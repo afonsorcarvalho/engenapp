@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id="sequence_os_seq" model="ir.sequence">
+        <field name="name">OS sequence</field>
+        <field name="code">engc.os_sequence</field>
+
+        <field eval="4" name="padding"/>
+       
+        <field eval="1" name="number_increment"/>
+       
+    </record>
+</odoo>

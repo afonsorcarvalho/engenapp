@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+
+
+access_engc_os,access_engc_os,model_engc_os,base.group_user,1,1,1,1 
+access_engc_os_servicos_line,access_engc_os_servicos_line,model_engc_os_servicos_line,base.group_user,1,1,1,1 
+access_engc_equipment,access_engc_equipment,model_engc_equipment,base.group_user,1,1,1,1 
+access_engc_equipment_category,access_engc_equipment_category,model_engc_equipment_category,base.group_user,1,1,1,1 
+access_engc_equipment_category_instruction,access_engc_equipment_category_instruction,model_engc_equipment_category_instruction,base.group_user,1,1,1,1 
+access_engc_equipment_maintenance_team,access_engc_equipment_maintenance_team,model_engc_equipment_maintenance_team,base.group_user,1,1,1,1 
+access_engc_equipment_location,access_engc_equipment_location,model_engc_equipment_location,base.group_user,1,1,1,1 
+access_engc_equipment_situation,access_engc_equipment_situation,model_engc_equipment_situation,base.group_user,1,1,1,1 
+access_engc_equipment_means_of_aquisition,access_engc_equipment_means_of_aquisition,model_engc_equipment_means_of_aquisition,base.group_user,1,1,1,1 
+access_engc_equipment_marca,access_engc_equipment_marca,model_engc_equipment_marca,base.group_user,1,1,1,1 
+access_engc_equipment_pictures,access_engc_equipment_pictures,model_engc_equipment_pictures,base.group_user,1,1,1,1 

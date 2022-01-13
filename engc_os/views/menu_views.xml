@@ -1,0 +1,38 @@
+<odoo>
+  <data>
+    <!-- actions opening views on models -->
+
+    <record model="ir.actions.act_window" id="engc_os.action_window">
+      <field name="name">Ordens de Serviço</field>
+      <field name="res_model">engc.os</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+    <!-- actions opening views on models -->
+
+    <record model="ir.actions.act_window" id="engc_os.equipment_action_window">
+      <field name="name">Equipamentos</field>
+      <field name="res_model">engc.equipment</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+
+
+    <!-- Top menu item -->
+
+    <menuitem name="Engenharia Clínica" id="engc_os.menu_root" />
+
+    <!-- menu categories -->
+
+    <menuitem name="Serviços" id="engc_os.servicos_menu" parent="engc_os.menu_root" />
+    <menuitem name="Equipamentos" id="engc_os.equipament_menu" parent="engc_os.menu_root" />
+    <menuitem name="Configurações" id="engc_os.configuracoes_menu" parent="engc_os.menu_root" />
+
+    <!-- actions -->
+
+    <menuitem name="Ordens de Serviço" id="engc_os.os_list" parent="engc_os.servicos_menu" action="engc_os.action_window" />
+    <menuitem name="Equipamentos" id="engc_os.equipments_list" parent="engc_os.equipament_menu" action="engc_os.equipment_action_window" />
+    <!--
+    <menuitem name="Server to list" id="engc_os" parent="engc_os.menu_2"
+              action="engc_os.action_server"/>
+-->
+  </data>
+</odoo>

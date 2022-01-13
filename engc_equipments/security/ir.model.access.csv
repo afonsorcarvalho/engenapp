@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+
+access_engc_equipment,engc_equipment,model_engc_equipment,base.group_user,1,1,1,1
+access_engc_equipment_category,engc_equipment_category,model_engc_equipment_category,base.group_user,1,1,1,1
+access_engc_equipment_category_instruction,engc_equipment_category_instruction,model_engc_equipment_category_instruction,base.group_user,1,1,1,1
+access_engc_equipment_maintenance_team,engc_equipment_team,model_engc_equipment_team,base.group_user,1,1,1,1
+access_engc_equipment_location,engc_equipment_location,model_engc_equipment_location,base.group_user,1,1,1,1
+access_engc_equipment_situation,engc_equipment_situation,model_engc_equipment_situation,base.group_user,1,1,1,1
+access_engc_equipment_means_of_aquisition,engc_equipment_means_of_aquisition,model_engc_equipment_means_of_aquisition,base.group_user,1,1,1,1

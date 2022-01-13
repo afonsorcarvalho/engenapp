@@ -1,0 +1,101 @@
+<odoo>
+  <data>
+
+
+    <record model="ir.ui.view" id="engc_os.equipments_list">
+      <field name="name">Equipamentos List</field>
+      <field name="model">engc.equipment</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="id" />
+          <field name="name" />
+          <field name="serial_number" />
+          <field name="create_date" string="Criado em" />
+          <field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
+          <field name="company_id" groups="base.group_multi_company" />
+          <field name="model" />
+          <field name="category_id" />
+          <field name="situation_id" />
+          <field name="picture_ids" />
+        </tree>
+      </field>
+    </record>
+
+    <record model="ir.ui.view" id="engc_os.equipments_form">
+      <field name="name">Equipamentos Form</field>
+      <field name="model">engc.equipment</field>
+      <field name="arch" type="xml">
+        <form string="Equipamentos">
+          <header>
+            <!-- <button name="" string="" class="oe_highlight" states="" type=""/> -->
+            <field name="situation_id" widget="statusbar"  />
+          </header>
+          <sheet>
+            <h2>
+              <field name="name" />
+            </h2>
+            <h4>
+              <field name="company_id"  groups="base.group_multi_company" />
+            </h4>
+            <group string="Dados do equipamento">
+              <group>
+                <field name="situation_id" />
+                <field name="marca_id" />
+                <field name="partner_reference" />
+                <field name="model" />
+                <field name="category_id" />
+                
+              </group>
+              <group>
+                <field name="serial_number" />
+                <field name="patrimony" />
+                <field name="tag" />
+                <field name="anvisa_code" />
+              </group>
+              <group>
+                <field name="manufacturing_date" />
+                <field name="instalation_date" /> 
+                <field name="acquisition_date" />
+                <field name="warranty" />
+                <field name="extended_warranty" />
+              </group>
+              <group>
+                <field name="location_id" />
+                <field name="means_of_aquisition_id" />
+                <field name="note"/>
+
+              </group>
+            </group> 
+            <notebook>
+              <page string="Fotos">
+                <group>
+                  <field name="picture_ids" nolabel="1">
+                    <tree>
+                      <field name="name" />
+                      <field name="picture" widget="image" class="oe_avatar" options="{'size': [90, 90]}" />
+                    </tree>
+                    <form>
+                      <sheet>
+                        <group>
+                          <field name="name" />
+                          <field name="picture" widget="image"  />
+                        </group>
+                      </sheet>
+                    </form>
+                  </field>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+          <div class="oe_chatter" groups="base.group_multi_company" >
+            <field name="message_follower_ids" widget="mail_followers"/>
+            <field name="message_ids" widget="mail_thread"/>
+          </div>
+        </form>
+
+      </field>
+    </record>
+
+
+  </data>
+</odoo>
