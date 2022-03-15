@@ -14,6 +14,16 @@
       <field name="res_model">engc.equipment</field>
       <field name="view_mode">tree,form</field>
     </record>
+    <record model="ir.actions.act_window" id="engc_os.calibration_instruments_action_window">
+      <field name="name">Instrumentos</field>
+      <field name="res_model">engc.calibration.instruments</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+    <record model="ir.actions.act_window" id="engc_os.calibration_action_window">
+      <field name="name">Calibrações</field>
+      <field name="res_model">engc.calibration</field>
+      <field name="view_mode">tree,form</field>
+    </record>
 
 
     <!-- Top menu item -->
@@ -24,12 +34,15 @@
 
     <menuitem name="Serviços" id="engc_os.servicos_menu" parent="engc_os.menu_root" />
     <menuitem name="Equipamentos" id="engc_os.equipament_menu" parent="engc_os.menu_root" />
+    <menuitem name="Calibração e Ensaios" id="engc_os.calibration_menu" parent="engc_os.menu_root" />
     <menuitem name="Configurações" id="engc_os.configuracoes_menu" parent="engc_os.menu_root" />
 
     <!-- actions -->
 
     <menuitem name="Ordens de Serviço" id="engc_os.os_list" parent="engc_os.servicos_menu" action="engc_os.action_window" />
     <menuitem name="Equipamentos" id="engc_os.equipments_list" parent="engc_os.equipament_menu" action="engc_os.equipment_action_window" />
+    <menuitem name="Calibrações" id="engc_os.calibration_list" parent="engc_os.calibration_menu" action="engc_os.calibration_action_window" />
+    <menuitem name="Instrumentos" id="engc_os.calibration_instruments_list" parent="engc_os.calibration_menu" action="engc_os.calibration_instruments_action_window" />
     <!--
     <menuitem name="Server to list" id="engc_os" parent="engc_os.menu_2"
               action="engc_os.action_server"/>

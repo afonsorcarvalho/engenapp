@@ -28,6 +28,7 @@
         'data/sequence.xml',
 
         'views/equipments_views.xml',
+        'views/calibration_instruments_views.xml',
         'views/os_views.xml',
         'views/menu_views.xml',
         'views/templates.xml',
