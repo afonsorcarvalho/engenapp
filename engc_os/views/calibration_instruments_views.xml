@@ -7,9 +7,15 @@
       <field name="model">engc.calibration.instruments</field>
       <field name="arch" type="xml">
         <tree>
-         
+
           <field name="name" />
-          
+          <field name="id_number" />
+          <field name="marca" />
+          <field name="modelo" />
+          <field name="date_calibration" />
+          <field name="validate_calibration" />
+          <field name="certificate_calibration" widget="binary" />
+
         </tree>
       </field>
     </record>
@@ -18,6 +24,8 @@
       <field name="name">Instruments Form</field>
       <field name="model">engc.calibration.instruments</field>
       <field name="arch" type="xml">
+       
+
         <form string="Equipamentos">
           <header>
             <!-- <button name="" string="" class="oe_highlight" states="" type=""/> -->
@@ -27,28 +35,37 @@
             <h2>
               <field name="name" />
             </h2>
-            
-            <group string="Dados do equipamento">
-              <group>
-              
-                
-              </group>
-              <group>
-              
-              </group>
-              <group>
-              
-              </group>
-              <group>
-               
+
+            <group>
+              <group string="identificação">
+
+                <field name="id_number" />
+                <field name="marca" />
+                <field name="modelo" />
 
               </group>
-            </group> 
-           
+              <group string="Certificado">
+                <field name="certificate_number" />
+                <field name="certificate_partner" />
+
+              </group>
+              <group string="Datas e Validade">
+                <field name="date_calibration" />
+                <field name="validate_calibration" />
+
+              </group>
+              <group string="Arquivo">
+
+                <field name="certificate_calibration" widget="binary" />
+
+
+              </group>
+            </group>
+
           </sheet>
-          <div class="oe_chatter" groups="base.group_multi_company" >
-            <field name="message_follower_ids" widget="mail_followers"/>
-            <field name="message_ids" widget="mail_thread"/>
+          <div class="oe_chatter" groups="base.group_multi_company">
+            <field name="message_follower_ids" widget="mail_followers" />
+            <field name="message_ids" widget="mail_thread" />
           </div>
         </form>
 

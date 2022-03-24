@@ -242,7 +242,8 @@ class EquipmentsPictures(models.Model):
     _name = 'engc.equipment.pictures'
     _description = "Fotos dos equipamentos"
 
-    name = fields.Char('Descrição da foto')
+    name = fields.Char('Título da foto')
+    description = fields.Text('Descrição da foto')
 
     
     equipment_id = fields.Many2one(

@@ -75,11 +75,17 @@ class CalibrationIntrument(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Instrumentos de calibração'
 
-    name = fields.Char(compute="_compute_name", store=True)
-
-    date_calibration = fields.Date('Data da Calibração')
-    next_date_calibration = fields.Date('Próxima Calibração')
-    certificate_calibration = fields.Binary("Certificado de calibração")
+    name = fields.Char("Nome",track_visibility='always')
+    id_number = fields.Char("Nº Idenficação")
+    marca = fields.Char("Marca")
+    modelo = fields.Char("Modelo")
+    certificate_calibration = fields.Binary("Certificado de Calibração", track_visibility='always')
+    certificate_number = fields.Char(string='Nº Certificado', track_visibility='always')
+    certificate_partner = fields.Many2one(string='Certificadora', comodel_name='res.partner', ondelete='restrict',track_visibility='always')
+    date_calibration = fields.Date('Data da Calibração',track_visibility='always')
+    
+    validate_calibration = fields.Date('Data de Validade',track_visibility='always')
+    
   
 
 
