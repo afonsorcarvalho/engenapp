@@ -37,7 +37,7 @@
             </h2>
 
             <group>
-              <group string="identificação">
+              <group string="Identificação">
 
                 <field name="id_number" />
                 <field name="marca" />
@@ -49,7 +49,7 @@
                 <field name="certificate_partner" />
 
               </group>
-              <group string="Datas e Validade">
+              <group string="Data e Validade">
                 <field name="date_calibration" />
                 <field name="validate_calibration" />
 

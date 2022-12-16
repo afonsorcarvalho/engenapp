@@ -4,14 +4,37 @@ from odoo import models, fields, api
 
 class Equipment(models.Model):
     _name = 'engc.equipment'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _inherit = ['mail.thread']
     _description = 'Equipamento'
     _check_company_auto = True
 
+    STATES = [
+       
+        ('draft', 'Rascunho'),
+        ('in_use', 'Em uso'),
+        ('out_of_use', 'Fora de uso'),
+        ('useless', 'Inservível'),
+        
+    ]
+
     name = fields.Char(compute="_compute_name", store=True)
+  
+    image_1920 = fields.Binary(
+        string='avatar',
+    )
+    ()
+    
+    alias = fields.Char()
     category_id = fields.Many2one(
         'engc.equipment.category', 'Categoria', required=True, check_company=True)
-       
+    state  = fields.Selection(
+        string="Status",
+        selection=STATES,
+        required=True,
+        default='draft',
+        tracking=True
+        
+    )
     company_id = fields.Many2one(
         string='Instituição', 
         comodel_name='res.company', 
@@ -19,8 +42,6 @@ class Equipment(models.Model):
         default=lambda self: self.env.user.company_id
     )
     
-    situation_id = fields.Many2one(
-        'engc.equipment.situation', 'Situação', required=True)
     means_of_aquisition_id = fields.Many2one(
         'engc.equipment.means.of.aquisition', 'Meio de Aquisição', required=True,  check_company=True)
     technician_id = fields.Many2one('hr.employee', 'Técnico',check_company=True)
@@ -82,7 +103,7 @@ class Equipment(models.Model):
             if not record.category_id.name or not record.model or not record.marca_id.name or not record.serial_number:
                 record.name = ""
             else:
-                record.name = record.category_id.name + " " + record.model + " " + record.marca_id.name + " "  + record.serial_number
+                record.name = record.category_id.name + " " + record.model + " " + record.serial_number + " "  + record.marca_id.name
     
     
     
@@ -108,6 +129,27 @@ class Equipment(models.Model):
                 'id', operator, name), ('serial_number', operator, name)] + args, limit=limit)
 
         return recs.name_get()
+    
+    '''
+        Açao pra colocar equipamento em uso
+    '''
+
+    def action_in_use(self):
+        for rec in self:
+            rec.write({
+                'state':'in_use'
+            })
+
+    def action_useless(self):
+        for rec in self:
+            rec.write({
+                'state':'useless'
+            })
+    def action_out_of_use(self):
+        for rec in self:
+            rec.write({
+                'state':'out_of_use'
+            })
 
 
 class Category(models.Model):

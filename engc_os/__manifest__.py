@@ -18,6 +18,7 @@
     'category': 'Services',
     'version': '0.1',
 
+
     # any module necessary for this one to work correctly
     'depends': ['base', 'mail','hr'],
 
@@ -26,8 +27,8 @@
         'security/ir.model.access.csv',
         'security/security.xml',
         'data/sequence.xml',
-
         'views/equipments_views.xml',
+        'views/calibration_views.xml',
         'views/calibration_instruments_views.xml',
         'views/os_views.xml',
         'views/menu_views.xml',
@@ -37,4 +38,6 @@
     'demo': [
         'demo/demo.xml',
     ],
+    'installable': True,
+    'application': True,
 }

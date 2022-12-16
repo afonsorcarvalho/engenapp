@@ -32,7 +32,7 @@ class EngcOs(models.Model):
         ('cancel', 'Cancelada'),
     ]
 
-    # TODO Transformar o tipo de manutenção em uma classe
+    # TODO Transformar o tipo de manutenção em uma classe será que é preciso?
     MAINTENANCE_TYPE_SELECTION = [
         ('corrective', 'Corretiva'),
         ('preventive', 'Preventiva'),
@@ -125,12 +125,12 @@ class EngcOs(models.Model):
         help="Pessoa que solicitou a ordem de serviço",
         required=True,
     )   
-    
+  
     company_id = fields.Many2one(
         string='Instituição', 
         comodel_name='res.company', 
         required=True, 
-        default=lambda self: self.env.user.company_id
+        default=lambda self: self.env.company
     )
     
     tecnico_id = fields.Many2one(
@@ -190,8 +190,14 @@ class EngcOs(models.Model):
   
     check_list_created = fields.Boolean(
         'Check List Created', track_visibility='True', default=False)
-    
-    
+  
+    relatorios_id = fields.One2many(
+        string="Relatórios",
+        comodel_name="engc.os.relatorios",
+        inverse_name="os_id",        
+        help="Relatórios de atendimento",
+    )
+
     @api.depends('relatorios')
     def _compute_time_execution(self):
         if self.relatorios:
@@ -611,9 +617,6 @@ class EngcOs(models.Model):
                             'product_uom_qty' : product_uom_qty
                         })]
 
-     
-
-                
         return self.servicos
    
 
@@ -633,52 +636,28 @@ class EngcOs(models.Model):
 
             self.check_list_created = True
 
+     
+class RelatoriosLine(models.Model):
+    _name = 'engc.os.relatorios'
+    _description = 'Relatórios de atendimento'
+    _order = "data_atendimento,id"
 
-class ServicosLine(models.Model):
-    _name = 'engc.os.servicos.line'
-    _description = 'Servicos Line'
-    _order = 'os_id, sequence, id'
+    name = fields.Char(
+        'Nº Relatório de Serviço', default=lambda self: self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
+                'engc.os.relatorio_sequence'), copy=False, required=True)
 
-    name = fields.Char('Description', required=True)
+        
     os_id = fields.Many2one(
         'engc.os', 'Ordem de Serviço',
         index=True, ondelete='cascade')
-    to_invoice = fields.Boolean('Faturar')
-    product_id = fields.Many2one('product.product', u'Serviço', domain=[
-                                 ('type', '=', 'service')], required=True)
-    invoiced = fields.Boolean('Faturada', copy=False, readonly=True)
-    automatic = fields.Boolean('Gerado automático', copy=False,  default=False)
-    tax_id = fields.Many2many(
-        'account.tax', 'engc_os_service_line_tax', 'engc_os_service_line_id', 'tax_id', 'Impostos')
-    product_uom_qty = fields.Float(
-        'Qtd', default=1.0,
-        digits=dp.get_precision('Product Unit of Measure'), required=True)
-    product_uom = fields.Many2one(
-        'product.uom', 'Unidade de medida',
-        required=True)
-    invoice_line_id = fields.Many2one(
-        'account.invoice.line', 'Linha da fatura',
-        copy=False, readonly=True)
-    sequence = fields.Integer(string='Sequence', default=10)
 
-    @api.onchange('os_id', 'product_id', 'product_uom_qty')
-    def onchange_product_id(self):
-        """On change of product it sets product quantity, tax account, name, uom of
-        product, unit price and price subtotal."""
-        if self.product_id:
-            self.name = self.product_id.display_name
-            self.product_uom = self.product_id.uom_id.id
-            self.product_uom = self.product_id.uom_id.id
+    data_atendimento = fields.Date(string='Data de Atendimento', 
+        required=True
+    )
 
-    def can_unlink(self):
-        if self.automatic:
-            return False
-        return True
-
-    
-    def unlink(self):
-        for item in self:
-            if not item.can_unlink():
-                raise UserError(
-                    _('Serviço adicionado pelo sistema - Proibido excluir'))
-        super(ServicosLine, self).unlink()
+    start_hour = fields.Float("Hora início", 
+        required=True
+    )
+    final_hour = fields.Float("Hora fim", 
+        required=True
+    )

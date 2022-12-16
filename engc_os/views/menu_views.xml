@@ -24,6 +24,16 @@
       <field name="res_model">engc.calibration</field>
       <field name="view_mode">tree,form</field>
     </record>
+    <record model="ir.actions.act_window" id="engc_os.calibration_measurement_procedure_action_window">
+      <field name="name">Procedimentos de Medição</field>
+      <field name="res_model">engc.calibration.measurement.procedure</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+    <record model="ir.actions.act_window" id="engc_os.calibration_measurement_unit_action_window">
+      <field name="name">Unidades de Medição</field>
+      <field name="res_model">engc.calibration.measurement.unit</field>
+      <field name="view_mode">tree,form</field>
+    </record>
 
 
     <!-- Top menu item -->
@@ -35,14 +45,18 @@
     <menuitem name="Serviços" id="engc_os.servicos_menu" parent="engc_os.menu_root" />
     <menuitem name="Equipamentos" id="engc_os.equipament_menu" parent="engc_os.menu_root" />
     <menuitem name="Calibração e Ensaios" id="engc_os.calibration_menu" parent="engc_os.menu_root" />
-    <menuitem name="Configurações" id="engc_os.configuracoes_menu" parent="engc_os.menu_root" />
+    <menuitem name="Configurações" id="engc_os.configuracoes_menu" parent="engc_os.menu_root" sequence="100"  />
 
     <!-- actions -->
 
-    <menuitem name="Ordens de Serviço" id="engc_os.os_list" parent="engc_os.servicos_menu" action="engc_os.action_window" />
-    <menuitem name="Equipamentos" id="engc_os.equipments_list" parent="engc_os.equipament_menu" action="engc_os.equipment_action_window" />
-    <menuitem name="Calibrações" id="engc_os.calibration_list" parent="engc_os.calibration_menu" action="engc_os.calibration_action_window" />
-    <menuitem name="Instrumentos" id="engc_os.calibration_instruments_list" parent="engc_os.calibration_menu" action="engc_os.calibration_instruments_action_window" />
+    <menuitem name="Ordens de Serviço" id="engc_os.os_list_menu" parent="engc_os.servicos_menu" action="engc_os.action_window" />
+    <menuitem name="Equipamentos" id="engc_os.equipments_list_menu" parent="engc_os.equipament_menu" action="engc_os.equipment_action_window" />
+    <menuitem name="Calibrações" id="engc_os.calibration_list_menu" parent="engc_os.calibration_menu" action="engc_os.calibration_action_window" />
+    <menuitem name="Procedimentos de Medição" id="engc_os.calibration_measurement_procedure_list_menu" parent="engc_os.calibration_menu" action="engc_os.calibration_measurement_procedure_action_window" />
+    <menuitem name="Instrumentos" id="engc_os.calibration_instruments_list_menu" parent="engc_os.calibration_menu" action="engc_os.calibration_instruments_action_window" />
+    
+    <menuitem name="Unidades de Medida" id="engc_os.calibration_measurement_unit_list_menu" parent="engc_os.configuracoes_menu" action="engc_os.calibration_measurement_unit_action_window" />
+    
     <!--
     <menuitem name="Server to list" id="engc_os" parent="engc_os.menu_2"
               action="engc_os.action_server"/>
