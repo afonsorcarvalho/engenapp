@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data>
+        <record id="report_engc_os_calibration_certificate" model="ir.actions.report">
+            <field name="name">Impressão de Certificado de Calibração</field>
+            <field name="model">engc.calibration</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">engc_os.calibration_certificate_template</field>
+            <field name="report_file">engc_os.calibration_certificate_template</field>
+            <field name="print_report_name">'%s - certificado_calibracao - %s' % (object.name, object.client_id.name)</field>
+            <field name="binding_model_id" ref="model_engc_calibration"/>
+            <field name="binding_type">report</field>
+        </record>
+    </data>
+</odoo>

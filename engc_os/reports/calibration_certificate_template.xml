@@ -1,0 +1,168 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <template id="calibration_certificate_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <style>
+                        div .watermark{
+                            margin-top: 300px;
+                            margin-left: 50px;
+                            width: 1000px;
+                            height: 180px;
+                            color: red;
+                            position:absolute;
+                            text-align:center;
+                            z-index:1000;
+                            font-size:120px;
+                            -ms-transform: rotate(-30deg); 
+                            -webkit-transform: rotate(-30deg); 
+                            transform: rotate(-30deg);
+                          }
+                    </style>
+                    
+                    <!-- <div class="page"> --> 
+                         <t t-if="o.state != 'done'">
+                        <div class="watermark" style="opacity:0.20;">
+                          
+                               <span>SEM VALIDADE</span> 
+                            
+                        </div>
+                    </t>
+                        <h3 class="text-center">
+                           Certificado de Calibração<br/> <span t-field="o.name"/>
+                        </h3>
+                        <br/>
+                        <br/>
+                        
+                     
+                        <div class="row">
+                            <div class="col-2"><strong>Instrumento: </strong></div>
+                            <div class="col-10"><span t-field="o.equipment_id"/></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2"><strong>Fabricante: </strong></div>
+                            <div class="col-10"><span t-field="o.equipment_id.marca_id"/></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2"><strong>Modelo: </strong></div>
+                            <div class="col-10"><span t-field="o.equipment_id.model"/></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2"><strong>Nº de Série: </strong></div>
+                            <div class="col-10"><span t-field="o.equipment_id.serial_number"/></div>
+                        </div>
+                        
+                        <br/>
+                        <div class="row">
+                            <div class="col-2"><strong>Cliente: </strong></div>
+                            <div class="col-10"><span t-field="o.client_id"/></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2"><strong>Endereço: </strong></div>
+                            <div class="col-10">
+                                <span t-field="o.client_id.street"/>,
+                                <span t-field="o.client_id.street2"/>, 
+                                CEP: <span t-field="o.client_id.zip"/>,
+                                <span t-field="o.client_id.city"/>-
+                                <span t-field="o.client_id.state_id"/>
+                            </div>
+                        </div>
+                        <br/>
+
+                        <div class="row">
+                            <div class="col-3"> <strong>Procedimento de medição: </strong></div>
+                            <div class="col-9"><span t-field="o.measurement_procedure"/> - <span t-field="o.measurement_procedure.description"/></div>
+                        </div>
+                        <br/>
+
+                        <div class="row">
+                            <div class="col-3">  <strong>Data da calibração: </strong></div>
+                            <div class="col-9"><span t-field="o.date_calibration"/></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3"> <strong>Calibrado por: </strong></div>
+                            <div class="col-9"><span t-field="o.technician_id"/></div>
+                        </div>                                           
+                        <div class="row">
+                            <div class="col-3"> <strong>Condições ambientais: </strong></div>
+                            <div class="col-9"><span t-field="o.environmental_conditions"/></div>
+                        </div>                                           
+                        <br/>
+
+                        <div class="row">
+                            <div class="col-2"> <strong>Padrões utilizados: </strong></div>
+                            <div class="col-10">
+                                <t t-foreach="o.instruments_ids" t-as="i">
+                                <span t-field="i.display_name"/> marca <span t-field="i.marca"/>, modelo <span t-field="i.modelo"/>, número de série  <span t-field="i.id_number"/>.<br/>
+                                Certificado de calibração emitido por <span t-field="i.certificate_partner"/> sob o número <span t-field="i.certificate_number"/> com validade até <span t-field="i.validate_calibration"/>
+                                </t>
+                            </div>
+                        </div>
+                       <br/>
+                       <br/>
+                       <br/>
+
+                        <h4>Resultados</h4>
+                        
+                        <table class="table table-condensed table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Valor Real</th>
+                                    <th>Valor Medido</th>
+                                    <th>Erro</th>
+                                    <th>Incerteza</th>
+                                    <th>k</th>
+                                    <th>Veff</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="measurement" t-value="o.measurement_ids"/>
+                                <t t-foreach="measurement" t-as="m">
+                                <tr t-foreach="m.measurement_lines" t-as="l">
+                                    <td class="text-center">
+                                        <span t-field="l.true_quantity_value"/> <span t-field="l.unit_of_measurement.simbolo"/>
+                                    </td>
+                                    <td class="text-center">
+                                        <span t-field="l.measurement_quantity_value_mean" t-options='{"widget": "float", "precision": 2}'/> <span t-field="l.unit_of_measurement.simbolo"/>
+                                    </td>
+                                    <td class="text-center">
+                                        <span t-field="l.erro_value" t-options='{"widget": "float", "precision": 2}'/> <span t-field="l.unit_of_measurement.simbolo"/>
+                                    </td>
+                                    <td class="text-center">
+                                        <span t-field="l.uncertainty" t-options='{"widget": "float", "precision": 2}'/> <span t-field="l.unit_of_measurement.simbolo" /> 
+                                    </td>
+                                    <td class="text-center">
+                                        <span t-field="l.coverage_factor" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                    <td class="text-center">
+                                        <span t-field="l.veff" t-options='{"widget": "float", "precision": 2}'/>
+                                    </td>
+                                </tr></t>
+                            </tbody>
+                        </table>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <h6>Observações</h6>
+                        
+                        <p>
+                            A incerteza padrão de medição foi determinada de acordo com a publicação do EA-4/02
+                        </p>
+                        <p>
+                            1) Os resultados deste certificado referem-se exclusivamente ao instrumento submetido à calibração nas condições
+                            especificadas, não sendo extensivo a quaisquer lotes.
+                            
+                        </p>
+                        <p>
+                            2) A reprodução deste certificado só pode ser total. A reprodução de partes depende da aprovação, por escrito, do laboratório emitente.
+                        </p>
+                       
+                        
+                           
+                    <!-- </div> -->
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

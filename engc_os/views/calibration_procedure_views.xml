@@ -1,0 +1,124 @@
+<odoo>
+  <data>
+    <!-- explicit list view definition -->
+
+    <record model="ir.ui.view" id="engc_os.calibration_measurement_procedure_list">
+      <field name="name">Procedimentos de Medições</field>
+      <field name="model">engc.calibration.measurement.procedure</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="name" />
+          <field name="create_date" string="Criado em" />
+          <field name="create_uid" string="Criado por" widget="many2one_avatar_user" />      
+          <field name="description" />
+          <field name="revision" />
+          <field name="emission" />
+          <field name="checked" />
+        </tree>
+      </field>
+    </record>
+
+    <record model="ir.ui.view" id="engc_os.calibration_measurement_procedure_form">
+      <field name="name">Procedimentos de Medição</field>
+      <field name="model">engc.calibration.measurement.procedure</field>
+      <field name="arch" type="xml">
+
+        <form string="Procedimentos de Medição">
+          <header>
+            
+            <button name="action_emited" string="Conferir" class="oe_highlight" states="draft" type="object"/>
+            <button name="action_confered" string="Conferir" class="oe_highlight" states="draft" type="object"/>
+            <button name="action_aproved" string="Aprovar" class="oe_highlight" states="draft" type="object"/>
+            <button name="action_review" string="Revisar" class="oe_highlight" states="draft" type="object"/>
+            <button name="action_cancel" string="Cancelar" class="oe_highlight" states="done" type="object"/> 
+            <!-- <field name="state" widget="statusbar"  /> -->
+          </header>
+
+
+          <sheet string="Relatório de serviço">
+            <div class="oe_title">
+              <label for="name" string="Código"/>
+              <h1>
+                <field name="name" />
+              </h1>
+             
+           
+            </div>
+            
+            <group string="Procedimento de Medição">
+              <group>
+
+                <field name="description" />
+                <field name="revision" />
+                <field name="emission" />
+                <field name="checked" />
+                <field name="aproved" />
+                
+
+              </group>
+              
+              
+            </group>
+            <group>
+
+                <field name="objective" />
+                <field name="application" />
+                <field name="reference_documents" />
+                <field name="terminology" />
+                <field name="materials_used" />
+                <field name="ambiental_conditions" />
+                <field name="precaution_and_preparation" />
+                <field name="method" />
+                <field name="analysis" />
+                <field name="measurement_uncertainty" />
+                <field name="presentation_of_results" />
+                
+                <field name="changes" />
+                
+
+              </group>
+           
+            <group>
+              <field name="document"  widget="pdf_viewer"
+             
+               />
+            </group>
+           <notebook>
+            <page string="Anexos">
+              
+                <field name="anexos_ids" nolabel="1"
+
+                 >
+                  <form>
+                    
+                    <label for='name'>Título</label>
+                    
+                    <h2><field name="name" /></h2>
+                    
+                    <label for='text'>Corpo do texto</label>
+                    
+                   <p>
+                    <field name="text" />
+                  </p>
+                  </form>
+                </field>
+              
+            </page>
+           
+           </notebook>
+          
+          </sheet>
+          <div class="oe_chatter">
+            <field name="message_follower_ids" widget="mail_followers" />
+            <field name="message_ids" widget="mail_thread" />
+          </div>
+
+
+        </form>
+
+      </field>
+    </record>
+
+
+  </data>
+</odoo>

@@ -1,0 +1,127 @@
+<odoo>
+  <data>
+    <!-- explicit list view definition -->
+
+    <record model="ir.ui.view" id="engc_os.os_relatorio_list">
+      <field name="name">Relatório de Serviço</field>
+      <field name="model">engc.os.relatorios</field>
+      <field name="arch" type="xml">
+        <tree>
+
+          <field name="name" />
+          <field name="create_date" string="Criado em" />
+          <field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
+          <field name="company_id" string="Instituição" groups="base.group_multi_company" />
+          <field name="service_summary" />
+          <field name="fault_description" />
+          <field name="data_atendimento" />
+          <field name="start_hour" widget="float_time" />
+          <field name="final_hour" widget="float_time" />
+
+
+          <field name="state" widget="badge" />
+
+        </tree>
+
+      </field>
+    </record>
+    <record model="ir.ui.view" id="engc_os.os_relatorio_form">
+      <field name="name">Relatório de serviço</field>
+      <field name="model">engc.os.relatorios</field>
+      <field name="arch" type="xml">
+
+        <form string="Relatório de serviço">
+          <header>
+            <button name="action_done" string="Concluir" class="oe_highlight" states="draft"
+              type="object" />
+            <button name="action_cancel" string="Cancelar" class="oe_highlight" states="done"
+              type="object" />
+            <field name="state" widget="statusbar" />
+          </header>
+          <sheet string="Relatório de serviço">
+            <div class="oe_title">
+              <h1>
+                <field name="name" />
+              </h1>
+              <label for="company_id" class="oe_edit_only" />
+              <h2>
+                <field name="company_id" options="{'no_create': True, 'no_create_edit':True}" />
+              </h2>
+            </div>
+            <group string="Relatório">
+              <group>
+                <field name="data_atendimento"
+                  required="1"
+                />
+              </group>
+              <group>
+                <field name="start_hour" widget="float_time" />
+                <field name="final_hour" widget="float_time" />
+              </group>
+
+              <group>
+                <field name="fault_description" />
+                <field name="service_summary" />
+              </group>
+            </group>
+            <notebook>
+              <page string="Fotos">
+                <field name="picture_ids" nolabel="1" >
+                  <kanban>
+                    <templates>
+                      <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill o_hr_kanban_record">
+                           <field name="picture" widget="image" class="oe_avatar" options="{'zoom': true}" style="margin-right:50px" /> 
+                          <div class="oe_kanban_details">
+                            <div class="o_kanban_record_top">
+                              
+                                <div class="o_kanban_record_title">
+                                 
+                                    
+                                    <b><field name="name"/></b>
+                                
+                                </div>
+                               
+                              
+                            </div> 
+                            <div class="o_kanban_record_body">
+                                    <field name="description"/>
+                                </div>
+                          </div>
+                        </div>
+                      </t>
+                    </templates>
+                  </kanban>
+                 <form string="Fotos" create="true" delete="true" edit="true">
+                     <sheet>
+                         <div class="oe_title">
+                             <label for="name" class="oe_edit_only" />
+                             <h1><field name="name" placeholder="Título da foto ..." /></h1>
+                         </div>
+                         <group>
+                          <field name="description"/>
+                         </group>
+                         <group>
+                          <field name="picture" widget="image" 
+                          options="{'zoom': True}"
+                          />
+                         </group>
+                         
+                     </sheet>
+                 </form>
+                 
+                </field>
+              </page>
+            </notebook>
+          </sheet>
+          <div class="oe_chatter">
+            <field name="message_follower_ids" widget="mail_followers" />
+            <field name="message_ids" widget="mail_thread" />
+          </div>
+        </form>
+      </field>
+    </record>
+
+
+  </data>
+</odoo>
