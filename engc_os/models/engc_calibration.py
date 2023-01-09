@@ -145,8 +145,9 @@ class CalibrationIntrument(models.Model):
 
     @api.onchange('date_calibration')
     def onchange_date_calibration(self):
-        self.date_next_calibration = self.date_calibration + relativedelta(years=1)
-        self.validate_calibration = self.date_calibration + relativedelta(years=1)
+        if self.date_calibration:
+            self.date_next_calibration = self.date_calibration + relativedelta(years=1)
+            self.validate_calibration = self.date_calibration + relativedelta(years=1)
     
 
 
