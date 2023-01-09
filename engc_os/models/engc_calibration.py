@@ -170,13 +170,14 @@ class CalibrationMeasurement (models.Model):
     date_measurement= fields.Date("Data de aquisição")
     measurement_lines = fields.One2many('engc.calibration.measurement.lines', 'measurement_id') 
     uncertainty = fields.Char('Incerteza') 
-    coverage_factor= fields.Float(string="Fator K", 
+    coverage_factor= fields.Float(string="Fator K padrão", 
     required=True, default=2.0, help="Fator de abrangência padrão que será utilizado no cálculo da incerteza das medições"
      )
-    environmental_conditions = fields.Char('Condições ambientais')
+    environmental_conditions = fields.Char('Condições ambientais', default="25 graus Celsius, Umidade Relativa 50%")
     instrument_id = fields.Many2one(
         'engc.calibration.instruments',
         string='Padrão utilizado',
+        
         required=True
         
         )
