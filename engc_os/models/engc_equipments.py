@@ -74,14 +74,14 @@ class Equipment(models.Model):
         string="Calibrações",
         comodel_name='engc.calibration',
         inverse_name="equipment_id",
-        help="Calibrações e ensaios do equipametos.",
+        help="Calibrações e ensaios do equipamentos.",
     )
     oses = fields.One2many(
         string='Ordens de serviço',
         comodel_name='engc.os',
         inverse_name='equipment_id',
-        check_company=True,
-        store=False,
+       
+       
         
     )
 

@@ -150,6 +150,9 @@ class EngcOs(models.Model):
         'engc.equipment', 'Equipamento',
         index=True, required=True,
         company_dependent=True,
+        
+      
+        
         help='Escolha o equipamento referente a Ordem de Servico.'
     )
 

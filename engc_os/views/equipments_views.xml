@@ -128,12 +128,20 @@
               </page> 
               <page string="Calibrações e Ensaios">
                
-                  <field name="calibrations_ids" nolabel="1"/>
+                  <field name="calibrations_ids" nolabel="1">
+                    <control>
+                      <create string="Adicionar calibração"/>
+                    </control>
+                  </field>
                
               </page>
               <page string="Ordens de Serviço">
              
-                  <field name="oses" nolabel="1"/>
+                  <field name="oses" nolabel="1">
+                    <control>
+                      <create string="Adicionar Ordem de Serviço"/>
+                    </control>
+                  </field>
 
               
                   
