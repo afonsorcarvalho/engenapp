@@ -155,6 +155,9 @@
             <group>
               <field name="environmental_conditions"/>
             </group>
+            <group>
+              <field name="instrument_id"/>
+            </group>
           </group>
           <notebook>
             <page string="Linhas">
