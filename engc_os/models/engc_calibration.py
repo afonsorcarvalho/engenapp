@@ -171,7 +171,7 @@ class CalibrationMeasurement (models.Model):
     measurement_lines = fields.One2many('engc.calibration.measurement.lines', 'measurement_id') 
     uncertainty = fields.Char('Incerteza') 
     coverage_factor= fields.Float(string="Fator K", 
-    required=True
+    required=True, default=2.0, help="Fator de abrangência padrão que será utilizado no cálculo da incerteza das medições"
      )
     environmental_conditions = fields.Char('Condições ambientais')
     instrument_id = fields.Many2one(

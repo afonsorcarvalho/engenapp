@@ -158,6 +158,9 @@
             <group>
               <field name="instrument_id"/>
             </group>
+            <group>
+              <field name="coverage_factor"/>
+            </group>
           </group>
           <notebook>
             <page string="Linhas">
