@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 class EngcOs(models.Model):
     _name = 'engc.os'
     _description = 'Ordem de Serviço'
-    _inherit = ['mail.thread', ]
+    _inherit = ['mail.thread' ]
     _check_company_auto = True
 
     _order = 'name'
@@ -51,8 +51,8 @@ class EngcOs(models.Model):
     ]
 
     WHO_EXECUTOR_SELECTION = [
-        ('externa', 'Externa'),
-        ('interna', 'Interna'),
+        ('3rd_party', 'Terceirizada'),
+        ('propria', 'própria'),
        
 
     ]

@@ -39,7 +39,9 @@
               <field name="name" />
             </h2>
             <h4>
-              <field name="company_id"  groups="base.group_multi_company" />
+              <field name="company_id" 
+              
+                />
             </h4>
             <group string="Dados do equipamento">
               <group>
@@ -48,7 +50,7 @@
                 <field name="partner_reference" />
                 <field name="model" />
                 <field name="category_id" />
-                
+              
               </group>
               <group>
                 <field name="serial_number" />
@@ -82,7 +84,7 @@
                       <templates>
                         <t t-name="kanban-box">
                           <div class="oe_kanban_global_click o_kanban_record_has_image_fill o_hr_kanban_record">
-                            <field name="picture" widget="image" class="oe_avatar" options="{'size': [90,'100%']}"/>
+                             <field name="picture" widget="image" class="oe_avatar" options="{'zoom': true}" style="margin-right:50px" /> 
                             <div class="oe_kanban_details">
                               <div class="o_kanban_record_top">
                                 
@@ -115,6 +117,18 @@
                   </field>
                 </group>
               </page> 
+              <page string="Calibrações e Ensaios">
+               
+                  <field name="calibrations_ids" nolabel="1"/>
+               
+              </page>
+              <page string="Ordens de Serviço">
+             
+                  <field name="oses" nolabel="1"/>
+
+              
+                  
+              </page>
             </notebook>
           </sheet>
           <div class="oe_chatter">

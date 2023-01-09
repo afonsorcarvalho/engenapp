@@ -9,6 +9,12 @@
         <tree>
 
           <field name="name" />
+          <field name="client_id" />
+          <field name="equipment_id" />
+          <field name="technician_id" />
+          <field name="date_calibration" />
+          <field name="date_next_calibration" />
+          <field name="state" />
 
         </tree>
       </field>
@@ -20,9 +26,12 @@
       <field name="arch" type="xml">
         <form string="Calibrações e Ensaios">
           <header>
-           <button name="action_confirmed" string="Confirmar" class="oe_highlight" states="draft" type="object"/>
-           <button name="action_done" string="Concluir" class="oe_highlight" states="confirmed" type="object"/>
-           <button name="action_draft" string="Rascunho" class="oe_highlight" states="done" type="object"/>
+            <button name="action_confirmed" string="Confirmar" class="oe_highlight" states="draft"
+              type="object" />
+            <button name="action_done" string="Concluir" class="oe_highlight" states="confirmed"
+              type="object" />
+            <button name="action_draft" string="Rascunho" class="oe_highlight" states="done"
+              type="object" />
             <field name="state" widget="statusbar" />
           </header>
           <sheet>
@@ -31,54 +40,60 @@
             </h2>
             <group>
               <group>
-                <field name="company_id"
-                  groups="base.group_multi_company"
+                <field name="company_id" attrs="{'readonly': [('state','not in',('draft'))] }"
                 />
               </group>
             </group>
             <group>
               <group string="Dados do Cliente">
-                <field name="client_id" />
+                <field name="client_id"
+                  attrs="{'readonly': ['|',('state','not in',('draft')),('state','in',('done'))] }" />
               </group>
               <group string="Dados do equipamento">
-                <field name="equipment_id" />
+                <field name="equipment_id"
+                  attrs="{'readonly': ['|',('state','not in',('draft')),('state','in',('done'))] }" />
               </group>
-              
+
             </group>
-            <group >
-                <group string="Dados da Calibração">
-                  <field name="technician_id" />
-                  <field name="duration" />
-                  <field name="measurement_procedure" />
-                 
-                </group>
-                <group string="Datas">
-                  <field name="date_calibration" />
-                  <field name="date_next_calibration" />
-                  <field name="issue_date" />
-                </group>
+            <group>
+              <group string="Dados da Calibração">
+                <field name="technician_id" attrs="{'readonly': [('state','in',('done'))] }" />
+                <field name="duration" widget="float_time" attrs="{'readonly': [('state','in',('done'))] }" />
+                <field name="measurement_procedure" attrs="{'readonly': [('state','in',('done'))] }" />
+                <field name="environmental_conditions" attrs="{'readonly': [('state','in',('done'))] }" />
+
+              </group>
+              <group string="Datas">
+                <field name="date_calibration" attrs="{'readonly': [('state','in',('done'))] }" />
+
+
+                <field name="date_next_calibration" attrs="{'readonly': [('state','in',('done'))] }" />
+                <field name="issue_date" attrs="{'readonly': [('state','in',('done'))] }" />
+
+
+              </group>
             </group>
             <notebook>
-              <page string="Instrumentos Utilizados">
-               
-                  <field name="instruments_ids"/>
-               
+              <page string="Padrões Utilizados">
+
+                <field name="instruments_ids" attrs="{'readonly': [('state','in',('done'))] }" />
+
               </page>
-              <page string="Medidas">
-                  <field name="measurement_ids">
-                    <tree>
-                      <field name="name"/>
-                      <field name="date_measurement"/>
-                      <field name="date_measurement"/>
-                    </tree>
-                  </field>
-               
+              <page string="Medidas Adquiridas">
+                <field name="measurement_ids" attrs="{'readonly': [('state','in',('done'))] }">
+                  <tree>
+                    <field name="name" />
+                    <field name="date_measurement" />
+
+                  </tree>
+                </field>
+
               </page>
             </notebook>
-            
-           
+
+
           </sheet>
-          <div class="oe_chatter" groups="base.group_multi_company">
+          <div class="oe_chatter">
             <field name="message_follower_ids" widget="mail_followers" />
             <field name="message_ids" widget="mail_thread" />
           </div>
@@ -87,6 +102,105 @@
       </field>
     </record>
 
+    <record id="engc_os.calibration_search" model="ir.ui.view">
+      <field name="name">engc.calibration.search</field>
+      <field name="model">engc.calibration</field>
+      <field name="arch" type="xml">
+        <search string="">
+          <field name="name" />
+          <field name="client_id" />
+          <field name="equipment_id" />
+
+
+          <filter string='group_client_id' name='filter_group_client_id'
+            context="{'group_by':'client_id'}" />
+          <filter string='group_equipment_id' name='filter_group_equipment_id'
+            context="{'group_by':'equipment_id'}" />
+
+          <filter string="Concluída"
+            name="filter_state_done"
+            domain="[('state','in',['done'])]"
+            help="Calibrações concluídas" />
+          <filter string="Em adamento"
+            name="filter_state_confirmed"
+            domain="[('state','in',['confirmed'])]"
+            help="Calibrações em Andamento" />
+          <filter string="Rascunho"
+            name="filter_state_draft"
+            domain="[('state','in',['draft'])]"
+            help="Calibrações em rascunho" />
+
+          <separator string="Some Text" colspan="4" />
+
+
+        </search>
+      </field>
+
+    </record>
+    <record id="engc_os.calibration_measurement_form" model="ir.ui.view">
+      <field name="name">engc_os.calibration.measurement.form</field>
+      <field name="model">engc.calibration.measurement</field>
+      <field name="arch" type="xml">
+        <form string="Medidas">
+          <header>
+          </header>
+          <sheet>
+            
+            <label for='name'>Nome</label>
+            <field name="name"/>
+          <group string="">
+            <group>
+              <field name="date_measurement"/>
+            </group>
+            <group>
+              <field name="environmental_conditions"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Linhas">
+             
+                <field name="measurement_lines" nolabel="1">
+                <tree editable="1">
+                  <field name="true_quantity_value"/>
+                  <field name="measurement_quantity_value_1"/>
+                  <field name="measurement_quantity_value_2"/>
+                  <field name="measurement_quantity_value_3"/>
+                  <field name="measurement_quantity_value_mean"/>
+                  <field name="erro_value"/>
+                  <field name="uncertainty"/>
+                  <field name="coverage_factor"/>
+                  <field name="veff"/>
+                </tree>
+                </field>
+             
+            </page>
+          </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+    <record id="engc_os.calibration_measurement_unit_form" model="ir.ui.view">
+      <field name="name">engc_os.calibration.measurement.unit.form</field>
+      <field name="model">engc.calibration.measurement.unit</field>
+      <field name="arch" type="xml">
+        <form string="Medidas">
+          <header>
+          </header>
+          <sheet>
+            
+            <label for='name'>Unidade</label>
+            <h2>
+              <field name="name"/>
+            </h2>
+          <group string="">
+            <group>
+              <field name="simbolo"/>
+            </group>
+          </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
 
   </data>
 </odoo>

@@ -20,19 +20,23 @@
 
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'mail','hr'],
+    'depends': ['base','base_setup', 'mail','hr'],
 
     # always loaded
     'data': [
-        'security/ir.model.access.csv',
         'security/security.xml',
+        'security/ir.model.access.csv',
         'data/sequence.xml',
         'views/equipments_views.xml',
         'views/calibration_views.xml',
+        'views/calibration_procedure_views.xml',
         'views/calibration_instruments_views.xml',
         'views/os_views.xml',
+        'views/os_relatorio_views.xml',
         'views/menu_views.xml',
         'views/templates.xml',
+        'reports/calibration_certificate_template.xml',
+        'reports/engc_os_reports.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

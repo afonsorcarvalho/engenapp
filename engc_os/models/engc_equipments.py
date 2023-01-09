@@ -69,6 +69,13 @@ class Equipment(models.Model):
     
     duration = fields.Float('Duração da Manutenção')
     note = fields.Text()
+    
+    calibrations_ids = fields.One2many(
+        string="Calibrações",
+        comodel_name='engc.calibration',
+        inverse_name="equipment_id",
+        help="Calibrações e ensaios do equipametos.",
+    )
     oses = fields.One2many(
         string='Ordens de serviço',
         comodel_name='engc.os',

@@ -12,12 +12,22 @@ _logger = logging.getLogger(__name__)
 class RelatoriosLine(models.Model):
     _name = 'engc.os.relatorios'
     _description = 'Relatórios de atendimento'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = "data_atendimento,id"
     _check_company_auto = True
 
+    STATE_SELECTION = [
+        ('draft', 'Criado'),
+        ('done', 'Concluído'),
+        ('cancel', 'Cancelado'),
+    ]
 
 #TODO 
 #   1 -Fazer codigo para gerar o codigo name somente quando salvar o relatório
+
+    state = fields.Selection(string='', selection=STATE_SELECTION, default="draft",
+    required=True
+    )
 
     company_id = fields.Many2one(
         string='Instituição', 
@@ -27,12 +37,14 @@ class RelatoriosLine(models.Model):
     )
     name = fields.Char(
         'Nº Relatório de Serviço', default=lambda self: self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
-                'engc.os.relatorio_sequence'), copy=False, required=True)
+                'engc.os.relatorio_sequence'), copy=False, 
+                readonly=True, 
+                required=True)
     
         
     os_id = fields.Many2one(
         'engc.os', 'Ordem de Serviço',
-        index=True, ondelete='cascade')
+        index=True, ondelete='cascade',required=True)
     
     service_summary = fields.Text("Resumo do atendimento")
     fault_description = fields.Text("Descrição do defeito")
@@ -49,8 +61,22 @@ class RelatoriosLine(models.Model):
         required=True
     )
     picture_ids = fields.One2many('engc.os.relatorios.pictures', 'relatorio_id', "fotos")
+
+    #******************************************
+    #  ACTIONS
+    #
+    #******************************************
     
 
+    def action_cancel(self):
+        self.write({
+            'state': 'cancel'
+        })
+
+    def action_done(self):
+         self.write({
+            'state': 'done'
+        })
 
 class RelatoriosPictures(models.Model):
     _name = 'engc.os.relatorios.pictures'
@@ -66,16 +92,12 @@ class RelatoriosPictures(models.Model):
         required=True, 
         default=lambda self: self.env.user.company_id
     )
-    
-
-    
     relatorio_id = fields.Many2one(
         string='Equipamento', 
         comodel_name='engc.os.relatorios', 
         required=True, 
        
     )
-
     picture = fields.Binary(string="Foto", 
     required=True
      )
