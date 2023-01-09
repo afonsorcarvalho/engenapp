@@ -15,6 +15,8 @@
           <field name="equipment_serial_number" />
           <field name="equipment_model" />
           <field name="equipment_category" />
+          <field name="client_id" />
+          
           <field name="solicitante" />
           <field name="date_scheduled" widget="remaining_days" />
           <field name="maintenance_type" />
@@ -46,12 +48,18 @@
               <h2>
                 <field name="company_id" options="{'no_create': True, 'no_create_edit':True}" />
               </h2>
+
               <h2>
                 <field name="origin" readonly="1" />
               </h2>
-
+              <label for="client_id" class="oe_edit_only" />
+                  <h2>
+                    <field name="client_id"  />
+                  </h2>
             </div>
             <group string="Dados do equipamento">
+             
+              
               <group>
                 <field name="equipment_id" domain="[('company_id', '=', company_id)]"
                   options="{'no_create': True, 'no_create_edit':True}" />

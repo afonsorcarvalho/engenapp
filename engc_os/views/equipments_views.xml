@@ -43,6 +43,15 @@
               
                 />
             </h4>
+           
+              
+              <label for='client_id'>Cliente</label>
+              
+              <field name="client_id" 
+              
+                />
+
+           
             <group string="Dados do equipamento">
               <group>
              

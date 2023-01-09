@@ -41,7 +41,7 @@ class Equipment(models.Model):
         required=True, 
         default=lambda self: self.env.user.company_id
     )
-    
+    client_id = fields.Many2one("res.partner", "Cliente")
     means_of_aquisition_id = fields.Many2one(
         'engc.equipment.means.of.aquisition', 'Meio de Aquisição', required=True,  check_company=True)
     technician_id = fields.Many2one('hr.employee', 'Técnico',check_company=True)
