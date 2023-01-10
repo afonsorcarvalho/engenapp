@@ -2,11 +2,16 @@
 
 from math import sqrt
 from statistics import mean, stdev
+
+from datetime import date
+from dateutil.relativedelta import relativedelta
+
+
+
 from odoo import models, fields, api, _
 from odoo.addons import decimal_precision as dp
-from dateutil.relativedelta import relativedelta
 from odoo import netsvc
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 import logging
 
 class EngcCalibration(models.Model):
@@ -79,12 +84,25 @@ class EngcCalibration(models.Model):
 
     def action_done(self):
         for rec in self:
+            if not rec.date_calibration:
+                raise ValidationError(_("Verifique a Data de Calibração"))
+            if not rec.date_next_calibration:
+                raise ValidationError(_("Verifique a Data da proxima Calibração"))
+            if not rec.date_next_calibration:
+                raise ValidationError(_("Verifique a Data da proxima Calibração"))
+            if not rec.technician_id:
+                raise ValidationError(_("Verifique o Calibrado por"))
+                
             rec.write({
-                'state': 'done'
-            })
+                    'state': 'done',
+                    'issue_date': date.today(),
+
+
+                })
     def action_draft(self):
         for rec in self:
             rec.write({
+
                 'state': 'draft'
             })
 

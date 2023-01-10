@@ -176,7 +176,9 @@
                   <field name="measurement_quantity_value_2"/>
                   <field name="measurement_quantity_value_3"/>
                   <field name="measurement_quantity_value_mean"/>
-                  <field name="unit_of_measurement"/>
+                  <field name="unit_of_measurement" 
+                  required="1"
+                  />
                   <field name="erro_value"/>
                   <field name="uncertainty"/>
                   <field name="coverage_factor"/>
