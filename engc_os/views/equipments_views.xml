@@ -129,9 +129,9 @@
               <page string="Calibrações e Ensaios">
                
                   <field name="calibrations_ids" nolabel="1">
-                    <control>
+                    <!-- <control>
                       <create string="Adicionar calibração"/>
-                    </control>
+                    </control> -->
                   </field>
                
               </page>
