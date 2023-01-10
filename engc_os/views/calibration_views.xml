@@ -83,6 +83,7 @@
                 <field name="measurement_ids" attrs="{'readonly': [('state','in',('done'))] }">
                   <tree>
                     <field name="name" />
+                    <field name="title"/>
                     <field name="date_measurement" />
 
                   </tree>
@@ -148,6 +149,9 @@
             
             <label for='name'>Nome</label>
             <field name="name"/>
+            <label for='title'>Título</label>
+            <h2><field name="title"/></h2>
+
           <group string="">
             <group>
               <field name="date_measurement"/>
@@ -172,6 +176,7 @@
                   <field name="measurement_quantity_value_2"/>
                   <field name="measurement_quantity_value_3"/>
                   <field name="measurement_quantity_value_mean"/>
+                  <field name="unit_of_measurement"/>
                   <field name="erro_value"/>
                   <field name="uncertainty"/>
                   <field name="coverage_factor"/>
