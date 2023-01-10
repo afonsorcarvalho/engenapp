@@ -138,9 +138,9 @@
               <page string="Ordens de Serviço">
              
                   <field name="oses" nolabel="1">
-                    <control>
+                    <!-- <control>
                       <create string="Adicionar Ordem de Serviço"/>
-                    </control>
+                    </control> -->
                   </field>
 
               
