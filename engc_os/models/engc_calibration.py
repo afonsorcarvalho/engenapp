@@ -12,7 +12,11 @@ from odoo import models, fields, api, _
 from odoo.addons import decimal_precision as dp
 from odoo import netsvc
 from odoo.exceptions import UserError, ValidationError
+from babel.dates import  format_date
+from odoo.tools.misc import  get_lang
+
 import logging
+_logger = logging.getLogger(__name__)
 
 class EngcCalibration(models.Model):
     _name = 'engc.calibration'
@@ -76,6 +80,18 @@ class EngcCalibration(models.Model):
         result = super(EngcCalibration, self).create(vals)
         return result
     
+    def get_sign_date(self):
+        '''
+            Função que retorna uma string da data para impressão 
+            no formato: ex. São Luis-MA, 02 de agosto de 2022
+        '''
+        locale = get_lang(self.env).code
+
+        _logger.info(self.company_id.city + '-' + self.company_id.state_id.code)
+        date_str = self.company_id.city + '-' + self.company_id.state_id.code + ', ' + format_date(self.issue_date,format="long",locale=locale)
+        return   date_str
+
+
     def action_confirmed(self):
         for rec in self:
             rec.write({
@@ -140,6 +156,9 @@ class CalibrationIntrument(models.Model):
     
     marca = fields.Char("Marca")
     modelo = fields.Char("Modelo")
+ 
+   
+    
     certificate_calibration = fields.Binary(
         "Certificado de Calibração", tracking=True)
     certificate_number = fields.Char(
@@ -155,6 +174,13 @@ class CalibrationIntrument(models.Model):
     environmental_conditions = fields.Char('Condições ambientais') 
     erro_value= fields.Float(string="Erro fiducial" )
     uncertainty = fields.Float('Incerteza') 
+   
+    uncertainty_ids = fields.One2many(
+        string='Incertezas e erros',
+        comodel_name='engc.calibration.instruments.uncertainty.lines',
+        inverse_name='instrument_id',
+    )
+    
     coverage_factor= fields.Float(string="Fator K", 
         required=True, default=2.0
      )
@@ -166,6 +192,47 @@ class CalibrationIntrument(models.Model):
         if self.date_calibration:
             self.date_next_calibration = self.date_calibration + relativedelta(years=1)
             self.validate_calibration = self.date_calibration + relativedelta(years=1)
+
+class CalibrationIntrumentUncertaintyLines(models.Model):
+    _name = 'engc.calibration.instruments.uncertainty.lines'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _description = 'Incertezas dos Instrumentos de calibração'
+    
+    
+    instrument_id = fields.Many2one(
+        string='Instrumento',
+        comodel_name='engc.calibration.instruments',
+        ondelete='restrict',
+        
+        required=True
+        
+    )
+    erro_value= fields.Float(string="Erro fiducial" )
+    uncertainty = fields.Float('Incerteza', 
+    required=True
+    ) 
+    coverage_factor= fields.Float(string="Fator K", 
+        required=True, default=2.0
+     )
+    veff = fields.Float(string = "Veff", help="Graus de liberdade efetiva. Para valores infinitos preencha com qualquer número maior que 100")
+    resolution = fields.Float(string = "Resolução", help="Resolução do padrão", 
+    required=True
+    )
+    unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', ondelete='restrict', 
+    required=True
+    )
+
+    
+    
+  
+
+    _sql_constraints = [
+        (
+            'instrument_id_unit_of_measurement_uniq',
+            'unique (unit_of_measurement,instrument_id)',
+            'A unidade de medida deve ser unica para cada instrumento'
+        ),
+    ]
     
 
 

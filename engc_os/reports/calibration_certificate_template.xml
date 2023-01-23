@@ -215,7 +215,35 @@
                         4) A reprodução deste certificado só pode ser total. A reprodução de partes
                         depende da aprovação, por escrito, do laboratório emitente.
                     </p>
+                    <br/>
+                    <div class="row">
+                        <div class="col-6">
+                        </div>
+                        <div class="col-6 text-center">
+                            
+                            <t t-esc="o.get_sign_date()" />
+                            
+                           
+                        </div>
 
+
+                    </div>
+                    <br/>
+                    <br/>
+                    <div class="row">
+                            <div class="col-6 text-center">
+                                ________________________________________________<br/>
+                                <b><span t-field="o.technician_id" /></b><br/>
+                                <i>Técnico</i>
+                            </div>
+                            <div class="col-6 text-center">
+                                ________________________________________________<br/>
+                                <b>Afonso de Carvalho</b><br/>
+                                <i>Responsável Técnico</i>
+
+
+                            </div>
+                    </div>
 
                     <!-- </div> -->
                 </t>

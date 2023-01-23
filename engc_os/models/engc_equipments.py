@@ -7,6 +7,17 @@ class Equipment(models.Model):
     _inherit = ['mail.thread']
     _description = 'Equipamento'
     _check_company_auto = True
+    _parent_name = "parent_id"
+    
+    _parent_store = True
+
+    
+    
+    parent_left = fields.Integer('Left Parent', index=1)
+    parent_right = fields.Integer('Right Parent', index=1)
+    
+    
+   
 
     STATES = [
        
@@ -18,11 +29,16 @@ class Equipment(models.Model):
     ]
 
     name = fields.Char(compute="_compute_name", store=True)
-  
+    parent_id = fields.Many2one(
+        'engc.equipment',index=True,
+        string='Equipamento pai',
+        )
+    child_ids = fields.One2many('engc.equipment', "parent_id", string="Componentes")
+    parent_path = fields.Char(index=True, unaccent=False)
     image_1920 = fields.Binary(
         string='avatar',
     )
-    ()
+    
     
     alias = fields.Char()
     category_id = fields.Many2one(

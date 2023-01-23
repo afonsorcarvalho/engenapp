@@ -45,6 +45,15 @@
             </h4>
            
               
+              <label for='parent_id'>Equipamento pai</label>
+              
+              <h4><field name="parent_id" 
+              
+                /></h4>
+              <h4><field name="parent_path" 
+              
+                /></h4>
+             
               <label for='client_id'>Cliente</label>
               
               <field name="client_id" 
@@ -143,6 +152,15 @@
                     </control> -->
                   </field>
 
+              
+                  
+              </page>
+              <page string="Componentes e acessórios">
+             
+                <field name="child_ids" nolabel="1"
+              
+                />
+                 
               
                   
               </page>

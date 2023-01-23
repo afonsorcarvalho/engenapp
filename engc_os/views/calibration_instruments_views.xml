@@ -38,24 +38,13 @@
 
             <group>
               <group string="Identificação">
-
                 <field name="id_number" />
                 <field name="marca" />
                 <field name="modelo" />
-                <field name="modelo" />
-
               </group>
               <group string="Certificado">
                 <field name="certificate_number" />
                 <field name="certificate_partner" />
-
-              </group>
-              <group string="Incerteza e erro">
-                <field name="uncertainty" />
-                <field name="erro_value" />
-                <field name="coverage_factor" />
-                <field name="resolution" />
-                <field name="veff" />
 
               </group>
               <group string="Data e Validade">
@@ -63,13 +52,38 @@
                 <field name="validate_calibration" />
 
               </group>
-
             </group>
-            <group string="Arquivo">
-
+          <notebook>
+            <page string="Incerteza e Erros">
+              <field name="uncertainty_ids" nolabel="1">
+                <tree editable="bottom">
+                  <field name="unit_of_measurement" />
+                  <field name="uncertainty" />
+                  <field name="erro_value" />
+                  <field name="coverage_factor" />
+                  <field name="resolution" />
+                  <field name="veff" />
+  
+                </tree>
+                <form string="Dados de incerteza">
+                  <sheet>
+                    <group>
+                      <field name="uncertainty" />
+                      <field name="erro_value" />
+                      <field name="coverage_factor" />
+                      <field name="resolution" />
+                      <field name="veff" />
+                      <field name="unit_of_measurement" />
+                    </group>
+                  </sheet>
+                </form>
+              </field>
+              
+            </page>
+            <page string="Certificado">
               <field name="certificate_calibration" widget="pdf_viewer" />
-
-            </group>
+            </page>
+          </notebook>
           </sheet>
           <div class="oe_chatter" groups="base.group_multi_company">
             <field name="message_follower_ids" widget="mail_followers" />
