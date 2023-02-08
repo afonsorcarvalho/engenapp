@@ -1,5 +1,6 @@
 
 
+import json
 from math import sqrt
 from statistics import mean, stdev
 
@@ -11,12 +12,15 @@ from dateutil.relativedelta import relativedelta
 from odoo import models, fields, api, _
 from odoo.addons import decimal_precision as dp
 from odoo import netsvc
+
 from odoo.exceptions import UserError, ValidationError
 from babel.dates import  format_date
 from odoo.tools.misc import  get_lang
 
 import logging
 _logger = logging.getLogger(__name__)
+
+#TODO Não deixar excluir instrumento padrao caso ele esteja sendo utilizado nas medidas adquiridas
 
 class EngcCalibration(models.Model):
     _name = 'engc.calibration'
@@ -52,6 +56,12 @@ class EngcCalibration(models.Model):
         'Data Cal.', help="Data da realização da calibração")
     date_next_calibration = fields.Date('Próxima Calibração')
     
+    @api.constrains("date_next_calibration", "date_calibration", )
+    def _check_date_calibration(self):
+        for rec in self:
+            if rec.date_calibration > rec.date_next_calibration:
+                raise ValidationError(_("A data de calibração não pode ser maor que a data da proxima calibração"))
+    
     instruments_ids = fields.Many2many(string='Instrumentos padrão', comodel_name='engc.calibration.instruments')
     
     issue_date = fields.Date('Data de Emissão', help="Data de emissão do certificado de calibração")
@@ -60,13 +70,28 @@ class EngcCalibration(models.Model):
     measurement_procedure = fields.Many2one(string='Norma/Procedimento', comodel_name='engc.calibration.measurement.procedure', ondelete='restrict')
     measurement_ids = fields.One2many(string='Cod. Medidas', comodel_name='engc.calibration.measurement',inverse_name='calibration_id', ondelete='restrict')
     
-    environmental_conditions = fields.Char('Condições ambientais') 
+    environmental_conditions = fields.Char('Condições ambientais', 
+    required=True, 
+    default='25 ºC, 60% UR' 
+    
+    ) 
+
+
     @api.onchange('date_calibration')
     def onchange_date_calibration(self):
         if self.date_calibration:
             self.date_next_calibration = self.date_calibration + relativedelta(years=1)
+    @api.onchange('measurement_ids')
+    def onchange_measurement_ids(self):
+        if self.measurement_ids:
+            _logger.info(self.measurement_ids)
     
-    
+    # @api.ondelete(at_uninstall=False)
+    # def _unlink_except_instruments_ids(self):
+        
+    #     if any(instrument.id in self.instruments_ids.mapped(lambda r: r.id) for instrument in self.measurement_ids.mapped(lambda r: r.instrument_id)):
+    #         raise UserError("Não pode deletar um instrumento que está em um medida adquirida ")
+        
     @api.model
     def create(self, vals):
         """Salva ou atualiza os dados no banco de dados"""
@@ -122,30 +147,8 @@ class EngcCalibration(models.Model):
                 'state': 'draft'
             })
 
-    # @api.depends('model', 'marca_id', 'serial_number')
-    # def _compute_name(self):
 
-    #     for record in self:
-    #         if not record.category_id.name or not record.model or not record.marca_id.name or not record.serial_number:
-    #             record.name = ""
-    #         else:
-    #             record.name = record.category_id.name + " " + record.model + \
-    #                 " " + record.marca_id.name + " " + record.serial_number
-
-    # @api.model
-    # def name_search(self, name, args=None, operator='ilike', limit=100):
-    #     args = args or []
-
-    #     if operator == 'ilike' and not (name or '').strip():
-    #         recs = self.search([] + args, limit=limit)
-    #     elif operator in ('ilike', 'like', '=', '=like', '=ilike'):
-    #         recs = self.search(['|', '|', ('name', operator, name), (
-    #             'id', operator, name), ('serial_number', operator, name)] + args, limit=limit)
-
-    #     return recs.name_get()
-
-
-class CalibrationIntrument(models.Model):
+class CalibrationInstrument(models.Model):
     _name = 'engc.calibration.instruments'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Instrumentos de calibração'
@@ -153,12 +156,41 @@ class CalibrationIntrument(models.Model):
     name = fields.Char("Nome", tracking=True)
     id_number = fields.Char("Nº Idenficação")
     
-    
+    tag = fields.Char("Tag")    
     marca = fields.Char("Marca")
     modelo = fields.Char("Modelo")
- 
    
+
+    certificate_ids = fields.One2many(
+        string='Certificado',
+        comodel_name='engc.calibration.instruments.certificates',
+        inverse_name='instrument_id',)
     
+   
+
+    def get_certificate_valid(self):
+        return  self.certificate_ids.filtered(lambda rec: rec.is_valid)
+    
+
+     
+    
+
+    
+
+
+class CalibrationInstrumentCertificates(models.Model):
+    _name = 'engc.calibration.instruments.certificates'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _description = 'Certificados dos Instrumentos de calibração'
+
+    
+    instrument_id = fields.Many2one(
+        string='Instrumento',
+        comodel_name='engc.calibration.instruments',
+        ondelete='restrict',
+        required=True
+        
+    )
     certificate_calibration = fields.Binary(
         "Certificado de Calibração", tracking=True)
     certificate_number = fields.Char(
@@ -172,26 +204,34 @@ class CalibrationIntrument(models.Model):
     validate_calibration = fields.Date(
         'Data de Validade', tracking=True)
     environmental_conditions = fields.Char('Condições ambientais') 
-    erro_value= fields.Float(string="Erro fiducial" )
-    uncertainty = fields.Float('Incerteza') 
-   
-    uncertainty_ids = fields.One2many(
+
+    uncertainty_lines = fields.One2many(
         string='Incertezas e erros',
         comodel_name='engc.calibration.instruments.uncertainty.lines',
-        inverse_name='instrument_id',
+        inverse_name='certificate',
     )
-    
-    coverage_factor= fields.Float(string="Fator K", 
-        required=True, default=2.0
-     )
-    veff = fields.Float(string = "Veff", help="Graus de liberdade efetiva")
-    resolution = fields.Float(string = "Resolução", help="Resolução do padrão")
+    is_valid = fields.Boolean("É válido", compute="_compute_is_valid")
+
+    @api.depends('validate_calibration')
+    def _compute_is_valid(self):
+        if self.validate_calibration :
+            self.is_valid()
+
 
     @api.onchange('date_calibration')
     def onchange_date_calibration(self):
         if self.date_calibration:
             self.date_next_calibration = self.date_calibration + relativedelta(years=1)
             self.validate_calibration = self.date_calibration + relativedelta(years=1)
+    
+    def is_valid(self):
+        for rec in self:
+            return rec.validate_calibration >= date.today()
+
+        
+  
+
+
 
 class CalibrationIntrumentUncertaintyLines(models.Model):
     _name = 'engc.calibration.instruments.uncertainty.lines'
@@ -199,14 +239,14 @@ class CalibrationIntrumentUncertaintyLines(models.Model):
     _description = 'Incertezas dos Instrumentos de calibração'
     
     
-    instrument_id = fields.Many2one(
+    certificate = fields.Many2one(
         string='Instrumento',
-        comodel_name='engc.calibration.instruments',
+        comodel_name='engc.calibration.instruments.certificates',
         ondelete='restrict',
-        
         required=True
-        
     )
+
+    
     erro_value= fields.Float(string="Erro fiducial" )
     uncertainty = fields.Float('Incerteza', 
     required=True
@@ -216,23 +256,19 @@ class CalibrationIntrumentUncertaintyLines(models.Model):
      )
     veff = fields.Float(string = "Veff", help="Graus de liberdade efetiva. Para valores infinitos preencha com qualquer número maior que 100")
     resolution = fields.Float(string = "Resolução", help="Resolução do padrão", 
-    required=True
+        required=True
     )
     unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', ondelete='restrict', 
     required=True
     )
 
-    
-    
-  
-
-    _sql_constraints = [
-        (
-            'instrument_id_unit_of_measurement_uniq',
-            'unique (unit_of_measurement,instrument_id)',
-            'A unidade de medida deve ser unica para cada instrumento'
-        ),
-    ]
+    # _sql_constraints = [
+    #     (
+    #         'instrument_id_unit_of_measurement_uniq',
+    #         'unique (unit_of_measuremen)',
+    #         'A unidade de medida deve ser unica para cada instrumento'
+    #     ),
+    # ]
     
 
 
@@ -258,42 +294,112 @@ class CalibrationMeasurement (models.Model):
     coverage_factor= fields.Float(string="Fator K padrão", 
     required=True, default=2.0, help="Fator de abrangência padrão que será utilizado no cálculo da incerteza das medições"
      )
-    environmental_conditions = fields.Char('Condições ambientais', default="25 graus Celsius, Umidade Relativa 50%")
+    environmental_conditions = fields.Char('Condições ambientais', default="25 graus Celsius, Umidade Relativa 60%")
     instrument_id = fields.Many2one(
         'engc.calibration.instruments',
         string='Padrão utilizado',
-        
         required=True
-        
         )
-    uncertainty_instrument = fields.Float(
-        related='instrument_id.uncertainty',
+    instrument_id_domain = fields.Char(
+        compute="_compute_instrument_id_domain",
         readonly=True,
-        store=True
+        store=False,
+    )
+    unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', ondelete='restrict')
+    unit_of_measurement_domain = fields.Char(
+        compute="_compute_unit_of_measurement_domain",
+        readonly=True,
+        store=False,
+    )
+    @api.depends('calibration_id')
+    def _compute_instrument_id_domain(self):
+        for rec in self:
+            
+            rec.instrument_id_domain = json.dumps(
+                [('id', 'in', rec.calibration_id.instruments_ids.mapped(lambda r: r.id))]
+            )
+
+
+    @api.depends('instrument_id')
+    def _compute_unit_of_measurement_domain(self):
+        for rec in self:
+            certificates  = self.instrument_id.get_certificate_valid()
+            uncertainty_lines = certificates.mapped(lambda r: r.uncertainty_lines)
+            unit_of_measurement_lines = uncertainty_lines.mapped(lambda r: r.unit_of_measurement)
+            rec.unit_of_measurement_domain = json.dumps(
+                [('id', 'in', unit_of_measurement_lines.mapped(lambda r: r.id))]
+            )
+    
+    uncertainty_instrument = fields.Float(
+        
+        readonly=True,
+   
         )
     erro_value_instrument = fields.Float(
-        related='instrument_id.erro_value',
+       
         readonly=True,
-        store=True
+   
         )
     coverage_factor_instrument = fields.Float(
-        related='instrument_id.coverage_factor',
+        
         readonly=True,
-        store=True
+   
         )
     resolution_instrument = fields.Float(
-        related='instrument_id.resolution',
+       
         readonly=True,
-        store=True
+   
         )
     veff_instrument = fields.Float(
-        related='instrument_id.veff',
+      
         readonly=True,
-        store=True
+   
         )
+    #TODO fazer ele pegar o certificado valido mais novo, caso tenha mais de um certificado válido
+    def _search_certificates_valid(self):
+        '''
+            Pega os certificados válidos do instrumento de calibração
+        '''
+        certificates = self.instrument_id.certificate_ids.filtered(lambda rec: rec.validate_calibration >= date.today())
+        if len(certificates) == 0:
+                raise ValidationError(_("Verifique a Data de vencimento da Calibração do instrumento utilizado. Não é possível utilizar intrumento com calibração vencida"))
+        return certificates
     
+    def _search_statistics(self):
+        # Procura a incerteza 
+        uncertainty_id_line = []
+        certificates = self._search_certificates_valid()
+        if len(certificates) == 0:
+            return [],[]
+        
+        uncertainty_id_line = certificates.uncertainty_lines
+        if len(uncertainty_id_line) > 0:
+            uncertainty_id_line = uncertainty_id_line.filtered(lambda rec: rec.unit_of_measurement.id == self.unit_of_measurement.id)
+            if len(uncertainty_id_line) == 0:
+                raise ValidationError(_("Verifique a unidade de medida selecionada. Não existe essa unidade no instrumento padrão utilizado."))
+        _logger.info(uncertainty_id_line)   
+
+        return uncertainty_id_line,certificates
 
 
+    @api.onchange('instrument_id')
+    def onchange_instrument_id(self):
+        self.unit_of_measurement = None
+
+    @api.onchange('unit_of_measurement')
+    def onchange_unit_of_measurement(self):
+        if self.unit_of_measurement:
+            uncertainty_id_line, certificate_instrument = self._search_statistics()
+            _logger.info(self.unit_of_measurement)
+            _logger.info(uncertainty_id_line)
+            _logger.info(certificate_instrument)
+           # self.certificate_instrument = certificate_instrument.id
+            self.resolution_instrument = uncertainty_id_line.resolution
+            self.coverage_factor_instrument = uncertainty_id_line.coverage_factor
+            self.uncertainty_instrument = uncertainty_id_line.uncertainty
+            self.erro_value_instrument = uncertainty_id_line.erro_value
+            self.veff_instrument = uncertainty_id_line.veff
+    
     @api.model
     def create(self, vals):
         """Salva ou atualiza os dados no banco de dados"""
@@ -314,7 +420,12 @@ class CalibrationMeasurementLines (models.Model):
 
    
     measurement_id = fields.Many2one(string='Cod. Medidas', comodel_name='engc.calibration.measurement', ondelete='restrict')
-    unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', ondelete='restrict')
+    
+    related='field_name',
+    readonly=True,
+    store=True
+    
+    unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', related='measurement_id.unit_of_measurement' )
     true_quantity_value = fields.Float(string="Valor Real" )
     measurement_quantity_value_1= fields.Float(string="Leitura 01" )
     measurement_quantity_value_2= fields.Float(string="Leitura 02" )
@@ -326,46 +437,49 @@ class CalibrationMeasurementLines (models.Model):
     veff = fields.Float(string = "Veff",compute="_compute_statistics", store=True)
     resolutino_instrument = fields.Float(string = "Resolução do instrumento", compute="_compute_statistics", store=True)
 
-    @api.depends('true_quantity_value','coverage_factor','measurement_quantity_value_1','measurement_quantity_value_2','measurement_quantity_value_3')
+    @api.depends('measurement_id.instrument_id','measurement_id.unit_of_measurement','true_quantity_value','coverage_factor','measurement_quantity_value_1','measurement_quantity_value_2','measurement_quantity_value_3')
     def _compute_statistics(self):
+        for rec in self:
+            uncertainty_instrument = rec.measurement_id.uncertainty_instrument
+            k_instrument = 2.0
+            if rec.measurement_id.coverage_factor_instrument != 0: 
+                k_instrument = rec.measurement_id.coverage_factor_instrument
         
-        uncertainty_instrument = self.measurement_id.uncertainty_instrument
-        k_instrument = 2.0
-        if self.measurement_id.coverage_factor_instrument != 0: 
-            k_instrument = self.measurement_id.coverage_factor_instrument
-       
-        erro_instrument = self.measurement_id.erro_value_instrument
-        resolution_instrument= self.measurement_id.resolution_instrument
-        
-        for record in self:
-            values = [
-                record.measurement_quantity_value_1,
-                record.measurement_quantity_value_2,
-                record.measurement_quantity_value_3,
-                ]
-           
-            record.measurement_quantity_value_mean = mean(values)
-            record.erro_value = record.measurement_quantity_value_mean - record.true_quantity_value
-            # incerteza combinada é igual a raiz quadrada da soma de:
-            #    - incerteza das medidas
-            #    - incerteza do instrumento
-            #    - incerteza do erro do instrumento
-            #    - incerteza da resolução do instrumento
-           
-            combined_uncertainty = sqrt((stdev(values)/2)**2
-                    + (uncertainty_instrument/k_instrument)**2
-                    + (erro_instrument/sqrt(3))**2
-                    + (resolution_instrument/sqrt(12))**2
-                    )
+            erro_instrument = rec.measurement_id.erro_value_instrument
+            resolution_instrument= rec.measurement_id.resolution_instrument
             
-            # incerteza =  incerteza combinada*k
-            record.uncertainty = record.coverage_factor * combined_uncertainty
+            for record in rec:
+                values = [
+                    record.measurement_quantity_value_1,
+                    record.measurement_quantity_value_2,
+                    record.measurement_quantity_value_3,
+                    ]
+            
+                record.measurement_quantity_value_mean = mean(values)
+                record.erro_value = record.measurement_quantity_value_mean - record.true_quantity_value
+                # incerteza combinada é igual a raiz quadrada da soma de:
+                #    - incerteza das medidas
+                #    - incerteza do instrumento
+                #    - incerteza do erro do instrumento
+                #    - incerteza da resolução do instrumento
+            
+                combined_uncertainty = sqrt((stdev(values)/2)**2
+                        + (uncertainty_instrument/k_instrument)**2
+                        + (erro_instrument/sqrt(3))**2
+                        + (resolution_instrument/sqrt(12))**2
+                        )
+                
+                # incerteza =  incerteza combinada*k
+                record.uncertainty = record.coverage_factor * combined_uncertainty
 
-            #grau de liberdade efetivo
-            try:
-                record.veff = 3*(combined_uncertainty/(stdev(values)/2))**4
-            except:
-                record.veff = 0
+                #grau de liberdade efetivo
+                try:
+                    record.veff = 3*(combined_uncertainty/(stdev(values)/2))**4
+                except:
+                    record.veff = 0
+
+
+
 
 
    

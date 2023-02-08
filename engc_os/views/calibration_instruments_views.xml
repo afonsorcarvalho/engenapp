@@ -12,8 +12,7 @@
           <field name="id_number" />
           <field name="marca" />
           <field name="modelo" />
-          <field name="date_calibration" />
-          <field name="validate_calibration" />
+
           <!-- <field name="certificate_calibration" widget="pdf_viewer" /> -->
 
         </tree>
@@ -41,49 +40,107 @@
                 <field name="id_number" />
                 <field name="marca" />
                 <field name="modelo" />
+                <field name="tag" />
               </group>
-              <group string="Certificado">
-                <field name="certificate_number" />
-                <field name="certificate_partner" />
 
-              </group>
-              <group string="Data e Validade">
-                <field name="date_calibration" />
-                <field name="validate_calibration" />
-
-              </group>
             </group>
-          <notebook>
-            <page string="Incerteza e Erros">
-              <field name="uncertainty_ids" nolabel="1">
+            <notebook>
+              <!-- <page string="Incerteza e Erros">
+              <field name="uncertainty_ids"
+              nolabel="1">
                 <tree editable="bottom">
-                  <field name="unit_of_measurement" />
+                  <field
+              name="unit_of_measurement" />
                   <field name="uncertainty" />
-                  <field name="erro_value" />
+                  <field
+              name="erro_value" />
                   <field name="coverage_factor" />
-                  <field name="resolution" />
+                  <field
+              name="resolution" />
                   <field name="veff" />
   
                 </tree>
-                <form string="Dados de incerteza">
+              <form string="Dados de incerteza">
                   <sheet>
                     <group>
-                      <field name="uncertainty" />
+              <field name="uncertainty" />
                       <field name="erro_value" />
-                      <field name="coverage_factor" />
+                      <field
+              name="coverage_factor" />
                       <field name="resolution" />
-                      <field name="veff" />
+                      <field
+              name="veff" />
                       <field name="unit_of_measurement" />
                     </group>
-                  </sheet>
+              </sheet>
                 </form>
               </field>
               
-            </page>
-            <page string="Certificado">
-              <field name="certificate_calibration" widget="pdf_viewer" />
-            </page>
-          </notebook>
+            </page> -->
+              <page string="Certificados">
+                <field name="certificate_ids">
+                  <tree>
+
+                    <field name="certificate_number" />
+                    <field name="certificate_partner" />
+                    <field name="date_calibration" />
+                    <field name="validate_calibration" />
+                    <field name="date_next_calibration" />
+                    <field name="certificate_calibration" widget="file"/>
+
+
+                  </tree>
+                  <form>
+                    <group string="Certificado">
+                      <field name="certificate_number" />
+                      <field name="certificate_partner" />
+
+                    </group>
+                    <group string="Data e Validade">
+                      <field name="date_calibration" />
+                      <field name="validate_calibration" />
+
+                    </group>
+                    <notebook>
+                      <page string="Resultados">
+
+                        <field name="uncertainty_lines">
+                          <tree editable="bottom" multi_edit="1">
+                            <field name="unit_of_measurement" width="3" />
+                            <field name="erro_value" width="1"/>
+                            <field name="uncertainty" width="1"/>
+                            <field name="coverage_factor" width="1"/>
+                            <field name="veff" width="1" />
+                            <field name="resolution" width="1" />
+
+                          </tree>
+                          <form>
+                            <group>
+                              <group>
+                                <field name="unit_of_measurement" />
+                                <field name="erro_value" />
+                                <field name="uncertainty" />
+                                <field name="coverage_factor" />
+                                <field name="veff" />
+                                <field name="resolution" />
+
+                              </group>
+                            </group>
+                          </form>
+                        </field>
+
+                      </page>
+                      <page string="Certificado">
+
+                        <field name="certificate_calibration" widget="pdf_viewer" />
+
+                      </page>
+                    </notebook>
+                  </form>
+                </field>
+              </page>
+
+            </notebook>
           </sheet>
           <div class="oe_chatter" groups="base.group_multi_company">
             <field name="message_follower_ids" widget="mail_followers" />

@@ -134,9 +134,9 @@
                                 <span t-field="i.display_name" /> marca <span t-field="i.marca" />,
                                 modelo <span t-field="i.modelo" />, número de série <span
                                     t-field="i.id_number" />.<br /> Certificado de calibração
-                                emitido por <span t-field="i.certificate_partner" /> sob o número <span
-                                    t-field="i.certificate_number" /> com validade até <span
-                                    t-field="i.validate_calibration" />
+                                 emitido por <span t-field="i.get_certificate_valid().certificate_number" /> sob o número <span
+                                    t-field="i.get_certificate_valid().certificate_number" /> com validade até <span 
+                                    t-field="i.get_certificate_valid().validate_calibration" /><br />
                             </t>
                         </div>
                     </div>
@@ -186,8 +186,16 @@
                                             t-options='{"widget": "float", "precision": 2}' />
                                     </td>
                                     <td class="text-center">
-                                        <span t-field="l.veff"
-                                            t-options='{"widget": "float", "precision": 2}' />
+                                        
+                                        <t t-if="l.veff >= 100.0">
+                                            
+                                            Infinito
+                                            
+                                        </t>
+                                        <t t-if="l.veff &lt; 100.0">
+                                            <span t-field="l.veff"
+                                                t-options='{"widget": "float", "precision": 2}' />
+                                        </t>
                                     </td>
                                 </tr>
                             </tbody>
