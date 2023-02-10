@@ -112,8 +112,8 @@ class EngcCalibration(models.Model):
         '''
         locale = get_lang(self.env).code
 
-        _logger.info(self.company_id.city + '-' + self.company_id.state_id.code)
-        date_str = self.company_id.city + '-' + self.company_id.state_id.code + ', ' + format_date(self.issue_date,format="long",locale=locale)
+        _logger.info(str(self.company_id.city )+ '-' + str(self.company_id.state_id.code))
+        date_str = str(self.company_id.city) + '-' + str(self.company_id.state_id.code) + ', ' + format_date(self.issue_date,format="long",locale=locale)
         return   date_str
 
 
@@ -313,11 +313,14 @@ class CalibrationMeasurement (models.Model):
     )
     @api.depends('calibration_id')
     def _compute_instrument_id_domain(self):
+        domain = []
         for rec in self:
+            if rec.instrument_id_domain:
+                domain = [('id', 'in', rec.calibration_id.instruments_ids.mapped(lambda r: r.id))]
             
-            rec.instrument_id_domain = json.dumps(
-                [('id', 'in', rec.calibration_id.instruments_ids.mapped(lambda r: r.id))]
-            )
+            rec.instrument_id_domain = json.dumps(domain)
+            
+          
 
 
     @api.depends('instrument_id')
