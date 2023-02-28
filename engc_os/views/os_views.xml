@@ -58,8 +58,6 @@
                   </h2>
             </div>
             <group string="Dados do equipamento">
-             
-              
               <group>
                 <field name="equipment_id" domain="[('company_id', '=', company_id)]"
                   options="{'no_create': True, 'no_create_edit':True}" />
@@ -72,18 +70,32 @@
                 <field name="equipment_tag" string="Tag" />
               </group>
             </group>
+
             <group string="Dados da OS">
               <group>
-
                 <field name="solicitante" />
                 <field name="who_executor" widget="selection" />
                 <field name="tecnico_id"
                   attrs="{'invisible': [('who_executor','!=','interna')], 'required':[('who_executor','=','interna')]}" />
                 <field name="empresa_manutencao"
                   attrs="{'invisible': [('who_executor','!=','externa')],'required':[('who_executor','=','externa')]}" />
-                <field name="maintenance_type" />
+                  <label for="maintenance_type"/>
+                  <div class="o_row">
+                    <field name="maintenance_type" />
+                    <div attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','not in',('New'))]}">
+                      <p>Salve a OS e volte aqui</p>
+                    </div>
+                    <button name="action_name" class="oe_link"
+                       string="gerar calibração"
+                        type="" 
+                        attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','in',('New'))]}"
+                        
+                         icon="fa-plus">
+                      <!-- <field name="field_name" string="" widget="statinfo"/> -->
+                    </button>
+                
+                </div>
                 <field name="priority" widget="priority" />
-
               </group>
               <group>
                 <field name="date_scheduled" />
@@ -93,12 +105,10 @@
               </group>
             </group>
             <group string="Serviços">
-
-
               <field name="problem_description" />
               <field name="service_description" />
-
             </group>
+
             <notebook>
               <page string="Relatórios">
 

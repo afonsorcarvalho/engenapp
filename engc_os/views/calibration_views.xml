@@ -6,10 +6,14 @@
       <field name="name">Calibration List</field>
       <field name="model">engc.calibration</field>
       <field name="arch" type="xml">
-        <tree>
+        <tree 
+        decoration-info="state == 'draft'"
+        decoration-danger="state == 'confirmed'"
+        decoration-bf="state == 'done'">
 
           <field name="name" />
           <field name="client_id" />
+          <field name="os_id" />
           <field name="equipment_id" />
           <field name="technician_id" />
           <field name="date_calibration" />
@@ -41,6 +45,10 @@
             <group>
               <group>
                 <field name="company_id" attrs="{'readonly': [('state','not in',('draft'))] }"
+                />
+              </group>
+              <group>
+                <field name="os_id" 
                 />
               </group>
             </group>

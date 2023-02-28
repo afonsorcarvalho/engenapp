@@ -45,15 +45,16 @@ class EngcCalibration(models.Model):
         required=True,
         default=lambda self: self.env.user.company_id
     )
-    client_id = fields.Many2one("res.partner", "Cliente")
+    os_id = fields.Many2one("engc.os", "Ordem de Serviço")
+    client_id = fields.Many2one("res.partner", "Cliente", required=True)
     equipment_id = fields.Many2one("engc.equipment",'Equipamento', 
     required=True
     )
 
     technician_id = fields.Many2one(
-        'hr.employee', 'Técnico', check_company=True)
+        'hr.employee', 'Técnico', check_company=True, required=True)
     date_calibration = fields.Date(
-        'Data Cal.', help="Data da realização da calibração")
+        'Data Cal.', help="Data da realização da calibração", required=True)
     date_next_calibration = fields.Date('Próxima Calibração')
     
     @api.constrains("date_next_calibration", "date_calibration", )
@@ -62,17 +63,18 @@ class EngcCalibration(models.Model):
             if rec.date_calibration > rec.date_next_calibration:
                 raise ValidationError(_("A data de calibração não pode ser maor que a data da proxima calibração"))
     
-    instruments_ids = fields.Many2many(string='Instrumentos padrão', comodel_name='engc.calibration.instruments')
+    instruments_ids = fields.Many2many(string='Instrumentos padrão', comodel_name='engc.calibration.instruments', required=True)
     
     issue_date = fields.Date('Data de Emissão', help="Data de emissão do certificado de calibração")
     duration = fields.Float('Duração')
-    note = fields.Text()
-    measurement_procedure = fields.Many2one(string='Norma/Procedimento', comodel_name='engc.calibration.measurement.procedure', ondelete='restrict')
+    note = fields.Text("Observações")
+    measurement_procedure = fields.Many2one(string='Norma/Procedimento', comodel_name='engc.calibration.measurement.procedure', ondelete='restrict', required=True)
     measurement_ids = fields.One2many(string='Cod. Medidas', comodel_name='engc.calibration.measurement',inverse_name='calibration_id', ondelete='restrict')
     
     environmental_conditions = fields.Char('Condições ambientais', 
     required=True, 
-    default='25 ºC, 60% UR' 
+    default='25 ºC, 60% UR',
+    
     
     ) 
 
