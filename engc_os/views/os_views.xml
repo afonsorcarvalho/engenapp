@@ -75,19 +75,22 @@
               <group>
                 <field name="solicitante" />
                 <field name="who_executor" widget="selection" />
-                <field name="tecnico_id"
-                  attrs="{'invisible': [('who_executor','!=','interna')], 'required':[('who_executor','=','interna')]}" />
+                <field name="tecnico_id" 
+                   attrs="{'invisible': [('who_executor','!=','own')], 'required':[('who_executor','=','own')]}" 
+                   options="{'no_create': True}"
+                   />
                 <field name="empresa_manutencao"
-                  attrs="{'invisible': [('who_executor','!=','externa')],'required':[('who_executor','=','externa')]}" />
+                  attrs="{'invisible': [('who_executor','!=','3rd_party')],'required':[('who_executor','=','3rd_party')]}" />
                   <label for="maintenance_type"/>
                   <div class="o_row">
                     <field name="maintenance_type" />
                     <div attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','not in',('New'))]}">
                       <p>Salve a OS e volte aqui</p>
                     </div>
-                    <button name="action_name" class="oe_link"
+                   
+                    <button name="action_make_calibration" class="oe_link"
                        string="gerar calibração"
-                        type="" 
+                        type="object" 
                         attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','in',('New'))]}"
                         
                          icon="fa-plus">

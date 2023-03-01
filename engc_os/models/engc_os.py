@@ -52,12 +52,9 @@ class EngcOs(models.Model):
 
     WHO_EXECUTOR_SELECTION = [
         ('3rd_party', 'Terceirizada'),
-        ('propria', 'própria'),
-       
-
+        ('own', 'Própria'),
     ]
    
-
 
     @api.model
     def create(self, vals):
@@ -94,7 +91,7 @@ class EngcOs(models.Model):
                              "* The \'Done\' status is set when repairing is completed.\n"
                              "* The \'Cancelled\' status is used when user cancel repair order.")
     who_executor = fields.Selection(WHO_EXECUTOR_SELECTION, string='Manutenção',
-                             copy=False, track_visibility='True', required=True,
+                             copy=False, tracking=True, required=True,
                             )
     kanban_state = fields.Selection([('normal', 'In Progress'), ('blocked', 'Blocked'), ('done', 'Ready for next stage')],
                                     string='Kanban State', required=True, default='normal', track_visibility='True')
@@ -308,7 +305,26 @@ class EngcOs(models.Model):
     #  ACTIONS
     #
     #******************************************
-    
+    def action_make_calibration(self):
+        _logger.info("chamando calibracao")
+        
+        return {
+            'name': _('teste'),
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'engc.calibration',
+            'context': {
+                'default_os_id': self.id,
+                'default_client_id': self.client_id.id,
+                'default_equipment_id': self.equipment_id.id,
+                'default_technician_id': self.tecnico_id.id
+               
+                
+                         },
+        }
+        
+
     def action_draft(self):
         return self.action_repair_cancel_draft()
 

@@ -175,54 +175,6 @@ class Equipment(models.Model):
             })
 
 
-class Category(models.Model):
-    _name = 'engc.equipment.category'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
-    _description = 'Categoria de Equipamento'
-    _check_company_auto = True
-
-    name = fields.Char()
-    
-    company_id = fields.Many2one(
-        string='Company', 
-        comodel_name='res.company', 
-        required=True, 
-        default=lambda self: self.env.user.company_id
-    )
-    
-    responsibles = fields.Many2many('res.users', string='Responsáveis')
-    note = fields.Text()
-    equipments_id = fields.One2many(
-        'engc.equipment', 'category_id', string='Equipamentos', 
-        company_dependent=True
-        )
-    instructions_id = fields.One2many(
-        'engc.equipment.category.instruction', 'category_id', 
-        company_dependent=True,
-        copy=True)
-    sequence = fields.Integer(string='Sequence', default=10)
-
-
-class CategoryInstruction(models.Model):
-    _name = 'engc.equipment.category.instruction'
-    _description = "Instruções de tarefas para os equipamentos"
-    _check_company_auto = True
-
-    name = fields.Char('Instrução')
-    category_id = fields.Many2one('engc.equipment.category', 
-    company_dependent=True
-    )
-    sequence = fields.Integer(string='Sequence', default=10)
-    
-    company_id = fields.Many2one(
-        string='Company', 
-        comodel_name='res.company', 
-        required=True, 
-        default=lambda self: self.env.user.company_id
-    )
-    
-
-
 class MaintenanceTeam(models.Model):
     _name = 'engc.equipment.maintenance.team'
     _inherit = ['mail.thread', 'mail.activity.mixin']

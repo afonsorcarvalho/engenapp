@@ -77,6 +77,7 @@ class RelatoriosLine(models.Model):
          self.write({
             'state': 'done'
         })
+ 
 
 class RelatoriosPictures(models.Model):
     _name = 'engc.os.relatorios.pictures'

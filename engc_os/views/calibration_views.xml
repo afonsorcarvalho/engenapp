@@ -16,9 +16,10 @@
           <field name="os_id" />
           <field name="equipment_id" />
           <field name="technician_id" />
+         
           <field name="date_calibration" />
           <field name="date_next_calibration" />
-          <field name="state" />
+          <field name="state" /> 
 
         </tree>
       </field>
