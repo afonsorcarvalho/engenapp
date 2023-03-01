@@ -133,7 +133,7 @@
       </field>
     </record>
     <record model="ir.ui.view" id="engc_os.relatorio_list">
-      <field name="name">RElatórios de Serviço</field>
+      <field name="name">Relatórios de Serviço</field>
       <field name="model">engc.os.relatorios</field>
       <field name="arch" type="xml">
         <tree>
@@ -142,7 +142,7 @@
 
           <control>
             <create string="Adicionar relatório"
-            context="{'default_service_summary': 'testando a parada'}"
+            
             />
 
           </control>
