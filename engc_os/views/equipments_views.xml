@@ -50,9 +50,9 @@
               <h4><field name="parent_id" 
               
                 /></h4>
-              <h4><field name="parent_path" 
+              <!-- <h4><field name="parent_path" 
               
-                /></h4>
+                /></h4> -->
              
               <label for='client_id'>Cliente</label>
               

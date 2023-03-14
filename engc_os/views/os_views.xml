@@ -1,158 +1,142 @@
 <odoo>
-  <data>
-    <!-- explicit list view definition -->
-
-    <record model="ir.ui.view" id="engc_os.list">
-      <field name="name">Ordens de Serviço</field>
-      <field name="model">engc.os</field>
-      <field name="arch" type="xml">
-        <tree>
-          <!-- <field name="name" /> -->
-          <field name="create_date" string="Criado em" />
-          <field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
-          <field name="company_id" string="Instituição" groups="base.group_multi_company" />
-          <field name="equipment_id" />
-          <field name="equipment_serial_number" />
-          <field name="equipment_model" />
-          <field name="equipment_category" />
-          <field name="client_id" />
-          
-          <field name="solicitante" />
-          <field name="date_scheduled" widget="remaining_days" />
-          <field name="maintenance_type" />
-          <field name="state" widget="badge" />
-
-        </tree>
-
-
-      </field>
-    </record>
-    <record model="ir.ui.view" id="engc_os.form">
-      <field name="name">Ordens de Serviço</field>
-      <field name="model">engc.os</field>
-      <field name="arch" type="xml">
-
-        <form string="Ordem de serviço">
-          <header>
-            <!-- <button name="" string="" class="oe_highlight" states="" type=""/> -->
-            <field name="state" widget="statusbar" statusbar_visible="draft" />
-          </header>
-
-
-          <sheet string="Ordem de Serviço">
-            <div class="oe_title">
-              <h1>
-                <field name="name" />
-              </h1>
-              <label for="company_id" class="oe_edit_only" />
-              <h2>
-                <field name="company_id" options="{'no_create': True, 'no_create_edit':True}" />
-              </h2>
-
-              <h2>
-                <field name="origin" readonly="1" />
-              </h2>
-              <label for="client_id" class="oe_edit_only" />
-                  <h2>
-                    <field name="client_id"  />
-                  </h2>
-            </div>
-            <group string="Dados do equipamento">
-              <group>
-                <field name="equipment_id" domain="[('company_id', '=', company_id)]"
-                  options="{'no_create': True, 'no_create_edit':True}" />
-                <field name="equipment_model" />
-                <field name="equipment_category" />
-              </group>
-              <group>
-                <field name="equipment_serial_number" />
-                <field name="equipment_patrimonio" string="Patrimônio" />
-                <field name="equipment_tag" string="Tag" />
-              </group>
-            </group>
-
-            <group string="Dados da OS">
-              <group>
-                <field name="solicitante" />
-                <field name="who_executor" widget="selection" />
-                <field name="tecnico_id" 
-                   attrs="{'invisible': [('who_executor','!=','own')], 'required':[('who_executor','=','own')]}" 
-                   options="{'no_create': True}"
-                   />
-                <field name="empresa_manutencao"
-                  attrs="{'invisible': [('who_executor','!=','3rd_party')],'required':[('who_executor','=','3rd_party')]}" />
-                  <label for="maintenance_type"/>
-                  <div class="o_row">
-                    <field name="maintenance_type" />
-                    <div attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','not in',('New'))]}">
-                      <p>Salve a OS e volte aqui</p>
-                    </div>
+	<data>
+		<!-- explicit list view definition -->
+		<record model="ir.ui.view" id="engc_os.list">
+			<field name="name">Ordens de Serviço</field>
+			<field name="model">engc.os</field>
+			<field name="arch" type="xml">
+				<tree>
+					<!-- <field name="name" /> -->
+					<field name="create_date" string="Criado em" />
+					<field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
+					<field name="company_id" string="Instituição" groups="base.group_multi_company" />
+					<field name="equipment_id" />
+					<field name="equipment_serial_number" />
+					<field name="equipment_model" />
+					<field name="equipment_category" />
+					<field name="client_id" />
+					<field name="solicitante" />
+					<field name="date_scheduled" widget="remaining_days" />
+					<field name="maintenance_type" />
+					<field name="state" widget="badge" />
+				</tree>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="engc_os.form">
+			<field name="name">Ordens de Serviço</field>
+			<field name="model">engc.os</field>
+			<field name="arch" type="xml">
+				<form string="Ordem de serviço">
+					<header>
+						<button name="action_" string="" class="oe_highlight" states="" type="" />
+						<field name="state" widget="statusbar" statusbar_visible="draft" />
+					</header>
+					<sheet string="Ordem de Serviço">
+						<div class="oe_title">
+							<h1>
+								<field name="name" />
+							</h1>
+							<label for="company_id" class="oe_edit_only" />
+							<h2>
+								<field name="company_id" options="{'no_create': True, 'no_create_edit':True}" />
+							</h2>
+							<!-- <h2>
+								<field name="origin" readonly="1" />
+							</h2> -->
+							<label for="client_id" class="oe_edit_only" />
+							<h2>
+								<field name="client_id" />
+							</h2>
+						</div>
+						<group string="Dados do equipamento">
+							<group>
+								<field name="equipment_id" domain="[('company_id', '=', company_id)]" options="{'no_create': True, 'no_create_edit':True}" />
+								<field name="equipment_model" />
+								<field name="equipment_category" />
+							</group>
+							<group>
+								<field name="equipment_serial_number" />
+								<field name="equipment_patrimonio" string="Patrimônio" />
+								<field name="equipment_tag" string="Tag" />
+							</group>
+						</group>
+						<group string="Dados da OS">
+							<group>
+								<field name="solicitante" />
+								<field name="who_executor" widget="selection" />
+								<field name="tecnico_id" attrs="{'invisible': [('who_executor','!=','own')], 'required':[('who_executor','=','own')]}" options="{'no_create': True}" />
+								<field name="empresa_manutencao" attrs="{'invisible': [('who_executor','!=','3rd_party')],'required':[('who_executor','=','3rd_party')]}" />
+								<label for="maintenance_type" />
+								<div class="o_row">
+                <field name="maintenance_type" attrs = "{'readonly':[('calibration_created','=',True)]}"/>
+									<div attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','not in',('New'))]}">
+										<p>
+											Salve a OS e volte aqui
+										</p>
+									</div>
+									<button name="action_make_calibration" class="oe_link" string="gerar calibração" type="object"
+                     attrs="{
+                      'invisible': [
+                      '|','|',
+                      ('maintenance_type','not in',('calibration')),
+                      ('calibration_created','=',True),
+                      ('name','in',('New'))],
+                      
+                    
+                    }" icon="fa-plus">
                    
-                    <button name="action_make_calibration" class="oe_link"
-                       string="gerar calibração"
-                        type="object" 
-                        attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','in',('New'))]}"
-                        
-                         icon="fa-plus">
-                      <!-- <field name="field_name" string="" widget="statinfo"/> -->
-                    </button>
-                
-                </div>
-                <field name="priority" widget="priority" />
-              </group>
-              <group>
-                <field name="date_scheduled" />
-                <field name="date_execution" />
-                <field name="date_start" />
-                <field name="date_finish" />
-              </group>
-            </group>
-            <group string="Serviços">
-              <field name="problem_description" />
-              <field name="service_description" />
-            </group>
-
-            <notebook>
-              <page string="Relatórios">
-
-                <field name="relatorios_id">
-
-                </field>
-
-              </page>
-            </notebook>
-          </sheet>
-          <div class="oe_chatter">
-            <field name="message_follower_ids" widget="mail_followers" />
-            <field name="message_ids" widget="mail_thread" />
-          </div>
-
-
-        </form>
-
-      </field>
-    </record>
-    <record model="ir.ui.view" id="engc_os.relatorio_list">
-      <field name="name">Relatórios de Serviço</field>
-      <field name="model">engc.os.relatorios</field>
-      <field name="arch" type="xml">
-        <tree>
-          <field name="name" />
-          <field name="service_summary" />
-
-          <control>
-            <create string="Adicionar relatório"
-            
-            />
-
-          </control>
-
-
-        </tree>
-
-
-      </field>
-    </record>
-
-  </data>
+                    
+										<!-- <field name="field_name" string="" widget="statinfo"/> -->
+									</button>
+								</div>
+                <field name="calibration_created" attrs="{
+                  'invisible': [('maintenance_type','not in',('calibration'))],
+                  'readonly':[('calibration_created','=',True)]
+                  }" />
+                <field name="calibration_id"  attrs="{
+                  'invisible': [('calibration_created','==', False)],
+                  'readonly':[('calibration_created','=',True)]
+                  }"/>
+								<field name="priority" widget="priority" />
+							</group>
+							<group>
+								<field name="date_scheduled" />
+								<field name="date_execution" />
+								<field name="date_start" />
+								<field name="date_finish" />
+							</group>
+						</group>
+						<group string="Serviços">
+							<field name="problem_description" />
+							<field name="service_description" />
+						</group>
+						<notebook>
+							<page string="Relatórios">
+								<field name="relatorios_id">
+								</field>
+							</page>
+						</notebook>
+					</sheet>
+					<div class="oe_chatter">
+						<field name="message_follower_ids" widget="mail_followers" />
+						<field name="message_ids" widget="mail_thread" />
+					</div>
+				</form>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="engc_os.relatorio_list">
+			<field name="name">Relatórios de Serviço</field>
+			<field name="model">engc.os.relatorios</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="name" />
+					<field name="service_summary" />
+					<field name="technicians" widget="many2many" />
+					<control>
+						<create string="Adicionar relatório" />
+					</control>
+				</tree>
+			</field>
+		</record>
+	</data>
 </odoo>
