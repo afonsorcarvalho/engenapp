@@ -9,14 +9,13 @@
         <tree>
           <field name="id" />
           <field name="name" />
-          
-          <field name="serial_number"  />
+          <field name="apelido" string="Apelido" groups="base.group_no_one"  />
+          <field name="serial_number" />
           <field name="create_date" string="Criado em" />
           <field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
           <field name="company_id" groups="base.group_multi_company" />
           <field name="model" />
           <field name="category_id" />
-        
           <field name="picture_ids" />
         </tree>
       </field>
@@ -28,47 +27,34 @@
       <field name="arch" type="xml">
         <form string="Equipamentos">
           <header>
-             <button name="action_in_use" string="Em uso" class="oe_highlight" states="draft,useless,out_of_use" type="object"/> 
-             <button name="action_out_of_use" string="Fora de uso"  states="in_use,draft" type="object"/> 
-             <button name="action_useless" string="Sucata" states="in_use,out_of_use" type="object"/> 
-            <field name="state" widget="statusbar"  />
+            <button name="action_in_use" string="Em uso" class="oe_highlight"
+              states="draft,useless,out_of_use" type="object" />
+            <button name="action_out_of_use" string="Fora de uso" states="in_use,draft"
+              type="object" />
+            <button name="action_useless" string="Sucata" states="in_use,out_of_use" type="object" />
+            <field name="state" widget="statusbar" />
           </header>
           <sheet>
             <field name="image_1920" widget='image' class="oe_avatar" />
             <h2>
               <field name="name" />
+            <field name="apelido" string="Apelido" groups="base.group_no_one" />
             </h2>
             <h4>
-              <field name="company_id" 
-              
-                />
+              <field name="company_id" />
             </h4>
-           
-              
-              <label for='parent_id'>Equipamento pai</label>
-              
-              <h4><field name="parent_id" 
-              
-                /></h4>
-              <h4><field name="parent_path" 
-              
-                /></h4>
-             
-              <label for='client_id'>Cliente</label>
-              
-              <field name="client_id" 
-              
-                />
-
-           
+            <label for='parent_id'>Equipamento pai</label>
+            <h4>
+              <field name="parent_id" />
+            </h4>
+            <label for='client_id'>Cliente</label>
+            <field name="client_id" />
             <group string="Dados do equipamento">
               <group>
-             
                 <field name="marca_id" />
                 <field name="partner_reference" />
                 <field name="model" />
                 <field name="category_id" />
-              
               </group>
               <group>
                 <field name="serial_number" />
@@ -78,7 +64,7 @@
               </group>
               <group>
                 <field name="manufacturing_date" />
-                <field name="instalation_date" /> 
+                <field name="instalation_date" />
                 <field name="acquisition_date" />
                 <field name="warranty" />
                 <field name="extended_warranty" />
@@ -86,12 +72,12 @@
               <group>
                 <field name="location_id" />
                 <field name="means_of_aquisition_id" />
-                <field name="note"/>
+                <field name="note" />
               </group>
-            </group> 
+            </group>
             <group string="Manutenção">
               <group>
-                  <field name="maintenance_team_id"/>
+                <field name="maintenance_team_id" />
               </group>
             </group>
             <notebook>
@@ -101,23 +87,22 @@
                     <kanban>
                       <templates>
                         <t t-name="kanban-box">
-                          <div class="oe_kanban_global_click o_kanban_record_has_image_fill o_hr_kanban_record">
-                             <field name="picture" widget="image" class="oe_avatar" options="{'zoom': true}" style="margin-right:50px" /> 
+                          <div
+                            class="oe_kanban_global_click o_kanban_record_has_image_fill o_hr_kanban_record">
+                            <field name="picture" widget="image" class="oe_avatar"
+                              options="{'zoom': true}" style="margin-right:50px" />
                             <div class="oe_kanban_details">
                               <div class="o_kanban_record_top">
-                                
-                                  <div class="o_kanban_record_title">
-                                   
-                                      
-                                      <b><field name="name"/></b>
-                                  
-                                  </div>
-                                 
-                                
-                              </div> 
+
+                                <div class="o_kanban_record_title">
+                                  <b>
+                                    <field name="name" />
+                                  </b>
+                                </div>
+                              </div>
                               <div class="o_kanban_record_body">
-                                      <field name="description"/>
-                                  </div>
+                                <field name="description" />
+                              </div>
                             </div>
                           </div>
                         </t>
@@ -128,48 +113,41 @@
                         <group>
                           <field name="name" />
                           <field name="description" />
-                          <field name="picture" widget="image"  />
+                          <field name="picture" widget="image" />
                         </group>
                       </sheet>
                     </form>
                   </field>
                 </group>
-              </page> 
+              </page>
+
               <page string="Calibrações e Ensaios">
-               
-                  <field name="calibrations_ids" nolabel="1">
-                    <!-- <control>
+                <field name="calibrations_ids" nolabel="1">
+                  <!-- <control>
                       <create string="Adicionar calibração"/>
                     </control> -->
-                  </field>
-               
+                </field>
               </page>
+
               <page string="Ordens de Serviço">
-             
-                  <field name="oses" nolabel="1">
-                    <!-- <control>
+                <field name="oses" nolabel="1">
+                  <!-- <control>
                       <create string="Adicionar Ordem de Serviço"/>
                     </control> -->
-                  </field>
+                </field>
+              </page>
 
-              
-                  
-              </page>
               <page string="Componentes e acessórios">
-             
                 <field name="child_ids" nolabel="1"
-              
                 />
-                 
-              
-                  
               </page>
+
             </notebook>
           </sheet>
           <div class="oe_chatter">
-            <field name="message_follower_ids" widget="mail_followers"/>
-            <field name="message_ids" widget="mail_thread"/>
-        </div>
+            <field name="message_follower_ids" widget="mail_followers" />
+            <field name="message_ids" widget="mail_thread" />
+          </div>
         </form>
 
       </field>

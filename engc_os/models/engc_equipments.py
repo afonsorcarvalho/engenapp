@@ -4,20 +4,16 @@ from odoo import models, fields, api
 
 class Equipment(models.Model):
     _name = 'engc.equipment'
-    _inherit = ['mail.thread']
+    _inherit = ['mail.thread','mail.activity.mixin']
     _description = 'Equipamento'
     _check_company_auto = True
     _parent_name = "parent_id"
-    
     _parent_store = True
 
     
     
     parent_left = fields.Integer('Left Parent', index=1)
     parent_right = fields.Integer('Right Parent', index=1)
-    
-    
-   
 
     STATES = [
        
@@ -27,8 +23,8 @@ class Equipment(models.Model):
         ('useless', 'Inservível'),
         
     ]
-
     name = fields.Char(compute="_compute_name", store=True)
+    apelido = fields.Char("apelido")
     parent_id = fields.Many2one(
         'engc.equipment',index=True,
         string='Equipamento pai',
@@ -38,9 +34,7 @@ class Equipment(models.Model):
     image_1920 = fields.Binary(
         string='avatar',
     )
-    
-    
-    alias = fields.Char()
+   
     category_id = fields.Many2one(
         'engc.equipment.category', 'Categoria', required=True, check_company=True)
     state  = fields.Selection(
@@ -49,7 +43,6 @@ class Equipment(models.Model):
         required=True,
         default='draft',
         tracking=True
-        
     )
     company_id = fields.Many2one(
         string='Instituição', 
