@@ -70,6 +70,7 @@
                 <field name="extended_warranty" />
               </group>
               <group>
+                <field name="section_id" />
                 <field name="location_id" />
                 <field name="means_of_aquisition_id" />
                 <field name="note" />

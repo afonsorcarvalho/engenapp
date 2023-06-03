@@ -35,16 +35,39 @@ class RelatoriosLine(models.Model):
         required=True, 
         default=lambda self: self.env.user.company_id
     )
-    name = fields.Char(
-        'Nº Relatório de Serviço', default=lambda self: self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
-                'engc.os.relatorio_sequence'), copy=False, 
-                readonly=True, 
-                required=True)
     
+    name = fields.Char(
+        'Nº Relatório de Serviço', 
+        default=lambda self: _('New'), copy=False, 
+        readonly=True, 
+        index=True,
+        required=True)
+    
+    @api.model
+    def create(self, vals):
+        """Salva ou atualiza os dados no banco de dados"""
+        if 'company_id' in vals:
+            vals['name'] = self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
+                'engc.os.relatorio_sequence') or _('New')
+        else:
+            vals['name'] = self.env['ir.sequence'].next_by_code('engc.os.relatorio_sequence') or _('New')
+        
+
+        result = super(RelatoriosLine, self).create(vals)
+        return result
         
     os_id = fields.Many2one(
         'engc.os', 'Ordem de Serviço',
         index=True, ondelete='cascade',required=True)
+    #TODO colocar tecnico na Os automaticamente, a media que ele vai
+    #  sendo inserido aqui nos relatórios
+    technicians  = fields.Many2many(
+        string='Técnicos',
+        comodel_name='hr.employee'
+       
+    )
+    
+    
     
     service_summary = fields.Text("Resumo do atendimento")
     fault_description = fields.Text("Descrição do defeito")

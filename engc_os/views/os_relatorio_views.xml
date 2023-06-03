@@ -13,8 +13,8 @@
           <field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
           <field name="company_id" string="Instituição" groups="base.group_multi_company" />
           <field name="service_summary" />
-          <field name="fault_description" />
           <field name="data_atendimento" />
+          <field name="technicians" />
           <field name="start_hour" widget="float_time" />
           <field name="final_hour" widget="float_time" />
 
@@ -52,7 +52,8 @@
               <group>
                 <field name="data_atendimento"
                   required="1"
-                />
+                  />
+                  <field name="technicians" widget="many2many_tags" />
               </group>
               <group>
                 <field name="start_hour" widget="float_time" />

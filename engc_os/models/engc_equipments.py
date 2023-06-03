@@ -56,6 +56,9 @@ class Equipment(models.Model):
     technician_id = fields.Many2one('hr.employee', 'Técnico',check_company=True)
     maintenance_team_id = fields.Many2one(
         'engc.equipment.maintenance.team', 'Equipe de Manutenção',check_company=True)
+    section_id =  fields.Many2one(
+        'engc.equipment.section',
+        string='Departamento'    )
     location_id = fields.Many2one(
         'engc.equipment.location', 'Local de Uso', required=True, check_company=True)
     marca_id = fields.Many2one('engc.equipment.marca', 'Marca', required=True)
@@ -247,6 +250,16 @@ class MeansOfAquisition(models.Model):
         required=True, 
         default=lambda self: self.env.user.company_id
     )
+class EquipmentsSection(models.Model):
+    _name = 'engc.equipment.section'
+    _description = "setor do local equipamentos"
+    
+    name = fields.Char('Nome no setor')
+    description = fields.Text('Descrição')
+    section_parent  = fields.Many2one(
+        'engc.equipment.section',
+        string='Setor Pai',
+        )
 
 class EquipmentsPictures(models.Model):
     _name = 'engc.equipment.pictures'

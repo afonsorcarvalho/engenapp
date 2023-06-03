@@ -77,8 +77,6 @@ class EngcCalibration(models.Model):
     
     
     ) 
-
-
     @api.onchange('date_calibration')
     def onchange_date_calibration(self):
         if self.date_calibration:
@@ -103,8 +101,9 @@ class EngcCalibration(models.Model):
         else:
             vals['name'] = self.env['ir.sequence'].next_by_code('engc.calibration_sequence') or _('New')
         
-
+        
         result = super(EngcCalibration, self).create(vals)
+        self.action_confirmed()
         return result
     
     def get_sign_date(self):
@@ -121,9 +120,13 @@ class EngcCalibration(models.Model):
 
     def action_confirmed(self):
         for rec in self:
-            rec.write({
-                'state': 'confirmed'
+            resp = rec.write({
+                'state': 'confirmed',
             })
+            if resp:
+                if rec.os_id:
+                    rec.os_id.calibration_created = True
+                    rec.os_id.calibration_id = self.id
 
     def action_done(self):
         for rec in self:
@@ -414,7 +417,7 @@ class CalibrationMeasurement (models.Model):
         else:
             vals['name'] = self.env['ir.sequence'].next_by_code('engc.calibration_measurement_sequence') or _('New')
         
-
+        
         result = super(CalibrationMeasurement, self).create(vals)
         return result
    

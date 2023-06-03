@@ -74,13 +74,18 @@ class EngcOs(models.Model):
 
     #	self.qr = self.name + "\n" + self.cliente_id.name + "\n" + self.equipment_id.name + "-" + self.equipment_id.serial_no
 
-   
 
-   
 
     sequence = fields.Integer(string='Sequence', default=10)
     name = fields.Char(string='OS. N', required=True, copy=False,
                        readonly=True, index=True, default=lambda self: _('New'))
+    company_id = fields.Many2one(
+        string='Instituição', 
+        comodel_name='res.company', 
+        required=True, 
+        default=lambda self: self.env.company
+    )
+    
     client_id = fields.Many2one("res.partner", "Cliente")
 
     origin = fields.Char('Source Document', size=64, readonly=True, states={'draft': [('readonly', False)]},
@@ -117,20 +122,13 @@ class EngcOs(models.Model):
     #     index=True, ondelete='restrict')
     problem_description = fields.Text('Descrição do Defeito')
 
-   
+    
     solicitante = fields.Char(
         "Solicitante", size=60,
         help="Pessoa que solicitou a ordem de serviço",
         required=True,
     )   
   
-    company_id = fields.Many2one(
-        string='Instituição', 
-        comodel_name='res.company', 
-        required=True, 
-        default=lambda self: self.env.company
-    )
-    
     tecnico_id = fields.Many2one(
         'hr.employee', string='Técnico',  track_visibility='True',
     )
@@ -147,9 +145,6 @@ class EngcOs(models.Model):
         'engc.equipment', 'Equipamento',
         index=True, required=True,
         company_dependent=True,
-        
-      
-        
         help='Escolha o equipamento referente a Ordem de Servico.'
     )
 
@@ -197,6 +192,15 @@ class EngcOs(models.Model):
         comodel_name="engc.os.relatorios",
         inverse_name="os_id",        
         help="Relatórios de atendimento",
+    )
+    calibration_created = fields.Boolean("Calibração criada")
+    calibration_id = fields.Many2one(
+        string="Calibração Cod.",
+        comodel_name="engc.calibration",
+        
+        
+        
+        help="Calibração gerada pela OS.",
     )
 
     @api.depends('relatorios')
@@ -305,28 +309,33 @@ class EngcOs(models.Model):
     #  ACTIONS
     #
     #******************************************
+    
+
+    
     def action_make_calibration(self):
         _logger.info("chamando calibracao")
-        
+
         return {
-            'name': _('teste'),
+            'name': _('Calibração'),
             'type': 'ir.actions.act_window',
             'view_type': 'form',
             'view_mode': 'form',
             'res_model': 'engc.calibration',
+            'target': 'new',
             'context': {
                 'default_os_id': self.id,
                 'default_client_id': self.client_id.id,
                 'default_equipment_id': self.equipment_id.id,
                 'default_technician_id': self.tecnico_id.id
-               
-                
                          },
         }
+        
         
 
     def action_draft(self):
         return self.action_repair_cancel_draft()
+    
+    
 
     
     def action_repair_cancel_draft(self):
