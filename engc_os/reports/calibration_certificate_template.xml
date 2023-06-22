@@ -134,7 +134,7 @@
                                 <span t-field="i.display_name" /> marca <span t-field="i.marca" />,
                                 modelo <span t-field="i.modelo" />, número de série <span
                                     t-field="i.id_number" />.<br /> Certificado de calibração
-                                 emitido por <span t-field="i.get_certificate_valid().certificate_number" /> sob o número <span
+                                 emitido por <span t-field="i.get_certificate_valid().certificate_partner" /> sob o número <span
                                     t-field="i.get_certificate_valid().certificate_number" /> com validade até <span 
                                     t-field="i.get_certificate_valid().validate_calibration" /><br />
                             </t>
