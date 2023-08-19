@@ -7,20 +7,50 @@
 			<field name="arch" type="xml">
 				<tree>
 					<!-- <field name="name" /> -->
+					<field name="name" string="Os nº" />
 					<field name="create_date" string="Criado em" />
 					<field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
 					<field name="company_id" string="Instituição" groups="base.group_multi_company" />
+					<field name="client_id" />
 					<field name="equipment_id" />
+					<field name="equipment_apelido" />
 					<field name="equipment_serial_number" />
 					<field name="equipment_model" />
 					<field name="equipment_category" />
-					<field name="client_id" />
 					<field name="solicitante" />
+					<field name="date_request" widget="remaining_days" />
 					<field name="date_scheduled" widget="remaining_days" />
 					<field name="maintenance_type" />
 					<field name="state" widget="badge" />
 				</tree>
 			</field>
+		</record>
+		<record model="ir.ui.view" id="engc_os.search">
+			<field name="name">Ordens de Serviço</field>
+			<field name="model">engc.os</field>
+			<field name="arch" type="xml">
+				<search>
+					<filter name="filter_create_date" date="create_date" string="Data de criação"/>
+					<filter name="filter_request_date" date="date_request" string="Data de programada"/>
+					<filter name="filter_scheduled_date" date="date_scheduled" string="Data de programada"/>
+					<group expand="0" string="Group By">
+						<filter name="groupby_client" string="Cliente" context="{'group_by': 'client_id'}"/>
+						<filter name="groupby_equipment" string="Equipamento" context="{'group_by': 'equipment_id'}"/>
+						<filter name="groupby_category" string="Categoria" context="{'group_by': 'equipment_category'}"/>
+						<filter name="groupby_maintenance_type" string="Tipo de manutenção" context="{'group_by': 'maintenance_type'}"/>
+						
+					</group>
+					<searchpanel>
+						<field name="state"/>
+						<field name="maintenance_type"/>
+						<field name="company_id" groups="base.group_multi_company"/>
+
+					</searchpanel>
+				</search>
+				
+				
+			</field>
+
 		</record>
 		<record model="ir.ui.view" id="engc_os.form">
 			<field name="name">Ordens de Serviço</field>
@@ -100,15 +130,16 @@
 								<field name="priority" widget="priority" />
 							</group>
 							<group>
+								<field name="date_request" />
 								<field name="date_scheduled" />
 								<field name="date_execution" />
 								<field name="date_start" />
 								<field name="date_finish" />
 							</group>
 						</group>
-						<group string="Serviços">
+						<group string="Solicitação">
 							<field name="problem_description" />
-							<field name="service_description" />
+							<!-- <field name="service_description" /> -->
 						</group>
 						<notebook>
 							<page string="Relatórios">

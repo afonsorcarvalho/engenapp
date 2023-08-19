@@ -56,15 +56,16 @@ class EngcOs(models.Model):
     ]
    
 
-    @api.model
-    def create(self, vals):
+    @api.model_create_multi
+    def create(self, vals_list):
         """Salva ou atualiza os dados no banco de dados"""
-        if 'company_id' in vals:
-            vals['name'] = self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
-                'engc.os_sequence') or _('New')
-        else:
-            vals['name'] = self.env['ir.sequence'].next_by_code('engc.os_sequence') or _('New')
-        
+        for vals in vals_list:
+            if 'company_id' in vals:
+                vals['name'] = self.env['ir.sequence'].with_context(force_company=self.company_id.id).next_by_code(
+                    'engc.os_sequence') or _('New')
+            else:
+                vals['name'] = self.env['ir.sequence'].next_by_code('engc.os_sequence') or _('New')
+            
 
         result = super(EngcOs, self).create(vals)
         return result
@@ -91,7 +92,7 @@ class EngcOs(models.Model):
     origin = fields.Char('Source Document', size=64, readonly=True, states={'draft': [('readonly', False)]},
                          help="Referencia ao documento que gerou a ordem de servico.")
     state = fields.Selection(STATE_SELECTION, string='Status',
-                             copy=False, default='draft',  track_visibility='True',
+                             copy=False, default='draft',  tracking=True,
                              help="* The \'Draft\' status is used when a user is encoding a new and unconfirmed repair order.\n"
                              "* The \'Done\' status is set when repairing is completed.\n"
                              "* The \'Cancelled\' status is used when user cancel repair order.")
@@ -99,7 +100,7 @@ class EngcOs(models.Model):
                              copy=False, tracking=True, required=True,
                             )
     kanban_state = fields.Selection([('normal', 'In Progress'), ('blocked', 'Blocked'), ('done', 'Ready for next stage')],
-                                    string='Kanban State', required=True, default='normal', track_visibility='True')
+                                    string='Kanban State', required=True, default='normal', tracking=True)
    
     priority = fields.Selection([('0', 'Normal'), ('1', "Baixa"),
                                  ('2', "Alta"), ('3', 'Muito Alta')], 'Prioridade', default='1')
@@ -112,15 +113,16 @@ class EngcOs(models.Model):
     is_warranty = fields.Boolean(string="É garantia",  default=False)
     warranty_type = fields.Selection(
         string='Tipo de Garantia', selection=GARANTIA_SELECTION)
-    date_scheduled = fields.Datetime('Data programada', required=True, track_visibility='True')
-    date_execution = fields.Datetime('Data de Execução', track_visibility='True')
-    date_start = fields.Datetime('Início da Execução',  track_visibility='True')
-    date_finish = fields.Datetime('Término da Execução', track_visibility='True')
+    date_request = fields.Datetime('Data Requisição', required=True, tracking=True)
+    date_scheduled = fields.Datetime('Data Programada', required=True, tracking=True)
+    date_execution = fields.Datetime('Data de Execução', tracking=True)
+    date_start = fields.Datetime('Início da Execução',  tracking=True)
+    date_finish = fields.Datetime('Término da Execução', tracking=True)
           
     # request_id = fields.Many2one(
     #     'engc.os.request', 'Solicitação Ref.',
     #     index=True, ondelete='restrict')
-    problem_description = fields.Text('Descrição do Defeito')
+    problem_description = fields.Text('Descrição do chamado')
 
     
     solicitante = fields.Char(
@@ -130,13 +132,13 @@ class EngcOs(models.Model):
     )   
   
     tecnico_id = fields.Many2one(
-        'hr.employee', string='Técnico',  track_visibility='True',
+        'hr.employee', string='Técnico',  tracking=True,
     )
 
     empresa_manutencao = fields.Many2one(
         'res.partner',
         string='Empresa',
-        track_visibility='True'
+        tracking=True
         )
 
     repaired = fields.Boolean(u'Concluído', copy=False, readonly=True)
@@ -151,7 +153,14 @@ class EngcOs(models.Model):
     equipment_category = fields.Char(
         'Categoria',
         related='equipment_id.category_id.name',
-        readonly=True
+        readonly=True,
+        store=True
+    )
+    equipment_apelido = fields.Char(
+        'Apelido',
+        related='equipment_id.apelido',
+        readonly=True,
+        store=True
     )
     equipment_serial_number = fields.Char(
         'Número de Série',
@@ -179,13 +188,13 @@ class EngcOs(models.Model):
         readonly=True
     )
   
-    service_description = fields.Char(
+    service_description = fields.Text(
         "Descrição do Serviço",required=True, help="Descrição do serviço realizado ou a ser relalizado", 
-        track_visibility='True'
+        tracking=True
         )
   
     check_list_created = fields.Boolean(
-        'Check List Created', track_visibility='True', default=False)
+        'Check List Created', tracking=True, default=False)
   
     relatorios_id = fields.One2many(
         string="Relatórios",

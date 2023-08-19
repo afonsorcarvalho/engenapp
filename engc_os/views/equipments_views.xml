@@ -9,7 +9,7 @@
         <tree>
           <field name="id" />
           <field name="name" />
-          <field name="apelido" string="Apelido" groups="base.group_no_one"  />
+          <field name="apelido" string="Apelido" groups="base.group_no_one" />
           <field name="serial_number" />
           <field name="create_date" string="Criado em" />
           <field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
@@ -38,50 +38,67 @@
             <field name="image_1920" widget='image' class="oe_avatar" />
             <h2>
               <field name="name" />
-            <field name="apelido" string="Apelido" groups="base.group_no_one" />
             </h2>
-            <h4>
-              <field name="company_id" />
-            </h4>
-            <label for='parent_id'>Equipamento pai</label>
-            <h4>
-              <field name="parent_id" />
-            </h4>
-            <label for='client_id'>Cliente</label>
-            <field name="client_id" />
-            <group string="Dados do equipamento">
+            <group>
               <group>
-                <field name="marca_id" />
-                <field name="partner_reference" />
-                <field name="model" />
-                <field name="category_id" />
-              </group>
-              <group>
-                <field name="serial_number" />
-                <field name="patrimony" />
-                <field name="tag" />
-                <field name="anvisa_code" />
-              </group>
-              <group>
-                <field name="manufacturing_date" />
-                <field name="instalation_date" />
-                <field name="acquisition_date" />
-                <field name="warranty" />
-                <field name="extended_warranty" />
-              </group>
-              <group>
-                <field name="section_id" />
-                <field name="location_id" />
-                <field name="means_of_aquisition_id" />
-                <field name="note" />
+
+                <field name="apelido" string="Apelido" groups="base.group_no_one" />
               </group>
             </group>
-            <group string="Manutenção">
-              <group>
-                <field name="maintenance_team_id" />
-              </group>
-            </group>
+
+
             <notebook>
+
+              <page string="Dados do Equipamento">
+                <group>
+                  <group>
+                    <field name="marca_id" />
+                    <field name="partner_reference" />
+                    <field name="model" />
+                    <field name="category_id" />
+                  </group>
+                  <group>
+                    <field name="serial_number" />
+                    <field name="patrimony" />
+                    <field name="tag" />
+                    <field name="anvisa_code" />
+                  </group>
+                  <group>
+                    <field name="manufacturing_date" />
+                    <field name="instalation_date" />
+                    <field name="acquisition_date" />
+                    <field name="warranty" />
+                    <field name="extended_warranty" />
+                  </group>
+                  <group>
+                    <field name="section_id" />
+                    <field name="location_id" />
+                    <field name="means_of_aquisition_id" />
+                    <field name="note" />
+                  </group>
+                </group>
+                
+              </page>
+              <page string="Ordens de Serviço">
+                <field name="oses" nolabel="1">
+                  <!-- <control>
+                      <create string="Adicionar Ordem de Serviço"/>
+                    </control> -->
+                </field>
+              </page>
+              <page string="Calibrações e Ensaios">
+                <field name="calibrations_ids" nolabel="1">
+                  <!-- <control>
+                      <create string="Adicionar calibração"/>
+                    </control> -->
+                </field>
+              </page>
+
+
+              <page string="Componentes e acessórios">
+                <field name="child_ids" nolabel="1"
+                />
+              </page>
               <page string="Fotos">
                 <group>
                   <field name="picture_ids" nolabel="1">
@@ -121,29 +138,23 @@
                   </field>
                 </group>
               </page>
-
-              <page string="Calibrações e Ensaios">
-                <field name="calibrations_ids" nolabel="1">
-                  <!-- <control>
-                      <create string="Adicionar calibração"/>
-                    </control> -->
-                </field>
+              <page string="Outros">
+                <group>
+                  <group>
+                    <field name="company_id" />
+                    <field name="parent_id" />
+                    <field name="client_id" />
+                    <field name="maintenance_team_id" />
+                  </group>
+                </group>
+                <group >
+                  <group>
+                  </group>
+                </group>
               </page>
-
-              <page string="Ordens de Serviço">
-                <field name="oses" nolabel="1">
-                  <!-- <control>
-                      <create string="Adicionar Ordem de Serviço"/>
-                    </control> -->
-                </field>
-              </page>
-
-              <page string="Componentes e acessórios">
-                <field name="child_ids" nolabel="1"
-                />
-              </page>
-
             </notebook>
+
+
           </sheet>
           <div class="oe_chatter">
             <field name="message_follower_ids" widget="mail_followers" />

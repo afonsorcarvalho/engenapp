@@ -9,16 +9,10 @@
         <tree>
 
           <field name="name" />
-          <field name="create_date" string="Criado em" />
-          <field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
-          <field name="company_id" string="Instituição" groups="base.group_multi_company" />
-          <field name="service_summary" />
           <field name="data_atendimento" />
-          <field name="technicians" />
+          <field name="service_summary" />
           <field name="start_hour" widget="float_time" />
           <field name="final_hour" widget="float_time" />
-
-
           <field name="state" widget="badge" />
 
         </tree>
@@ -59,12 +53,19 @@
                 <field name="start_hour" widget="float_time" />
                 <field name="final_hour" widget="float_time" />
               </group>
-
               <group>
-                <field name="fault_description" />
-                <field name="service_summary" />
+                <field name="report_type" />
+                
               </group>
+
             </group>
+            <group>
+              <field name="fault_description" />
+              <field name="service_summary" />
+              <field name="observations" />
+              <field name="pendency" />
+            </group>
+            
             <notebook>
               <page string="Fotos">
                 <field name="picture_ids" nolabel="1" >

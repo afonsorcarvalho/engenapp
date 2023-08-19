@@ -21,11 +21,23 @@ class RelatoriosLine(models.Model):
         ('done', 'Concluído'),
         ('cancel', 'Cancelado'),
     ]
+    REPORT_TYPE = [
+        ('orcamento', 'Orçamento'),
+        ('manutencao', 'Manutenção'),
+        ('instalacao', 'Instalação'),
+        ('treinamento', 'Treinamento'),
+        ('calibracao', 'Calibração'),
+        ('qualificacao', 'Qualificação'),
+        
+    ]
 
 #TODO 
 #   1 -Fazer codigo para gerar o codigo name somente quando salvar o relatório
 
     state = fields.Selection(string='', selection=STATE_SELECTION, default="draft",
+    required=True
+    )
+    report_type = fields.Selection(string='Tipo de Relatório', selection=REPORT_TYPE, 
     required=True
     )
 
@@ -71,6 +83,9 @@ class RelatoriosLine(models.Model):
     
     service_summary = fields.Text("Resumo do atendimento")
     fault_description = fields.Text("Descrição do defeito")
+    
+    pendency = fields.Text("Pendência")
+    observations = fields.Text("Observações")
 
 
     data_atendimento = fields.Date(string='Data de Atendimento', 

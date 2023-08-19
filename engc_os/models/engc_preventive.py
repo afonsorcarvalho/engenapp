@@ -18,11 +18,12 @@ _logger = logging.getLogger(__name__)
 
 
 class EngcPreventiva(models.Model):
-    _name = 'engc.dgt_preventiva'
-    
+    _name = 'engc.preventive'
     _description = 'Preventiva'
     _order = 'dias_de_atraso ASC'
-    _inherit =['mail.thread']
+    _inherit =['mail.thread','mail.activity.mixin']
+    _check_company_auto = True
+
    
     
     STATE_SELECTION = [
@@ -34,7 +35,7 @@ class EngcPreventiva(models.Model):
         ('done', 'Concluída'),
     ]
     state = fields.Selection(STATE_SELECTION, string='Status',
-                             copy=False, default='draft',  track_visibility='onchange',
+                             copy=False, default='draft',  tracking=True,
                              help="*  \'Criada\' usado quando a preventiva está somente criada.\n"
                                   "*  \'Cancelada\' usado quando a preventiva foi cancelada pelo usuário.\n"
                                   "*  \'Atrasada\' usado quando a preventiva não foi executada no dia programado.\n"
@@ -43,31 +44,44 @@ class EngcPreventiva(models.Model):
                                   "*  \'Concluída\' a ordem de serviço já foi executada."
                             )
     name = fields.Char()
+    company_id = fields.Many2one(
+        string='Company', 
+        comodel_name='res.company', 
+        required=True, 
+        default=lambda self: self.env.company
+    )
     equipment = fields.Many2one(
         string=u'Equipamento',
-        comodel_name='dgt_os.equipment',
+        comodel_name='engc.equipment',
         ondelete='cascade',
+        company_dependent=True
     )
     client = fields.Many2one(
         string=u'Cliente',
         comodel_name='res.partner',
         ondelete='set null',
+        company_dependent=True
     )
     cronograma = fields.Many2one(
         string=u'Cronograma',
-        comodel_name='dgt_preventiva.cronograma',
+        comodel_name='engc.preventive.cronograma',
         ondelete='set null',
+        company_dependent=True
     )
     
     tecnico = fields.Many2one(
         string=u'Técnico',
         comodel_name='hr.employee',
         ondelete='set null',
-        track_visibility='onchange',
+        tracking=True,
+        company_dependent=True
     )
-    grupo_id = fields.Many2many(
-        'dgt_os.instruction.grupo', string='Grupo de Instruções',track_visibility='onchange',
-    )
+    # grupo_id = fields.Many2many(
+    #     'engc.instruction.grupo',
+    #     string='Grupo de Instruções',
+    #     tracking=True,
+    #     company_dependent=True,
+    # )
     
     tempo_estimado = fields.Float(
         string=u'Tempo Estimado', 
@@ -77,25 +91,25 @@ class EngcPreventiva(models.Model):
     data_programada = fields.Datetime(
         string=u'Data Programada',
 
-        default=fields.datetime.now(),track_visibility='onchange',
+        default=fields.datetime.now(),tracking=True,
         help="Data e hora programada do início da preventiva.",
     )
 
     data_programada_fim = fields.Datetime(
         string=u'Data Programada fim',
-        default=fields.datetime.now(),track_visibility='onchange',
+        default=fields.datetime.now(),tracking=True,
         help="Data e hora programada do fim da preventiva.",
     )
 
     data_execucao = fields.Datetime(
         string=u'Início Execução',
-        default=fields.datetime.now(),track_visibility='onchange',
+        default=fields.datetime.now(),tracking=True,
         help="Data e hora do início da execuão da preventiva.",
     )
 
     data_execucao_fim = fields.Datetime(
         string=u'Fim da Execução',
-        default=fields.datetime.now(),track_visibility='onchange',
+        default=fields.datetime.now(),tracking=True,
         help="Data e hora do fim da execuão da preventiva.",
     )
     
@@ -105,17 +119,18 @@ class EngcPreventiva(models.Model):
     )
     
     gerada_os = fields.Boolean(
-        string=u'Gerada Os',track_visibility='onchange',
+        string=u'Gerada Os',tracking=True,
         help="Indica ordem de serviço gerada.",
     )
     os_id = fields.Many2one(
         string="Ordem de serviço",
-        comodel_name="dgt_os.os",
+        comodel_name="engc.os",
         ondelete="set null",
-        help="Ordem de serviço referente a preventiva.",track_visibility='onchange',
+        help="Ordem de serviço referente a preventiva.",tracking=True,
+        company_dependent=True
     )
     preventiva_executada = fields.Boolean(
-        string=u'Preventiva executada?',track_visibility='onchange',
+        string=u'Preventiva executada?',tracking=True,
         help="Indica que preventiva foi executada.",
     )
     
@@ -159,7 +174,7 @@ class EngcPreventiva(models.Model):
         self.state = 'done'
         self.preventiva_executada = True
         
-    @api.multi
+    
     def write(self, vals):
         self.ensure_one()
         
@@ -179,11 +194,11 @@ class EngcPreventiva(models.Model):
         if self.preventiva_executada == True:
             raise UserError(
                 _("Não pode alterar preventiva que já tem OS executada"))    
-        result = super(dgt_preventiva, self).write(vals)
+        result = super(EngcPreventiva, self).write(vals)
         return result
     
     
-    @api.multi
+    
     def action_gera_os(self):
         
         _logger.info("gerando os!!!")
@@ -195,12 +210,12 @@ class EngcPreventiva(models.Model):
                 _logger.info("Os já gerada!!!")
                 #if os.id:
                 msg = "A Ordem de serviço já foi gerada!!!."
-                message_id = self.env['dgt_preventiva.message.wizard'].create({'message': _(msg)})
+                message_id = self.env['engc.preventive.message.wizard'].create({'message': _(msg)})
                 return {
                         'name': _('Aviso!!'),
                         'type': 'ir.actions.act_window',
                         'view_mode': 'form',
-                        'res_model': 'dgt_preventiva.message.wizard',
+                        'res_model': 'engc.preventive.message.wizard',
                         'res_id': message_id.id,
                         'target': 'new'
                     }
@@ -210,7 +225,7 @@ class EngcPreventiva(models.Model):
     
     #TODO
     # Colocar serviço de manutenção preventiva default do contrato na service.line da Ordem de serviço
-    @api.multi
+    
     def gera_os(self):
         r = self
         _logger.info("Grupo de instruções...")
@@ -254,7 +269,7 @@ class EngcPreventiva(models.Model):
 
         description = 'Manutenção Preventiva referente ao mês ' + r.data_programada.strftime('%m/%Y')
             
-        os = self.env['dgt_os.os'].create({
+        os = self.env['engc.os'].create({
                 'origin':r.name,
                 'maintenance_type':'preventive',
                 'cliente_id': r.client.id,
@@ -282,25 +297,25 @@ class EngcPreventiva(models.Model):
         r.write({'gerada_os': True,'state':'programada', 'os_id': os.id})
         return os
     
-    @api.one
+    
     def set_preventiva_atrasada(self):
         if not self.preventiva_executada:
             self.state = 'atrasada'
     
-    @api.multi
+    
     def envia_email_aviso_preventiva(self,tipo='aviso') :
         _logger.info("Email de Preventivas.. ")
         _logger.info(self)
         for preventiva in self:
             if tipo == 'aviso':
                 _logger.info("Email de aviso de Preventivas.. ")
-                template_client_id = self.env.ref('dgt_preventiva.mail_aviso_preventiva_cliente')
-                template_tecnico_id = self.env.ref('dgt_preventiva.mail_aviso_preventiva_tecnico')
+                template_client_id = self.env.ref('engc.preventive.mail_aviso_preventiva_cliente')
+                template_tecnico_id = self.env.ref('engc.preventive.mail_aviso_preventiva_tecnico')
              
             if tipo == 'atraso':
                 _logger.info("Email de aviso de atraso de Preventivas.. ")
-                template_client_id = self.env.ref('dgt_preventiva.mail_aviso_atraso_preventiva_cliente')
-                template_tecnico_id = self.env.ref('dgt_preventiva.mail_aviso_atraso_preventiva_tecnico')
+                template_client_id = self.env.ref('engc.preventive.mail_aviso_atraso_preventiva_cliente')
+                template_tecnico_id = self.env.ref('engc.preventive.mail_aviso_atraso_preventiva_tecnico')
                 
             _logger.info("Eviando email para tecnico: ")
             preventiva.message_post_with_template( template_tecnico_id.id)
@@ -308,13 +323,13 @@ class EngcPreventiva(models.Model):
             preventiva.message_post_with_template( template_client_id.id)
             
            
-    @api.multi
+    
     def aviso_preventiva(self):
         hoje = fields.Date.today()
         dias_aviso_preventiva = 2
        # dia_procura_inicio = hoje + timedelta(days=dias_aviso_preventiva)
        # dia_procura_fim
-        res = self.env['dgt_preventiva.dgt_preventiva'].search(
+        res = self.env['engc.preventive'].search(
             [('gerada_os', '=', True),
              ('data_programada', '>=', hoje + timedelta(days=0,hours=0)),('data_programada', '<=', hoje + timedelta(days=dias_aviso_preventiva,hours=0))])
         _logger.info("Aviso de Preventivas.. ")
@@ -322,14 +337,14 @@ class EngcPreventiva(models.Model):
         
         res.envia_email_aviso_preventiva()
         
-    @api.multi
+    
     def aviso_preventiva_atrasada(self):
         _logger.info("entrou no aviso de preventiva atrasada...")
         hoje = fields.Datetime.now()
         _logger.info("procurando preventiva atrasada...")
        # dia_procura_inicio = hoje + timedelta(days=dias_aviso_preventiva)
        # dia_procura_fim
-        res = self.env['dgt_preventiva.dgt_preventiva'].search(
+        res = self.env['engc.preventive'].search(
             [('gerada_os', '=', True),('preventiva_executada','=',False),
              ('data_programada', '<', hoje)])
         
@@ -339,7 +354,7 @@ class EngcPreventiva(models.Model):
         _logger.info(res)
         res.envia_email_aviso_preventiva('atraso')
         
-    @api.multi
+    
     def calc_dias_de_atraso(self):
         p=self
         for p in self:
@@ -366,14 +381,14 @@ class EngcPreventiva(models.Model):
     #  CRON  gera OS e verifica atrasos de preventiva
     #
     # *************************
-    @api.multi
+    
     def cron_agenda_preventiva(self):
         dias_antecipa_gera_os = 5
         dias_avisa_prev = 2
         _logger.info("Entrou no agendamento da preventiva...")
         hoje = fields.Date.today()
         
-        res = self.env['dgt_preventiva.dgt_preventiva'].search(
+        res = self.env['engc.preventive'].search(
             [('gerada_os', '=', False), ('data_programada', '>=', hoje),('data_programada', '<=', hoje + timedelta(days=dias_antecipa_gera_os))])
         _logger.debug(res)
 
@@ -387,7 +402,7 @@ class EngcPreventiva(models.Model):
         #atualizando dias de atraso/que faltam das preventivas
         #valores negativos dias que faltam para preventiva
         #valores positivos dias de atraso
-        res = self.env['dgt_preventiva.dgt_preventiva'].search([('preventiva_executada', '=', False)])
+        res = self.env['engc.preventive'].search([('preventiva_executada', '=', False)])
         res.calc_dias_de_atraso()
         
             
@@ -398,22 +413,22 @@ class EngcPreventiva(models.Model):
 
 
 class dgtPreventivaMessageWizard(models.TransientModel):
-    _name = 'dgt_preventiva.message.wizard'
+    _name = 'engc.preventive.message.wizard'
     _description = u'Model para menus Popups de confirmação de ações'
     
 
     message = fields.Text('Message', required=True)
 
-    @api.multi
+    
     def action_ok(self):
         """ close wizard"""
         return {'type': 'ir.actions.act_window_close'}       
 
 
 class CronogramaPreventiva(models.Model):
-    _name = 'dgt_preventiva.cronograma'
+    _name = 'engc.preventive.cronograma'
     _description = u'Cronogramas de preventivas'
-
+    _check_company_auto = True
     _rec_name = 'name'
     _order = 'name ASC'
     
@@ -433,6 +448,7 @@ class CronogramaPreventiva(models.Model):
         default=lambda self: _('New'),
         copy=False
     )
+    company_id = fields.Many2one('res.company', string='Company', required=True, readonly=True, default=lambda self: self.env.company)
     state = fields.Selection(
         string="Status",
         selection=STATE_SELECTION,
@@ -449,10 +465,10 @@ class CronogramaPreventiva(models.Model):
         if vals.get('name', _('New')) == _('New'):
             if 'company_id' in vals:
                 vals['name'] = self.env['ir.sequence'].with_context(
-                    force_company=vals['company_id']).next_by_code('dgt_preventiva.cronograma') or _('New')
+                    force_company=vals['company_id']).next_by_code('engc.preventive.cronograma') or _('New')
             else:
                 vals['name'] = self.env['ir.sequence'].next_by_code(
-                    'dgt_preventiva.cronograma') or _('New')
+                    'engc.preventive.cronograma') or _('New')
 
         result = super(CronogramaPreventiva, self).create(vals)
         return result
@@ -461,7 +477,7 @@ class CronogramaPreventiva(models.Model):
     description = fields.Text(
         required=True, help="Descreva o cronograma com nome de cliente se faz parte de algum contrato etc...")
     equipments = fields.Many2many(
-        'dgt_os.equipment', string='Equipamentos', required=True, help="Insira os equipamentos que farão parte deste cronograma"
+        'engc.equipment', string='Equipamentos', required=True, help="Insira os equipamentos que farão parte deste cronograma"
     )
     date_start = fields.Date(
         string="Data de início do cronograma", help="Data de início do cronograma")
@@ -490,7 +506,7 @@ class CronogramaPreventiva(models.Model):
         first_day =datetime(ano,mes,1,0,0,0,0).strftime("%Y-%m-%d %I:%M:%S")
         last_day = datetime(ano, mes, monthrange(ano, mes)[1], 23, 59, 59, 0).strftime("%Y-%m-%d %I:%M:%S")
         
-        res = self.env['dgt_preventiva.dgt_preventiva'].search([(
+        res = self.env['engc.preventive'].search([(
             'cronograma', '=', self.id),
             ('data_programada', '>=', first_day),
             ('data_programada', '<', last_day)],
@@ -510,7 +526,7 @@ class CronogramaPreventiva(models.Model):
     def report_get_meses_que_tem_preventivas(self, ano):
         first_day = datetime(ano,1, 1, 0, 0, 0, 0).strftime("%Y-%m-%d %I:%M:%S")
         last_day = datetime(ano,12,monthrange(ano,12)[1],23,59,59,0).strftime("%Y-%m-%d %I:%M:%S")
-        res = self.env['dgt_preventiva.dgt_preventiva'].search([(
+        res = self.env['engc.preventive'].search([(
             'cronograma', '=', self.id),
             ('data_programada', '>=', first_day),
             ('data_programada', '<', last_day)
@@ -550,7 +566,7 @@ class CronogramaPreventiva(models.Model):
     
     '''
     def report_get_preventivas_date(self,data_programada):
-        res = self.env['dgt_preventiva.dgt_preventiva'].search([(
+        res = self.env['engc.preventive'].search([(
             'cronograma', '=', self.id),
             ('data_programada', '=', data_programada)],
             offset=0,
@@ -572,7 +588,7 @@ class CronogramaPreventiva(models.Model):
 #  para cada equipamento cadastrado no cronograma
 #
 
-    @api.multi
+    
     def action_gera_cronograma(self):
         user_tz = self.env.user.tz
         local = pytz.timezone(user_tz)
@@ -590,16 +606,16 @@ class CronogramaPreventiva(models.Model):
         for equipment in self.equipments:
             _logger.info("equipment.category_id.name:")
             _logger.info(equipment.category_id.id)
-            instructions = self.env['dgt_os.equipment.category.instruction'].search([('category_id','=',equipment.category_id.id)])
+            instructions = self.env['engc.equipment.category.instruction'].search([('category_id','=',equipment.category_id.id)])
             _logger.info("instruções:")
             _logger.info(instructions)
+            grupo_instructions = []
             for instruction in instructions:
                 _logger.info("instrução:")
                 _logger.info(instruction)
                 #grupo = [instruction.grupo_id]
                 #_logger.info("grupo:")
                 #_logger.info(grupo)
-                grupo_instructions = []
                 if instruction.grupo_id.instruction_type == 'preventiva':
                     if instruction.grupo_id not in grupo_instructions:
                         _logger.info("novo grupo:")
@@ -645,7 +661,7 @@ class CronogramaPreventiva(models.Model):
                     da = datetime(data_programada.year, data_programada.month, data_programada.day,0,0,0,0,tzinfo=local).strftime("%Y-%m-%d %H:%M:%S")
                     dp = datetime(data_programada.year, data_programada.month, data_programada.day,23,59,59,0,tzinfo=local).strftime("%Y-%m-%d %H:%M:%S")
 
-                    prev = self.env['dgt_preventiva.dgt_preventiva'].search([
+                    prev = self.env['engc.preventive'].search([
                         ['data_programada','>=',da],['data_programada','<=',dp],
                         ['equipment','=',equipment.id],
                         ['cronograma','=',self.id]])
@@ -665,7 +681,7 @@ class CronogramaPreventiva(models.Model):
                             "tecnico": self.tecnicos[0].id,
                         })
                     else:   
-                        self.env['dgt_preventiva.dgt_preventiva'].create({
+                        self.env['engc.preventive'].create({
                             "name": str(self.name) + "/" + str(equipment.name),
                             "client": equipment.client_id.id,
                             "equipment": equipment.id,

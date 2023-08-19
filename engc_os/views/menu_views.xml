@@ -14,6 +14,16 @@
       <field name="res_model">engc.equipment</field>
       <field name="view_mode">tree,form</field>
     </record>
+    <record model="ir.actions.act_window" id="engc_os.equipment_category_action_window">
+      <field name="name">Categorias de Equipamentos</field>
+      <field name="res_model">engc.equipment.category</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+    <record model="ir.actions.act_window" id="engc_os.equipment_category_instructions_action_window">
+      <field name="name">Instruções de manutenção</field>
+      <field name="res_model">engc.equipment.category.instruction</field>
+      <field name="view_mode">tree,form</field>
+    </record>
     <record model="ir.actions.act_window" id="engc_os.calibration_instruments_action_window">
       <field name="name">Instrumentos</field>
       <field name="res_model">engc.calibration.instruments</field>
@@ -34,6 +44,31 @@
       <field name="res_model">engc.calibration.measurement.unit</field>
       <field name="view_mode">tree,form</field>
     </record>
+    <record model="ir.actions.act_window" id="engc_os.maintenance_plan_action_window">
+      <field name="name">Planos de Manutenção</field>
+      <field name="res_model">engc.maintenance_plan</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+  
+
+   
+   
+    <!-- menu categories -->
+    
+   <!-- <menuitem name="Grupo de preventiva" id="dgt_preventiva.menu_1" parent="dgt_preventiva.menu_root"/>
+    <menuitem name="Menu 2" id="dgt_preventiva.menu_2" parent="dgt_preventiva.menu_root"/> -->
+   
+    <!-- actions -->
+    
+    <!-- <menuitem name="Grupo de preventivas" id="engc_os.preventive.menu_1_list" parent="engc_os.preventive.menu_root"
+              action="equipment_category_instruction_grupo_action_window"/>
+    <menuitem name="Preventivas" id="engc_os.preventive.menu_2_list" parent="engc_os.preventive.menu_root"
+              action="preventiva_action_window"/>
+    <menuitem name="Cronogramas de preventivas" id="engc_os.preventive.menu_3_list" parent="engc_os.preventive.menu_root"
+              action="cronograma_preventiva_action_window"/>
+              
+     <menuitem name="Contratos" id="engc_os.preventive.menu_4_list" parent="engc_os.preventive.menu_root"
+              action="contrato_preventiva_action_window"/> -->
 
 
     <!-- Top menu item -->
@@ -43,23 +78,35 @@
     <!-- menu categories -->
 
     <menuitem name="Serviços" id="engc_os.servicos_menu" parent="engc_os.menu_root" />
+    <menuitem name="Preventivas" id="engc_os.preventive_menu_root" parent="engc_os.menu_root" />
     <menuitem name="Equipamentos" id="engc_os.equipament_menu" parent="engc_os.menu_root" />
     <menuitem name="Calibração e Ensaios" id="engc_os.calibration_menu" parent="engc_os.menu_root" />
     <menuitem name="Configurações" id="engc_os.configuracoes_menu" parent="engc_os.menu_root" sequence="100"  />
 
-    <!-- actions -->
-
+    
+    <!-- Servicos -->
     <menuitem name="Ordens de Serviço" id="engc_os.os_list_menu" parent="engc_os.servicos_menu" action="engc_os.action_window" />
+    
+    <!-- Preventivas -->
+    <menuitem name="Listar Preventivas" id="engc_os.preventive_list_menu" parent="engc_os.preventive_menu_root" action="engc_os.preventiva_action_window" />
+    <menuitem name="Cronogramas" id="engc_os.cronogramas_list_menu" parent="engc_os.preventive_menu_root" action="engc_os.cronograma_preventiva_action_window" />
+    <menuitem name="Planos de Manutenção" id="engc_os.maintenance_plan_list_menu" parent="engc_os.preventive_menu_root" action="engc_os.maintenance_plan_action_window" />
+    
+    
+
+    <!-- Equipamentos -->
     <menuitem name="Equipamentos" id="engc_os.equipments_list_menu" parent="engc_os.equipament_menu" action="engc_os.equipment_action_window" />
+    <menuitem name="Categorias" id="engc_os.categorias_list_menu" parent="engc_os.equipament_menu" action="engc_os.equipment_category_action_window" />
+
+    <!-- Calibrações e ensaios -->
     <menuitem name="Calibrações" id="engc_os.calibration_list_menu" parent="engc_os.calibration_menu" action="engc_os.calibration_action_window" />
     <menuitem name="Procedimentos de Medição" id="engc_os.calibration_measurement_procedure_list_menu" parent="engc_os.calibration_menu" action="engc_os.calibration_measurement_procedure_action_window" />
     <menuitem name="Instrumentos" id="engc_os.calibration_instruments_list_menu" parent="engc_os.calibration_menu" action="engc_os.calibration_instruments_action_window" />
     
+    <!-- Configurações -->
     <menuitem name="Unidades de Medida" id="engc_os.calibration_measurement_unit_list_menu" parent="engc_os.configuracoes_menu" action="engc_os.calibration_measurement_unit_action_window" />
     
-    <!--
-    <menuitem name="Server to list" id="engc_os" parent="engc_os.menu_2"
-              action="engc_os.action_server"/>
--->
+   
+
   </data>
 </odoo>

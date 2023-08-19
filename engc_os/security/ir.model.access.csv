@@ -3,8 +3,6 @@ access_engc_os,access_engc_os,model_engc_os,base.group_user,1,1,1,1
 access_engc_os_relatorios,access_engc_os_relatorios,model_engc_os_relatorios,base.group_user,1,1,1,1
 
 access_engc_equipment,access_engc_equipment,model_engc_equipment,base.group_user,1,1,1,1
-access_engc_equipment_category,access_engc_equipment_category,model_engc_equipment_category,base.group_user,1,1,1,1
-access_engc_equipment_category_instruction,access_engc_equipment_category_instruction,model_engc_equipment_category_instruction,base.group_user,1,1,1,1
 access_engc_equipment_maintenance_team,access_engc_equipment_maintenance_team,model_engc_equipment_maintenance_team,base.group_user,1,1,1,1
 access_engc_equipment_location,access_engc_equipment_location,model_engc_equipment_location,base.group_user,1,1,1,1
 access_engc_equipment_section_user,engc_os.engc.equipment.section,model_engc_equipment_section,base.group_user,1,1,1,1
@@ -12,6 +10,13 @@ access_engc_equipment_situation,access_engc_equipment_situation,model_engc_equip
 access_engc_equipment_means_of_aquisition,access_engc_equipment_means_of_aquisition,model_engc_equipment_means_of_aquisition,base.group_user,1,1,1,1
 access_engc_equipment_marca,access_engc_equipment_marca,model_engc_equipment_marca,base.group_user,1,1,1,1
 access_engc_equipment_pictures,access_engc_equipment_pictures,model_engc_equipment_pictures,base.group_user,1,1,1,1
+
+access_engc_equipment_category_user,engc_os.engc.equipment.category,model_engc_equipment_category,base.group_user,1,1,1,1
+access_engc_equipment_category_instruction_user,engc_os.engc.equipment.category.instruction,model_engc_equipment_category_instruction,base.group_user,1,1,1,1
+access_engc_equipment_category_instruction_group_user,engc_os.engc.equipment.category.instruction.group,model_engc_equipment_category_instruction_group,base.group_user,1,1,1,1
+access_engc_equipment_category_instruction_grandeza_user,engc_os.engc.equipment.category.instruction.grandeza,model_engc_equipment_category_instruction_grandeza,base.group_user,1,1,1,1
+
+
 
 access_engc_calibration,access_engc_calibration,model_engc_calibration,base.group_user,1,1,1,1
 access_engc_calibration_instruments,access_engc_calibration_instruments,model_engc_calibration_instruments,base.group_user,1,1,1,1
@@ -27,5 +32,15 @@ access_engc_calibration_measurement_unit_user,engc_os.engc.calibration.measureme
 
 access_engc_os_relatorios_pictures_user,engc_os.engc.os.relatorios.pictures,model_engc_os_relatorios_pictures,base.group_user,1,1,1,1
 
+access_engc_preventive_user,engc_os.engc.preventive,model_engc_preventive,base.group_user,1,1,1,1
+access_engc_preventive_message_wizard_user,engc_os.engc.preventive.message.wizard,model_engc_preventive_message_wizard,base.group_user,1,1,1,1
+
+access_engc_preventive_cronograma_user,engc_os.engc.preventive.cronograma,model_engc_preventive_cronograma,base.group_user,1,1,1,1
+
+access_engc_maintenance_plan_user,engc_os.engc.maintenance_plan,model_engc_maintenance_plan,base.group_user,1,1,1,1
+access_engc_maintenance_plan_instruction_user,engc_os.engc.maintenance_plan.instruction,model_engc_maintenance_plan_instruction,base.group_user,1,1,1,1
+access_engc_maintenance_plan_section_user,engc_os.engc.maintenance_plan.section,model_engc_maintenance_plan_section,base.group_user,1,1,1,1
+access_engc_maintenance_plan_periodicity_user,engc_os.engc.maintenance_plan.periodicity,model_engc_maintenance_plan_periodicity,base.group_user,1,1,1,1
+access_engc_maintenance_plan_instruction_magnitude_user,engc_os.engc.maintenance_plan.instruction.magnitude,model_engc_maintenance_plan_instruction_magnitude,base.group_user,1,1,1,1
 
 

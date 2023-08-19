@@ -41,14 +41,14 @@ class Equipment(models.Model):
         string="Status",
         selection=STATES,
         required=True,
-        default='draft',
+        default='in_use',
         tracking=True
     )
     company_id = fields.Many2one(
         string='Instituição', 
         comodel_name='res.company', 
         required=True, 
-        default=lambda self: self.env.user.company_id
+        default=lambda self: self.env.company
     )
     client_id = fields.Many2one("res.partner", "Cliente")
     means_of_aquisition_id = fields.Many2one(
@@ -103,7 +103,7 @@ class Equipment(models.Model):
     #     copy=True, 
     #     readonly=False,
     #     check_company=True,
-    #     track_visibility=True)
+    #     tracking=True)
     
     _sql_constraints = [
         ('serial_marca_company_id_no_uniq',
@@ -186,7 +186,7 @@ class MaintenanceTeam(models.Model):
         string='Company', 
         comodel_name='res.company', 
         required=True, 
-        default=lambda self: self.env.user.company_id
+        default=lambda self: self.env.company
     )
     
 
@@ -201,7 +201,7 @@ class Location(models.Model):
         string='Company', 
         comodel_name='res.company', 
         required=True, 
-        default=lambda self: self.env.user.company_id
+        default=lambda self: self.env.company
     )
     
 
@@ -216,7 +216,7 @@ class Situation(models.Model):
         string='Company', 
         comodel_name='res.company', 
         required=True, 
-        default=lambda self: self.env.user.company_id
+        default=lambda self: self.env.company
     )
     
     _sql_constraints = [
@@ -229,11 +229,17 @@ class Marca(models.Model):
     _description = "Marca dos equipamentos"
 
     name = fields.Char('Marca')
+    company_id = fields.Many2one(
+        string='Company', 
+        comodel_name='res.company', 
+        required=True, 
+        default=lambda self: self.env.company
+    )
     
  
     _sql_constraints = [
 
-        ('situation_uniq', 'unique (name)', 'O nome já existe !')
+        ('situation_uniq', 'unique (name,company_id)', 'O nome já existe !')
 
     ]
 
@@ -248,13 +254,20 @@ class MeansOfAquisition(models.Model):
         string='Company', 
         comodel_name='res.company', 
         required=True, 
-        default=lambda self: self.env.user.company_id
+        default=lambda self: self.env.company
     )
 class EquipmentsSection(models.Model):
     _name = 'engc.equipment.section'
     _description = "setor do local equipamentos"
     
+
     name = fields.Char('Nome no setor')
+    company_id = fields.Many2one(
+        string='Company', 
+        comodel_name='res.company', 
+        required=True, 
+        default=lambda self: self.env.company
+    )
     description = fields.Text('Descrição')
     section_parent  = fields.Many2one(
         'engc.equipment.section',
