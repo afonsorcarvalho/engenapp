@@ -201,16 +201,30 @@ class EngcOs(models.Model):
         comodel_name="engc.os.relatorios",
         inverse_name="os_id",        
         help="Relatórios de atendimento",
+        check_company=True
     )
+    relatorios_count = fields.Integer(compute='compute_relatorios_count')
+
+    def compute_relatorios_count(self):
+        for record in self:
+            record.relatorios_count = self.env['engc.os.relatorios'].search_count(
+                [('os_id', '=', self.id)])
+
     calibration_created = fields.Boolean("Calibração criada")
     calibration_id = fields.Many2one(
         string="Calibração Cod.",
         comodel_name="engc.calibration",
-        
-        
-        
         help="Calibração gerada pela OS.",
+        check_company=True
     )
+
+    request_parts = fields.One2many(comodel_name='engc.os.request.parts',inverse_name="os_id",check_company=True)
+    request_parts_count = fields.Integer(compute='compute_request_parts_count')
+
+    def compute_request_parts_count(self):
+        for record in self:
+            record.request_parts_count = self.env['engc.os.request.parts'].search_count(
+                [('os_id', '=', self.id)])
 
     @api.depends('relatorios')
     def _compute_time_execution(self):
@@ -224,9 +238,6 @@ class EngcOs(models.Model):
     #  ONCHANGES
     #
     #******************************************
-
-
-  
 
     @api.onchange('date_scheduled')
     def onchange_scheduled_date(self):
@@ -251,58 +262,6 @@ class EngcOs(models.Model):
         body = "Modificado Tecnicos -> " + str_tecnicos
         # self.message_post(body=body)
 
-    @api.onchange('relatorios')
-    def onchange_relatorios(self):
-        _logger.debug('Onchange Relatórios')
-        #self.update_parts_os()
-    
-    
-    def verify_on_add_relatorios(self):
-        _logger.debug('INICIANDO CRIAÇÃO DE RELATÓRIOS')
-        return True
-    
-    """
-        function que atualiza as peças que foram requisitada no relatório nas pecas da OS
-    """
-    
-    def update_parts_os(self):
-        _logger.info("Atualizando pecas requisitadas na os")
-        #for os in self:
-        _logger.info("OS")
-        _logger.info(self)
-        _logger.info("PROCURANDO RELATORIOS")
-        _logger.info(self.relatorios)
-        for relatorio in self.relatorios:
-
-                parts_request = relatorio.parts_request
-                _logger.debug("Atualizando Pecas Requisitadas na OS")
-                _logger.debug(parts_request)
-
-                for parts in parts_request:
-                    _logger.debug(parts.parts_request.display_name)
-                    pecas_line = self.env['engc.os.pecas.line'].search([('relatorio_parts_id', '=', parts.id)])
-                    _logger.debug(pecas_line)
-                    if len(pecas_line) == 0:
-                        _logger.debug("Ainda não foi adicionada a peça do relatorio na OS")
-                        _logger.debug(pecas_line)
-                        _logger.debug(self.name)
-                        vals = {              
-                            'os_id': self.id,
-                            'name': parts.parts_request.display_name,
-                            'relatorio_parts_id': parts.id,
-                            'product_id': parts.parts_request.id,
-                            'product_uom_qty': parts.product_uom_qty,
-                            'product_uom': parts.parts_request.uom_id.id,
-                            'relatorio_request_id': relatorio.id,
-                        }
-                        self.pecas = [(0,0,vals)]
-                    else:
-                        _logger.debug("Peca já adicionada!!!")
-                        _logger.debug(pecas_line.name)
-                        _logger.debug(pecas_line)
-                        
-  
-
     def verify_execution_rules(self):
         """ Verifica as regras para início da execução da OS
         
@@ -319,7 +278,30 @@ class EngcOs(models.Model):
     #
     #******************************************
     
-
+    def action_go_relatorios(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Relatorios'),
+            'view_mode': 'tree,form',
+            'res_model': 'engc.os.relatorios',
+            'domain': [('os_id', '=', self.id)],
+            'context': {
+                'default_os_id': self.id,
+                'create': False if self._verify_relatorio_aberto() else True
+            },
+        }
+    
+    def action_go_request_parts(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Peças'),
+            'view_mode': 'tree',
+            'res_model': 'engc.os.request.parts',
+            'domain': [('os_id', '=', self.id)],
+            'context': "{'create': False,'delete': False,'edit':False}"
+        }
     
     def action_make_calibration(self):
         _logger.info("chamando calibracao")
@@ -404,7 +386,12 @@ class EngcOs(models.Model):
             'maintenance_duration': 1
 
         })
-    
+
+    def _verify_relatorio_aberto(self):
+        self.ensure_one()
+        domain = [('os_id','=', self.id), ('state','not in',['done','cancel'])]
+        relatorios_count = self.env['engc.os.relatorios'].search_count(domain)
+        return relatorios_count
     
    
     def verify_others_os_open(self):
@@ -450,17 +437,40 @@ class EngcOs(models.Model):
         return res
 
     
-    def action_repair_executar(self):
+    def action_start_execution(self):
 
-        self.verify_execution_rules()
-        self.repair_relatorio_service_start()
-        if self.state == 'draft' or self.state == 'execution_ready':
-            _logger.debug("Criando Check List")
-            self.create_checklist()
-        self.message_post(body='Iniciada execução da ordem de serviço!')
-        res = self.write(
-            {'state': 'under_repair', 'date_start': time.strftime('%Y-%m-%d %H:%M:%S')})
-        return res
+        #self.verify_execution_rules()
+        #self.repair_relatorio_service_start()
+        
+
+        _logger.info("Iniciando Execução")
+        report_type = self.env.context.get('report_type')
+        
+        current_datetime = fields.Datetime.now()
+        # self.write({
+        #     'state':'under_repair'
+        # })
+        employee = self.env['hr.employee'].search([('user_id', '=', self.env.user.id)], limit=1)
+        if employee.id:
+            tecnico = employee
+        else:
+            tecnico = self.tecnico_id
+        return {
+            'name': _('Iniciar Execução'),
+            'type': 'ir.actions.act_window',
+            'target':'current',
+            'view_mode': 'form',
+            'res_model': 'engc.os.relatorios',
+           # 'domain': [('curso_matricula_id', '=', self.curso_matricula_id.id)],
+            'context': {
+                'default_os_id': self.id,
+                'default_technicians': [(4,[tecnico.id])],
+                'default_data_atendimento':current_datetime,
+                'default_report_type': report_type or None,
+     
+            }
+        }
+        
 
     
     def action_pause_repair_executar(self):
@@ -675,27 +685,139 @@ class EngcOs(models.Model):
             self.check_list_created = True
 
      
-class RelatoriosLine(models.Model):
-    _name = 'engc.os.relatorios'
-    _description = 'Relatórios de atendimento'
-    _order = "data_atendimento,id"
-
-    name = fields.Char(
-        'Nº Relatório de Serviço', default=lambda self: self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
-                'engc.os.relatorio_sequence'), copy=False, required=True)
+# class RelatoriosLine(models.Model):
+#     _name = 'engc.os.relatorios'
+#     _description = 'Relatórios de atendimento'
+#     _order = "data_atendimento,id"
+    
+#     company_id = fields.Many2one(
+#         string='Company', 
+#         comodel_name='res.company', 
+#         required=True, 
+#         default=lambda self: self.env.user.company_id
+#     )
+    
+#     name = fields.Char(
+#         'Nº Relatório de Serviço', default=lambda self: self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
+#                 'engc.os.relatorio_sequence'), copy=False, required=True)
 
         
+#     os_id = fields.Many2one(
+#         'engc.os', 'Ordem de Serviço',
+#         index=True, ondelete='cascade')
+
+#     data_atendimento = fields.Date(string='Data de Atendimento', 
+#         required=True
+#     )
+
+#     start_hour = fields.Float("Hora início", 
+#         required=True
+#     )
+#     final_hour = fields.Float("Hora fim", 
+#         required=True
+#     )
+
+class RequestParts(models.Model):
+    _name = 'engc.os.request.parts'
+    _description = "Requisição de peças"
+    _check_company_auto = True
+    name = fields.Char()
+    
+    
+    @api.depends('name', 'request_parts_id')
+    def name_get(self):
+        result = []
+        for record in self:
+            
+            name = '[' + record.product_id.default_code + '] ' + record.product_id.name
+            
+            result.append((record.id, name))
+        return result
+    
+    company_id = fields.Many2one(
+        string='Instituição', 
+        comodel_name='res.company', 
+        required=True, 
+        default=lambda self: self.env.company
+    )
+    state = fields.Selection(selection = [
+        ('requisitada','Requisitada'),
+        ('autorizada','Autorizada'),
+        ('aplicada','Aplicada'),
+        ('nao_autorizada','Não Autorizada'),
+        ('cancel','Cancelada'),
+        ],
+        default = 'requisitada',
+        required=True
+        
+
+        )
+
+    product_id = fields.Many2one('product.product', u'Peças', 
+                                  required=True, check_company=True, 
+                                  domain="[('sale_ok', '=', True), '|', ('company_id', '=', False), ('company_id', '=', company_id)]")
+                                  
+    # name = fields.Text(
+    #     string="Description",
+    #     computed = "_compute_name",
+    #     store=True,  required=True)
+
+    @api.depends('product_id')
+    def _compute_name(self):
+        for line in self:
+            if not line.product_id:
+                continue    
+           
+            line.name = line.product_id.name 
+       
+    product_uom_qty = fields.Float(
+        string="Quantity",
+        compute='_compute_product_qty',
+        digits='Product Unit of Measure', default=1.0,
+        store=True, readonly=False, required=True, precompute=True)
+    
+    product_uom = fields.Many2one(
+        comodel_name='uom.uom',
+        string="Unit of Measure",
+        compute='_compute_product_uom',
+        store=True, readonly=False, precompute=True, ondelete='restrict',
+        domain="[('category_id', '=', product_uom_category_id)]")
+    product_uom_category_id = fields.Many2one(related='product_id.uom_id.category_id', depends=['product_id'])
+    
+    @api.depends('product_id')
+    def _compute_product_uom(self):
+        for line in self:
+            if not line.product_uom or (line.product_id.uom_id.id != line.product_uom.id):
+                line.product_uom = line.product_id.uom_id
+    
+    
+    @api.depends('product_id', 'product_uom', 'product_uom_qty')
+    def _compute_product_qty(self):
+        for line in self:
+            if not line.product_id or not line.product_uom or not line.product_uom_qty:
+                line.product_uom_qty = 0.0
+                continue
+            line.product_uom_qty = line.product_uom._compute_quantity(line.product_uom_qty, line.product_id.uom_id)
+
+    placed = fields.Boolean('Aplicada')
+    
+    @api.onchange('placed')
+    def onchange_placed(self):
+        print(self.env.context)
+        #if self.placed:
+        #    self.relatorio_application_id = self.
+    
+    
     os_id = fields.Many2one(
         'engc.os', 'Ordem de Serviço',
-        index=True, ondelete='cascade')
+         index=True, ondelete='cascade', check_company=True)
+    relatorio_request_id = fields.Many2one('engc.os.relatorios', 'Relatório Solicitante')
+    relatorio_application_id = fields.Many2one('engc.os.relatorios', 'Relatório Aplicado')
 
-    data_atendimento = fields.Date(string='Data de Atendimento', 
-        required=True
-    )
+    #******************************************
+    #  ACTIONS
+    #
+    #******************************************
 
-    start_hour = fields.Float("Hora início", 
-        required=True
-    )
-    final_hour = fields.Float("Hora fim", 
-        required=True
-    )
+    def action_application_request_parts(self):
+        _logger.info("Aplicando peças")

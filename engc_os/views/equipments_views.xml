@@ -138,6 +138,18 @@
                   </field>
                 </group>
               </page>
+              <page string="Histórico de Paradas">
+                
+                    <field name="stop_history_ids" readonly="1" >
+                    <tree>
+                      <field name="date_time"/>
+                      <field name="relatorio_id"/>
+                      <field name="state"/>
+                    </tree>
+                    </field>
+                 
+                
+              </page>
               <page string="Outros">
                 <group>
                   <group>

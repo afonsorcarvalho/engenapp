@@ -105,6 +105,11 @@ class Equipment(models.Model):
     #     check_company=True,
     #     tracking=True)
     
+    stop_history_ids = fields.One2many(
+        comodel_name='engc.equipment.stop.history',
+        inverse_name='equipment_id',
+    )
+    
     _sql_constraints = [
         ('serial_marca_company_id_no_uniq',
          'unique (serial_number,marca_id)',
@@ -292,6 +297,35 @@ class EquipmentsPictures(models.Model):
     picture = fields.Binary(string="Foto", 
     required=True
      )
+    
+class EquipmentsStopHistory(models.Model):
+    _name = 'engc.equipment.stop.history'
+    _description = "Histórico de parada do equipamento"
+
+    STATE_EQUIPMENT_SELECTION = [
+        ('parado', 'Parado'),
+        ('funcionando', 'Funcionando'),
+        ('restricao', 'Funcionando com restrições'), 
+    ]
+    
+
+    
+    equipment_id = fields.Many2one(
+        string='Equipamento', 
+        comodel_name='engc.equipment', 
+        required=True, 
+       
+    )
+
+    relatorio_id = fields.Many2one('engc.os.relatorios', 
+        required=True
+    )
+    state = fields.Selection(string="Estado do Equipamento",selection=STATE_EQUIPMENT_SELECTION)
+    date_time = fields.Datetime(
+        string='Data',
+        default=fields.Datetime.now,
+    )
+    
     
 
    

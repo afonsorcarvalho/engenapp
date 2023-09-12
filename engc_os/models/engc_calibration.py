@@ -69,7 +69,7 @@ class EngcCalibration(models.Model):
     duration = fields.Float('Duração')
     note = fields.Text("Observações")
     measurement_procedure = fields.Many2one(string='Norma/Procedimento', comodel_name='engc.calibration.measurement.procedure', ondelete='restrict', required=True)
-    measurement_ids = fields.One2many(string='Cod. Medidas', comodel_name='engc.calibration.measurement',inverse_name='calibration_id', ondelete='restrict')
+    measurement_ids = fields.One2many(string='Cod. Medidas', comodel_name='engc.calibration.measurement',inverse_name='calibration_id')
     
     environmental_conditions = fields.Char('Condições ambientais', 
     required=True, 
