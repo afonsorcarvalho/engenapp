@@ -115,8 +115,14 @@ class EngcOs(models.Model):
         string='Tipo de Garantia', selection=GARANTIA_SELECTION)
     date_request = fields.Datetime('Data Requisição', required=True, tracking=True)
     date_scheduled = fields.Datetime('Data Programada', required=True, tracking=True)
+    #TODO
+    # FAZER COM QUE A DATA DE EXECUÇÃO SEJA SEMPRE A DO RELATORIO DE ATENDIMENTO MAIS RECENTE
     date_execution = fields.Datetime('Data de Execução', tracking=True)
+    #TODO
+    # FAZER COM QUE A DATA DE INICIO DA EXECUÇÃO SEJA A DATAHORA DE INICIO DO PRIMEIRO RELATORIO
     date_start = fields.Datetime('Início da Execução',  tracking=True)
+    #TODO
+    # FAZER COM QUE A DATA DE INICIO DA EXECUÇÃO SEJA A DATAHORA DE FINAL DO ULTIMO RELATORIO
     date_finish = fields.Datetime('Término da Execução', tracking=True)
           
     # request_id = fields.Many2one(
