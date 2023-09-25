@@ -1,0 +1,278 @@
+<odoo>
+  <data>
+
+    <record model="ir.ui.view" id="equipment_category_instruction_grupo_list">
+      <field name="name">Grupo de preventiva</field>
+      <field name="model">engc.equipment.category.instruction.group</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="name"/>
+          <field name="category_id"/>
+          
+          <field name="periodicity"/>
+          <field name="instruction_type"/>
+
+        </tree>
+      </field>
+    </record>
+
+        
+  
+    <!-- <record model="ir.actions.act_window" id="contrato_preventiva_action_window">
+      <field name="name">Contratos de Manutenção</field>
+      <field name="res_model">engc.contratos</field>
+      <field name="view_mode">tree,form</field>
+    </record> -->
+    
+<!--
+
+PREVENTIVA
+
+-->
+
+
+<record id="dgt_preventiva_form" model="ir.ui.view">
+  <field name="name">engc.form</field>
+  <field name="model">engc.preventive</field>
+  <field name="arch" type="xml">
+    <form string="Preventiva"  readonly= "[('state','not in',('draft'))]" >
+      <header>
+          <button name="action_gera_os"
+                string="Gera OS"
+                type="object"
+               
+                help="Gerar Ordem de Serviço para essa preventiva imediatamente.
+                Lembrando que ela será gerada automaticamente pelo sistema" />
+          <field name="state" widget="statusbar" statusbar_visible="" statusbar_colors="{'programada':'decoration-danger','done':'decoration-success', 'cancel':'decoration-muted'}"/>
+      </header>
+      <sheet>
+        
+            
+              
+              <h1><field name="name"/></h1>
+          
+        <group>     
+            <group>
+                <field name="equipment"/>
+                <field name="client"/>
+              <field name="tecnico"/>
+              <field name="cronograma"/>
+              <!-- <field name="grupo_id" widget="many2many_tags"/> -->
+            </group>
+            <group>
+              
+              <field name="data_programada"  attrs="{'readonly':[('state','!=', 'draft')]}"/>
+              <field name="data_programada_fim" attrs="{'readonly':[('state','!=', 'draft')]}"/>
+          
+              <field name="data_execucao" string="inicio da execução"  readonly="1"/>
+              
+              <field name="data_execucao_fim" string="Fim da execução"  readonly="1"/>
+            </group>
+        </group>
+
+        <group>
+          <group>
+            <field name="os_id"/>
+          </group>
+          <group>
+            
+            <field name="gerada_os" string="OS gerada?" readonly="1"/>
+         
+            <field name="preventiva_executada" string="Executada?" readonly="1"/>
+          </group>
+        </group>
+        
+        
+      </sheet>
+      <div class="oe_chatter">
+        <field name="activity_ids" widget="mail_activity"/>
+        <field name="message_follower_ids" widget="mail_followers"/>
+        <field name="message_ids" widget="mail_thread"/>
+      </div>
+    </form>
+  </field>
+</record>
+
+<record id="engc_preventive_calendar" model="ir.ui.view">
+  <field name="name">engc.preventive.calendar</field>
+  <field name="model">engc.preventive</field>
+  <field name="arch" type="xml">
+    <calendar date_start="data_programada" date_stop="data_programada_fim" color="cronograma">
+      <field name="name"/>
+      <field name="client"/>
+      <field name="equipment" widget="many2one_tags"/>
+      <field name="cronograma"/>
+      <!-- <field name="grupo_id" widget="many2many_tags"/> -->
+      
+      <field name="tecnico" widget="many2one_tags" />
+      
+      <field name="state" />
+    </calendar>
+  </field>
+</record>
+
+<record id="engc_preventive_lst" model="ir.ui.view">
+  <field name="name">engc.preventive.list</field>
+  <field name="model">engc.preventive</field>
+  <field name="arch" type="xml">
+  
+  
+    <tree string="Preventivas" delete="true" create="true" edit="1" editable="top"
+          decoration-bf="state=='programada'"
+          
+          decoration-danger="state == 'atrasada'"
+          decoration-success="state == 'done'"
+          decoration-muted="state == 'cancel'">
+
+      <!--<button string="Gera OS" class="oe_highlight" icon="fa-briefcase" type="object" name="action_gera_os"/> -->
+      <field name="name"/>
+      <field name="data_programada" string="Início"/>
+      <field name="data_programada_fim" string="Fim"/>
+      <field name="tempo_estimado"  widget="float_time" />
+      <field name="client"/>
+      <field name="cronograma"/>
+
+      <field name="equipment" readonly="1"/>
+      <!-- <field name="grupo_id" widget="many2many_tags"/> -->
+      <field name="dias_de_atraso" readonly="1"/>
+
+      <field name="tecnico"/>
+      <field name="gerada_os" string="OS gerada?" />
+      <field name="os_id" string="OS nº" />
+      <field name="state" />
+    </tree>
+  </field>
+</record>
+
+<record id="engc_preventive_search" model="ir.ui.view"> 
+    <field name="model">engc.preventive</field> 
+    <field name="arch" type="xml"> 
+        <search> 
+          <field name="name" /> 
+          <field name="client"/> 
+          <field name="equipment" 
+           
+          />
+          <field name="tecnico"/>
+          <field name="state" />
+          <field name="os_id" string="OS nº" />
+          <field name="dias_de_atraso" />
+          <field name="data_programada" string="Início"/>
+          
+        </search> 
+    </field> 
+</record>
+
+<!--
+
+MENU POPUP DE CONCLUIDO COM SUCESSO
+
+-->
+<record id="engc_preventive_message_wizard_form" model="ir.ui.view">
+    <field name="name">engc.preventive.message.wizard.form</field>
+    <field name="model">engc.preventive.message.wizard</field>
+    <field name="arch" type="xml">
+        <form >
+        <i class="fa fa-info-circle" aria-hidden="true"><field name="message"/></i>
+            <h1><field name="message"/></h1>
+            
+        <footer>
+            <button name="action_ok" string="Ok" type="object" default_focus="1" class="oe_highlight"/> 
+        </footer>
+        </form>
+    </field>
+</record>
+
+<!--
+
+CRONOGRAMA
+
+-->
+    <record id="engc_preventive_cronograma_form" model="ir.ui.view">
+			<field name="name">engc.preventive.cronograma.form</field>
+			<field name="model">engc.preventive.cronograma</field>
+			<field name="arch" type="xml">
+				<form>
+         <header>
+           <button name="action_gera_cronograma" type="object" string="Gerar Preventivas" class="oe_highlight" />
+                                                         
+           <field name="state" widget="statusbar"  />
+         </header>
+          <sheet>
+            <h1><field name="name"/></h1>
+            <group>
+              <group>
+                <field name="description" string="Descrição"/>
+              </group>
+            </group>
+            <group>
+              <group>
+                <field name="date_start" string="Início"/>
+              </group>
+              <group>
+                <field name="date_stop" string="Fim"/>
+              </group>
+            </group>
+        
+            <notebook>
+              
+              <page string="Equipamentos" >
+                     <field name="equipments" />
+              </page>
+              <page string="Técnicos" >
+                     <field name="tecnicos" />
+              </page>
+             
+            </notebook>         
+          </sheet>
+				</form>
+			</field>
+		</record>
+    <record id="engc_preventive_cronograma_lst" model="ir.ui.view">
+			<field name="name">engc.preventive.cronograma.list</field>
+			<field name="model">engc.preventive.cronograma</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="name"/>
+					<field name="description"/>
+					<field name="date_start"/>
+          <field name="date_stop"/>
+          <field name="tecnicos" 
+            widget="many2many_tags"
+            />
+				</tree>
+			</field>
+		</record>
+
+    <!-- server action to the one above -->
+    <record model="ir.actions.act_window" id="equipment_category_instruction_grupo_action_window">
+      <field name="name">Grupo de Preventiva</field>
+      <field name="res_model">engc.equipment.category.instruction.group</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+  
+    <record model="ir.actions.act_window" id="preventiva_action_window">
+      <field name="name">Preventivas</field>
+      <field name="res_model">engc.preventive</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+    <record model="ir.actions.act_window" id="cronograma_preventiva_action_window">
+      <field name="name">Cronogramas de preventivas</field>
+      <field name="res_model">engc.preventive.cronograma</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+    <!-- <record model="ir.actions.act_window" id="contrato_preventiva_action_window">
+      <field name="name">Contratos de Manutenção</field>
+      <field name="res_model">dgt_preventiva.contratos</field>
+      <field name="view_mode">tree,form</field>
+    </record> -->
+
+    <!-- Top menu item -->
+    
+   <!--  <menuitem name="dgt_preventiva" id="dgt_preventiva.menu_root"/> -->
+    
+  <!--  <menuitem name="Server to list" id="dgt_preventiva" parent="dgt_preventiva.menu_2"
+              action="dgt_preventiva.action_server"/> -->
+   
+  </data>
+</odoo>

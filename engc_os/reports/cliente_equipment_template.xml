@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_cliente_equipment_template">
+
+        <div class="row">
+
+            <!-- DADOS EQUIPAMENTO -->
+            <div class="col-6">
+                <table class="table table-borderless" name="engc_equipment_table">
+                    <tbody>
+                        <tr>
+                            <td colspan="2">Equipamento:</td>
+                            <td colspan="4">
+                                <strong>
+                                    <span t-field="o.equipment_id.name" />
+                                </strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Nº Série:</td>
+                            <td>
+                                <b>
+                                    <span t-field="o.equipment_id.serial_number" />
+                                </b>
+                            </td>
+                            <td>Modelo:</td>
+                            <td>
+                                <b>
+                                    <span t-if="o.equipment_id.model" t-field="o.equipment_id.model" />
+                                </b>
+                            </td>
+                            <td> Marca:</td>
+                            <td>
+                                <b>
+                                    <span t-if="o.equipment_id.marca_id.name"
+                                        t-field="o.equipment_id.marca_id.name" />
+                                </b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Patrimonio:</td>
+                            <td>
+                                <b>
+                                    <span t-field="o.equipment_id.serial_number" />
+                                </b>
+                            </td>
+                            <td>TAG:</td>
+                            <td>
+                                <b>
+                                    <span t-if="o.equipment_id.model" t-field="o.equipment_id.model" />
+                                </b>
+                            </td>
+                            <td> </td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+
+                </table>
+            </div>
+
+            <!-- DADOS CLIENTE -->
+            <div class="col-6">
+                <table t-if="o.client_id" class="table table-sm table-borderless" name="engc_client_table">
+                    <tbody>
+                        <tr>
+                            <td>Cliente:</td>
+                            <td colspan="3">
+                                <strong>
+                                    <span class="text-uppercase" t-field="o.client_id.name" />
+                                </strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>CNPJ/CPF:</td>
+                            <td>
+                                <b>
+                                    <span t-field="o.client_id.l10n_br_cnpj_cpf" />
+                                </b>
+                            </td>
+                            <td>Contato:</td>
+                            <td>
+                                <b>
+                                    <span t-if="o.client_id.mobile" t-field="o.client_id.mobile" />
+                                </b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td> Endereço:</td>
+                            <td colspan="4">
+                                <b>
+                                    <span t-if="o.client_id.street" t-field="o.client_id.street" />
+                                   
+                                </b>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- <b><span t-field="o.client_id.name"/></b> <br/> CNPJ/CPF:<span
+        t-field="o.client_id.l10n_br_cnpj_cpf"/><br/>
+                                <span t-field="o.client_id.street"/>, <span t-field="o.client_id.l10n_br_number"/>, 
+                                <span t-field="o.client_id.l10n_br_district"/>
+                                <span t-field="o.client_id.street2"/>-<br/> 
+                                <span t-field="o.client_id.city_id.name"/>
+                                <span t-field="o.client_id.state_id.name"/>-
+                                <span t-field="o.client_id.country_id.name"/>-
+                                <span t-field="o.client_id.zip"/><br/>
+                                <strong>Contato:</strong><br/>
+                                <span t-field="o.client_id.phone"/><br/> 
+                                <span t-field="o.client_id.mobile"/><br/>
+                                <span t-field="o.client_id.email"/> -->
+
+
+        <!-- <t t-if="o.location_id">
+                                    <b>Local: </b><span t-if="o.location_id" t-field="o.location_id"/><br/>	
+                                </t> -->
+        <!-- <strong>Status:</strong><br/>
+                                <span t-field="o.equipment_id.situation_id"/>	 -->
+
+    </template>
+</odoo>

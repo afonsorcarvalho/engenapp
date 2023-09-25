@@ -1,0 +1,179 @@
+<odoo>
+  <data>
+
+    <record model="ir.ui.view" id="maintenance_plan_list">
+      <field name="name">Plano de manutenção</field>
+      <field name="model">engc.maintenance_plan</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="name" />
+          <field name="objective" />
+
+          <field name="section_ids" />
+          <field name="periodicity_ids" />
+          <!-- <field name="instrucion_ids" /> -->
+
+        </tree>
+      </field>
+    </record>
+
+
+    <!-- <record model="ir.actions.act_window" id="contrato_preventiva_action_window">
+      <field name="name">Contratos de Manutenção</field>
+      <field name="res_model">engc.contratos</field>
+      <field name="view_mode">tree,form</field>
+    </record> -->
+
+    <!--
+
+PREVENTIVA
+
+-->
+    <record id="maintenance_plan_form" model="ir.ui.view">
+      <field name="name">engc.maintenance_plan.form</field>
+      <field name="model">engc.maintenance_plan</field>
+      <field name="arch" type="xml">
+        <form string="Plano de Manutenção" readonly="[('state','not in',('draft'))]">
+          <header>
+            <!-- <button name="action_gera_os"
+                string="Gera OS"
+                type="object"
+               
+                help="Gerar Ordem de Serviço para essa preventiva imediatamente.
+                Lembrando que ela será gerada automaticamente pelo sistema" /> -->
+            <field name="state" widget="statusbar" />
+          </header>
+          <sheet>
+            <div class="oe_title">
+              <h1>
+                <field name="name" />
+              </h1>
+            </div>
+            <group>
+              <label string="Objetivo" for="objective" />
+              <div class="oe_inline" name="edit_objective">
+                <field name="objective"
+                  required="1"
+                />
+              </div>
+            </group>
+            <div class="oe_inline" name="edit_section_ids">
+              <div class="oe_title">
+                <h1>
+                  Periodicidades
+                </h1>
+              </div>
+            </div>
+
+            <field name="periodicity_ids" string="Periodicidades" class="oe_inline" required="1" widget="many2many_tags">
+              <!-- <tree>
+                <field name="sequence" widget="handle" />
+                <field name="name" />
+                <field name="frequency" />
+              </tree> -->
+            </field>
+
+            <div class="oe_inline" name="edit_section_ids">
+              <div class="oe_title">
+                <h1>
+                  Seções
+                </h1>
+              </div>
+            </div>
+            <field name="section_ids" nolabel="1" class="oe_inline">
+              <tree editable="bottom">
+                <field name="sequence" widget="handle" />
+                <field name="name" />
+                <field name="maintenance_plan" invisible="1" />
+                <field name="instrucion_ids" widget="many2many_tags"
+                  domain="[('maintenance_plan', '=', maintenance_plan),('section', '=', id)]"
+                  options="{'open':false,'create':false,'create_edit':false}">
+                  <form>
+                    <field name="name" />
+                  </form>
+                </field>
+
+                <button name="action_open_section_form"
+                  string="mais"
+                  context="{'action': 'visualizar',  }"
+                  type="object"
+                  class="oe_highlight"
+                  icon="fa-plus-square"
+                  help="message"
+                />
+
+
+              </tree>
+
+              <form>
+                <div class="oe_title">
+                  <h1>
+                    <field name="name"
+                      readonly="1"
+                    />
+                  </h1>
+                </div>
+
+                <field name="instrucion_ids">
+                  <tree editable="botton">
+                    <field name="sequence" widget="handle" />
+                    <field name="name" string="Instruções" required="1" />
+                    <field name="periodicity">
+
+                    </field>
+                  </tree>
+                  <form>
+                    <group>
+                      <group>
+                        <field name="name" string="Instruções" required="1" />
+                        <field name="periodicity" required="1" />
+                      </group>
+                    </group>
+                  </form>
+                </field>
+
+              </form>
+            </field>
+
+
+          </sheet>
+          <!-- <div class="oe_chatter">
+        <field name="activity_ids" widget="mail_activity"/>
+        <field name="message_follower_ids" widget="mail_followers"/>
+        <field name="message_ids" widget="mail_thread"/>
+      </div> -->
+        </form>
+      </field>
+    </record>
+    <record id="maintenance_plan_instructions_sections_form" model="ir.ui.view">
+      <field name="name">engc.maintenance_plan.section.form</field>
+      <field name="model">engc.maintenance_plan.section</field>
+      <field name="arch" type="xml">
+        <form string="Instruções da Seção" readonly="[('state','not in',('draft'))]">
+          <div class="oe_title">
+            <h1>
+              <field name="name" readonly="1" />
+            </h1>
+          </div>
+          <field name="maintenance_plan"
+            invisible="1"
+          />
+          <field name="instrucion_ids" context="{'default_maintenance_plan': maintenance_plan}">
+            <tree editable="bottom">
+              <field name="sequence" widget="handle" />
+              <field name="name" />
+              <field name="is_measurement" />
+              <field name="magnitude" />
+              <field name="tipo_de_campo" />
+              <field name="time_duration" widget="float_time" />
+              <field name="periodicity" />
+              <field name="maintenance_plan" invisible="1" />
+
+            </tree>
+          </field>
+        </form>
+      </field>
+    </record>
+
+  </data>
+</odoo>

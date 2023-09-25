@@ -1,0 +1,70 @@
+<odoo>
+  <data>
+    <!-- explicit list view definition -->
+
+    <record model="ir.ui.view" id="engc_os.os_request_parts_list">
+      <field name="name">Peças</field>
+      <field name="model">engc.os.request.parts</field>
+      <field name="arch" type="xml">
+        <tree editable="top"
+          decoration-success="state == 'aplicada'"
+          decoration-muted="state == 'cancel'"
+          decoration-danger="state == 'requisitada'"
+        >
+          <header>
+            <button name="action_application_request_parts" string="aplicar" class="oe_highlight" />
+
+            <button name="action_application_request_parts" string="não autorizada"
+               />
+
+            <button name="action_application_request_parts" string="cancelar" />
+          </header>
+          <!-- <button name="action_application_request_parts"
+            icon="fa-cog"
+            type="object"
+            string="Aplicar"
+            attrs="{'invisible':[('state','not in',('reuisitada'))]}"
+            optional="hide"
+            /> -->
+          <field name="company_id" optional="hide" />
+          <field name="product_id" />
+          <field name="product_uom_qty" />
+          <field name="product_uom_category_id" optional="hide" />
+          <field name="product_uom" />
+          <!-- <field name="name" /> -->
+
+          <field name="placed" optional="hide" />
+          <field name="state" />
+          <field name="os_id" optional="hide"
+          />
+          <field name="relatorio_request_id" optional="show" />
+          <field name="relatorio_application_id" optional="show" />
+        </tree>
+
+
+      </field>
+    </record>
+
+    <record model="ir.ui.view" id="engc_os.os_request_parts_form">
+      <field name="name">Peças</field>
+      <field name="model">engc.os.request.parts</field>
+      <field name="arch" type="xml">
+        <form>
+          <field name="product_id" />
+          <!-- <field name="name" /> -->
+          <field name="company_id" />
+          <field name="state" />
+          <field name="placed" />
+          <field name="os_id" />
+          <field name="relatorio_request_id" />
+          <field name="relatorio_application_id" />
+
+        </form>
+
+
+      </field>
+    </record>
+
+
+  </data>
+</odoo>

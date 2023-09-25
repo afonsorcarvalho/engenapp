@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+   <odoo>
+    <data>
+   
+        <record id="view_application_parts_wizard_form" model="ir.ui.view">
+            <field name="name">Aplicar</field>
+            <field name="model">application.parts.wizard</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="">
+                                        
+                        
+                        <field name="list_parts_request" nolabel="1">
+                                <tree editable="top" create="0"  delete="0">
+                                
+                                   <field name="state" />
+                                   <field name="applied" widget="button"/>
+                                   <field name="cancel" widget="button"/>
+                                   <field name="not_autorized" widget="button"/>
+                                   <field name="request_parts"/>
+                                   <field name="product_uom_qty"/>
+                                   <field name="product_uom"/>
+                                </tree>
+                        </field>
+                          
+                           
+                       
+                        
+                  <group>
+                        <field name="os_id"  />
+                        
+                    </group>
+                    <footer>
+                        <button name="action_done" string="Concluir" type="object" class="oe_highlight" default_focus="1"/>
+                        <button special="cancel" string="Cancelar" class="oe_link" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+   
+        <record id="action_" model="ir.actions.act_window">
+            <field name="name">Wizard</field>
+            <field name="res_model">application.parts.wizard</field>
+           
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+   
+       </data>
+</odoo>

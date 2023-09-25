@@ -1,0 +1,373 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <template id="report_os_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <style type="text/css">
+
+
+                        .table-borderless &gt; :not(caption) &gt; * &gt; * {
+                        border: 0;
+                        border-bottom-width: 0px;
+                        }
+                        .table-borderless &gt; :not(:first-child) {
+                        border: 0;
+                        border-bottom-width: 0px;
+                        }
+                        .table &gt; :not(caption) &gt; * &gt; * {
+                        padding: 0.1rem 0.1rem;
+
+                        border-bottom-width: 0px;
+
+                        }
+                        .table &gt; tbody {
+                        vertical-align: inherit;
+                        }
+                        .table &gt; thead {
+                        vertical-align: bottom;
+                        }
+                        .table &gt; :not(:first-child) {
+                        border-top: 2px solid currentColor;
+                        }
+
+
+                    </style>
+                    <div class="page">
+                        <div class="row">
+                            <t t-if="o.maintenance_type != 'preventive'">
+                                <div class="col-6">
+                                    <h2> Ordem de Serviço : <span t-field="o.name" />
+                                    </h2>
+                                </div>
+                            </t>
+                            <t t-if="o.maintenance_type == 'preventive'">
+                                <div class="col-6">
+                                    <h2> Manutenção Preventiva: <span t-field="o.name" />
+                                    </h2>
+                                </div>
+                                <div class="col-6">
+                                    <h2> Mês Referência: <t
+                                            t-esc="o.date_scheduled.strftime('%m/%Y')">
+                                        </t>
+                                    </h2>
+                                </div>
+                            </t>
+                            <!-- <div  > -->
+                            <!-- <img width="100px" height="100px"
+                            t-att-src="'/report/barcode/QR/%s' % 'My text in qr code'"/> -->
+                            <!-- <img class="col-6 float-right" width="100" height="100"
+                            t-att-src="'/report/barcode/QR/%s%s' %
+                            ('http://server.diagnostica-ma.com.br:8069/report/pdf/dgt_os.report_ordem_servico/',o.id)"/> -->
+                            <!-- </div> -->
+                        </div>
+                        <div class="row">
+                            <div class="col-12 mt-2 mb-1">
+                                <t t-call="engc_os.report_cliente_equipment_template" />
+                            </div>
+                        </div>
+                        <!-- <t t-if="o.origin">
+                            <div class="row mt-1 mb-1" id="engc_solicitacao_origem">
+                                <div class="col-6">
+                                    <strong>
+                                        Solicitação Origem:
+                                    </strong>
+                                    <br />
+                                    <span t-field="o.origin" />
+                                </div>
+                                
+								<div class="col-6">
+								<strong>Data de impressão:</strong><br/>
+								<span t-esc="time.strftime('%d-%m-%Y')"/>
+								</div>
+								</div>
+								
+                            </div>
+                        </t> -->
+
+                        <!-- <br /> -->
+                        <div class="row">
+                            <div class="col-12 rounded border border-dark p-1 mt-2 mb-1">Dados da Ordem de
+                                Serviço - <span t-field="o.name" /></div>
+                        </div>
+                        <div class="row" id="engc_os_dados">
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td>
+                                            <span class="font-weight-light">Solicitante:</span>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <span t-field="o.solicitante" />
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="font-weight-light">Tipo:</span>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <span t-field="o.maintenance_type" />
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="font-weight-light">Manutenção:</span>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <span t-field="o.who_executor" />
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td width="30%">
+                                            <span class="font-weight-light">Técnico iniciou O.S.:</span>
+                                        </td>
+                                        <td width="70%">
+                                            <strong>
+                                                <span t-field="o.tecnico_id" />
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td width="30%">
+                                            <span class="font-weight-light">Data do chamado:</span>
+                                        </td>
+                                        <td width="70%">
+                                            <strong>
+                                                <span t-field="o.date_request" />
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="font-weight-light">Data programada:</span>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <span t-field="o.date_scheduled" />
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="font-weight-light">Data de execução:</span>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <span t-field="o.date_execution" />
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="font-weight-light">Nº Solicitação:</span>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <span t-field="o.origin" />
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                </table>
+
+
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12 text-justify">
+                                <small>
+                                    <strong>Decrição do chamado:</strong>
+                                </small>
+                                <p t-field="o.problem_description" class="text-justify"/>
+                            </div>
+                        </div>
+                        <div class="row" t-if="o.relatorios_id" id="engc_os_relatorios">
+                            <div class="col-12">
+                                <t t-if="o.relatorios_id">
+                                    <p style="page-break-before:avoid" />
+                                    <div class="row">
+                                        <div class="col-12 rounded border border-dark p-1 mt-2 mb-1">
+                                            <span t-if="o.relatorios_id"> Relatório(s) de
+                                                Atendimento - <span t-field="o.name" />
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <table class="table table-sm table-borderless mt-2 mb-1"
+                                        t-if="o.relatorios_id" style="page-break-after:avoid">
+                                        <t t-foreach="o.relatorios_id" t-as="line">
+                                            <tr>
+                                                <td colspan="99">
+                                                    <div class="border-bottom">
+                                                        <strong>
+                                                            <span t-field="line.name" /> - Data: <span
+                                                                t-field="line.data_atendimento" />
+                                                        </strong>
+                                                        - <strong>
+                                                            Hora de início:
+                                                        </strong>
+                                                        <t
+                                                            t-esc="'%02d:%02d' % (int(line.start_hour), line.start_hour % 1 * 60)" />
+                                                        <strong>
+                                                        Hora do término:
+                                                        </strong>
+                                                        <t
+                                                            t-esc="'%02d:%02d' % (int(line.final_hour), line.final_hour % 1 * 60)" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="pt-2 text-justify">
+                                                        <small >
+                                                            <strong>Diagnóstico:</strong>
+                                                        </small>
+                                                        <p class="text-justify">
+                                                            <t t-if="line.fault_description">
+                                                                <span
+                                                                    t-field="line.fault_description" />
+                                                            </t>
+                                                            <t t-if="not line.fault_description">
+                                                                Nenhum
+                                                            </t>
+                                                        </p>
+                                                        <small>
+                                                            <strong>Descrição do atendimento:</strong>
+                                                        </small>
+                                                        <p class="text-justify"> 
+                                                            <span t-field="line.service_summary"  />
+                                                            <t t-call="engc_os.report_pecas_template" />
+                                                        </p>
+                                                        <small>
+                                                            <strong>Pendências:</strong>
+                                                        </small>
+                                                        <p t-if="line.pendency">
+                                                            <span t-field="line.pendency" />
+                                                        </p>
+                                                        <p t-if="not line.pendency">Nenhuma</p>
+                                                        <small t-if="line.observations">
+                                                            <strong>Observações:</strong>
+                                                        </small>
+                                                        <p t-if="line.observations" class="text-justify">
+                                                            <span t-field="line.observations" />
+                                                        </p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </table>
+                                </t>
+                            </div>
+                        </div>
+                        <div class="row" t-if="o.request_parts">
+							<div class="col-12">
+                                <div class="row">
+                                    <div class="col-12 rounded bg-light border border-dark p-1 mt-2 mb-1">
+                                        <span>Resumo das Peças da <span t-field="o.name" /></span>
+                                    </div>
+                                </div>
+								<table class="table table-sm table-condensed table-striped" t-if="o.request_parts">
+									<thead>
+										
+										<tr>
+											<th>
+												<strong>
+													Status
+												</strong>
+											</th>
+											<th>
+												<strong>
+													Descrição
+												</strong>
+											</th>
+											<th class="text-right">
+												<strong>
+													Quantidade
+												</strong>
+											</th>
+										</tr>
+									</thead>
+									<tbody>
+										<t t-if="o.request_parts">
+											<tr t-foreach="o.request_parts" t-as="line">
+												<td>
+													
+                                                    <span t-field="line.state" />
+                                                    
+												</td>
+												<td>
+													<span t-field="line.product_id" />
+												</td>
+												<td class="text-right">
+													<span t-field="line.product_uom_qty" />
+													<span t-field="line.product_uom" groups="product.group_uom" />
+												</td>
+											</tr>
+										</t>
+									</tbody>
+								</table>
+							</div>
+						</div> 
+                        <div class="row">
+                            <div class="col-12 rounded bg-light border border-dark p-1 mt-2 mb-1">
+                                <span>Assinaturas <span t-field="o.name" /></span>
+                            </div>
+                        </div>
+                        <t t-call="engc_os.report_assinaturas_template" />
+
+
+                        <t t-set="has_picture" t-value="0" />
+                        <t t-foreach="o.relatorios_id" t-as="rel">
+                            <t t-if="rel.picture_ids">
+                                <t t-set="has_picture" t-value="1" />
+                            </t>
+                        </t>
+                        <t t-if="has_picture">
+                            <div class="col-12"
+                                style="page-break-before: always;text-align:center ">
+                                <h1 t-if="not title_anexo_impresso">ANEXO FOTOS</h1>
+                                <t t-set="number_foto" t-value="1" />
+                                <t t-foreach="o.relatorios_id" t-as="rel">
+                                    <t t-if="rel.picture_ids">
+
+
+                                        <t t-foreach="rel.picture_ids" t-as="picture">
+
+                                            <div class="row-12"
+                                                style="border:1px solid;height:330mm;page-break-after: always;
+                        text-align:center ">
+
+                                                <h1>Figura - <t t-esc="number_foto" /> - <span
+                                                        t-field="picture.name" /></h1>
+
+
+                                                <p>
+                                                    <span t-field="picture.description" />
+                                                </p>
+                                                <img
+                                                    t-attf-src="data:image/png;base64,{{ picture.picture }}"
+                                                    style="max-height:280mm;
+                        max-width:250mm" />
+                                            </div>
+                                            <t t-set="number_foto" t-value="number_foto+1" />
+                                        </t>
+                                        <t t-set="title_anexo_impresso" t-value="1" />
+                                    </t>
+                                </t>
+                            </div>
+                        </t>
+                    </div>
+
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

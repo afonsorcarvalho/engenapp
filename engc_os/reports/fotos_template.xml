@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_fotos_template">
+        <div class="row mt-2">
+            <div class="col-6">
+                <table class="table table-borderless" id="engc_os_fotos_table">
+                    <tr>
+                        <td>Data:_______/_________/__________</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                    </tr>
+                   <!-- <tr>
+                         <td width="50%">
+                            <div t-foreach="o.tecnico_id" t-as="line">
+                                <img width="50%" class="img-fluid"
+                                t-att-src="'data:image/png;base64,%s' %
+                                to_text(line.user_id.digital_signature)"/>	
+                            </div>
+                        </td> 
+                        <<td>
+                            <img width="50%" class="img-fluid" t-att-src="'data:image/png;base64,%s' %
+                            to_text(o.digital_signature_client)"/>	
+                        </td> 
+                    </tr>-->
+                    <tr t-foreach="o.tecnico_id" t-as="line">
+                        <td class="pl-5 pr-5">
+                            <div class="text-center mt-5">
+                                _____________________________________________________<br />
+                                        <span
+                                    t-field="line.name" />
+                            </div>
+                        </td>
+                        <!-- <td><span t-field="o.name_digital_signature_client"/></td> -->
+                    </tr>
+                </table>
+            </div>
+            <div class="col-6">
+                <table class="table table-borderless ">
+                    <tr>
+                        <td>Data:_______/_________/__________</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                    </tr>
+                   <!-- <tr>
+                         <td width="50%">
+                            <div t-foreach="o.tecnico_id" t-as="line">
+                                <img width="50%" class="img-fluid"
+                                t-att-src="'data:image/png;base64,%s' %
+                                to_text(line.user_id.digital_signature)"/>	
+                            </div>
+                        </td> 
+                        <<td>
+                            <img width="50%" class="img-fluid" t-att-src="'data:image/png;base64,%s' %
+                            to_text(o.digital_signature_client)"/>	
+                        </td> 
+                    </tr>-->
+                    <tr>
+                        <td class="pl-5 pr-5">
+                            <div class="text-center mt-5">
+                                _____________________________________________________<br />
+                                        Assintatura cliente/setor
+                            </div>
+                        </td>
+                        <!-- <td><span t-field="o.name_digital_signature_client"/></td> -->
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </template>
+</odoo>
