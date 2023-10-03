@@ -61,7 +61,7 @@ class EngcOs(models.Model):
         """Salva ou atualiza os dados no banco de dados"""
         for vals in vals_list:
             if 'company_id' in vals:
-                vals['name'] = self.env['ir.sequence'].with_context(force_company=self.company_id.id).next_by_code(
+                vals['name'] = self.env['ir.sequence'].with_company(self.company_id.id).next_by_code(
                     'engc.os_sequence') or _('New')
             else:
                 vals['name'] = self.env['ir.sequence'].next_by_code('engc.os_sequence') or _('New')
@@ -195,7 +195,7 @@ class EngcOs(models.Model):
     )
   
     service_description = fields.Text(
-        "Descrição do Serviço",required=True, help="Descrição do serviço realizado ou a ser relalizado", 
+        "Descrição do Serviço", help="Descrição do serviço realizado ou a ser relalizado", 
         tracking=True
         )
   
