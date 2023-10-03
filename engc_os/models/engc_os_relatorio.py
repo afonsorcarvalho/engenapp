@@ -233,8 +233,8 @@ class Relatorios(models.Model):
         return {
             'name': _('Requisitar Peças'),
             'type': 'ir.actions.act_window',
-            'view_type': 'form',
-            'view_mode': 'form',
+            'views': [[False,'tree']],
+            'view_mode': 'tree',
             'res_model': 'engc.os.request.parts',
             'target': 'new',
             'context': {
@@ -242,6 +242,7 @@ class Relatorios(models.Model):
                  'default_relatorio_request_id': self.id,
 
                           },
+            'domain':[('relatorio_request_id','=',self.id)]
         }
     def _get_parts_requests(self):
         result = self.env['engc.os.request.parts'].search([

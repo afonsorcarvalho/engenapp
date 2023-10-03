@@ -208,19 +208,13 @@
                                                 <td colspan="99">
                                                     <div class="border-bottom">
                                                         <strong>
-                                                            <span t-field="line.name" /> - Data: <span
+                                                            <span t-field="line.name" /> - Início: <span
                                                                 t-field="line.data_atendimento" />
+                                                            - Término: <span
+                                                                t-field="line.data_fim_atendimento" />
                                                         </strong>
-                                                        - <strong>
-                                                            Hora de início:
-                                                        </strong>
-                                                        <t
-                                                            t-esc="'%02d:%02d' % (int(line.start_hour), line.start_hour % 1 * 60)" />
-                                                        <strong>
-                                                        Hora do término:
-                                                        </strong>
-                                                        <t
-                                                            t-esc="'%02d:%02d' % (int(line.final_hour), line.final_hour % 1 * 60)" />
+                                                        
+                                                        
                                                     </div>
                                                 </td>
                                             </tr>
@@ -228,7 +222,7 @@
                                                 <td>
                                                     <div class="pt-2 text-justify">
                                                         <small >
-                                                            <strong>Diagnóstico:</strong>
+                                                            <strong  >Diagnóstico:</strong>
                                                         </small>
                                                         <p class="text-justify">
                                                             <t t-if="line.fault_description">

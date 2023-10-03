@@ -14,9 +14,9 @@
                                 <tree editable="top" create="0"  delete="0">
                                 
                                    <field name="state" />
-                                   <field name="applied" widget="button"/>
-                                   <field name="cancel" widget="button"/>
-                                   <field name="not_autorized" widget="button"/>
+                                   <field name="applied" string="Aplicada" widget="button"/>
+                                   <field name="cancel" string="Cancelada" widget="button"/>
+                                   <field name="not_autorized" string="Não autorizada" widget="button"/>
                                    <field name="request_parts"/>
                                    <field name="product_uom_qty"/>
                                    <field name="product_uom"/>

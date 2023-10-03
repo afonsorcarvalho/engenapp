@@ -11,14 +11,14 @@
           decoration-muted="state == 'cancel'"
           decoration-danger="state == 'requisitada'"
         >
-          <header>
+          <!-- <header>
             <button name="action_application_request_parts" string="aplicar" class="oe_highlight" />
 
             <button name="action_application_request_parts" string="não autorizada"
                />
 
             <button name="action_application_request_parts" string="cancelar" />
-          </header>
+          </header> -->
           <!-- <button name="action_application_request_parts"
             icon="fa-cog"
             type="object"
@@ -34,11 +34,11 @@
           <!-- <field name="name" /> -->
 
           <field name="placed" optional="hide" />
-          <field name="state" />
-          <field name="os_id" optional="hide"
+          <field name="state" optional="show" readonly="1" />
+          <field name="os_id" optional="hide" readonly="1"
           />
-          <field name="relatorio_request_id" optional="show" />
-          <field name="relatorio_application_id" optional="show" />
+          <field name="relatorio_request_id" optional="hide"   readonly="1"/>
+          <field name="relatorio_application_id" optional="hide" readonly="1"/>
         </tree>
 
 
