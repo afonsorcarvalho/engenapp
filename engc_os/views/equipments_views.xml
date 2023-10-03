@@ -157,6 +157,7 @@
                     <field name="parent_id" />
                     <field name="client_id" />
                     <field name="maintenance_team_id" />
+                    <field name="maintenance_plan" />
                   </group>
                 </group>
                 <group >

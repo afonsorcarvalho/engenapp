@@ -133,6 +133,7 @@ PREVENTIVA
       <field name="cronograma"/>
 
       <field name="equipment" readonly="1"/>
+      <field name="periodicity_ids" widget="many2many_tags" />
       <!-- <field name="grupo_id" widget="many2many_tags"/> -->
       <field name="dias_de_atraso" readonly="1"/>
 

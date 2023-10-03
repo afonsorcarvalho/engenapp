@@ -50,25 +50,33 @@ class MaintencePlan(models.Model):
         default=lambda self: self.env.company
     )
     
-    objective = fields.Char("Objetivo")
-    
-    # field_name_ids = fields.One2many(
-    #     string='field_name',
-    #     comodel_name='model.name',
-    #     inverse_name='inverse_field',
-    # )
-    
+    objective = fields.Char("Objetivo")  
     section_ids = fields.One2many(string='Seções',comodel_name='engc.maintenance_plan.section',inverse_name='maintenance_plan',copy=True)
-    #periodicity_ids = fields.One2many(string='Periodicidade',comodel_name='engc.maintenance_plan.periodicity',inverse_name='maintenance_plan')
-    
-  
     periodicity_ids = fields.Many2many(
         string='Periodicidade',comodel_name='engc.maintenance_plan.periodicity'
     )
     instrucion_ids =  fields.One2many(string='instruções',comodel_name='engc.maintenance_plan.instruction',inverse_name='maintenance_plan',copy=True)
 
-    
- 
+    def get_time_duration(self, periodicitys = [] ):
+        result =[]
+        time_duration_list = {}
+        for rec in self:
+            
+            for periodicity in periodicitys:
+                if periodicity:
+                    instructions = self.env['engc.maintenance_plan.instruction'].search([
+                        ('periodicity','=',periodicity.id),
+                        ('maintenance_plan','=',rec.id)
+                        ])
+                else:
+                    instructions = self.env['engc.maintenance_plan.instruction'].search([ 
+                        ('maintenance_plan','=',rec.id)
+                        ])
+                time_duration_list[periodicity.name] = sum(instructions.mapped('time_duration'))
+                
+            result.append(time_duration_list)
+        return result
+
 
 class MaintencePlanInstruction(models.Model):
     """
@@ -102,8 +110,8 @@ class MaintencePlanInstruction(models.Model):
     )
     sequence = fields.Integer(string='Sequence', default=10)
 
-    time_duration = fields.Float(string="Tempo de duração",
-        help="Tempo em minutos de duração da tarefa da preventiva")
+    time_duration = fields.Float(string="Tempo (HH:mm)",
+        help="Tempo em horas (HH:mm) de duração da tarefa da preventiva")
     
     maintenance_plan = fields.Many2one(
         'engc.maintenance_plan',
@@ -174,18 +182,6 @@ class MaintencePlanSection(models.Model):
 
     def action_open_section_form(self):
  
-        #    if self._context['action'] == "agendar":
-        #     self.action_agendar()
-        #     return
-
-        # if self._context['action'] == "iniciar":
-        #     self.action_iniciar()
-
-        # if self._context['action'] == "reiniciar":
-        #     self.action_reiniciar()
-       
-            
-            
         res_model = 'engc.maintenance_plan.section'
         view_id = self.env.ref('engc_os.maintenance_plan_instructions_sections_form', False).id
         return {
@@ -231,13 +227,7 @@ class MaintencePlanPeriodicity(models.Model):
     )
     sequence = fields.Integer(string='Sequence', default=10)
     frequency =  fields.Integer("Pediodicidade (dias)")
-    # maintenance_plan  = fields.Many2one(
-    #     string='Plano de Manutenção',
-    #     comodel_name='engc.maintenance_plan',
-        
-    # )
-
-
+   
 class MaintencePlanInstructionMagnitude(models.Model):
  
    
@@ -256,13 +246,4 @@ class MaintencePlanInstructionMagnitude(models.Model):
     unit = fields.Char(
         string=u'Unidade',help="Unidade da grandeza. exemplo: KM/h, Joules"
 
-    )
-
-
-   
-  
-
-   
-
-
-    
+    )    

@@ -9,12 +9,17 @@ from datetime import timezone
 from dateutil.relativedelta import relativedelta
 from calendar import monthrange
 from calendar import monthcalendar
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 import pytz
 import logging
 import calendar
+import holidays
+from ..tools.schedule_preventive import SchedulePreventive,calcular_divisores
+import math
+
 
 _logger = logging.getLogger(__name__)
+
 
 
 class EngcPreventiva(models.Model):
@@ -40,7 +45,7 @@ class EngcPreventiva(models.Model):
                                   "*  \'Cancelada\' usado quando a preventiva foi cancelada pelo usuário.\n"
                                   "*  \'Atrasada\' usado quando a preventiva não foi executada no dia programado.\n"
                                   "*  \'Ordem Gerada\' usado quando já existe OS gerada para execução.\n"
-                                  "*  \'Reagenda\' usada quando OS gerada e foi reagendada a execução.\n"
+                                  "*  \'Reagendada\' usada quando OS gerada e foi reagendada a execução.\n"
                                   "*  \'Concluída\' a ordem de serviço já foi executada."
                             )
     name = fields.Char()
@@ -67,6 +72,18 @@ class EngcPreventiva(models.Model):
         comodel_name='engc.preventive.cronograma',
         ondelete='set null',
         company_dependent=True
+    )
+    maintenance_plan = fields.Many2one(
+        string=u'Cronograma',
+        comodel_name='engc.maintenance_plan',
+        ondelete='set null',
+        company_dependent=True
+    )
+    periodicity_ids = fields.Many2many(
+        string=u'Preventiva',
+        comodel_name='engc.maintenance_plan.periodicity',
+       
+        
     )
     
     tecnico = fields.Many2one(
@@ -579,117 +596,231 @@ class CronogramaPreventiva(models.Model):
     
     '''
     def report_get_number_weeks(self,ano, mes):
-        
-        
         res = len(monthcalendar(ano,mes))
         return res
+    
+    def _concatenate_days_schedule(self,schedule_for_periodicity_equipment_list):
+        concatenate_list ={}
+        temporary_schedule = schedule_for_periodicity_equipment_list.copy()
+
+        for k,v in schedule_for_periodicity_equipment_list.items():
+            this_schedule = schedule_for_periodicity_equipment_list[k]
+            del temporary_schedule[k]
+            _logger.info(f"temporary_schedule:{temporary_schedule}")
+            _logger.info(f"schedule_for_periodicity_equipment_list:{schedule_for_periodicity_equipment_list}")
+            if 'schedule' in this_schedule:
+                for schedule_item in this_schedule['schedule']:
+                    _logger.info(f"Schedule item:{schedule_item}")
+                    start, end = schedule_item
+                    if start not in concatenate_list:
+                        concatenate_list[start] = {'schedule': schedule_item, 'periodicity': [k]}
+                        for periodicity, values in temporary_schedule.items():
+                            if schedule_item in temporary_schedule[periodicity]['schedule']:
+                                _logger.info(f"Tem no {periodicity}")
+                                _logger.info(f"Voce esta no  {k}")
+                                periodicity_list =[]
+                                #pegando a datahora fim do agendamento do dia
+                                conc_start, conc_end = concatenate_list[start]['schedule']
+                                _logger.info(f"Como esta concatenate_list[start]['periodicity'] = {concatenate_list[start]['periodicity']} e o k é {k}")                             
+                                periodicity_list = concatenate_list[start]['periodicity'] +[periodicity]
+                                concatenate_list[start]={'schedule': (start,conc_end + timedelta(hours=1)), 'periodicity': periodicity_list}
+                        else:
+                            _logger.info(f"Não tem no {periodicity}")
+                            
+        _logger.info(f"Lista concatenada: {concatenate_list}")
+        return concatenate_list
+                        
+    def _make_preventives(self, concatenate_list):
+        user_tz = self.env.user.tz
+        local = pytz.timezone(user_tz)
+
+        _logger.info("Montando preventivas para serem adicionadas")
+        result = []
+        for equipment, value in concatenate_list.items():
+            _logger.info(equipment)
+            _logger.info(value)
+            for k, v in value.items():
+                if 'schedule' in v:
+                    schedule = v['schedule']
+                    periodicity = v['periodicity']
+                    _logger.info(schedule)
+                    date_start,date_end = schedule
+                    #procurando as periodicidades pelo nome
+                    periodicity_ids = self.env['engc.maintenance_plan.periodicity'].search([('name','in',periodicity)]).mapped('id')
+                    #transformando horario em UTC para colocar no banco
+                    date_start = local.localize(date_start).astimezone(pytz.utc).replace(tzinfo=None)
+                    date_end = local.localize(date_end).astimezone(pytz.utc).replace(tzinfo=None)
+                    dict_prev  =    {
+                            "name": str(self.name) + "/" + str(equipment.name),
+                            "client": equipment.client_id.id,
+                            "equipment": equipment.id,
+                            "periodicity_ids": [(6,0,periodicity_ids)],
+                            "data_programada": date_start,
+                            "data_programada_fim": date_end,
+                            "cronograma":self.id,
+                            "tecnico": self.tecnicos[0].id,
+                        }
+                    result.append(dict_prev)
+                    
+        return result
+    def _get_other_appointments(self,concatenate_schedule):
+        _logger.info(f"Other_appointments:{concatenate_schedule}")
+        other_appointments = []
+        for equipment,schedule_equipment in concatenate_schedule.items():
+            for day,data in schedule_equipment.items():
+                other_appointments.append(data['schedule'])
+        return other_appointments
+
+
+
+    
+
+
+    
 #
 # funcão de gera cronograma de preventivas
 #  para cada equipamento cadastrado no cronograma
 #
-
     
     def action_gera_cronograma(self):
         user_tz = self.env.user.tz
         local = pytz.timezone(user_tz)
         _logger.info(local)
         today = date.today()
-        hora_ini_dia = time(11,0,0, tzinfo=timezone.utc) # hora de início do dia
-        hora_fim_dia = time(21,0,0, tzinfo=timezone.utc) # hora de fim do dia
-        today_time = datetime.combine(today,hora_ini_dia) #começa sempre 8 da manhã brazil
+
         if self.date_start > self.date_stop:
             raise UserError(
                 _("Data de início maior que data de fim da geração do cronograma. Não é possivel gerar cronograma"))
         if self.date_stop < today:
             raise UserError(
                 _("Data de fim do cronograma menor que a data atual. Não é possivel gerar cronograma"))
+
+        # data de inicio e fim de cronograma
+        start_date = self.date_start.strftime('%Y-%m-%d')
+        start_year = int(self.date_start.strftime('%Y'))
+        end_date = self.date_stop.strftime('%Y-%m-%d')
+        end_year = int(self.date_stop.strftime('%Y'))
+        
+        #pegando apenas o ano das datas de inicio e fim
+        years = set()
+        years.add(start_year)
+        years.add(end_year)
+        years_list = list(years)
+        
+        #configurando os periodos de preventiva hora de inicio e fim de cada 
+        morning_start = 8
+        morning_end = 12
+        afternoon_start = 14
+        afternoon_end = 18
+
+        # pegando feriados do periodo
+        br_holidays = holidays.BR(subdiv='MA', years=years_list).items()
+        holidays_list = list(map(lambda x: x[0].strftime('%Y-%m-%d'), br_holidays))
+    
+        # hora_ini_dia = time(8,0,0, tzinfo=local) # hora de início do dia
+        # hora_fim_dia = time(18,0,0, tzinfo=local) # hora de fim do dia
+
+        # today_time = datetime.combine(today,hora_ini_dia) #começa sempre 8 da manhã brazil
+
+        #verificando se todos os equipamentos tem plano de manutenção cadastrado
+        msg_error_maintenance_plan = []
+        concatenate_schedule={}
+        maintenance_plan_dict ={}
         for equipment in self.equipments:
-            _logger.info("equipment.category_id.name:")
-            _logger.info(equipment.category_id.id)
-            instructions = self.env['engc.equipment.category.instruction'].search([('category_id','=',equipment.category_id.id)])
-            _logger.info("instruções:")
-            _logger.info(instructions)
-            grupo_instructions = []
-            for instruction in instructions:
-                _logger.info("instrução:")
-                _logger.info(instruction)
-                #grupo = [instruction.grupo_id]
-                #_logger.info("grupo:")
-                #_logger.info(grupo)
-                if instruction.grupo_id.instruction_type == 'preventiva':
-                    if instruction.grupo_id not in grupo_instructions:
-                        _logger.info("novo grupo:")
-                        grupo_instructions = grupo_instructions + [instruction.grupo_id]
-            _logger.info("grupo de instruções:")
-            _logger.info(grupo_instructions)
-            for grupo_instruction in grupo_instructions:
-                dias = grupo_instruction.periodicidade
-                _logger.info("Periodicidade")
-                _logger.info(dias)
-                if self.date_start >= today:
-                    date_current = datetime.combine(self.date_start,hora_ini_dia)
-                else:
-                    date_current = today_time
-                while (date_current.date() < self.date_stop):
-                    data_programada = date_current + timedelta(days=dias)
-                    # Adiciona a preventiva no cronograma
-                    _logger.info("NOVA data preventiva:")
-                    _logger.info(data_programada)
-                    date_current = data_programada
-                    _logger.info("data agora:")
-                    _logger.info(date_current)
+            maintenance_plan_dict[equipment] = equipment.maintenance_plan if equipment.maintenance_plan else equipment.category_id.maintenance_plan
+            if not maintenance_plan_dict[equipment]:
+                msg_error_maintenance_plan.append(f"Equipamento: {equipment.name}")
+            
+        if msg_error_maintenance_plan:
+            raise ValidationError(
+                    _("Os seguintes equipamentos não tem plano de manutenção cadastrados:\n\n"+ 
+                      "\n".join(msg_error_maintenance_plan) +
+                      "\n\nCadastre um plano de manutenção para gerar preventivas dos cronogramas!"))   
+        other_appointments = []
+        schedule_periodicity_equipment_list = []
+        for equipment in self.equipments:
+            
+            maintenance_plan = maintenance_plan_dict[equipment]
+            periodicity_list = maintenance_plan.periodicity_ids
+            divisores_periodicity_list = calcular_divisores(periodicity_list.mapped('frequency'))
+            _logger.info(divisores_periodicity_list)
+            _logger.info(periodicity_list)
+            time_duration_list = maintenance_plan.get_time_duration(periodicitys=periodicity_list)
+            time_duration_list = time_duration_list[0]
+            # time_duration_list = sorted(time_duration_list, key=lambda x: x.) 
+            _logger.info(time_duration_list)
+            schedule_for_periodicity_equipment = {}
+            for index,periodicity in enumerate(periodicity_list):
+                _logger.info(f"Gerando {periodicity.name}")
+                
+                other_appointments = self._get_other_appointments(concatenate_schedule)
+                schedule = SchedulePreventive(
+                            "Preventiva",
+                            preventive_duration_hours=int(math.ceil(time_duration_list[periodicity.name])) if int(math.ceil(time_duration_list[periodicity.name])) else 1,
+                            periodicity_days = periodicity.frequency,
+                            start_date=start_date,
+                            end_date=end_date,
+                            holidays=holidays_list,
+                            other_appointments=other_appointments,
+                            time_increment_minutes=15,
+                            morning_start=morning_start,
+                            morning_end=morning_end,
+                            afternoon_start=afternoon_start,
+                            afternoon_end=afternoon_end)
+                schedule.generate_schedule() 
+                schedule_for_periodicity_equipment[periodicity.name] = {
+                    'schedule' : schedule.get_schedule(),
+                    'time_duration': time_duration_list[periodicity.name]
+                }
+            _logger.info(schedule_for_periodicity_equipment)
 
-                    # ajustando a data programada para dias que não sejam finais de semana
-                    dia_sem = datetime.weekday(data_programada)
-                    _logger.info("dia da semana:")
-                    _logger.info(dia_sem)
-                    if dia_sem == 5:
-                        _logger.info("é sabado:")          
-                        data_programada=data_programada + timedelta(days=2)
-                        _logger.info("somando dois dias:") 
-                        _logger.info(data_programada)
-                    if dia_sem == 6:
-                        _logger.info("é domingo:") 
-                        data_programada=data_programada + timedelta(days=1)
-                        _logger.info("somando um dia:") 
-                        _logger.info(data_programada)
-                    
-                    # verificando se existe alguma preventiva já programada para esse equipamento
+            #concatenando dias periodicidades que caeem em dias iguais
+            concatenate_schedule[equipment] = self._concatenate_days_schedule(schedule_for_periodicity_equipment)
+        
+        preventives_maked = self._make_preventives(concatenate_schedule)
+        _logger.info(preventives_maked)
+        
+        # inserindo preventivas
+        self.env['engc.preventive'].create(preventives_maked)
+           
+           
+                
+
+            #if not maintenance_plan:
+                
+
+                   # verificando se existe alguma preventiva já programada para esse equipamento
                    # str_data_prog = data_programada.strftime("%d/%m/%Y")
-                    _logger.info("data_procura")
-                    _logger.info(data_programada)
-                    da = datetime(data_programada.year, data_programada.month, data_programada.day,0,0,0,0,tzinfo=local).strftime("%Y-%m-%d %H:%M:%S")
-                    dp = datetime(data_programada.year, data_programada.month, data_programada.day,23,59,59,0,tzinfo=local).strftime("%Y-%m-%d %H:%M:%S")
+                   
+                    # prev = self.env['engc.preventive'].search([
+                    #     ['data_programada','>=',da],['data_programada','<=',dp],
+                    #     ['equipment','=',equipment.id],
+                    #     ['cronograma','=',self.id]])
+                    # _logger.info("Preventiva igual, mano:")
+                    # _logger.info(prev)
+                    # if prev:
+                    #     _logger.info("jA TEM PREVENTIVA")
+                    #     _logger.info(prev)
+                    #     prev.write({
+                    #         "name": str(self.name) + "/" + str(equipment.name),
+                    #         "client": equipment.client_id.id,
+                    #         "equipment": equipment.id,
+                    #         "grupo_id": [(4,grupo_instruction.id)],
+                    #         "data_programada": data_programada.replace(hour=hora_ini_dia.hour,minute=hora_ini_dia.minute, tzinfo=timezone.utc),
+                    #         "data_programada_fim": data_programada.replace(hour=15,minute=0, tzinfo=timezone.utc),
+                    #         "cronograma":self.id,
+                    #         "tecnico": self.tecnicos[0].id,
+                    #     })
+                    # else:   
+                    #     self.env['engc.preventive'].create({
+                    #         "name": str(self.name) + "/" + str(equipment.name),
+                    #         "client": equipment.client_id.id,
+                    #         "equipment": equipment.id,
+                    #         "grupo_id": [(4,grupo_instruction.id)],
+                    #         "data_programada": data_programada.replace(hour=hora_ini_dia.hour,minute=hora_ini_dia.minute, tzinfo=timezone.utc),
+                    #         "data_programada_fim": data_programada.replace(hour=15,minute=0, tzinfo=timezone.utc),
+                    #         "cronograma":self.id,
+                    #         "tecnico": self.tecnicos[0].id,
 
-                    prev = self.env['engc.preventive'].search([
-                        ['data_programada','>=',da],['data_programada','<=',dp],
-                        ['equipment','=',equipment.id],
-                        ['cronograma','=',self.id]])
-                    _logger.info("Preventiva igual, mano:")
-                    _logger.info(prev)
-                    if prev:
-                        _logger.info("jA TEM PREVENTIVA")
-                        _logger.info(prev)
-                        prev.write({
-                            "name": str(self.name) + "/" + str(equipment.name),
-                            "client": equipment.client_id.id,
-                            "equipment": equipment.id,
-                            "grupo_id": [(4,grupo_instruction.id)],
-                            "data_programada": data_programada.replace(hour=hora_ini_dia.hour,minute=hora_ini_dia.minute, tzinfo=timezone.utc),
-                            "data_programada_fim": data_programada.replace(hour=15,minute=0, tzinfo=timezone.utc),
-                            "cronograma":self.id,
-                            "tecnico": self.tecnicos[0].id,
-                        })
-                    else:   
-                        self.env['engc.preventive'].create({
-                            "name": str(self.name) + "/" + str(equipment.name),
-                            "client": equipment.client_id.id,
-                            "equipment": equipment.id,
-                            "grupo_id": [(4,grupo_instruction.id)],
-                            "data_programada": data_programada.replace(hour=hora_ini_dia.hour,minute=hora_ini_dia.minute, tzinfo=timezone.utc),
-                            "data_programada_fim": data_programada.replace(hour=15,minute=0, tzinfo=timezone.utc),
-                            "cronograma":self.id,
-                            "tecnico": self.tecnicos[0].id,
-
-                        })
+                    #     })
             # chama adiciona_preventiva(self,equipments, data_programada, grupo_instrucao)

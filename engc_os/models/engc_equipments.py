@@ -92,10 +92,23 @@ class Equipment(models.Model):
         string='Ordens de serviço',
         comodel_name='engc.os',
         inverse_name='equipment_id',
-       
-       
+    )
+
+
+
+    def _get_default_maintenace_plan(self):
+        return self.category_id.maintenance_plan.id
+   
+    maintenance_plan = fields.Many2one(
+        string='Plano de manutenção',
+        comodel_name='engc.maintenance_plan',
+        default =_get_default_maintenace_plan,
+        
         
     )
+    
+
+
 
     picture_ids = fields.One2many('engc.equipment.pictures', 'equipment_id', "fotos")
     # relatorios = fields.One2many(
