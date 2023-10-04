@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import random
 from odoo import models, fields, api, _
 from datetime import date
 from datetime import time
@@ -151,6 +152,15 @@ class EngcPreventiva(models.Model):
         help="Indica que preventiva foi executada.",
     )
     
+    color = fields.Char(string='Color', compute='_compute_color', store=True)
+
+    @api.depends('state')
+    def _compute_color(self):
+        for record in self:
+            # Substitua esta lógica pela lógica que define a cor com base no estado.
+            # Neste exemplo, estamos gerando cores aleatórias.
+            color = "#{:02x}{:02x}{:02x}".format(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            record.color = color
     
     @api.onchange('data_programada')
     def _onchange_data_programada(self):

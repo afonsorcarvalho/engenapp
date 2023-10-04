@@ -43,7 +43,7 @@ PREVENTIVA
                
                 help="Gerar Ordem de Serviço para essa preventiva imediatamente.
                 Lembrando que ela será gerada automaticamente pelo sistema" />
-          <field name="state" widget="statusbar" statusbar_visible="" statusbar_colors="{'programada':'decoration-danger','done':'decoration-success', 'cancel':'decoration-muted'}"/>
+          <field name="state" widget="statusbar" statusbar_visible="draft,done" statusbar_colors="{'programada':'decoration-danger','done':'decoration-success', 'cancel':'decoration-muted'}"/>
       </header>
       <sheet>
         
@@ -93,7 +93,7 @@ PREVENTIVA
   </field>
 </record>
 
-<record id="engc_preventive_calendar" model="ir.ui.view">
+<!-- <record id="engc_preventive_calendar" model="ir.ui.view">
   <field name="name">engc.preventive.calendar</field>
   <field name="model">engc.preventive</field>
   <field name="arch" type="xml">
@@ -102,14 +102,15 @@ PREVENTIVA
       <field name="client"/>
       <field name="equipment" widget="many2one_tags"/>
       <field name="cronograma"/>
-      <!-- <field name="grupo_id" widget="many2many_tags"/> -->
+     
+       <field name="grupo_id" widget="many2many_tags"/> 
       
       <field name="tecnico" widget="many2one_tags" />
       
       <field name="state" />
     </calendar>
   </field>
-</record>
+</record> -->
 
 <record id="engc_preventive_lst" model="ir.ui.view">
   <field name="name">engc.preventive.list</field>
@@ -125,6 +126,13 @@ PREVENTIVA
           decoration-muted="state == 'cancel'">
 
       <!--<button string="Gera OS" class="oe_highlight" icon="fa-briefcase" type="object" name="action_gera_os"/> -->
+      <field name="state" widget="badge"
+      decoration-bf="state=='programada'"
+          
+      decoration-danger="state == 'atrasada'"
+      decoration-success="state == 'done'"
+      decoration-muted="state == 'cancel'"
+      />
       <field name="name"/>
       <field name="data_programada" string="Início"/>
       <field name="data_programada_fim" string="Fim"/>
@@ -140,7 +148,7 @@ PREVENTIVA
       <field name="tecnico"/>
       <field name="gerada_os" string="OS gerada?" />
       <field name="os_id" string="OS nº" />
-      <field name="state" />
+      <!-- <field name="color" widget="color"/> -->
     </tree>
   </field>
 </record>
@@ -163,6 +171,36 @@ PREVENTIVA
         </search> 
     </field> 
 </record>
+
+<record id="engc_preventive_calendar" model="ir.ui.view">
+  <field name="name">engc.preventive.calendar</field>
+  <field name="model">engc.preventive</field>
+  <field name="arch" type="xml">
+      <calendar string="Preventivas" 
+        date_start="data_programada" date_stop="data_programada_fim"
+        quick_add = "False"
+        color = "state"
+        form_view_id = "dgt_preventiva_form"
+        event_open_popup = "true"
+        delete = "false"
+        >
+          <field name="name"/>
+          <field name="data_programada" string="Início"/>
+          <field name="data_programada_fim" string="Fim"/>
+          <field name="client"/>
+          <field name="cronograma"/>
+          <field name="equipment" readonly="1" filters="1"/>
+          <field name="periodicity_ids" widget="many2many_tags"/>
+          <field name="dias_de_atraso" readonly="1"/>
+          <field name="tecnico" />
+          <field name="gerada_os" string="OS gerada?" />
+          <field name="os_id" string="OS nº" />
+          
+          <!-- <field name="color" widget="color"/> -->
+      </calendar>
+  </field>
+</record>
+
 
 <!--
 
@@ -255,7 +293,7 @@ CRONOGRAMA
     <record model="ir.actions.act_window" id="preventiva_action_window">
       <field name="name">Preventivas</field>
       <field name="res_model">engc.preventive</field>
-      <field name="view_mode">tree,form</field>
+      <field name="view_mode">tree,form,calendar</field>
     </record>
     <record model="ir.actions.act_window" id="cronograma_preventiva_action_window">
       <field name="name">Cronogramas de preventivas</field>
