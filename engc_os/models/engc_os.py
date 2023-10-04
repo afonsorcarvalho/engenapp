@@ -453,9 +453,12 @@ class EngcOs(models.Model):
         report_type = self.env.context.get('report_type')
         
         current_datetime = fields.Datetime.now()
-        # self.write({
-        #     'state':'under_repair'
-        # })
+        
+        self.write({
+             'state':'under_budget' if report_type == 'orcamento' else 'under_repair',
+             'date_start': current_datetime.utcnow(),
+             
+        })
         employee = self.env['hr.employee'].search([('user_id', '=', self.env.user.id)], limit=1)
         if employee.id:
             tecnico = employee
@@ -507,28 +510,28 @@ class EngcOs(models.Model):
         if self.filtered(lambda engc_os: engc_os.state == 'done'):
             raise UserError(_('Ordem já finalizada'))
 
-        if not self.relatorios:
+        if not self.relatorios_id:
             raise UserError(
                 _("Para finalizar O.S. deve-se incluir pelo menos um relatório de serviço."))
             return False
-        if self.relatorios.filtered(lambda x: x.state == 'draft'):
+        if self.relatorios_id.filtered(lambda x: x.state == 'draft'):
             raise UserError(
                 _("Para finalizar O.S. deve-se concluir todos os relatorios de serviço."))
             return False
            
 
         # verificando se pecas foram aplicadas
-        for p in self.pecas:
-            if not p.aplicada:
+        for p in self.request_parts:
+            if not p.state in ['aplicada','cancel','nao_autorizada']:
                 raise UserError(
                     _("Para finalizar O.S. todas as peças devem ser aplicadas"))
                 return False
         # if self.check_list_created:
-        for check in self.check_list:
-            if not check.check:
-                raise UserError(
-                    _("Para finalizar O.S. todas as instruções do check-list devem estar concluídas"))
-                return False
+        # for check in self.check_list:
+        #     if not check.check:
+        #         raise UserError(
+        #             _("Para finalizar O.S. todas as instruções do check-list devem estar concluídas"))
+        #         return False
 
         vals = {
             'state': 'done',
@@ -536,18 +539,18 @@ class EngcOs(models.Model):
         }
         # self.action_repair_done()
         res = self.write(vals)
-        if res:
-            if self.request_id.id:
-                self.request_id.action_finish_request()
-                _logger.debug("Concluída Solicitação")
-            else:
-                _logger.debug("Não existe solicitação para OS. Continuando...")
-            _logger.debug("Finalizando relatorios.")
-            self.finish_report()
-            return True
-        else:
-            _logger.debug("Erro ao atualizar OS.")
-            return False
+        # if res:
+        #     if self.request_id.id:
+        #         self.request_id.action_finish_request()
+        #         _logger.debug("Concluída Solicitação")
+        #     else:
+        #         _logger.debug("Não existe solicitação para OS. Continuando...")
+        #     _logger.debug("Finalizando relatorios.")
+        #     self.finish_report()
+        #     return True
+        # else:
+        #     _logger.debug("Erro ao atualizar OS.")
+        #     return False
 
     def repair_relatorio_service_start(self):
         date_now = datetime.now()

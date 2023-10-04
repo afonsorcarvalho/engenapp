@@ -65,9 +65,11 @@
 				<form string="Ordem de serviço" >
 					<header>
 						<button name="action_start_execution" string="Orçar" class="oe_highlight"
-							states="draft" type="object" context="{'report_type': 'orcamento'}" />
+							states="draft" type="object" context="{'report_type': 'orcamento'}"  />
 						<button name="action_start_execution" string="Executar" class="oe_highlight"
-							states="draft" type="object" context="{'report_type': 'manutencao'}" />
+							states="draft,under_budget" type="object" context="{'report_type': 'manutencao'}" />
+						<button name="action_repair_end" string="Finalizar Execução" class="oe_highlight"
+							states="under_repair" type="object"  />
 						<field name="state" widget="statusbar" statusbar_visible="draft"
 							options="{'clickable': True}" />
 					</header>
@@ -90,7 +92,7 @@
 							</h1>
 							<label for="company_id" class="oe_edit_only" />
 							<h2>
-								<field name="company_id"
+								<field name="company_id"  attrs="{'readonly': [('state','in',('done'))] }"
 									options="{'no_create': True, 'no_create_edit':True}" />
 							</h2>
 							<!-- <h2>
@@ -105,7 +107,9 @@
 							<group>
 								<field name="equipment_id"
 									domain="[('company_id', '=', company_id)]"
-									options="{'no_create': True, 'no_create_edit':True}" />
+									options="{'no_create': True, 'no_create_edit':True}"
+									attrs="{'readonly': [('state','in',('done'))] }"
+									/>
 								<field name="equipment_model" />
 								<field name="equipment_category" />
 							</group>
@@ -117,19 +121,19 @@
 						</group>
 						<group string="Dados da OS">
 							<group>
-								<field name="solicitante" />
-								<field name="who_executor" widget="selection" />
+								<field name="solicitante" attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="who_executor" widget="selection" attrs="{'readonly': [('state','in',('done'))] }"/>
 								<field name="tecnico_id"
-									attrs="{'invisible': [('who_executor','!=','own')], 'required':[('who_executor','=','own')]}"
+									attrs="{'invisible': [('who_executor','!=','own')], 'required':[('who_executor','=','own')],'readonly': [('state','in',('done'))]} "
 									options="{'no_create': True}" />
 								<field name="empresa_manutencao"
-									attrs="{'invisible': [('who_executor','!=','3rd_party')],'required':[('who_executor','=','3rd_party')]}" />
+									attrs="{'invisible': [('who_executor','!=','3rd_party')],'required':[('who_executor','=','3rd_party')],'readonly': [('state','in',('done'))]}" />
 								<label for="maintenance_type" />
 								<div class="o_row">
 									<field name="maintenance_type"
-										attrs="{'readonly':[('calibration_created','=',True)]}" />
+										attrs="{'readonly':['|',('calibration_created','=',True),('state','in',('done'))]}" />
 									<div
-										attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','not in',('New'))]}">
+										attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','not in',('New'))],'readonly': [('state','in',('done'))]}">
 										<p>
 											Salve a OS e volte aqui
 										</p>
@@ -142,9 +146,7 @@
                       ('maintenance_type','not in',('calibration')),
                       ('calibration_created','=',True),
                       ('name','in',('New'))],
-                      
-                    
-                    }"
+                      'readonly': [('state','in',('done'))]}"
 										icon="fa-plus">
 
 
@@ -154,25 +156,25 @@
 								<field name="calibration_created"
 									attrs="{
                   'invisible': [('maintenance_type','not in',('calibration'))],
-                  'readonly':[('calibration_created','=',True)]
+                  'readonly':['|',('calibration_created','=',True),('state','in',('done'))]
                   }" />
 								<field name="calibration_id"
 									attrs="{
                   'invisible': [('calibration_created','==', False)],
-                  'readonly':[('calibration_created','=',True)]
+                  'readonly':['|',('calibration_created','=',True),('state','in',('done'))]
                   }" />
 								<field name="priority" widget="priority" />
 							</group>
 							<group>
-								<field name="date_request" />
-								<field name="date_scheduled" />
-								<field name="date_execution" />
-								<field name="date_start" />
-								<field name="date_finish" />
+								<field name="date_request"  attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="date_scheduled" attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="date_execution" attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="date_start" attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="date_finish" attrs="{'readonly': [('state','in',('done'))] }"/>
 							</group>
 						</group>
 						<group string="Solicitação">
-							<field name="problem_description" />
+							<field name="problem_description" attrs="{'readonly': [('state','in',('done'))] }"/>
 							<!-- <field name="service_description" /> -->
 						</group>
 						<!-- <notebook>
