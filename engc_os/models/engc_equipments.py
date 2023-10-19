@@ -38,7 +38,7 @@ class Equipment(models.Model):
     )
    
     category_id = fields.Many2one(
-        'engc.equipment.category', 'Categoria', required=True, check_company=True)
+        'engc.equipment.category', 'Categoria', required=True)
     state  = fields.Selection(
         string="Status",
         selection=STATES,

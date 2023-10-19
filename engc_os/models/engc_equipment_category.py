@@ -6,19 +6,12 @@ class EngcEquipmentCategory(models.Model):
     _name = 'engc.equipment.category'
     _inherit = ['mail.thread']
     _description = 'Categoria de Equipamento'
-    _check_company_auto = True
+   
 
     name = fields.Char()
     
-    company_id = fields.Many2one(
-        string='Company', 
-        comodel_name='res.company', 
-        required=True, 
-        default=lambda self: self.env.company
-    )
     
-    responsibles = fields.Many2many('res.users', string='Responsáveis',
-                    company_dependent=True)
+    
     note = fields.Text("Notas",)
     # equipments_id = fields.One2many(
     #     'engc.equipment', 'category_id', string='Equipamentos', 

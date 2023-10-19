@@ -18,6 +18,7 @@
           <field name="company_id" groups="base.group_multi_company" />
           <field name="model" optional="hide"/> 
           <field name="category_id" optional="hide" />
+
           <!-- <field name="picture_ids" /> -->
         </tree>
       </field>
@@ -183,7 +184,7 @@
     
 
   
-  <record id="engc_os.equipment_search_view" model="ir.ui.view">
+  <!-- <record id="engc_os.equipment_search_view" model="ir.ui.view">
       <field name="name">equipment.search.view</field>
       <field name="model">engc.equipment</field>
       <field name="arch" type="xml">
@@ -205,7 +206,7 @@
             
         </searchpanel>
       </field>
-  </record>
+  </record> -->
 
     <record id="engc_os.equipment_pivot_view" model="ir.ui.view">
       <field name="name">equipment.pivot.view</field>
