@@ -125,7 +125,7 @@ class SchedulePreventive:
     def __init__(self, name, periodicity_days=7, start_date=None, end_date=None,
                  preventive_duration_hours=1, morning_start=8, morning_end=12,
                  afternoon_start=14, afternoon_end=18, holidays=None,others_day_off=None,
-                 other_appointments=None, time_increment_minutes=15):
+                 other_appointments=None, time_increment_minutes=15, not_weekend = True):
         # Inicialização dos atributos
         self.name = name
         self.periodicity_days = periodicity_days
@@ -142,6 +142,7 @@ class SchedulePreventive:
         self.holidays = holidays if holidays else []
         self.others_day_off = others_day_off if others_day_off else []
         self.other_appointments = other_appointments if other_appointments else []
+        self.not_weekend = not_weekend
         self.time_increment_minutes = time_increment_minutes
 
     # Métodos para definir e obter feriados
@@ -219,6 +220,17 @@ class SchedulePreventive:
             int: O incremento de tempo em minutos.
         """
         return self.time_increment_minutes
+    
+    def next_day(self,current_day, days = 1):
+        print("Procura proximo dia")
+        current_day += timedelta(days=days)
+        if self.not_weekend:
+            #weekday jump
+            while current_day.weekday() in [5,6]:
+                print(f"É final de semana {current_day.weekday()}")
+                current_day += timedelta(days=1)
+
+        return current_day
 
     def generate_schedule(self):
         """
@@ -246,7 +258,7 @@ class SchedulePreventive:
                         else:
                             if (schedule[0] + timedelta(minutes=self.get_time_increment())) > current_date.replace(hour=self.afternoon_end, minute=0, second=0):
                                 find_range_time = False
-                                current_date += timedelta(days=1)
+                                current_date = self.next_day(current_date)
                                 preventive_start = current_date.replace(
                                     hour=self.morning_start, minute=0, second=0)
                                 preventive_end = preventive_start + \
@@ -257,9 +269,9 @@ class SchedulePreventive:
                                 schedule = (schedule[0] + timedelta(minutes=self.get_time_increment(
                                 )), schedule[1] + timedelta(minutes=self.get_time_increment()))
                 else:
-                    current_date += timedelta(days=1)
+                    current_date = self.next_day(current_date)
 
-            current_date += timedelta(days=self.periodicity_days)
+            current_date =  self.next_day(current_date, days=self.periodicity_days)
 
     def can_schedule_on_day(self, current_date):
         """
@@ -312,12 +324,7 @@ class SchedulePreventive:
             return True
         return False
             
-             
-          
 
-        
-
-       
 
     def display_schedule(self):
         """

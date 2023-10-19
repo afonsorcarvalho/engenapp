@@ -1,6 +1,8 @@
 
 from odoo import models, fields, api
+import logging
 
+_logger = logging.getLogger(__name__)
 
 class Equipment(models.Model):
     _name = 'engc.equipment'
@@ -93,6 +95,7 @@ class Equipment(models.Model):
         comodel_name='engc.os',
         inverse_name='equipment_id',
     )
+    color = fields.Char()
 
 
 
@@ -106,6 +109,11 @@ class Equipment(models.Model):
         
         
     )
+    def get_maintenance_plan(self):
+        return self.maintenance_plan if self.maintenance_plan else self.category_id.maintenance_plan
+    
+    
+    
     
 
 
@@ -291,6 +299,20 @@ class EquipmentsSection(models.Model):
         'engc.equipment.section',
         string='Setor Pai',
         )
+    
+  
+    @api.depends('name', 'section_parent')
+    def name_get(self):
+        result = []
+        for record in self:
+            if record.section_parent:
+                name = record.section_parent.display_name + '/' + record.name
+            else:
+                name = record.name
+            result.append((record.id, name))
+        return result
+    
+    
 
 class EquipmentsPictures(models.Model):
     _name = 'engc.equipment.pictures'

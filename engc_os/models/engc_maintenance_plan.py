@@ -49,14 +49,21 @@ class MaintencePlan(models.Model):
         required=True, 
         default=lambda self: self.env.company
     )
+ 
     
     objective = fields.Char("Objetivo")  
-    section_ids = fields.One2many(string='Seções',comodel_name='engc.maintenance_plan.section',inverse_name='maintenance_plan',copy=True)
+    section_ids = fields.One2many(string='Seções',comodel_name='engc.maintenance_plan.section',inverse_name='maintenance_plan',copy=False)
     periodicity_ids = fields.Many2many(
         string='Periodicidade',comodel_name='engc.maintenance_plan.periodicity'
     )
     instrucion_ids =  fields.One2many(string='instruções',comodel_name='engc.maintenance_plan.instruction',inverse_name='maintenance_plan',copy=True)
 
+
+    def copy(self, default=None):
+        # Agregar codigo de validacion aca
+        
+        return super(MaintencePlan, self).copy()
+    
     def get_time_duration(self, periodicitys = [] ):
         result =[]
         time_duration_list = {}
@@ -172,6 +179,8 @@ class MaintencePlanSection(models.Model):
         string='Instruções',
         comodel_name='engc.maintenance_plan.instruction',
         inverse_name = 'section',
+        copy=False
+        
         
     )
     maintenance_plan  = fields.Many2one(

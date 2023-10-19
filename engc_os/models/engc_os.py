@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta
 from odoo import models, fields,  api, _, SUPERUSER_ID
 from odoo.addons import decimal_precision as dp
 from odoo import netsvc
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -215,6 +215,20 @@ class EngcOs(models.Model):
         for record in self:
             record.relatorios_count = self.env['engc.os.relatorios'].search_count(
                 [('os_id', '=', self.id)])
+    
+    check_list_id = fields.One2many(
+        string="Check-list",
+        comodel_name='engc.os.verify.checklist',
+        inverse_name="os_id",        
+        help="Check List de instruções",
+        check_company=True
+    )
+    check_list_count = fields.Integer(compute='compute_check_list_count')
+
+    def compute_check_list_count(self):
+        for record in self:
+            record.check_list_count = self.env['engc.os.verify.checklist'].search_count(
+                [('os_id', '=', self.id)])
 
     calibration_created = fields.Boolean("Calibração criada")
     calibration_id = fields.Many2one(
@@ -284,6 +298,26 @@ class EngcOs(models.Model):
     #
     #******************************************
     
+    def action_go_check_list(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Check-list'),
+            'view_mode': 'tree,form',
+            'res_model': 'engc.os.verify.checklist',
+            'domain': [('os_id', '=', self.id)],
+            'target': 'new',
+            'context': {
+                'default_os_id': self.id,
+                'search_default_group_section': 1,
+                'search_default_os_id': self.id,
+                'expand': True,
+                'create': True,
+                'delete': True,
+                
+                
+            },
+        }
     def action_go_relatorios(self):
         self.ensure_one()
         return {
@@ -308,6 +342,8 @@ class EngcOs(models.Model):
             'domain': [('os_id', '=', self.id)],
             'context': "{'create': False,'delete': False,'edit':False}"
         }
+    def action_make_check_list(self):
+        self.create_checklist()
     
     def action_make_calibration(self):
         _logger.info("chamando calibracao")
@@ -675,158 +711,28 @@ class EngcOs(models.Model):
                         })]
 
         return self.servicos
-   
 
     def create_checklist(self):
         """Cria a lista de verificacao caso a os seja preventiva."""
         if self.maintenance_type == 'preventive' or self.maintenance_type == 'loan' or self.maintenance_type == 'calibration':
             _logger.debug("Criando Checklist")
-            instructions = self.env['maintenance.equipment.category.vl'].search(
-                [('category_id.name', '=', self.equipment_id.category_id.name)])
-            os_check_list = self.env['engc.os.verify.list'].search(
-                [('category_id.name', '=', self.equipment_id.category_id.name)])
+            if not self.equipment_id:
+                raise ValidationError(_("Não está definido o campo equipamento na OS"))
+            
+            maintenance_plan = self.equipment_id.get_maintenance_plan()
+            if not maintenance_plan:
+                raise ValidationError(_("Não há plano de manutenção configurado no equipamento ou na sua categoria"))
+            instructions = maintenance_plan.instrucion_ids
+
+           
+            os_check_list = self.env['engc.os.verify.checklist'].search(
+                [('os_id', '=', self.id)])
+            if os_check_list:
+                raise ValidationError(_("Check list já criado. Exclua toda check-list para gerar novamente"))
 
             for i in instructions:
                 instructions = os_check_list.create(
-                    {'engc_os': self.id, 'instruction': str(i.name)})
+                    {'os_id': self.id, 'instruction': i.name})
                 _logger.debug(i)
 
-            self.check_list_created = True
-
-     
-# class RelatoriosLine(models.Model):
-#     _name = 'engc.os.relatorios'
-#     _description = 'Relatórios de atendimento'
-#     _order = "data_atendimento,id"
-    
-#     company_id = fields.Many2one(
-#         string='Company', 
-#         comodel_name='res.company', 
-#         required=True, 
-#         default=lambda self: self.env.user.company_id
-#     )
-    
-#     name = fields.Char(
-#         'Nº Relatório de Serviço', default=lambda self: self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
-#                 'engc.os.relatorio_sequence'), copy=False, required=True)
-
-        
-#     os_id = fields.Many2one(
-#         'engc.os', 'Ordem de Serviço',
-#         index=True, ondelete='cascade')
-
-#     data_atendimento = fields.Date(string='Data de Atendimento', 
-#         required=True
-#     )
-
-#     start_hour = fields.Float("Hora início", 
-#         required=True
-#     )
-#     final_hour = fields.Float("Hora fim", 
-#         required=True
-#     )
-
-class RequestParts(models.Model):
-    _name = 'engc.os.request.parts'
-    _description = "Requisição de peças"
-    _check_company_auto = True
-    name = fields.Char()
-    
-    
-    @api.depends('name', 'request_parts_id')
-    def name_get(self):
-        result = []
-        for record in self:
-            
-            name = '[' + record.product_id.default_code + '] ' + record.product_id.name
-            
-            result.append((record.id, name))
-        return result
-    
-    company_id = fields.Many2one(
-        string='Instituição', 
-        comodel_name='res.company', 
-        required=True, 
-        default=lambda self: self.env.company
-    )
-    state = fields.Selection(selection = [
-        ('requisitada','Requisitada'),
-        ('autorizada','Autorizada'),
-        ('aplicada','Aplicada'),
-        ('nao_autorizada','Não Autorizada'),
-        ('cancel','Cancelada'),
-        ],
-        default = 'requisitada',
-        required=True
-        
-
-        )
-
-    product_id = fields.Many2one('product.product', u'Peças', 
-                                  required=True, check_company=True, 
-                                  domain="[('sale_ok', '=', True), '|', ('company_id', '=', False), ('company_id', '=', company_id)]")
-                                  
-    # name = fields.Text(
-    #     string="Description",
-    #     computed = "_compute_name",
-    #     store=True,  required=True)
-
-    @api.depends('product_id')
-    def _compute_name(self):
-        for line in self:
-            if not line.product_id:
-                continue    
-           
-            line.name = line.product_id.name 
-       
-    product_uom_qty = fields.Float(
-        string="Quantity",
-        compute='_compute_product_qty',
-        digits='Product Unit of Measure', default=1.0,
-        store=True, readonly=False, required=True, precompute=True)
-    
-    product_uom = fields.Many2one(
-        comodel_name='uom.uom',
-        string="Unit of Measure",
-        compute='_compute_product_uom',
-        store=True, readonly=False, precompute=True, ondelete='restrict',
-        domain="[('category_id', '=', product_uom_category_id)]")
-    product_uom_category_id = fields.Many2one(related='product_id.uom_id.category_id', depends=['product_id'])
-    
-    @api.depends('product_id')
-    def _compute_product_uom(self):
-        for line in self:
-            if not line.product_uom or (line.product_id.uom_id.id != line.product_uom.id):
-                line.product_uom = line.product_id.uom_id
-    
-    
-    @api.depends('product_id', 'product_uom', 'product_uom_qty')
-    def _compute_product_qty(self):
-        for line in self:
-            if not line.product_id or not line.product_uom or not line.product_uom_qty:
-                line.product_uom_qty = 0.0
-                continue
-            line.product_uom_qty = line.product_uom._compute_quantity(line.product_uom_qty, line.product_id.uom_id)
-
-    placed = fields.Boolean('Aplicada')
-    
-    @api.onchange('placed')
-    def onchange_placed(self):
-        print(self.env.context)
-        #if self.placed:
-        #    self.relatorio_application_id = self.
-    
-    
-    os_id = fields.Many2one(
-        'engc.os', 'Ordem de Serviço',
-         index=True, ondelete='cascade', check_company=True)
-    relatorio_request_id = fields.Many2one('engc.os.relatorios', 'Relatório Solicitante')
-    relatorio_application_id = fields.Many2one('engc.os.relatorios', 'Relatório Aplicado')
-
-    #******************************************
-    #  ACTIONS
-    #
-    #******************************************
-
-    def action_application_request_parts(self):
-        _logger.info("Aplicando peças")
+            #self.check_list_created = True

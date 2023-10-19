@@ -7,16 +7,18 @@
       <field name="model">engc.equipment</field>
       <field name="arch" type="xml">
         <tree>
-          <field name="id" />
+          <field name="id" optional="show"/>
           <field name="name" />
           <field name="apelido" string="Apelido" groups="base.group_no_one" />
           <field name="serial_number" />
-          <field name="create_date" string="Criado em" />
-          <field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
+          <field name="create_date" string="Criado em" optional="hide"/>
+          <field name="create_uid" string="Criado por" widget="many2one_avatar_user" optional="hide"/>
+          <field name="create_date" string="Criado em" optional="hide"/>
+          <field name="section_id" />
           <field name="company_id" groups="base.group_multi_company" />
-          <field name="model" />
-          <field name="category_id" />
-          <field name="picture_ids" />
+          <field name="model" optional="hide"/> 
+          <field name="category_id" optional="hide" />
+          <!-- <field name="picture_ids" /> -->
         </tree>
       </field>
     </record>
@@ -177,6 +179,145 @@
 
       </field>
     </record>
+
+    
+
+  
+  <record id="engc_os.equipment_search_view" model="ir.ui.view">
+      <field name="name">equipment.search.view</field>
+      <field name="model">engc.equipment</field>
+      <field name="arch" type="xml">
+          <search string="Filtros">
+              <field name="name" filter_domain="[('name', 'ilike', self)]" string="Nome"/>
+              <field name="apelido" filter_domain="[('apelido', 'ilike', self)]" string="Apelido"/>
+              <field name="serial_number" filter_domain="[('serial_number', 'ilike', self)]" string="Número de Série"/>
+              <group expand="0" string="Agrupar por Setor">
+                <filter context="{'group_by': 'section_id'}" name="group_section_id" string="Departamento"/>
+              </group>
+          </search>
+          <searchpanel>
+            <field name="company_id" />
+            <field name="category_id" />
+            <field name="state" />
+            
+           
+           
+            
+        </searchpanel>
+      </field>
+  </record>
+
+    <record id="engc_os.equipment_pivot_view" model="ir.ui.view">
+      <field name="name">equipment.pivot.view</field>
+      <field name="model">engc.equipment</field>
+      <field name="arch" type="xml">
+          <pivot>
+              <field name="section_id" type="row" string="Setor"/>
+              <field name="category_id" type="col" string="Categoria"/>
+             
+          </pivot>
+      </field>
+  </record>
+  <record id="engc_os.equipment_kanban_view" model="ir.ui.view">
+    <field name="name">equipment.kanban.view</field>
+    <field name="model">engc.equipment</field>
+    <field name="arch" type="xml">
+        <kanban>
+            <templates>
+                <t t-name="kanban-box" >
+                 
+                    <div class="oe_kanban_global_click o_kanban_record_has_image_fill o_hr_kanban_record">
+                        <field name="image_1920" widget="image" class="oe_avatar" options="{'zoom': true}" style="max-width: 60px; max-height: 60px;margin-right: 50px"/>
+                        <div class="oe_kanban_details">
+                            <div class="o_kanban_record_top">
+                              <div class="o_kanban_record_headings">
+                                
+                                    <b>
+                                        <field name="name"/>
+                                    </b>
+                                    
+                                    <small class="o_kanban_record_subtitle text-muted">
+                                      <field name="apelido"/>
+                                    </small>
+
+                                
+                              </div>
+                              <div
+                                    class="o_dropdown_kanban dropdown"
+                                    t-if="!selection_mode"
+                                    groups="base.group_user"
+                                >
+                                    <a
+                                        role="button"
+                                        class="dropdown-toggle o-no-caret btn"
+                                        data-toggle="dropdown"
+                                        data-display="static"
+                                        href="#"
+                                        aria-label="Dropdown menu"
+                                        title="Dropdown menu"
+                                    >
+                                        <span class="fa fa-ellipsis-v" />
+                                    </a>
+                                    <div class="dropdown-menu" role="menu">
+                                        <a
+                                            t-if="widget.editable"
+                                            role="menuitem"
+                                            type="edit"
+                                            class="dropdown-item"
+                                        >Edit</a>
+                                        <a
+                                            t-if="widget.deletable"
+                                            role="menuitem"
+                                            type="delete"
+                                            class="dropdown-item"
+                                        >Delete</a>
+                                        <div
+                                            role="separator"
+                                            class="dropdown-divider"
+                                        />
+                                        <ul
+                                            class="oe_kanban_colorpicker"
+                                            data-field="color"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <small>
+                                  <field name="section_id"/>
+                                </small>
+                            </div>
+                            <div class="o_kanban_record_bottom">
+                              <!-- <div class="oe_kanban_bottom_left">
+                                  <field name="priority" widget="priority" />
+                                  <field
+                                      name="activity_ids"
+                                      widget="kanban_activity"
+                                      related="activity_state"
+                                  />
+                              </div> -->
+                              <div class="oe_kanban_bottom_right">
+                                  <!-- <field
+                                      name="kanban_state"
+                                      widget="state_selection"
+                                  />
+                                  <field name="activity_state" invisible="1" /> -->
+                                 <field name="state"/>
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+                  
+                </t>
+            </templates>
+        </kanban>
+    </field>
+</record>
+
+
+
+  
+
 
 
   </data>

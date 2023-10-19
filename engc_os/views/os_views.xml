@@ -70,11 +70,18 @@
 							states="draft,under_budget" type="object" context="{'report_type': 'manutencao'}" />
 						<button name="action_repair_end" string="Finalizar Execução" class="oe_highlight"
 							states="under_repair" type="object"  />
+						<button name="action_make_check_list" string="Gerar Check-List" class="oe_highlight"
+							states="draft, under_repair" type="object"  />
 						<field name="state" widget="statusbar" statusbar_visible="draft"
 							options="{'clickable': True}" />
 					</header>
 					<sheet string="Ordem de Serviço">
 						<div name="button_box" position="inside">
+							<button class="oe_stat_button" string="Check-List" type="object"
+								name="action_go_check_list"
+								icon="fa-list">
+								<field string="Check-List" name="check_list_count" widget="statinfo" />
+							</button>
 							<button class="oe_stat_button" string="Relatórios" type="object"
 								name="action_go_relatorios"
 								icon="fa-book">

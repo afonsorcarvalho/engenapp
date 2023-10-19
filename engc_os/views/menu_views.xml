@@ -12,17 +12,17 @@
     <record model="ir.actions.act_window" id="engc_os.equipment_action_window">
       <field name="name">Equipamentos</field>
       <field name="res_model">engc.equipment</field>
-      <field name="view_mode">tree,form</field>
+      <field name="view_mode">tree,form,pivot,kanban</field>
     </record>
     <record model="ir.actions.act_window" id="engc_os.equipment_category_action_window">
       <field name="name">Categorias de Equipamentos</field>
       <field name="res_model">engc.equipment.category</field>
-      <field name="view_mode">tree,form</field>
+      <field name="view_mode">tree,form,pivot</field>
     </record>
     <record model="ir.actions.act_window" id="engc_os.equipment_category_instructions_action_window">
       <field name="name">Instruções de manutenção</field>
       <field name="res_model">engc.equipment.category.instruction</field>
-      <field name="view_mode">tree,form</field>
+      <field name="view_mode">tree,form,pivot</field>
     </record>
     <record model="ir.actions.act_window" id="engc_os.calibration_instruments_action_window">
       <field name="name">Instrumentos</field>
