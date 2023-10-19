@@ -56,7 +56,7 @@ class MaintencePlan(models.Model):
     periodicity_ids = fields.Many2many(
         string='Periodicidade',comodel_name='engc.maintenance_plan.periodicity'
     )
-    instrucion_ids =  fields.One2many(string='instruções',comodel_name='engc.maintenance_plan.instruction',inverse_name='maintenance_plan',copy=True)
+    instrucion_ids =  fields.One2many(string='instruções',comodel_name='engc.maintenance_plan.instruction',inverse_name='maintenance_plan',copy=False)
 
 
     def copy(self, default=None):

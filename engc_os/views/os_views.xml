@@ -67,11 +67,11 @@
 						<button name="action_start_execution" string="Orçar" class="oe_highlight"
 							states="draft" type="object" context="{'report_type': 'orcamento'}"  />
 						<button name="action_start_execution" string="Executar" class="oe_highlight"
-							states="draft,under_budget" type="object" context="{'report_type': 'manutencao'}" />
+							states="draft,under_budget,execution_ready" type="object" context="{'report_type': 'manutencao'}" />
 						<button name="action_repair_end" string="Finalizar Execução" class="oe_highlight"
 							states="under_repair" type="object"  />
 						<button name="action_make_check_list" string="Gerar Check-List" class="oe_highlight"
-							states="draft, under_repair" type="object"  />
+							states="draft, under_repair,execution_ready" type="object"  />
 						<field name="state" widget="statusbar" statusbar_visible="draft"
 							options="{'clickable': True}" />
 					</header>

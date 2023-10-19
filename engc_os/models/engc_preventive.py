@@ -254,74 +254,56 @@ class EngcPreventiva(models.Model):
     # Colocar serviço de manutenção preventiva default do contrato na service.line da Ordem de serviço
     
     def gera_os(self):
-        r = self
-        _logger.info("Grupo de instruções...")
-        _logger.info(r.grupo_id)
-        analytic_account_id = 0
-        fiscal_position_id = 0
-        contrato = 0
-        #pegando grupo de instruções
-        grps_inst = [] 
+        rec = self
+        _logger.info("PROCURANDO INSTRUÇÕES DO PLANO DE MANUTENÇÃO...")
+        _logger.info(rec.maintenance_plan)
+      
+      
+        instructions_list = [] 
         tecnicos = []
+        who_executor = 'own'
+        date_request = datetime.now()
         
-        for g in r.grupo_id:
-            _logger.debug("Grupo de instruções adicionado %s", g.name)
-            grps_inst.append(g.id)
+        for instructions in rec.maintenance_plan.instrucion_ids:
+            _logger.debug("INSTRUÇÕES %s", instructions.name)
+            instructions_list.append(instructions.id)
         
         #pdb.set_trace()
-        _logger.debug("Tecnico da preventiva %s", r.tecnico.name)
-        for t in r.tecnico:
-            tecnicos.append(t.id)
+        #_logger.debug("Tecnico da preventiva %s", rec.tecnicos.name)
+        #for tecnico in rec.tecnicos:
+        #    tecnicos = tecnico.id
 
         
-        _logger.debug("Procurando contratos do equipamento")
-        contrato = self.equipment.get_contrato()
-        if type(contrato) is list:
-            try:
-                for c in contrato:
-                    #_logger.debug("contrato", c)
-                    _logger.debug("Achado contrato vigente %s", c.name)
-                    _logger.debug("Adicionando analytic_account %s", c.analytic_account_id.name)
-                    _logger.debug("Adicionando fiscal_position_id %s", c.fiscal_position_id.name)
-                    analytic_account_id = c.analytic_account_id.id
-                    fiscal_position_id = c.fiscal_position_id.id
-                    contrato = c.id
-                    
+        
 
-            except ValueError:
-                _logger.debug("Equipamento não pertence a nenhum contrato")
-                contrato = 0
-        else:
-            contrato = 0
-
-        description = 'Manutenção Preventiva referente ao mês ' + r.data_programada.strftime('%m/%Y')
+        description = 'Manutenção Preventiva referente ao mês ' + rec.data_programada.strftime('%m/%Y')
             
         os = self.env['engc.os'].create({
-                'origin':r.name,
+                'origin':rec.name,
                 'maintenance_type':'preventive',
-                'cliente_id': r.client.id,
-                'contact_os': 'Automático',
-                'description': description,
-                'contrato': contrato,
-                'analytic_account_id': analytic_account_id,
-                'fiscal_position_id': fiscal_position_id,
-                'equipment_id': r.equipment.id,
-                'date_scheduled':  r.data_programada,
-                'date_execution':  r.data_programada,
-                'maintenance_grupo_instrucao': [(6, 0, grps_inst)],
-                'tecnicos_id': [(6,0,tecnicos)],
+                'solicitante':'Automático',
+              #  'cliente_id': rec.client.id if rec.client.id else None ,
+                'problem_description': 'Manutenção preventiva',
+                'who_executor' : who_executor,
+              #  'description': description,
+                
+                
+                
+                'equipment_id': rec.equipment.id,
+                'date_request':  date_request,
+                'date_scheduled':  rec.data_programada,
+                'date_execution':  rec.data_programada,
+                'check_list_id': [(6, 0, instructions_list)],
+               
+                #'tecnico_id': [(6,0,tecnicos)],
                 
 
                 'state':'execution_ready',
             })
         
-        try:
-            os.add_service()   
-        except ValueError:
-            _logger.debug("Não foi possível adicionar serviço a OS")
-            _logger.debug(ValueError)
+        
 
-        r.write({'gerada_os': True,'state':'programada', 'os_id': os.id})
+        #rec.write({'gerada_os': True,'state':'programada', 'os_id': os.id})
         return os
     
     
@@ -685,6 +667,7 @@ class CronogramaPreventiva(models.Model):
 
     
 
+   
 
     
 #

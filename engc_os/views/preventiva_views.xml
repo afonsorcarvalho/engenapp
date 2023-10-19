@@ -124,7 +124,14 @@ PREVENTIVA
           decoration-danger="state == 'atrasada'"
           decoration-success="state == 'done'"
           decoration-muted="state == 'cancel'">
-
+          <header>
+          <button name="action_gera_os"
+                string="Gera OS"
+                type="object"
+               
+                help="Gerar Ordem de Serviço para essa preventiva imediatamente.
+                Lembrando que ela será gerada automaticamente pelo sistema" />
+              </header>
       <!--<button string="Gera OS" class="oe_highlight" icon="fa-briefcase" type="object" name="action_gera_os"/> -->
       <field name="state" widget="badge"
       decoration-bf="state=='programada'"

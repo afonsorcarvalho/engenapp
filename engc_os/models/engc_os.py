@@ -732,7 +732,7 @@ class EngcOs(models.Model):
 
             for i in instructions:
                 instructions = os_check_list.create(
-                    {'os_id': self.id, 'instruction': i.name})
+                    {'os_id': self.id, 'instruction': i.name,'section': i.section.id })
                 _logger.debug(i)
 
             #self.check_list_created = True
