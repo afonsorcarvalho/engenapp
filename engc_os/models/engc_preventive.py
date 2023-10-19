@@ -101,9 +101,18 @@ class EngcPreventiva(models.Model):
     #     company_dependent=True,
     # )
     
+    # tempo_estimado = fields.Float(
+    #     string=u'Tempo Estimado', 
+    #     help="Tempo estimado de conclusão da preventiva.", default=1.0)
     tempo_estimado = fields.Float(
         string=u'Tempo Estimado', 
+        compute = "_compute_tempo_estimado",
         help="Tempo estimado de conclusão da preventiva.", default=1.0)
+    @api.depends('data_programada','data_programada_fim')
+    def _compute_tempo_estimado(self):
+        for record in self:
+            if record.data_programada_fim  and record.data_programada:
+                record.tempo_estimado = (record.data_programada_fim - record.data_programada).total_seconds()/3600.0
     
     
     data_programada = fields.Datetime(
