@@ -1,0 +1,76 @@
+<odoo>
+    <data>
+
+        <record id="view_verify_os_checklist_tree" model="ir.ui.view">
+            <field name="name">Verify OS Checklist Tree View</field>
+            <field name="model">engc.os.verify.checklist</field>
+            <field name="arch" type="xml">
+                <tree string="Verify OS Checklist" editable="top" multi_edit="1">
+                    <field name="sequence" widget="handle"/>
+                    <field name="section" optional="hide"/>
+                    <field name="instruction"/>
+                    <field name="check"/>
+                    <field name="tem_medicao"/>
+                    <field name="medicao"/>
+                    <field name="magnitude"/>
+                    <!-- <field name="tipo_de_campo"/> -->
+                    <field name="observations"/>
+                    <!-- <field name="troca_peca"/> -->
+                    <!-- <field name="peca"/> -->
+                    <!-- <field name="peca_qtd"/> -->
+                </tree>
+            </field>
+        </record>
+        <record id="view_verify_os_checklist_search" model="ir.ui.view">
+            <field name="name">Verify OS Checklist Search View</field>
+            <field name="model">engc.os.verify.checklist</field>
+            <field name="arch" type="xml">
+                <search string="Search Verify OS Checklist">
+                    <field name="os_id"/>
+                    <field name="instruction"/>
+                    <field name="check"/>
+                    <field name="tem_medicao"/>
+                    <field name="medicao"/>
+                    <field name="magnitude"/>
+                    <field name="tipo_de_campo"/>
+                    <field name="observations"/>
+                    <field name="troca_peca"/>
+                    <field name="peca"/>
+                    <field name="peca_qtd"/>
+                    <group expand="0" string="Group By">
+                        <filter context="{'group_by': 'section'}" name="group_section" string="Section"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_verify_os_checklist_form" model="ir.ui.view">
+            <field name="name">Verify OS Checklist Form View</field>
+            <field name="model">engc.os.verify.checklist</field>
+            <field name="arch" type="xml">
+                <form string="Verify OS Checklist">
+                    <group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="instruction"/>
+                            <field name="check"/>
+                            <field name="tem_medicao"/>
+                            <field name="medicao"/>
+                            <field name="magnitude"/>
+                        </group>
+                        <group>
+                            <field name="tipo_de_campo"/>
+                            <field name="observations"/>
+                            <field name="troca_peca"/>
+                            <field name="peca"/>
+                            <field name="peca_qtd"/>
+                        </group>
+                    </group>
+                </form>
+            </field>
+        </record>
+        
+        
+
+    </data>
+</odoo>
