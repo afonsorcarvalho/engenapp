@@ -139,6 +139,7 @@
 								<div class="o_row">
 									<field name="maintenance_type"
 										attrs="{'readonly':['|',('calibration_created','=',True),('state','in',('done'))]}" />
+										
 									<div
 										attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','not in',('New'))],'readonly': [('state','in',('done'))]}">
 										<p>
@@ -170,6 +171,7 @@
                   'invisible': [('calibration_created','==', False)],
                   'readonly':['|',('calibration_created','=',True),('state','in',('done'))]
                   }" />
+								<field name="periodicity_ids" widget="many2many_tags" />
 								<field name="priority" widget="priority" />
 							</group>
 							<group>

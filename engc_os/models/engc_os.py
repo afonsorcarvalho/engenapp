@@ -108,6 +108,10 @@ class EngcOs(models.Model):
         MAINTENANCE_TYPE_SELECTION, string='Tipo de Manutenção', required=True, default=None)
     # time_execution = fields.Float(
     #     "Tempo Execução", compute='_compute_time_execution', help="Tempo de execução em minutos", store=True)
+    
+    periodicity_ids = fields.Many2many(
+        string='Periodicidade',comodel_name='engc.maintenance_plan.periodicity'
+    )
     maintenance_duration = fields.Float(
         "Tempo Estimado", default='1.0', readonly=False)
     is_warranty = fields.Boolean(string="É garantia",  default=False)

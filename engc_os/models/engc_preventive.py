@@ -269,6 +269,7 @@ class EngcPreventiva(models.Model):
       
       
         instructions_list = [] 
+        periodicity_list = []
         tecnicos = []
         who_executor = 'own'
         date_request = datetime.now()
@@ -276,6 +277,7 @@ class EngcPreventiva(models.Model):
         for instructions in rec.maintenance_plan.instrucion_ids:
             _logger.debug("INSTRUÇÕES %s", instructions.name)
             instructions_list.append(instructions.id)
+        periodicity_list = rec.maintenance_plan.periodicity_ids.mapped('id')    
         
         #pdb.set_trace()
         #_logger.debug("Tecnico da preventiva %s", rec.tecnicos.name)
@@ -292,8 +294,9 @@ class EngcPreventiva(models.Model):
                 'maintenance_type':'preventive',
                 'solicitante':'Automático',
               #  'cliente_id': rec.client.id if rec.client.id else None ,
-                'problem_description': 'Manutenção preventiva',
+                'problem_description': description,
                 'who_executor' : who_executor,
+                'periodicity_ids':[(6, 0, periodicity_list)],
               #  'description': description,
                 
                 
