@@ -54,13 +54,13 @@ class Equipment(models.Model):
     )
     client_id = fields.Many2one("res.partner", "Cliente")
     means_of_aquisition_id = fields.Many2one(
-        'engc.equipment.means.of.aquisition', 'Meio de Aquisição', required=True,  check_company=True)
+        'engc.equipment.means.of.aquisition', 'Meio de Aquisição', required=True)
     technician_id = fields.Many2one('hr.employee', 'Técnico',check_company=True)
     maintenance_team_id = fields.Many2one(
         'engc.equipment.maintenance.team', 'Equipe de Manutenção',check_company=True)
     section_id =  fields.Many2one(
         'engc.equipment.section',
-        string='Departamento'    )
+        string='Departamento', check_company=True  )
     location_id = fields.Many2one(
         'engc.equipment.location', 'Local de Uso', required=True, check_company=True)
     marca_id = fields.Many2one('engc.equipment.marca', 'Marca', required=True)
@@ -220,6 +220,7 @@ class MaintenanceTeam(models.Model):
 class Location(models.Model):
     _name = 'engc.equipment.location'
     _description = "Localização dos equipamentos"
+    _check_company_auto = True
 
     name = fields.Char('Local')
     
@@ -238,16 +239,11 @@ class Situation(models.Model):
 
     name = fields.Char('Situação')
     
-    company_id = fields.Many2one(
-        string='Company', 
-        comodel_name='res.company', 
-        required=True, 
-        default=lambda self: self.env.company
-    )
+  
     
     _sql_constraints = [
 
-        ('situation_uniq', 'unique (name,company_id)', 'O nome já existe !')
+        ('situation_uniq', 'unique (name)', 'O nome já existe !')
 
     ]
 class Marca(models.Model):
@@ -255,17 +251,12 @@ class Marca(models.Model):
     _description = "Marca dos equipamentos"
 
     name = fields.Char('Marca')
-    company_id = fields.Many2one(
-        string='Company', 
-        comodel_name='res.company', 
-        required=True, 
-        default=lambda self: self.env.company
-    )
+  
     
  
     _sql_constraints = [
 
-        ('situation_uniq', 'unique (name,company_id)', 'O nome já existe !')
+        ('situation_uniq', 'unique (name)', 'O nome já existe !')
 
     ]
 
@@ -276,18 +267,24 @@ class MeansOfAquisition(models.Model):
 
     name = fields.Char('Meio de Aquisição')
     
-    company_id = fields.Many2one(
-        string='Company', 
-        comodel_name='res.company', 
-        required=True, 
-        default=lambda self: self.env.company
-    )
+   
 class EquipmentsSection(models.Model):
     _name = 'engc.equipment.section'
     _description = "setor do local equipamentos"
+    _parent_name = "section_parent"
+    _parent_store = True
+    _rec_name = 'complete_name'
+    _order = 'complete_name'
+    _check_company_auto = True
+
     
 
-    name = fields.Char('Nome no setor')
+    name = fields.Char('Nome no setor', index='trigram', 
+    required=True
+    )
+    complete_name = fields.Char(
+        'Complete Name', compute='_compute_complete_name', recursive=True,
+        store=True)
     company_id = fields.Many2one(
         string='Company', 
         comodel_name='res.company', 
@@ -298,19 +295,29 @@ class EquipmentsSection(models.Model):
     section_parent  = fields.Many2one(
         'engc.equipment.section',
         string='Setor Pai',
+        check_company=True
         )
+    parent_path = fields.Char(index=True, unaccent=False)
+    child_id = fields.One2many('engc.equipment.section', 'section_parent', 'Child sections')
     
-  
-    @api.depends('name', 'section_parent')
-    def name_get(self):
-        result = []
-        for record in self:
-            if record.section_parent:
-                name = record.section_parent.display_name + '/' + record.name
+    @api.depends('name', 'section_parent.complete_name')
+    def _compute_complete_name(self):
+        for section in self:
+            if section.section_parent:
+                section.complete_name = '%s / %s' % (section.section_parent.complete_name, section.name)
             else:
-                name = record.name
-            result.append((record.id, name))
-        return result
+                section.complete_name = section.name
+  
+    # @api.depends('name', 'section_parent')
+    # def name_get(self):
+    #     result = []
+    #     for record in self:
+    #         if record.section_parent:
+    #             name = record.section_parent.display_name + '/' + record.name
+    #         else:
+    #             name = record.name
+    #         result.append((record.id, name))
+    #     return result
     
     
 

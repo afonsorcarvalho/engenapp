@@ -49,6 +49,18 @@
       <field name="res_model">engc.maintenance_plan</field>
       <field name="view_mode">tree,form</field>
     </record>
+   
+    <record id="engc_os.action_means_of_acquisition_action_window" model="ir.actions.act_window">
+      <field name="name">Meios de Aquisição de Equipamentos</field>
+      <field name="res_model">engc.equipment.means.of.aquisition</field>
+      <field name="view_mode">tree,form</field>
+  </record>
+  <record id="engc_os.action_equipments_section_action_window" model="ir.actions.act_window">
+    <field name="name">Departamento Equipamentos</field>
+    <field name="res_model">engc.equipment.section</field>
+    <field name="view_mode">tree,form</field>
+</record>
+
   
 
    
@@ -105,7 +117,8 @@
     
     <!-- Configurações -->
     <menuitem name="Unidades de Medida" id="engc_os.calibration_measurement_unit_list_menu" parent="engc_os.configuracoes_menu" action="engc_os.calibration_measurement_unit_action_window" />
-    
+    <menuitem id="engc_os.menu_means_of_acquisition_list" name="Meios de Aquisição" parent="engc_os.configuracoes_menu"  action="engc_os.action_means_of_acquisition_action_window"/>
+    <menuitem id="engc_os.menu_equipment_section_list" name="Departamento Equipamentos" parent="engc_os.configuracoes_menu"  action="engc_os.action_equipments_section_action_window"/>
    
 
   </data>

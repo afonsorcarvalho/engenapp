@@ -244,6 +244,8 @@ class EngcOs(models.Model):
 
     request_parts = fields.One2many(comodel_name='engc.os.request.parts',inverse_name="os_id",check_company=True)
     request_parts_count = fields.Integer(compute='compute_request_parts_count')
+    signature =  fields.Image('Signature', help='Signature', copy=False, attachment=True)
+    signature2 =  fields.Image('Signature2', help='Signature', copy=False, attachment=True)
 
     def compute_request_parts_count(self):
         for record in self:
@@ -732,11 +734,12 @@ class EngcOs(models.Model):
             os_check_list = self.env['engc.os.verify.checklist'].search(
                 [('os_id', '=', self.id)])
             if os_check_list:
-                raise ValidationError(_("Check list já criado. Exclua toda check-list para gerar novamente"))
+                raise ValidationError(_("Check list já criado."))
+            os_check_list_create = []
 
             for i in instructions:
-                instructions = os_check_list.create(
-                    {'os_id': self.id, 'instruction': i.name,'section': i.section.id })
-                _logger.debug(i)
+                os_check_list_create.append({'os_id': self.id, 'instruction': i.name,'section': i.section.id })
+            instructions = os_check_list.create(os_check_list_create)
+                
 
-            #self.check_list_created = True
+           
