@@ -315,11 +315,63 @@
     </field>
 </record>
 
+    <!-- Tree View -->
+    <record id="view_tree_means_of_acquisition" model="ir.ui.view">
+        <field name="name">means.of.acquisition.tree</field>
+        <field name="model">engc.equipment.means.of.aquisition</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
 
+    <!-- Form View -->
+    <record id="view_form_means_of_acquisition" model="ir.ui.view">
+        <field name="name">means.of.acquisition.form</field>
+        <field name="model">engc.equipment.means.of.aquisition</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tree_equipments_section" model="ir.ui.view">
+      <field name="name">equipments.section.tree</field>
+      <field name="model">engc.equipment.section</field>
+      <field name="arch" type="xml">
+          <tree>
+              <field name="display_name"/>
+              <field name="description"/>
+              <field name="section_parent"/>
+              <field name="company_id"/>
+          </tree>
+      </field>
+  </record>
+
+  <record id="view_form_equipments_section" model="ir.ui.view">
+    <field name="name">equipments.section.form</field>
+    <field name="model">engc.equipment.section</field>
+    <field name="arch" type="xml">
+        <form>
+            <sheet>
+                <group>
+                    <field name="name"/>
+                    <field name="company_id"/>
+                    <field name="description"/>
+                    <field name="section_parent"/>
+                   
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
 
   
-
-
-
   </data>
 </odoo>

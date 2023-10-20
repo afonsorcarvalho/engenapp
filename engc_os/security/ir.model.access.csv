@@ -21,7 +21,6 @@ access_engc_equipment_category_instruction_group_user,engc_os.engc.equipment.cat
 access_engc_equipment_category_instruction_grandeza_user,engc_os.engc.equipment.category.instruction.grandeza,model_engc_equipment_category_instruction_grandeza,base.group_user,1,1,1,1
 
 
-
 access_engc_calibration,access_engc_calibration,model_engc_calibration,base.group_user,1,1,1,1
 access_engc_calibration_instruments,access_engc_calibration_instruments,model_engc_calibration_instruments,base.group_user,1,1,1,1
 access_engc_calibration_instruments_uncertainty_lines_user,engc_os.engc.calibration.instruments.uncertainty.lines,model_engc_calibration_instruments_uncertainty_lines,base.group_user,1,1,1,1

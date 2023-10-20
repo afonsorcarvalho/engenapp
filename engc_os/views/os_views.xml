@@ -70,6 +70,8 @@
 							states="draft,under_budget,execution_ready" type="object" context="{'report_type': 'manutencao'}" />
 						<button name="action_repair_end" string="Finalizar Execução" class="oe_highlight"
 							states="under_repair" type="object"  />
+						<!-- <widget name="signature" string="Sign" highlight="1" attrs="{'invisible': ['|', '|', ('id', '=', False), ('picking_type_code', '!=', 'outgoing'), ('state', '!=', 'done')]}" full_name="partner_id" /> -->
+						<widget name="signature" string="Assinar Documento" highlight="1"   />
 						<button name="action_make_check_list" string="Gerar Check-List" class="oe_highlight"
 							states="draft, under_repair,execution_ready" type="object"  />
 						<field name="state" widget="statusbar" statusbar_visible="draft"
@@ -183,6 +185,18 @@
 						<group string="Solicitação">
 							<field name="problem_description" attrs="{'readonly': [('state','in',('done'))] }"/>
 							<!-- <field name="service_description" /> -->
+						</group>
+						<group>
+							<group>
+
+								<field name="signature" string="Assinatura Tecnico" widget="signature" />
+							</group>
+							<group>
+
+								
+								<field name="signature2" string="Assinatura Supervisor" widget="signature" />
+							</group>
+							
 						</group>
 						<!-- <notebook>
 							<page string="Relatórios">
