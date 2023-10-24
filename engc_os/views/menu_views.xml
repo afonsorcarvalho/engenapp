@@ -7,6 +7,12 @@
       <field name="res_model">engc.os</field>
       <field name="view_mode">tree,form</field>
     </record>
+    <record id="engc_os.request_service_action_window" model="ir.actions.act_window">
+      <field name="name">Solicitação de Serviço</field>
+      <field name="res_model">engc.request.service</field>
+      <field name="view_mode">tree,form</field>
+  </record>
+  
     <!-- actions opening views on models -->
 
     <record model="ir.actions.act_window" id="engc_os.equipment_action_window">
@@ -97,7 +103,8 @@
 
     
     <!-- Servicos -->
-    <menuitem name="Ordens de Serviço" id="engc_os.os_list_menu" parent="engc_os.servicos_menu" action="engc_os.action_window" />
+    <menuitem name="Solicitação de Serviço" id="engc_os.request_service_list_menu" parent="engc_os.servicos_menu" action="engc_os.request_service_action_window" sequence="1" />
+    <menuitem name="Ordens de Serviço" id="engc_os.os_list_menu" parent="engc_os.servicos_menu" action="engc_os.action_window" sequence="2"/>
     
     <!-- Preventivas -->
     <menuitem name="Listar Preventivas" id="engc_os.preventive_list_menu" parent="engc_os.preventive_menu_root" action="engc_os.preventiva_action_window" />

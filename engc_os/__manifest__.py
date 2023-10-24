@@ -37,6 +37,7 @@
         'views/os_relatorio_views.xml',
         'views/os_relatorio_request_parts_views.xml',
         'views/os_check_list_view.xml',
+        'views/request_service_views.xml',
         'views/preventiva_views.xml',
         'views/maintenance_plan.xml',
         'views/menu_views.xml',
