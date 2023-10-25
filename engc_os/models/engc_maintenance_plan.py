@@ -67,7 +67,7 @@ class MaintencePlan(models.Model):
     def get_time_duration(self, periodicitys = [] ):
         result =[]
         time_duration_list = {}
-        for rec in self:
+        for rec in self: 
             
             for periodicity in periodicitys:
                 if periodicity:

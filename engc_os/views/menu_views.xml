@@ -116,7 +116,7 @@
     <menuitem name="Instrumentos" id="engc_os.calibration_instruments_list_menu" parent="engc_os.calibration_menu" action="engc_os.calibration_instruments_action_window" />
     
     <!-- Configurações -->
-    <menuitem name="Unidades de Medida" id="engc_os.calibration_measurement_unit_list_menu" parent="engc_os.configuracoes_menu" action="engc_os.calibration_measurement_unit_action_window" />
+    <menuitem name="Unidades de Medida (Calibração)" id="engc_os.calibration_measurement_unit_list_menu" parent="engc_os.configuracoes_menu" action="engc_os.calibration_measurement_unit_action_window" />
     <menuitem id="engc_os.menu_means_of_acquisition_list" name="Meios de Aquisição" parent="engc_os.configuracoes_menu"  action="engc_os.action_means_of_acquisition_action_window"/>
     <menuitem id="engc_os.menu_equipment_section_list" name="Departamento Equipamentos" parent="engc_os.configuracoes_menu"  action="engc_os.action_equipments_section_action_window"/>
    
