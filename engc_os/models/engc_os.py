@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 class EngcOs(models.Model):
     _name = 'engc.os'
     _description = 'Ordem de Serviço'
-    _inherit = ['mail.thread' ]
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _check_company_auto = True
 
     _order = 'name'
@@ -91,6 +91,7 @@ class EngcOs(models.Model):
 
     origin = fields.Char('Source Document', size=64, readonly=True, states={'draft': [('readonly', False)]},
                          help="Referencia ao documento que gerou a ordem de servico.")
+    request_service_id = fields.Many2one('engc.request.service')
     state = fields.Selection(STATE_SELECTION, string='Status',
                              copy=False, default='draft',  tracking=True,
                              help="* The \'Draft\' status is used when a user is encoding a new and unconfirmed repair order.\n"

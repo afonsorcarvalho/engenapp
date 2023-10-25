@@ -1,0 +1,90 @@
+<odoo>
+    <data>
+        <record id="view_tree_request_service" model="ir.ui.view">
+            <field name="name">request.service.tree</field>
+            <field name="model">engc.request.service</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name" />
+                    <field name="requester" />
+                    <field name="state" />
+                    <field name="request_date" />
+                    <field name="schedule_date" />
+                    <field name="priority" />
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_form_request_service" model="ir.ui.view">
+            <field name="name">request.service.form</field>
+            <field name="model">engc.request.service</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <field name="state" widget="statusbar" 
+                        options="{'clickable': True}" />
+                    </header>
+                    <sheet>
+                        <div name="button_box" position="inside">
+                            <!-- <button class="oe_stat_button" string="Check-List" type="object"
+                                name="action_go_check_list"
+                                icon="fa-list">
+                                <field string="Check-List" name="check_list_count" widget="statinfo" />
+                            </button> -->
+                            
+                        </div>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" />
+                            </h1>
+                            
+
+                                <label for="company_id" class="oe_edit_only" />
+                                <h2>
+                                    <field name="company_id"  attrs="{'readonly': [('state','in',('done'))] }"
+                                        options="{'no_create': True, 'no_create_edit':True}" />
+                                </h2>
+                            
+                        </div>
+                        <group>
+                            <group string="Dados da requisição">
+                                <field name="requester"/>
+                                <field name="tecnicos" /> 
+                                <field name="priority" widget="priority"/>
+                            
+                                
+                                <field name="equipment_ids" 
+                                widget="many2many_tags"
+                                />
+                                <field name="maintenance_type"/>
+                                <field name="maintenance_team_id"/>
+                                
+                            </group>
+                            <group string="Datas">
+                                <field name="request_date"/>
+                                <field name="schedule_date"/>
+                                <field name="close_date"/>
+                                <field name="os_gerada"/>
+                                
+                            </group>
+
+                            
+                            
+                        </group>
+                        
+                        <group string="Descrição da Solicitação">
+
+                            <field name="description" string="Descrição"/>
+                        </group>
+                    </sheet>
+                    <div class="oe_chatter">
+						<field name="message_follower_ids" widget="mail_followers" />
+                        <field name="activity_ids"/>
+						<field name="message_ids" widget="mail_thread" />
+					</div>
+                </form>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

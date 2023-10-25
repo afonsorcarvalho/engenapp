@@ -50,4 +50,14 @@
         <field eval="1" name="number_increment"/>
        
     </record>
+    <record id="sequence_service_request_seq" model="ir.sequence">
+        <field name="name">Service Resquest sequence</field>
+        <field name="code">engc.service_request_sequence</field>
+        <field name="prefix">RS%(month)s%(y)s.</field>
+
+        <field eval="4" name="padding"/>
+       
+        <field eval="1" name="number_increment"/>
+       
+    </record>
 </odoo>
