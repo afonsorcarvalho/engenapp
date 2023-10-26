@@ -113,6 +113,7 @@ class EngcOs(models.Model):
     periodicity_ids = fields.Many2many(
         string='Periodicidade',comodel_name='engc.maintenance_plan.periodicity'
     )
+    department = fields.Many2one('hr.department', string="Departamento", check_company=True)
     maintenance_duration = fields.Float(
         "Tempo Estimado", default='1.0', readonly=False)
     is_warranty = fields.Boolean(string="É garantia",  default=False)

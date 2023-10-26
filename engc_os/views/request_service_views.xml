@@ -6,6 +6,7 @@
             <field name="arch" type="xml">
                 <tree>
                     <field name="name" />
+                    <field name="create_uid" />
                     <field name="requester" />
                     <field name="state" />
                     <field name="request_date" />
@@ -49,15 +50,26 @@
                         <group>
                             <group string="Dados da requisição">
                                 <field name="requester"/>
-                                <field name="tecnicos" /> 
-                                <field name="priority" widget="priority"/>
-                            
-                                
+                                <field name="department" required="1"/>
+                                <field name="equipment_ids_domain" 
+                                invisible="0" widget="domain"
+                                />
                                 <field name="equipment_ids" 
-                                widget="many2many_tags"
+                                widget="many2many_tags" 
+                                
+                                options="{'no_create': True, 'no_open': True, 'no_create_edit': True}"
+                                
+                               
+                                
+                                domain = 'equipment_ids_domain'
+
                                 />
                                 <field name="maintenance_type"/>
                                 <field name="maintenance_team_id"/>
+                                <field name="tecnicos"  /> 
+                                <field name="priority" widget="priority"/>
+                            
+                                
                                 
                             </group>
                             <group string="Datas">

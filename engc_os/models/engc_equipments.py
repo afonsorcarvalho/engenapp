@@ -58,9 +58,10 @@ class Equipment(models.Model):
     technician_id = fields.Many2one('hr.employee', 'Técnico',check_company=True)
     maintenance_team_id = fields.Many2one(
         'engc.equipment.maintenance.team', 'Equipe de Manutenção',check_company=True)
-    section_id =  fields.Many2one(
-        'engc.equipment.section',
-        string='Departamento', check_company=True  )
+    # section_id =  fields.Many2one(
+    #     'engc.equipment.section',
+    #     string='Departamento', check_company=True  )
+    department = fields.Many2one('hr.department', string="Departamento", check_company=True)
     location_id = fields.Many2one(
         'engc.equipment.location', 'Local de Uso', required=True, check_company=True)
     marca_id = fields.Many2one('engc.equipment.marca', 'Marca', required=True)

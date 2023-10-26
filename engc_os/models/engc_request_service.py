@@ -2,6 +2,10 @@ from odoo import _, api,  fields, models
 import odoo.addons.decimal_precision as dp
 from odoo.exceptions import UserError
 
+import logging
+_logger = logging.getLogger(__name__)
+
+
 
 class RequestService(models.Model):
     _name = 'engc.request.service'
@@ -35,14 +39,40 @@ class RequestService(models.Model):
         required=True, 
         default=lambda self: self.env.company
     )
-    requester = fields.Char('Requisitante', required=True)
-    
+    requester = fields.Char('Requisitante', required=True,default=lambda self: self.env.user.name)
+
     os_ids = fields.One2many(
         'engc.os', 'request_service_id', 'Request Service',
         copy=True)
     os_gerada = fields.Boolean("OS gerada", default=False)
     tecnicos = fields.Many2one('hr.employee', string="Técnico", domain=[("job_id", "=", "TECNICO")],check_company=True)
-    equipment_ids = fields.Many2many('engc.equipment', string='Equipamentos', index=True,check_company=True)
+    department = fields.Many2one('hr.department', string="Departamento", 
+                                 default=lambda self: self._default_department(),
+                                 
+                                 check_company=True)
+    def _default_department(self):
+        employee =  self.env['hr.employee'].search([('user_id','=',self.env.user.id)])
+        _logger.info(employee)
+        return employee.department_id.id
+
+
+    equipment_ids = fields.Many2many('engc.equipment', 
+                                     string='Equipamentos', 
+                                     index=True,check_company=True)
+    
+    equipment_ids_domain = fields.Binary(string='Domain Equipment',compute='_compute_domain_equipment')
+    
+    @api.depends('department')    
+    def _compute_domain_equipment(self):
+        for request_service in self:
+            _logger.info(f"Departamento:{request_service.department.id}")
+            department_ids = request_service.department.get_children_department_ids().mapped('id')
+            if department_ids:
+                domain = [('department','in',(False,*department_ids))]
+            else:
+                domain=[]
+            request_service.equipment_ids_domain = domain
+       
     description = fields.Text('Repair Description')
     state = fields.Selection([('new', 'Nova Solicitação'), ('in_progress', 'Em andamento'),('done', 'Concluído'),('cancel', 'Cancelada')], default="new")
     request_date = fields.Date('Data da Solicitação',tracking=True , default=fields.Date.context_today)
