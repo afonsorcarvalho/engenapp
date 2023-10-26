@@ -5,6 +5,7 @@ from odoo.exceptions import UserError
 
 class RequestService(models.Model):
     _name = 'engc.request.service'
+    _description = "Solicitação de Serviço"
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _check_company_auto = True
     _order = 'priority desc, create_date desc'
@@ -40,6 +41,12 @@ class RequestService(models.Model):
     os_ids = fields.One2many(
         'engc.os', 'request_service_id', 'Request Service',
         copy=True)
+    os_count = fields.Integer(compute="_compute_os_count")
+
+    def _compute_os_count(self):
+        for record in self:
+            record.os_count = self.env['engc.os'].search_count(
+                [('request_service_id', '=', self.id)])
     os_gerada = fields.Boolean("OS gerada", default=False)
     tecnicos = fields.Many2one('hr.employee', string="Técnico", domain=[("job_id", "=", "TECNICO")],check_company=True)
     equipment_ids = fields.Many2many('engc.equipment', string='Equipamentos', index=True,check_company=True)
@@ -63,9 +70,9 @@ class RequestService(models.Model):
         warehouse = self.env['stock.warehouse'].search(args, limit=1)
         
         equipments = self.equipments
-        
+        vals = []
         for line in equipments:
-            vals = {
+            vals.append( {
                     'origin': self.name,
                     'cliente_id': self.cliente_id.id,
                     'date_scheduled': self.schedule_date,
@@ -77,8 +84,8 @@ class RequestService(models.Model):
                     'request_id':self.id,
                     'priority':self.priority,
                     'tecnicos_id': [(4, self.tecnicos.id)]
-                    }
-            self.env['dgt_os.os'].create(vals)
+                    })
+        self.env['dgt_os.os'].create(vals)
             
         self.write({
             'stage_id': 'in_progress',
