@@ -16,7 +16,7 @@
           <field name="create_date" string="Criado em" optional="hide"/>
           <!-- <field name="section_id" /> -->
           <field name="department" />
-          <field name="company_id" groups="base.group_multi_company" />
+          <field name="company_id" />
           <field name="model" optional="hide"/> 
           <field name="category_id" optional="hide" />
 
@@ -353,7 +353,7 @@
               <field name="display_name"/>
               <field name="description"/>
               <field name="section_parent"/>
-              <field name="company_id"/>
+              <field name="company_id" />
           </tree>
       </field>
   </record>
@@ -366,7 +366,7 @@
             <sheet>
                 <group>
                     <field name="name"/>
-                    <field name="company_id"/>
+                    <field name="company_id" />
                     <field name="description"/>
                     <field name="section_parent"/>
                    
@@ -376,6 +376,41 @@
     </field>
 </record>
 
-  
+<record id="view_tree_maintenance_team" model="ir.ui.view">
+  <field name="name">maintenance.team.tree</field>
+  <field name="model">engc.equipment.maintenance.team</field>
+  <field name="arch" type="xml">
+      <tree>
+          <field name="name"/>
+          <field name="company_id" groups="base.group_multi_company"/>
+          <!-- <field name="team_members"/> -->
+      </tree>
+  </field>
+</record>
+<record id="view_form_maintenance_team" model="ir.ui.view">
+  <field name="name">maintenance.team.form</field>
+  <field name="model">engc.equipment.maintenance.team</field>
+  <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+              <group>
+                  <field name="name"/>
+                  <field name="company_id" />
+                  <field name="members" 
+                 widget="many2many_tags"
+                 domain="[('company_id','=', company_id)]"
+
+                 /> 
+                </group>
+                <group>
+                </group>
+              </group>
+        </sheet>
+      </form>
+  </field>
+</record>
+
+
   </data>
 </odoo>

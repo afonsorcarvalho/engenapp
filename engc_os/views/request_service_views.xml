@@ -29,8 +29,9 @@
                     </header>
                     <sheet>
                         <div name="button_box" position="inside">
-                            <button class="oe_stat_button" string="Gera OS" type="object"
-                                name="action_gera_os"
+                            <button class="oe_stat_button" string="Ordens de serviços" type="object"
+                                name="action_go_os"
+                                attrs="{'invisible': [('os_count', '=', 0)]}"
                                 icon="fa-wrench">
                                 <field string="Ordens de Serviços" name="os_count" widget="statinfo" />
                             </button> 
@@ -52,33 +53,34 @@
                         <group>
                             <group string="Dados da requisição">
                                 <field name="requester"/>
-                                <field name="department" required="1"/>
+                                <field name="department" required="1"
+                                    options="{'no_create': True, 'no_open': True, 'no_create_edit': True}"
+                                />
                                 <field name="equipment_ids_domain" 
-                                invisible="0" widget="domain"
+                                    invisible="1" 
                                 />
                                 <field name="equipment_ids" 
-                                widget="many2many_tags" 
-                                
-                                options="{'no_create': True, 'no_open': True, 'no_create_edit': True}"
-                                
-                               
-                                
-                                domain = 'equipment_ids_domain'
-
+                                    widget="many2many_tags"                
+                                    options="{'no_create': True, 'no_open': True, 'no_create_edit': True}"
+                                    domain = 'equipment_ids_domain'
                                 />
                                 <field name="maintenance_type"/>
-                                <field name="maintenance_team_id"/>
-                                <field name="tecnicos"  /> 
-                                <field name="priority" widget="priority"/>
-                            
-                                
-                                
-                            </group>
-                            <group string="Datas">
-                                <field name="request_date"/>
-                                <field name="schedule_date"/>
-                                <field name="close_date"/>
-                                <field name="os_gerada"/>
+                                <field name="maintenance_team_id" 
+                                    options="{'no_create': True, 'no_open': True, 'no_create_edit': True}"/>
+                                <field name="tecnicos"  
+                                    options="{'no_create': True, 'no_open': True, 'no_create_edit': True}"
+                                    domain="[('company_id','=',company_id)]"
+                                    /> 
+                                </group>
+                                <group string="Datas">
+                                    <field name="request_date" />
+                                    <field name="schedule_date" string="Dt. Programada"/>
+                                    <field name="close_date" string="Dt. Conclusão"/>
+                                    <field name="who_executor" 
+                                    widget="radio"
+                                    />
+                                    <field name="os_gerada" groups="base.group_no_one"/>
+                                    <field name="priority" widget="priority"/>
                                 
                             </group>
 

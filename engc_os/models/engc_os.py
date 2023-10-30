@@ -67,7 +67,7 @@ class EngcOs(models.Model):
                 vals['name'] = self.env['ir.sequence'].next_by_code('engc.os_sequence') or _('New')
             
 
-        result = super(EngcOs, self).create(vals)
+        result = super(EngcOs, self).create(vals_list)
         return result
 
     # @api.model
@@ -98,7 +98,7 @@ class EngcOs(models.Model):
                              "* The \'Done\' status is set when repairing is completed.\n"
                              "* The \'Cancelled\' status is used when user cancel repair order.")
     who_executor = fields.Selection(WHO_EXECUTOR_SELECTION, string='Manutenção',
-                             copy=False, tracking=True, required=True,
+                             copy=False, tracking=True, required=True, 
                             )
     kanban_state = fields.Selection([('normal', 'In Progress'), ('blocked', 'Blocked'), ('done', 'Ready for next stage')],
                                     string='Kanban State', required=True, default='normal', tracking=True)
@@ -131,9 +131,9 @@ class EngcOs(models.Model):
     # FAZER COM QUE A DATA DE INICIO DA EXECUÇÃO SEJA A DATAHORA DE FINAL DO ULTIMO RELATORIO
     date_finish = fields.Datetime('Término da Execução', tracking=True)
           
-    # request_id = fields.Many2one(
-    #     'engc.os.request', 'Solicitação Ref.',
-    #     index=True, ondelete='restrict')
+    request_id = fields.Many2one(
+         'engc.request.service', 'Solicitação Ref.',
+         index=True, ondelete='restrict')
     problem_description = fields.Text('Descrição do chamado')
 
     
@@ -518,6 +518,7 @@ class EngcOs(models.Model):
             'context': {
                 'default_os_id': self.id,
                 'default_technicians': [(4,[tecnico.id])],
+                'default_company_id': self.company_id.id,
                 'default_data_atendimento':current_datetime,
                 'default_report_type': report_type or None,
      

@@ -205,9 +205,11 @@ class MaintenanceTeam(models.Model):
     _check_company_auto = True
 
     name = fields.Char()
-    team_members = fields.Many2many('hr.employee', string='Membros', 
-    company_dependent=True
-    )
+  #  team_members = fields.Many2many(comodel_name='hr.employee', string='Membros', 
+ #   company_dependent=True
+ #   )
+   
+    members = fields.Many2many('hr.employee', 'maintenance_team_emp_rel', 'team_id', 'emp_id', string='Membro(s)')
     
     company_id = fields.Many2one(
         string='Company', 
