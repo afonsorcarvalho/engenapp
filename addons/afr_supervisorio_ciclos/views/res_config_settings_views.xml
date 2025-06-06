@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.afr.supervisorio.ciclos</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="50"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" data-string="Supervisório" string="Supervisório" data-key="afr_supervisorio_ciclos">
+                    <h2>Configurações de Autenticidade</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="public_key" string="Chave Pública"/>
+                                <div class="text-muted">
+                                    Chave pública para verificação de assinatura digital das fitas
+                                </div>
+                                <div class="mt16">
+                                    <field name="public_key" widget="binary" filename="public_key_filename"/>
+                                    <field name="public_key_filename" invisible="1"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo> 
