@@ -1,0 +1,18 @@
+{ 
+    "stubPath": "/home/afonso/docker/odoo_engenapp/odoo-stubs" ,
+    "root":"/home/afonso/docker/odoo_engenapp/",
+        "extraPaths": [
+         "/home/afonso/docker/odoo_engenapp/odoo/addons"
+        // 
+    //      "/home/afonso/docker/odoo_engenapp/odoo",
+    // "/home/afonso/docker/odoo_engenapp/odoo/odoo/odoo/modules",
+    //      "/home/afonso/docker/odoo_engenapp/odoo/odoo/addons", 
+    //      "/home/afonso/docker/odoo_engenapp/odoo/odoo/odoo", 
+        //  "/home/afonso/docker/", 
+    //     "/home/afonso/docker/odoo_engenapp/", 
+    //     "/home/afonso/docker/odoo_engenapp/engenapp"
+       ]
+    // 
+    
+    
+  }

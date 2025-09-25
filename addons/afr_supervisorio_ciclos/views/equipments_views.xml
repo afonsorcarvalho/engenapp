@@ -1,0 +1,29 @@
+<odoo>
+    <data>
+    <record id="afr_supervisorio_ciclos.equipments_form_inhrerit" model="ir.ui.view">
+        <field name="name">Equipamentos Form inherit</field>
+        <field name="model">engc.equipment</field>
+        <field name="inherit_id" ref="engc_os.equipments_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[6]" position="after">
+                <page string="Configuração Supervisorio">
+                    <group>
+                        <group>
+                            <field name="cycle_type_id"/>
+                            <field name="cycle_path"/>
+                            <field name="chamber_size"/>
+                        </group>
+                        <group>
+                            <!-- Botão para ler ciclos -->
+                            <button name="action_read_cycles" 
+                                    string="Ler Ciclos" 
+                                    type="object" 
+                                    class="oe_highlight"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+    </data>
+</odoo>

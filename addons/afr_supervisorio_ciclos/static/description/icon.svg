@@ -1,0 +1,25 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sombra Diagonal: desenha o contorno do tile principal, um pouco maior e deslocado, com cor escura e opacidade -->
+  <path d="M844 0 H180 Q0 0 0 180 V844 Q0 1024 180 1024 H844 Q1024 1024 1024 844 V180 Q1024 0 844 0 Z"
+        fill="rgba(0,0,0,0.15)"
+        transform="translate(45,45)"/>
+
+  <!-- Tile Principal Colorido -->
+  <!-- Usando uma cor similar ao ícone "Supervisório" (olho) da sua imagem: um vermelho escuro/bordô -->
+  <rect width="1024" height="1024" rx="180" fill="#B71C1C"/>
+
+  <!-- Elementos do Ícone (pessoa e tela) em branco -->
+  <g fill="#FFFFFF" transform="translate(0, -25)"> <!-- Leve ajuste vertical para centralização óptica -->
+    <!-- Tela do Monitor -->
+    <rect x="200" y="320" width="460" height="320" rx="35"/>
+    <!-- Suporte do Monitor -->
+    <rect x="380" y="640" width="100" height="70" rx="15"/> <!-- Base -->
+    <rect x="405" y="530" width="50" height="110" rx="10"/> <!-- Haste -->
+
+    <!-- Pessoa (Cabeça e Ombros) -->
+    <!-- Cabeça -->
+    <circle cx="740" cy="470" r="100"/>
+    <!-- Ombros/Corpo (forma de elipse simplificada) -->
+    <ellipse cx="740" cy="660" rx="170" ry="100"/>
+  </g>
+</svg>

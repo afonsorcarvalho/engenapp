@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+   
+    <!-- Action -->
+    <record id="action_afr_supervisorio_ciclos_all" model="ir.actions.act_window">
+        <field name="name">Todos os Ciclos</field>
+        <field name="res_model">afr.supervisorio.ciclos</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_cycle_type_eto': 1}</field>
+         <field name="search_view_id" ref="afr_supervisorio_ciclos.view_afr_supervisorio_ciclos_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('afr_supervisorio_ciclos.view_afr_supervisorio_ciclos_tree')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_afr_supervisorio_ciclos_form')})]"/> 
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Nenhum ciclo encontrado eles serão registrados automaticamente pelo sistema.
+            </p>
+        </field>
+    </record>
+     <!-- Menu principal -->
+    <menuitem 
+        id="menu_afr_supervisorio_ciclos"
+        name="Supervisório"
+        web_icon="afr_supervisorio_ciclos,static/description/icon.png"
+        sequence="10"/>
+
+    <!-- Submenu Operações -->
+    <menuitem 
+        id="menu_afr_supervisorio_ciclos_operations"
+        name="Ciclos"
+        parent="menu_afr_supervisorio_ciclos"
+        sequence="10"/>
+
+    <menuitem 
+        id="menu_afr_supervisorio_ciclos_ciclos"
+        name="Todos os Ciclos"
+        parent="menu_afr_supervisorio_ciclos_operations"
+        action="action_afr_supervisorio_ciclos_all"
+        sequence="1"/>
+
+    
+    <!-- Equipamentos -->
+    <menuitem name="Equipamentos" id="afr_supervisorio_ciclos.equipments_list_menu" parent="menu_afr_supervisorio_ciclos" action="engc_os.equipment_action_window" />
+    <menuitem name="Categorias" id="afr_supervisorio_ciclos.categorias_list_menu" parent="menu_afr_supervisorio_ciclos" action="engc_os.equipment_category_action_window" />
+
+    <!-- Submenu Configurações -->
+    <menuitem 
+        id="menu_afr_supervisorio_ciclos_config"
+        name="Configurações"
+        parent="menu_afr_supervisorio_ciclos"
+        sequence="100"/>
+
+    <menuitem 
+        id="menu_afr_cycle_type"
+        name="Tipos de Ciclo"
+        parent="menu_afr_supervisorio_ciclos_config"
+        action="action_cycle_type"
+        sequence="1"/>
+
+    <menuitem 
+        id="menu_ler_diretorio_ciclos"
+        name="Ler Diretório"
+        parent="menu_afr_supervisorio_ciclos_config"
+        action="action_wizard_ler_diretorio_ciclos_tree"
+        sequence="2"
+        groups="base.group_system"/>
+
+</odoo> 

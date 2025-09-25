@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Grupo Supervisorio Manager -->
+    <record id="group_supervisorio_manager" model="res.groups">
+        <field name="name">Supervisorio Manager</field>
+        <field name="category_id" ref="base.module_category_manufacturing"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_no_one'))]"/>
+        <field name="comment">Usuários com acesso total ao módulo de Supervisório</field>
+    </record>
+
+    <!-- Grupo Supervisorio User (Apenas Leitura) -->
+    <record id="group_supervisorio_user" model="res.groups">
+        <field name="name">Supervisorio User</field>
+        <field name="category_id" ref="base.module_category_manufacturing"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Usuários com acesso apenas de leitura ao módulo de Supervisório</field>
+    </record>
+
+    <!-- Regras de Acesso para Supervisorio Manager -->
+    <record id="supervisorio_manager_rule" model="ir.rule">
+        <field name="name">Supervisorio Manager: Acesso Total</field>
+        <field name="model_id" ref="model_afr_supervisorio_ciclos"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_supervisorio_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Regras de Acesso para Supervisorio User -->
+    <record id="supervisorio_user_rule" model="ir.rule">
+        <field name="name">Supervisorio User: Acesso Leitura</field>
+        <field name="model_id" ref="model_afr_supervisorio_ciclos"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_supervisorio_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Permissões de Acesso para Supervisorio Manager -->
+    <record id="access_afr_supervisorio_ciclos_manager" model="ir.model.access">
+        <field name="name">Supervisorio Manager: Acesso Total</field>
+        <field name="model_id" ref="model_afr_supervisorio_ciclos"/>
+        <field name="group_id" ref="group_supervisorio_manager"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Permissões de Acesso para Supervisorio User -->
+    <record id="access_afr_supervisorio_ciclos_user" model="ir.model.access">
+        <field name="name">Supervisorio User: Acesso Leitura</field>
+        <field name="model_id" ref="model_afr_supervisorio_ciclos"/>
+        <field name="group_id" ref="group_supervisorio_user"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+</odoo> 

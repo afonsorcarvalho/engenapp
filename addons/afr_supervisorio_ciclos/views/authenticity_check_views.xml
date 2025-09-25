@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_authenticity_check_form" model="ir.ui.view">
+        <field name="name">afr.supervisorio.ciclos.authenticity.check.form</field>
+        <field name="model">afr.supervisorio.ciclos.authenticity.check</field>
+        <field name="arch" type="xml">
+            <form string="Verificação de Autenticidade">
+                <field name="state" invisible="1"/>
+                <group states="draft">
+                    <field name="file" filename="file_name"/>
+                    <field name="file_name" invisible="1"/>
+                </group>
+                <group states="checked">
+                    <field name="result" widget="text"/>
+                </group>
+                <footer>
+                    <button name="action_check_authenticity" 
+                            string="Verificar" 
+                            type="object" 
+                            class="btn-primary" 
+                            states="draft"/>
+                    <button string="Fechar" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_authenticity_check" model="ir.actions.act_window">
+        <field name="name">Verificar Autenticidade</field>
+        <field name="res_model">afr.supervisorio.ciclos.authenticity.check</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Menu item -->
+    <menuitem id="menu_authenticity_check"
+              name="Verificar Autenticidade"
+              parent="menu_afr_supervisorio_ciclos"
+              action="action_authenticity_check"
+              sequence="20"/>
+</odoo> 

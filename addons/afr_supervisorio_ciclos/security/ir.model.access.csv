@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_afr_cycle_type_user,afr.cycle.type.user,model_afr_cycle_type,base.group_user,1,1,1,1
+access_afr_cycle_type_manager,afr.cycle.type.manager,model_afr_cycle_type,base.group_system,1,1,1,1
+access_afr_supervisorio_ciclos_user,afr.supervisorio.ciclos.user,model_afr_supervisorio_ciclos,base.group_user,1,1,1,1
+access_afr_supervisorio_ciclos_manager,afr.supervisorio.ciclos.manager,model_afr_supervisorio_ciclos,base.group_system,1,1,1,1
+access_afr_cycle_features_manager,afr.cycle.features.manager,model_afr_cycle_features,,1,1,1,1
+access_afr_cycle_features_user,afr.cycle.features.user,model_afr_cycle_features,base.group_user,1,1,1,1
+access_afr_supervisorio_ciclos_authenticity_check_user,afr.supervisorio.ciclos.authenticity.check.user,model_afr_supervisorio_ciclos_authenticity_check,base.group_user,1,1,1,0
+access_afr_public_authenticity_check_portal,afr.public.authenticity.check.portal,model_afr_public_authenticity_check,,1,1,1,0
+access_wizard_ler_diretorio_ciclos_system,wizard.ler.diretorio.ciclos.system,model_wizard_ler_diretorio_ciclos,base.group_system,1,1,1,1

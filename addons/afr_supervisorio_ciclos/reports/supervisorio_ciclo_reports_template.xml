@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_ciclos_template">
+
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+            <style>
+                .legenda {
+                    font-size: 9px;
+                }
+                .titulo_grafico {
+                    margin:0px;
+                }
+                .table-sm th, .table-sm td {
+                    padding: 0.3rem;
+                    font-size: 12px;
+                }
+                .table-responsive {
+                    max-height: 500px;
+                    overflow-y: auto;
+                }
+            </style>
+                
+                    <div class="page">
+
+                        <h2 class="text-center">RELATÓRIO DE CICLO</h2>
+                        <h3 class="text-center"><span t-field="o.name" /></h3>
+                        <h3>Cod. Carga <span t-field="o.batch_number" /></h3>
+                        <div class="row">
+                            <div class="col-2">
+                                <strong>Equipamento: </strong>
+                            </div>
+                            <div class="col-6">
+                                <span t-field="o.equipment_id" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2">
+                                <strong>Duração (HH:mm): </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.duration"  t-options='{"widget": "float_time"}'/>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2">
+                                <strong>Data início: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.start_date" />
+                            </div>
+                            <div class="col-2">
+                                <strong>Data fim: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.end_date" />
+                            </div>
+                            
+
+                        </div>
+                        
+                        <!-- <div class="row">
+                            <div class="col-2">
+                                <strong>Tipo de Ciclo: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.cycle_type_id" />
+                            </div>
+                            <div class="col-2">
+                                <strong>Operador: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.operator_id" />
+                            </div>
+                        </div> -->
+                        <div class="row">
+                            <div class="col-2">
+                                <strong>Status: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.state" />
+                            </div>
+                            <!-- <div class="col-2">
+                                <strong>Empresa: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.company_id" />
+                            </div> -->
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <!-- <h5>Informações do Ciclo</h5>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong>Duração Prevista: </strong>
+                                        <span t-field="o.duration_planned" t-options='{"widget": "float_time"}'/>
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Atrasado: </strong>
+                                        <span t-field="o.str_is_overdue" />
+                                    </div>
+                                </div> -->
+                                <div class="row mt-2">
+                                    <div class="col-12" t-if="o.notes">
+                                        <strong>Observações: </strong>
+                                        <div t-field="o.notes" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                       
+                        <div class="row mt-3 mb-1">
+                           <div class="col-12 text-center"  >
+                            <h5 class="titulo_grafico">Gráfico do Ciclo</h5>
+                            <t t-if="o.cycle_graph">
+                                <img class="mr-5" t-attf-src="data:image/png;charset=utf-8;base64,{{o.cycle_graph}}" width="100%"/>
+                            </t>
+                            <t t-else="">
+                                <p>Nenhum gráfico disponível para este ciclo.</p>
+                            </t>
+                           </div>
+                        </div>
+                       
+                        <div class="row mt-5">
+                            <div class="col-6  text-center" >
+                                <!-- ________________________________________<br/>
+                                 <span t-field="o.operator_id" /><br/> 
+                                Operador -->
+                            </div>
+                            <div class="col-6  text-center">
+                                ________________________________________<br/>
+                                Garantia de qualidade<br/>
+                                Aprovação
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

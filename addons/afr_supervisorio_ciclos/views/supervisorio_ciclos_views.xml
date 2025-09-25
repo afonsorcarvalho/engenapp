@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form View -->
+    <record id="view_afr_supervisorio_ciclos_form" model="ir.ui.view">
+        <field name="name">afr.supervisorio.ciclos.form</field>
+        <field name="model">afr.supervisorio.ciclos</field>
+        <field name="arch" type="xml">
+             <form string="Ciclo"
+            
+             >
+                <header>
+                    <button name="action_start" string="Iniciar" type="object" 
+                        class="oe_highlight" attrs="{'invisible': [('state', '!=', 'aguardando')]}" groups="base.group_system"/>
+                    <button name="action_conclude" string="Concluir" type="object" 
+                        class="oe_highlight" attrs="{'invisible': [('state', '!=', 'em_andamento')]}" groups="base.group_system"/>
+                   
+                   
+                    <button name="action_cancel" string="Reprovar" type="object" 
+                        attrs="{'invisible': [('state', 'in', ['concluido', 'cancelado'])]}"/>
+                    <button name="action_abrir_wizard_ler_diretorio_ciclos" string="Ler Diretório" type="object" 
+                      groups="base.group_system"/>
+                    <button name="action_atualizar_dados_ciclo_atual" string="Atualizar Dados" type="object" 
+                      groups="base.group_system" attrs="{'invisible': [('file_path', '=', False)]}"/>
+                    <button name="compute_cycle_graph" string="Atualizar Grafico" type="object" 
+                       groups="base.group_system"/>
+                    <field name="state" widget="statusbar" 
+                        statusbar_visible="em_andamento,concluido,cancelado,abortado" />
+                </header>
+                <sheet>
+                <group col="1">
+                    <group>
+                    
+                        <!-- <div class="oe_title col-12"> -->
+                            <label for="name" string="Código do Ciclo"/><br/>
+                            <h1>
+                                <field name="name" placeholder="Número da Carga" readonly="1"/>
+                            </h1>
+                        <!-- </div> -->
+                    </group>
+                </group>
+                    <group col="6">
+                        <group colspan="2">
+
+                            <field name="equipment_id" placeholder="Equipamento" readonly="1" />
+                        </group>        
+                        <group >
+
+                                <field name="equipment_nickname" string="Apelido" readonly="1" />
+                        </group>
+                    </group>
+                   
+                    <group col="3">
+                        <group >
+                            <field name="batch_number" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="start_date" readonly="1"/>
+                        </group>
+                        <group>
+                        
+                            <field name="end_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <group col="3">
+                        <group >
+                            <field name="duration" widget="float_time" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="duration_planned" widget="float_time" readonly="1"/>
+                        </group>
+                        <group>
+                        
+                            <field name="is_overdue" readonly="1"/>
+                        </group>
+                    </group>
+                    <group >
+                        <group  >
+                            
+                            <field name="cycle_type_id"  groups="base.group_system"/>
+                            <!-- <field name="cycle_features_id" attrs="{'readonly': [('state', 'in', ['em_andamento', 'concluido', 'cancelado', 'abortado'])]}" groups="!base.group_system"/> -->
+                            <field name="cycle_features_id" groups="base.group_system"/>
+                            <field name="operator_id" widget="many2one_avatar_employee"  groups="base.group_system" />
+                            
+                            <field name="company_id" groups="base.group_system" />
+                        </group>
+                      
+                    </group>
+                    <notebook accesskey="t">
+                        
+                        <page string="Arquivos" name="files" >
+                           
+                             <group col="1">
+                             <field name="file_path" groups="base.group_system" />    
+                               <field name="download_url" widget="Html" 
+                   string="Baixe aqui" 
+                   
+                   options="{'text': 'Baixe aqui','label': 'PDF'}"/> 
+                             </group>      
+                            
+                            <group col="2" >
+                                
+                                  
+                                    <group col="1">
+                                    <div></div>
+                                        <field name="cycle_txt" widget="ace_editor" options="{
+                                            'mode': 'text',
+                                            'theme': 'text',
+                                            'fontSize': 12,
+                                            'showPrintMargin': true,
+                                            'showGutter': true,
+                                            'highlightActiveLine': true,
+                                            'maxLines': 50,
+                                            'minLines': 10,
+                                            'enableBasicAutocompletion': false,
+                                            'enableLiveAutocompletion': false,
+                                            'behavioursEnabled': true,
+                                            'wrapBehavioursEnabled': false,
+                                            'autoScrollEditorIntoView': true,
+                                            }" attrs="{'invisible': [('cycle_txt', '=', False)]}" nolabel="1" />
+                                     
+                                        
+                                
+                               
+                                    </group>  
+                                    <group col="1">
+                                    <div></div>
+                                        <field name="cycle_statistics_txt" widget="ace_editor" options="{
+                                            'mode': 'text',
+                                            'theme': 'text',
+                                            'fontSize': 12,
+                                            'showPrintMargin': false,
+                                            'showGutter': false,
+                                            'maxLines': 50,
+                                            'minLines': 10,
+                                            'enableBasicAutocompletion': false,
+                                            'enableLiveAutocompletion': false,
+                                            'behavioursEnabled': false,
+                                            'wrapBehavioursEnabled': false,
+                                            'autoScrollEditorIntoView': true,
+                                        }" nolabel="1" />
+                                       
+                                    </group>
+                                    
+                                  
+                                        
+                                    
+                               
+                               
+                            </group>
+
+                            <group col="1">
+                                <field name="cycle_txt_filename" invisible="1"/>
+                                <!-- <field name="cycle_pdf" filename="cycle_pdf_filename" widget="pdf_viewer" /> -->
+                                <field name="cycle_pdf_filename" invisible="1"/>
+                            </group>
+
+                        </page>
+                        <page string="Gráfico do Ciclo" name="graph" attrs="{'invisible': [('cycle_graph', '=', False)]}">
+                            
+                                <field name="cycle_graph" filename="cycle_graph_filename" options='{"zoom": false}' widget="image" />
+                                <field name="cycle_graph_filename" invisible="1"/>
+                            
+                        </page>
+                        <page string="Observações">
+                            <field name="notes" placeholder="Digite suas observações aqui..."/>
+                        </page>
+                </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Tree View -->
+    <record id="view_afr_supervisorio_ciclos_tree" model="ir.ui.view">
+        <field name="name">afr.supervisorio.ciclos.tree</field>
+        <field name="model">afr.supervisorio.ciclos</field>
+       
+        <field name="arch" type="xml">
+            <!-- <tree string="Ciclos" decoration-info="state=='aguardando'"
+                  decoration-success="state=='concluido'"
+                  decoration-warning="state=='em_andamento'"
+                  decoration-danger="state in ['erro','cancelado','abortado']"
+                  decoration-bf="is_overdue"
+                  > -->
+            <tree string="Ciclos" 
+                  decoration-danger="is_overdue"
+                  >
+                <field name="state" widget="badge"
+                 decoration-info="state=='aguardando'"
+                  decoration-success="state=='concluido'"
+                  decoration-warning="state=='em_andamento'"
+                  decoration-danger="state in ['erro','cancelado','abortado']"
+                  decoration-bf="is_overdue"
+                />
+                <field name="name" optional="hide"/>
+                <field name="batch_number"/>
+                <field name="cycle_features_id" string="Ciclo Selecionado"/>
+                <field name="equipment_id"/>
+                <field name="equipment_nickname"/>
+                <field name="equipment_category_id" optional="hide"/>
+                <field name="cycle_type_id" optional="hide"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="duration" widget="float_time"/>
+                <field name="operator_id" widget="many2one_avatar_employee" optional="hide"/>
+                <field name="company_id" optional="hide"/>
+                <field name="is_overdue" optional="hide" 
+                 decoration-danger="is_overdue"
+                 decoration-success="not is_overdue"
+                />
+                <field name="str_is_overdue" optional="show"/>
+            </tree>
+        </field>
+           
+    </record>
+
+    <!-- Search View -->
+    <record id="view_afr_supervisorio_ciclos_search" model="ir.ui.view">
+        <field name="name">afr.supervisorio.ciclos.search</field>
+        <field name="model">afr.supervisorio.ciclos</field>
+        <field name="arch" type="xml">
+            <search string="Pesquisar Ciclos">
+                <field name="name"/>
+                <field name="equipment_id"/>
+                <field name="equipment_nickname"/>
+                <field name="cycle_type_id"/>
+                <field name="cycle_features_id"/>
+                <field name="operator_id"/>
+                <field name="batch_number" string="Lote"/>
+                <separator/>
+                <filter string="Meus Ciclos" name="my_cycles" domain="[('operator_id', '=', uid)]"/>
+               
+                <separator/>
+                <filter string="Em Andamento" name="ongoing" domain="[('state','=','em_andamento')]"/>
+                <filter string="Aguardando" name="waiting" domain="[('state','=','aguardando')]"/>
+                <filter string="Concluídos" name="completed" domain="[('state','=','concluido')]"/>
+                <filter string="Cancelados" name="canceled" domain="[('state','=','cancelado')]"/>
+                <filter string="Erro" name="error" domain="[('state','=','erro')]"/>
+                <filter string="Abortados" name="aborted" domain="[('state','=','abortado')]"/>
+                <filter string="Pausados" name="paused" domain="[('state','=','pausado')]"/>
+                <filter string="Atrasados" name="overdue" domain="[('is_overdue', '=', True)]"/>
+
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Equipamento" name="equipment" context="{'group_by':'equipment_id'}"/>
+                    <filter string="Apelido" name="equipment_nickname" context="{'group_by':'equipment_nickname'}"/>
+                    <filter string="Categoria de Equipamento" name="equipment_category" context="{'group_by':'equipment_category_id'}"/>
+                    <filter string="Tipo de Ciclo" name="cycle_type" context="{'group_by':'cycle_type_id'}"/>
+                    <filter string="Status" name="state" context="{'group_by':'state'}"/>
+                    <!-- <filter string="Operador" name="operator" context="{'group_by':'operator_id'}" /> -->
+                    <!-- <filter string="Data Início" name="start_date" context="{'group_by':'start_date:day'}"/> -->
+                </group>
+            </search>
+             <searchpanel>
+               
+                <field name="equipment_id" string="Equipamento" enable_counters="1" select="multi"/>
+                <!-- <field name="equipment_category_id" string="Categoria" enable_counters="1" select="multi"/> -->
+                <field name="cycle_features_id" string="Ciclo Selecionado" enable_counters="1" select="multi"/>
+                <field name="state" string="Status" enable_counters="1" select="multi"/>
+                
+                
+               
+            </searchpanel>
+            
+        </field>
+    </record>
+
+    <!-- Calendar View -->
+    <record id="view_afr_supervisorio_ciclos_calendar" model="ir.ui.view">
+        <field name="name">afr.supervisorio.ciclos.calendar</field>
+        <field name="model">afr.supervisorio.ciclos</field>
+        <field name="arch" type="xml">
+            <calendar string="Ciclos" date_start="start_date" date_stop="end_date" 
+                     color="state" mode="month" quick_add="False">
+                <field name="name"/>
+                <field name="equipment_id"/>
+                <!-- <field name="cycle_type_id"/> -->
+                <field name="operator_id"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- Pivot View -->
+    <record id="view_afr_supervisorio_ciclos_pivot" model="ir.ui.view">
+        <field name="name">afr.supervisorio.ciclos.pivot</field>
+        <field name="model">afr.supervisorio.ciclos</field>
+        <field name="arch" type="xml">
+            <pivot string="Análise de Ciclos">
+                <field name="equipment_id" type="row"/>
+                <field name="cycle_type_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="duration" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <!-- <record id="action_afr_supervisorio_ciclos_ciclos" model="ir.actions.act_window">
+        <field name="name">Ciclos de ETO</field>
+        <field name="res_model">afr.supervisorio.ciclos</field>
+        <field name="view_mode">tree,form,calendar,pivot</field>
+        <field name="search_view_id" ref="view_afr_supervisorio_ciclos_search"/>
+       
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">
+                Não há ciclos cadastrados.
+            </p>
+            <p>
+                Os ciclos serão registrados automaticamente pelo sistema.
+            </p>
+        </field>
+    </record> -->
+
+
+    <!-- Form View Lavadora Ultrassônica -->
+    <record id="view_afr_supervisorio_ciclos_form_ultrassonica" model="ir.ui.view">
+        <field name="name">afr.supervisorio.ciclos.form.ultrassonica</field>
+        <field name="model">afr.supervisorio.ciclos</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start" string="Iniciar" type="object" states="aguardando" class="oe_highlight"/>
+                    <button name="action_pause" string="Pausar" type="object" states="em_andamento"/>
+                    <button name="action_conclude" string="Concluir" type="object" states="em_andamento,pausado" class="oe_highlight"/>
+                    <button name="action_cancel" string="Cancelar" type="object" states="aguardando,em_andamento,pausado"/>
+                    <field name="state" widget="statusbar" statusbar_visible="aguardando,em_andamento,concluido"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+
+                        <h1>
+                            <field name="name" placeholder="Nome do Ciclo"/>
+                        </h1>
+                        <h2>
+                            Ciclo Ultrassônica
+                        </h2>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="equipment_id"/>
+                            <field name="cycle_type_id"/>
+                            <field name="operator_id"/>
+                            <field name="company_id"/>
+                        </group>
+                        <group>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="duration" widget="float_time"/>
+                     
+                            <field name="batch_number"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Parâmetros do Processo">
+                           
+                        </page>
+                        <page string="Observações">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+ 
+</odoo> 

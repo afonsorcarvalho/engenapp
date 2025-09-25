@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="afr_supervisorio_ciclos.AceEditor" owl="1">
+        <div class="o_field_ace_editor" t-att-class="{'o_field_readonly': props.readonly}">
+            <div t-ref="ace-editor" style="width: 100%; height: 300px;"></div>
+        </div>
+    </t>
+</templates>

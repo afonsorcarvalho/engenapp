@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Portal Form Template -->
+    <template id="portal_authenticity_check_form" name="Portal Authenticity Check Form">
+        <t t-call="portal.portal_layout">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h2 class="o_page_header mt-3">Verificação de Autenticidade de Fitas Digitais</h2>
+                        <p class="text-muted">
+                            Use este formulário para verificar a autenticidade de uma fita digital.
+                            Faça o upload do arquivo e clique em verificar.
+                        </p>
+                        <form action="/authenticity/check" method="post" enctype="multipart/form-data" class="mt-4">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <div class="form-group">
+                                <label for="name">Nome da Verificação</label>
+                                <input type="text" class="form-control" name="name" required="required" placeholder="Ex: Verificação Fita 123"/>
+                            </div>
+                            <div class="form-group mt-3">
+                                <label for="digital_tape_file">Arquivo da Fita Digital</label>
+                                <input type="file" class="form-control" name="digital_tape_file" required="required" accept=".txt"/>
+                                <small class="form-text text-muted">Selecione o arquivo .txt da fita digital</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-3">
+                                <i class="fa fa-check"/> Verificar Autenticidade
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Portal Result Template -->
+    <template id="portal_authenticity_check_result" name="Portal Authenticity Check Result">
+        <t t-call="portal.portal_layout">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h2 class="o_page_header mt-3">Resultado da Verificação</h2>
+                        <div class="card mt-4">
+                            <div class="card-body">
+                                <h5 class="card-title" t-esc="check.name"/>
+                                <p class="card-text">
+                                    <strong>Data:</strong> <span t-field="check.date"/>
+                                </p>
+                                <p class="card-text">
+                                    <strong>Arquivo:</strong> <span t-field="check.digital_tape_filename"/>
+                                </p>
+                                <div class="alert mt-3" t-att-class="'alert-success' if check.state == 'verified' else 'alert-danger'">
+                                    <pre t-field="check.verification_result"/>
+                                </div>
+                                <a href="/authenticity/check" class="btn btn-secondary mt-3">
+                                    <i class="fa fa-arrow-left"/> Nova Verificação
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo> 
