@@ -466,7 +466,8 @@ class SupervisorioCiclos(models.Model):
             'file_path': file_path,
             'cycle_txt_filename': arquivo['name'],
            # 'cycle_pdf': base64.b64encode(pdf_content) if pdf_content else False,
-            'cycle_pdf_filename': arquivo['name'].replace('.txt', '.pdf')
+            'cycle_pdf_filename': arquivo['name'].replace('.txt', '.pdf'),
+            'company_id': equipment_id.company_id.id if equipment_id.company_id else False
         }
         
         # Chamando método dinamicamente do cycle_type_id
