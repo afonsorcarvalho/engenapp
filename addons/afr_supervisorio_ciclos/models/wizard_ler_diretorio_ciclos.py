@@ -72,9 +72,9 @@ class WizardLerDiretorioCiclos(models.TransientModel):
                     raise ValidationError('A data de início não pode ser posterior à data de fim.')
                 
                 # Verifica se o período não é muito longo (opcional)
-                dias = (record.data_fim - record.data_inicio).days
-                if dias > 365:
-                    raise ValidationError('O período não pode ser superior a 365 dias.')
+                # dias = (record.data_fim - record.data_inicio).days
+                # if dias > 365:
+                #     raise ValidationError('O período não pode ser superior a 365 dias.')
 
     def action_confirmar_leitura(self):
         """
@@ -98,11 +98,7 @@ class WizardLerDiretorioCiclos(models.TransientModel):
             else:
                 # Usa o equipamento selecionado no wizard ou busca o primeiro disponível
                 equipment_id = self.equipment_id
-                if not equipment_id:
-                    # Busca equipamentos com tipo de ciclo definido
-                    equipment_id = self.env['engc.equipment'].search([
-                        ('cycle_type_id', '!=', False)
-                    ], limit=1)
+               
                     
                 if not equipment_id:
                     raise UserError('Nenhum equipamento encontrado com tipo de ciclo definido.')
@@ -123,7 +119,7 @@ class WizardLerDiretorioCiclos(models.TransientModel):
                     'title': 'Sucesso!',
                     'message': f'Leitura do diretório concluída com sucesso para o período de {self.data_inicio} a {self.data_fim}.',
                     'type': 'success',
-                    'sticky': False,
+                    'sticky': True,
                 }
             }
             

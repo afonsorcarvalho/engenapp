@@ -5,12 +5,14 @@
     <record id="action_afr_supervisorio_ciclos_all" model="ir.actions.act_window">
         <field name="name">Todos os Ciclos</field>
         <field name="res_model">afr.supervisorio.ciclos</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">tree,form,calendar,pivot</field>
         <field name="context">{'search_default_cycle_type_eto': 1}</field>
          <field name="search_view_id" ref="afr_supervisorio_ciclos.view_afr_supervisorio_ciclos_search"/>
         <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'tree', 'view_id': ref('afr_supervisorio_ciclos.view_afr_supervisorio_ciclos_tree')}),
-            (0, 0, {'view_mode': 'form', 'view_id': ref('view_afr_supervisorio_ciclos_form')})]"/> 
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_afr_supervisorio_ciclos_form')}),
+            (0, 0, {'view_mode': 'calendar', 'view_id': ref('afr_supervisorio_ciclos.view_afr_supervisorio_ciclos_calendar')}),
+            (0, 0, {'view_mode': 'pivot', 'view_id': ref('afr_supervisorio_ciclos.view_afr_supervisorio_ciclos_pivot')})]"/> 
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Nenhum ciclo encontrado eles serão registrados automaticamente pelo sistema.

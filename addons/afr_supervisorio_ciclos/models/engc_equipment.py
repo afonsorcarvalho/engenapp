@@ -22,6 +22,8 @@ class EngcEquipment(models.Model):
         Personaliza a exibição do nome do equipamento para mostrar o apelido primeiro.
         """
         result = []
+        print("######    entrou no name_get")
+        print(self.env.context)
         for record in self:
             # Verifica se deve mostrar apelido primeiro (contexto do wizard)
             show_apelido_first = self.env.context.get('show_apelido_first', False)

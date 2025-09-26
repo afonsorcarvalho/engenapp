@@ -278,7 +278,7 @@ class ReaderFitaDigitalInterface(ABC):
     def make_graph(self, header, body):    
         pass
     
-    def compute_statistics(self, phases=None, header=None, body=None):
+    def compute_statistics(self, phases=None, header=None, body=None,formated=True):
         """
         Calcula as estatísticas do ciclo (máximo, mínimo, média e moda) para cada variável.
 
@@ -371,8 +371,10 @@ class ReaderFitaDigitalInterface(ABC):
                 **stats
                
             }
-        
-        return self.formatar_estatisticas_colunas(estatisticas),error_msg
+        if formated:
+            return self.formatar_estatisticas_colunas(estatisticas),error_msg
+        else:
+            return estatisticas,error_msg
 
     def formatar_estatisticas_colunas(self,statistics):
         """

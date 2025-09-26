@@ -651,16 +651,20 @@ class SupervisorioCiclos(models.Model):
     @api.depends('cycle_txt')
     def _compute_cycle_statistics_data(self):
         for record in self:
+            _logger.info(f"Computando estatísticas para ciclo {record.name}")
             if not record.cycle_txt:
+                _logger.info(f"Ciclo {record.name} não possui cycle_txt")
                 record.cycle_statistics_data = {}
                 continue
             try:
                 do = self._get_dataobject(record.equipment_id, record.file_path)
-                if record.cycle_type_id.fases_fita_digital:
+                if record.cycle_type_id and record.cycle_type_id.fases_fita_digital:
                     fases = record.cycle_type_id.fases_fita_digital.split(',')
                     statistics = do.compute_statistics(fases)
                 else:
                     statistics = do.compute_statistics()
+                
+                _logger.info(f"Estatísticas calculadas para {record.name}: {statistics}")
                 
                 # Garantir que os dados estão no formato correto
                 if isinstance(statistics, dict):
@@ -677,9 +681,101 @@ class SupervisorioCiclos(models.Model):
                 else:
                     record.cycle_statistics_data = []
                     
+                _logger.info(f"Dados finais para {record.name}: {record.cycle_statistics_data}")
+                    
             except Exception as e:
                 _logger.error(f"Erro ao calcular estatísticas para ciclo {record.name}: {e}")
                 record.cycle_statistics_data = []
+
+    def get_cycle_statistics_for_report(self):
+        """
+        Retorna as estatísticas do ciclo para uso em relatórios.
+        """
+        self.ensure_one()
+        _logger.info(f"=== INÍCIO get_cycle_statistics_for_report para {self.name} ===")
+        
+        if not self.cycle_txt:
+            _logger.info(f"Ciclo {self.name} não possui cycle_txt - retornando lista vazia")
+            return []
+            
+        _logger.info(f"Ciclo {self.name} possui cycle_txt - continuando processamento")
+        
+        try:
+            _logger.info(f"Chamando _get_dataobject para equipamento {self.equipment_id}")
+            do = self._get_dataobject(self.equipment_id, self.file_path)
+            _logger.info(f"DataObject obtido: {do}")
+
+            # Garante que header/body estejam carregados
+            try:
+                if not getattr(do, 'body_fita', None) or 'data' not in getattr(do, 'body_fita', {}):
+                    _logger.info("Chamando read_all_fita() para carregar header/body da fita digital")
+                    do.read_all_fita()
+            except Exception as e:
+                _logger.error(f"Erro ao ler fita digital via read_all_fita(): {e}")
+                raise
+            
+            if self.cycle_type_id and self.cycle_type_id.fases_fita_digital:
+                fases = self.cycle_type_id.fases_fita_digital.split(',')
+                _logger.info(f"Usando fases específicas: {fases}")
+                statistics,error_msg = do.reader_fita.compute_statistics(fases, do.header_fita, do.body_fita,formated=False)
+            else:
+                # Derivar fases a partir do body_fita para cobrir todo o ciclo
+                fases_body = [f[1] for f in (do.body_fita.get('fase') or [])]
+                # Garante ordem e remove duplicidades preservando sequência
+                fases = []
+                for f in fases_body:
+                    if f not in fases:
+                        fases.append(f)
+                _logger.info(f"Fases derivadas do body: {fases}")
+                statistics,error_msg = do.reader_fita.compute_statistics(fases, do.header_fita, do.body_fita,formated=False)
+            
+            _logger.info(f"Estatísticas calculadas para relatório {self.name}: {statistics}")
+            _logger.info(f"Tipo das estatísticas: {type(statistics)}")
+
+            # Construir estrutura dinâmica baseada nas chaves presentes nas estatísticas
+            if isinstance(statistics, dict):
+                # Coletar variáveis na ordem de aparição (exclui Duration)
+                variables: list[str] = []
+                for fase, dados in statistics.items():
+                    if not isinstance(dados, dict):
+                        continue
+                    for key, val in dados.items():
+                        if key == 'Duration':
+                            continue
+                        if isinstance(val, dict) and key not in variables:
+                            variables.append(key)
+                # Montar linhas
+                rows = []
+                for fase, dados in statistics.items():
+                    if not isinstance(dados, dict):
+                        continue
+                    metrics = {}
+                    for var in variables:
+                        v = dados.get(var) if isinstance(dados.get(var), dict) else {}
+                        metrics[var] = {
+                            'min': (v or {}).get('min'),
+                            'max': (v or {}).get('max'),
+                            'media': (v or {}).get('media'),
+                        }
+                    rows.append({
+                        'fase': fase,
+                        'duracao': dados.get('Duration') or '',
+                        'metrics': metrics,
+                    })
+                result = {'variables': variables, 'rows': rows}
+                _logger.info(f"Estrutura dinâmica para template: {result}")
+                return result
+
+            # Fallback caso não seja dict
+            _logger.info("Estatísticas não são dict após compute; retornando estrutura vazia para o template")
+            return {'variables': [], 'rows': []}
+           
+                
+        except Exception as e:
+            _logger.error(f"ERRO ao calcular estatísticas para relatório do ciclo {self.name}: {e}")
+            import traceback
+            _logger.error(f"Traceback: {traceback.format_exc()}")
+            return []
    
 
     def compute_cycle_graph(self):

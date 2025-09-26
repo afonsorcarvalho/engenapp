@@ -232,8 +232,6 @@
                 <field name="cycle_features_id"/>
                 <field name="operator_id"/>
                 <field name="batch_number" string="Lote"/>
-                <separator/>
-                <filter string="Meus Ciclos" name="my_cycles" domain="[('operator_id', '=', uid)]"/>
                
                 <separator/>
                 <filter string="Em Andamento" name="ongoing" domain="[('state','=','em_andamento')]"/>
@@ -244,6 +242,10 @@
                 <filter string="Abortados" name="aborted" domain="[('state','=','abortado')]"/>
                 <filter string="Pausados" name="paused" domain="[('state','=','pausado')]"/>
                 <filter string="Atrasados" name="overdue" domain="[('is_overdue', '=', True)]"/>
+                
+                <separator/>
+                <filter string="Data Início" name="this_month" date="start_date" default_period="this_month"/>
+              
 
                 <group expand="0" string="Agrupar Por">
                     <filter string="Equipamento" name="equipment" context="{'group_by':'equipment_id'}"/>
@@ -257,7 +259,7 @@
             </search>
              <searchpanel>
                
-                <field name="equipment_id" string="Equipamento" enable_counters="1" select="multi"/>
+                <field name="equipment_id" string="Equipamento" enable_counters="1" select="multi" context="{'show_apelido_first': True}"/>
                 <!-- <field name="equipment_category_id" string="Categoria" enable_counters="1" select="multi"/> -->
                 <field name="cycle_features_id" string="Ciclo Selecionado" enable_counters="1" select="multi"/>
                 <field name="state" string="Status" enable_counters="1" select="multi"/>
@@ -277,7 +279,7 @@
             <calendar string="Ciclos" date_start="start_date" date_stop="end_date" 
                      color="state" mode="month" quick_add="False">
                 <field name="name"/>
-                <field name="equipment_id"/>
+                <field name="equipment_id" context="{'show_apelido_first': True}" filters="True"/>
                 <!-- <field name="cycle_type_id"/> -->
                 <field name="operator_id"/>
             </calendar>
@@ -291,9 +293,9 @@
         <field name="arch" type="xml">
             <pivot string="Análise de Ciclos">
                 <field name="equipment_id" type="row"/>
-                <field name="cycle_type_id" type="row"/>
-                <field name="state" type="col"/>
-                <field name="duration" type="measure"/>
+                <field name="start_date" type="col" interval="month"/>
+               
+                
             </pivot>
         </field>
     </record>
