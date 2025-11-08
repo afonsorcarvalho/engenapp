@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_relatorio_atendimento_blank_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <style type="text/css">
+                        .table-borderless > :not(caption) > * > * {
+                            border: 0;
+                            border-bottom-width: 0px;
+                        }
+                        .table-borderless > :not(:first-child) {
+                            border: 0;
+                            border-bottom-width: 0px;
+                        }
+                        .table > :not(caption) > * > * {
+                            padding: 0.1rem 0.1rem;
+                            border-bottom-width: 0px;
+                        }
+                        .table > tbody {
+                            vertical-align: inherit;
+                        }
+                        .table > thead {
+                            vertical-align: bottom;
+                        }
+                        .table > :not(:first-child) {
+                            border-top: 2px solid currentColor;
+                        }
+                        .campo-branco {
+                            border-bottom: 1px solid #000;
+                            min-height: 20px;
+                            padding: 5px;
+                            margin: 5px 0;
+                        }
+                        .campo-texto {
+                            border: 1px solid #000;
+                            min-height: 120px;
+                            padding: 5px;
+                            margin: 5px 0;
+                            background-image: repeating-linear-gradient(
+                                transparent,
+                                transparent 24px,
+                                #ccc 24px,
+                                #ccc 25px
+                            );
+                            background-size: 100% 25px;
+                            line-height: 25px;
+                        }
+                        .linha-pautada {
+                            border-bottom: 1px solid #ddd;
+                            min-height: 25px;
+                            padding: 2px 5px;
+                        }
+                    </style>
+                    <div class="page">
+                        <!-- Cabeçalho -->
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <h2>Relatório de Atendimento</h2>
+                            </div>
+                        </div>
+                        
+                        <!-- Dados da OS -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <table class="table table-sm table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Ordem de Serviço:</strong></td>
+                                            <td>
+                                                <span t-field="o.name" />
+                                            </td>
+                                            <td><strong>Data Requisição:</strong></td>
+                                            <td>
+                                                <span t-field="o.date_request" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Data Programada:</strong></td>
+                                            <td>
+                                                <span t-field="o.date_scheduled" />
+                                            </td>
+                                            <td><strong>Tipo de Manutenção:</strong></td>
+                                            <td>
+                                                <span t-field="o.maintenance_type" />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Dados Cliente e Equipamento -->
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <t t-call="engc_os.report_cliente_equipment_template" />
+                            </div>
+                        </div>
+
+                        <!-- Dados do Relatório de Atendimento -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-12 rounded border border-dark p-2 mb-2">
+                                        <h4>Relatório de Atendimento</h4>
+                                    </div>
+                                </div>
+                                
+                                <!-- Número do Relatório -->
+                                <div class="row mb-2">
+                                    <div class="col-3">
+                                        <strong>Nº Relatório:</strong>
+                                    </div>
+                                    <div class="col-9">
+                                        <div class="campo-branco"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Técnicos -->
+                                <div class="row mb-2">
+                                    <div class="col-3">
+                                        <strong>Técnico(s):</strong>
+                                    </div>
+                                    <div class="col-9">
+                                        <div class="campo-branco"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Datas de Atendimento -->
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <strong>Data/Hora Início:</strong>
+                                        <div class="campo-branco"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Data/Hora Término:</strong>
+                                        <div class="campo-branco"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Diagnóstico -->
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <strong>Diagnóstico / Descrição do Defeito:</strong>
+                                        <div class="campo-texto">
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Descrição do Atendimento -->
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <strong>Descrição do Atendimento / Serviços Executados:</strong>
+                                        <div class="campo-texto">
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Estado do Equipamento -->
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <strong>Estado do Equipamento:</strong>
+                                        <div class="mt-2">
+                                            <label class="mr-3">
+                                                <input type="checkbox" /> Parado
+                                            </label>
+                                            <label class="mr-3">
+                                                <input type="checkbox" /> Funcionando
+                                            </label>
+                                            <label class="mr-3">
+                                                <input type="checkbox" /> Funcionando com restrições
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Restrições -->
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <strong>Restrições (se aplicável):</strong>
+                                        <div class="campo-texto">
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pendências -->
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <strong>Pendências:</strong>
+                                        <div class="campo-texto">
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Observações -->
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <strong>Observações:</strong>
+                                        <div class="campo-texto">
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                            <div class="linha-pautada"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Espaço para Peças Aplicadas -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-12 rounded border border-dark p-2 mb-2">
+                                        <h5>Peças Aplicadas</h5>
+                                    </div>
+                                </div>
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th><strong>Descrição</strong></th>
+                                            <th><strong>Quantidade</strong></th>
+                                            <th><strong>Observações</strong></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                            <td style="min-height: 30px; padding: 5px;">
+                                                <div style="border-bottom: 1px solid #ddd; min-height: 25px;"></div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Assinaturas -->
+                        <div class="row mt-4">
+                            <div class="col-6">
+                                <div class="text-center">
+                                    <div class="campo-branco" style="min-height: 80px;"></div>
+                                    <strong>Técnico Responsável</strong>
+                                    <div class="campo-branco mt-2"></div>
+                                    <small>Nome e Assinatura</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center">
+                                    <div class="campo-branco" style="min-height: 80px;"></div>
+                                    <strong>Cliente / Responsável</strong>
+                                    <div class="campo-branco mt-2"></div>
+                                    <small>Nome e Assinatura</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="oe_structure" />
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
+

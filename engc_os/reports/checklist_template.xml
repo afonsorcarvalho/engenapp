@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_checklist_template">
+        <div class="row" t-if="o.check_list_id">
+            <div class="col-12">
+                <table class="table table-sm table-condensed table-striped" t-if="o.check_list_id">
+                    <thead>
+                        <tr>
+                            <th colspan="6">
+                                <h4 t-if="o.check_list_id">
+                                    Checklist
+                                    <span t-field="o.maintenance_type" />
+                                    -
+                                    <span t-field="o.name" />
+                                </h4>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th>
+                                <strong>
+                                    Item
+                                </strong>
+                            </th>
+                            <th>
+                                <strong>
+                                    Instrução
+                                </strong>
+                            </th>
+                            <th>
+                                <strong>
+                                    Verificado
+                                </strong>
+                            </th>
+                            <th>
+                                <strong>
+                                    Medições
+                                </strong>
+                            </th>
+                            <th>
+                                <strong>
+                                    Unidades
+                                </strong>
+                            </th>
+                            <th>
+                                <strong>
+                                    Observações
+                                </strong>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-if="o.check_list_id">
+                            <!--
+                            <tr>
+                            <td colspan="4"><strong>Peças Programadas</strong></td>
+                            </tr>
+                            -->
+                            <t t-set="i" t-value="1" />
+                            <tr t-foreach="o.check_list_id" t-as="line">
+                                <td>
+                                    <span t-esc="i" />
+                                    <t t-set="i" t-value="i+1" />
+                                </td>
+                                <td>
+                                    <span t-field="line.instruction" />
+                                </td>
+                                <td>
+                                    <t t-if="line.check == True">
+                                        Sim
+                                    </t>
+                                    <t t-else="">
+                                        Não
+                                    </t>
+                                </td>
+                                <td>
+                                    <t t-if="line.tem_medicao == True">
+                                        <t t-if="line.check == True">
+                                            <span t-field="line.medicao" />
+                                        </t>
+                                        <t t-else="">
+                                            Não Medido
+                                        </t>
+                                    </t>
+                                    <t t-else="">
+                                        xxxxxxx
+                                    </t>
+                                </td>
+                                <td>
+                                    <t t-if="line.tem_medicao == True">
+                                        <span t-field="line.unidade" />
+                                    </t>
+                                    <t t-else="">
+                                        xxxxxxx
+                                    </t>
+                                </td>
+                                <td>
+                                    <span t-field="line.observations" />
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </template>
+</odoo>
