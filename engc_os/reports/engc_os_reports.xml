@@ -22,12 +22,12 @@
             <field name="binding_type">report</field>
         </record>
         <record id="report_engc_os_blank" model="ir.actions.report">
-            <field name="name">Ordem de serviço em branco </field>
+            <field name="name">Checklist em branco</field>
             <field name="model">engc.os</field>
             <field name="report_type">qweb-pdf</field>
             <field name="report_name">engc_os.report_checklist_blank_template</field>
             <field name="report_file">engc_os.report_checklist_blank_template</field>
-            <field name="print_report_name">'Ordem de servico blank- %s' % (object.name)</field>
+            <field name="print_report_name">'Checklist em branco - %s' % (object.name)</field>
             <field name="binding_model_id" ref="model_engc_os"/>
             <field name="binding_type">report</field>
         </record>

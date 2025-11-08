@@ -82,8 +82,6 @@
 							states="draft,under_repair,execution_ready" type="object"  />
 						<button name="generate_report_and_attach" string="Gerar relatorio" class="oe_highlight"
 							 type="object"  />
-						<button name="action_relatorio_atendimento_resumo" string="Imprimir Resumo de Relatórios" 
-							 type="object" class="btn-secondary" />
 						<field name="state" widget="statusbar" statusbar_visible="draft"
 							options="{'clickable': True}" />
 					</header>
