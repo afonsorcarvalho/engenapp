@@ -6,7 +6,7 @@
       <field name="name">Relatório de Serviço</field>
       <field name="model">engc.os.relatorios</field>
       <field name="arch" type="xml">
-        <tree
+        <tree default_order="create_date desc"
         decoration-danger="state=='draft'"
         decoration-muted="state=='cancel'"
         decoration-success="state=='done'"
@@ -19,6 +19,9 @@
           decoration-success="state=='done'" 
            />
           <field name="name" />
+          <field name="company_id" string="Instituição" groups="base.group_multi_company" />
+          <field name="os_id" string="Ordem de Serviço" />
+          <field name="equipment_id" string="Equipamento" />
           <field name="data_atendimento" />
           <field name="data_fim_atendimento" />
           <field name="service_summary" />
@@ -97,7 +100,7 @@
                   <field name="service_summary" attrs="{'readonly': [('state','not in',('draft'))] }" />
                   <field name="observations" attrs="{'readonly': [('state','not in',('draft'))] }"/>
                   <field name="pendency" attrs="{'readonly': [('state','not in',('draft'))] }" />
-                  <field name="os_id" attrs="{'readonly': [('state','not in',('draft'))] }"/>
+                  <field name="os_id" required="1" attrs="{'readonly': [('state','not in',('draft'))] }"/>
                   
                 </group>
               </page>

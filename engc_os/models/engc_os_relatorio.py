@@ -2,7 +2,7 @@ import time
 from datetime import date, datetime, timedelta
 
 from odoo import models, fields,  api, _, Command, SUPERUSER_ID
-from odoo.addons import decimal_precision as dp
+#from odoo.addons import decimal_precision as dp
 from odoo import netsvc
 from odoo.exceptions import UserError, ValidationError
 import logging
@@ -31,7 +31,7 @@ class Relatorios(models.Model):
         ('qualificacao', 'Qualificação'),
 
     ]
-    STATE_EQUIPMENT_SELECTION = [
+    STATE_EQUIPMENT_SELECTION = [ 
         ('parado', 'Parado'),
         ('funcionando', 'Funcionando'),
         ('restricao', 'Funcionando com restrições'),
@@ -67,25 +67,68 @@ class Relatorios(models.Model):
     
             
 
-    @api.model
-    def create(self, vals):
+    @api.model_create_multi
+    def create(self, vals_list):
         """Salva ou atualiza os dados no banco de dados"""
-        # for vals in vals_list:
+        # Processa cada registro na lista
+        for vals in vals_list:
+            # Valida que a ordem de serviço é obrigatória
+            if not vals.get('os_id'):
+                raise ValidationError(
+                    _('⚠️ É obrigatório informar a Ordem de Serviço para criar um relatório de atendimento.')
+                )
+            if 'company_id' in vals:
+                vals['name'] = self.env['ir.sequence'].with_company(vals['company_id']).next_by_code(
+                    'engc.os.relatorio_sequence') or _('New')
+            else:
+                vals['name'] = self.env['ir.sequence'].with_company(self.env.company).next_by_code(
+                    'engc.os.relatorio_sequence') or _('New')
 
-       # self._verify_relatorio_aberto()
-        if 'company_id' in vals:
-            vals['name'] = self.env['ir.sequence'].with_company(vals['company_id']).next_by_code(
-                'engc.os.relatorio_sequence') or _('New')
-        else:
-            vals['name'] = self.env['ir.sequence'].with_company(self.company_id).next_by_code(
-                'engc.os.relatorio_sequence') or _('New')
-
-        result = super(Relatorios, self).create(vals)
+        result = super(Relatorios, self).create(vals_list)
+        # Aciona validações na OS após criar relatório
+        # Recalcula os campos computados antes de validar
+        for relatorio in result:
+            if relatorio.os_id:
+                # Força o recálculo dos campos computados
+                relatorio.os_id._compute_date_start()
+                relatorio.os_id._compute_date_finish()
+                # Aciona as validações
+                relatorio.os_id._check_date_start_vs_finish()
+                relatorio.os_id._check_date_request_vs_start()
+        return result
+    
+    def write(self, vals):
+        """
+        Sobrescreve o método write para acionar validações na OS 
+        quando os campos de data dos relatórios forem alterados.
+        """
+        result = super(Relatorios, self).write(vals)
+        # Se as datas de atendimento foram alteradas, aciona validações na OS
+        if 'data_atendimento' in vals or 'data_fim_atendimento' in vals:
+            # Agrupa as OSs para evitar validações duplicadas
+            os_ids = self.mapped('os_id').filtered(lambda os: os.id)
+            for os_record in os_ids:
+                # Força o recálculo dos campos computados
+                os_record._compute_date_start()
+                os_record._compute_date_finish()
+                # Aciona as validações
+                os_record._check_date_start_vs_finish()
+                os_record._check_date_request_vs_start()
         return result
 
     os_id = fields.Many2one(
         'engc.os', 'Ordem de Serviço',
-        ondelete='cascade', index=True)
+        ondelete='cascade', index=True, required=True)
+    
+    equipment_id = fields.Many2one(
+        'engc.equipment',
+        string='Equipamento',
+        related='os_id.equipment_id',
+        store=True,
+        readonly=True,
+        help='Equipamento associado através da Ordem de Serviço'
+    )
+    
     # TODO colocar tecnico na Os automaticamente, a media que ele vai
     #  sendo inserido aqui nos relatórios
     technicians = fields.Many2many(
@@ -111,13 +154,58 @@ class Relatorios(models.Model):
     data_fim_atendimento = fields.Datetime(string='Fim do Atendimento',
                                            required=True
                                            )
-
+    time_execution = fields.Float(compute="_compute_time_execution")
+    
+    @api.depends("data_atendimento","data_fim_atendimento")
+    def _compute_time_execution(self):
+        
+        for record in self:
+            if record.data_atendimento and record.data_fim_atendimento:
+                diferenca = record.data_fim_atendimento - record.data_atendimento
+                record.time_execution = diferenca.total_seconds() / 3600.0  # Converte para horas
+            else:
+                record.time_execution = 0.0  # Se algum valor for nulo, define como 0
+    
+    # ******************************************
+    #  VALIDAÇÕES (CONSTRAINTS)
+    #
+    # ******************************************
+    
+    @api.constrains('os_id')
+    def _check_os_id_required(self):
+        """
+        Valida que o relatório de serviço deve ter uma ordem de serviço associada.
+        """
+        for record in self:
+            if not record.os_id:
+                raise ValidationError(
+                    _('⚠️ É obrigatório informar a Ordem de Serviço para criar um relatório de atendimento.')
+                )
+    
+    @api.constrains('data_atendimento', 'data_fim_atendimento')
+    def _check_data_atendimento_vs_fim(self):
+        """
+        Valida que a Data de Atendimento deve ser antes do Fim do Atendimento.
+        """
+        for record in self:
+            if record.data_atendimento and record.data_fim_atendimento:
+                if record.data_atendimento >= record.data_fim_atendimento:
+                    raise ValidationError(
+                        _('A Data de Atendimento deve ser anterior ao Fim do Atendimento.\n'
+                          'Data de Atendimento: %s\n'
+                          'Fim do Atendimento: %s') % (
+                            record.data_atendimento.strftime('%d/%m/%Y %H:%M:%S'),
+                            record.data_fim_atendimento.strftime('%d/%m/%Y %H:%M:%S')
+                        )
+                    )
+        
     start_hour = fields.Float("Hora início",
 
                               )
     final_hour = fields.Float("Hora fim",
 
                               )
+    
 
     request_parts = fields.One2many(
         'engc.os.request.parts', 'relatorio_request_id', check_company=True)
@@ -240,6 +328,9 @@ class Relatorios(models.Model):
             'context': {
                  'default_os_id': self.os_id.id,
                  'default_relatorio_request_id': self.id,
+                 'create': False if self.state == 'done' else True,
+                 'edit': False if self.state == 'done' else True,
+                 'delete': False if self.state == 'done' else True,
 
                           },
             'domain':[('relatorio_request_id','=',self.id)]
@@ -277,8 +368,11 @@ class Relatorios(models.Model):
         self.write({
             'state': 'cancel'
         })
+        
 
     def action_done(self):
+        
+        
         self.write({
             'state': 'done'
         })
@@ -362,3 +456,61 @@ class RelatoriosPictures(models.Model):
     picture = fields.Binary(string="Foto",
                             required=True
                             )
+    
+    def _get_report_base_filename(self):
+        """
+        Gera o nome base do arquivo do relatório.
+        Inclui a instituição e as datas quando disponíveis no contexto.
+        """
+        self.ensure_one()
+        
+        # Verifica se há dados de filtro no contexto (vindo do wizard)
+        context = self.env.context
+        report_data = context.get('report_data') or {}
+        
+        # Monta o nome base
+        nome_base = "Relatorio Resumido de Atendimentos"
+        
+        # Adiciona a instituição (usa a do primeiro relatório ou do contexto)
+        company = self.company_id
+        if not company and context.get('company_id'):
+            company = self.env['res.company'].browse(context['company_id'])
+        if company:
+            # Remove caracteres especiais do nome da empresa para o nome do arquivo
+            company_name = company.name.replace('/', '-').replace('\\', '-').replace(':', '-')
+            nome_base += f" - {company_name}"
+        
+        # Adiciona as datas se disponíveis
+        date_start = report_data.get('date_start')
+        date_end = report_data.get('date_end')
+        
+        if date_start and date_end:
+            # Formata as datas (removendo hora se necessário)
+            try:
+                from datetime import datetime
+                if isinstance(date_start, str):
+                    # Tenta diferentes formatos
+                    try:
+                        dt_start = datetime.strptime(date_start, '%d/%m/%Y %H:%M')
+                    except:
+                        dt_start = datetime.strptime(date_start, '%Y-%m-%d %H:%M:%S')
+                else:
+                    dt_start = date_start
+                if isinstance(date_end, str):
+                    try:
+                        dt_end = datetime.strptime(date_end, '%d/%m/%Y %H:%M')
+                    except:
+                        dt_end = datetime.strptime(date_end, '%Y-%m-%d %H:%M:%S')
+                else:
+                    dt_end = date_end
+                
+                data_inicio_str = dt_start.strftime('%d%m%Y')
+                data_fim_str = dt_end.strftime('%d%m%Y')
+                nome_base += f" - {data_inicio_str}_a_{data_fim_str}"
+            except Exception as e:
+                # Se houver erro na formatação, usa as strings originais (sanitizadas)
+                date_start_clean = str(date_start).replace('/', '-').replace(':', '-').replace(' ', '_')
+                date_end_clean = str(date_end).replace('/', '-').replace(':', '-').replace(' ', '_')
+                nome_base += f" - {date_start_clean}_a_{date_end_clean}"
+        
+        return nome_base

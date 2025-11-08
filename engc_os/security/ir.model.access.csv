@@ -39,6 +39,7 @@ access_engc_os_relatorios_pictures_user,engc_os.engc.os.relatorios.pictures,mode
 
 access_application_parts_wizard_user,engc_os.application.parts.wizard,model_application_parts_wizard,base.group_user,1,1,1,1
 access_application_parts_wizard_lines_user,engc_os.application.parts.wizard.lines,model_application_parts_wizard_lines,base.group_user,1,1,1,1
+access_relatorio_atendimento_resumo_wizard_user,engc_os.wizard.relatorio.atendimento.resumo,model_wizard_relatorio_atendimento_resumo,base.group_user,1,1,1,1
 
 access_engc_preventive_user,engc_os.engc.preventive,model_engc_preventive,base.group_user,1,1,1,1
 access_engc_preventive_message_wizard_user,engc_os.engc.preventive.message.wizard,model_engc_preventive_message_wizard,base.group_user,1,1,1,1

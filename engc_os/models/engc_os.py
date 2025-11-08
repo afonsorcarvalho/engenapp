@@ -1,8 +1,9 @@
 import time
+import base64
 from datetime import date, datetime, timedelta
 
 from odoo import models, fields,  api, _, SUPERUSER_ID
-from odoo.addons import decimal_precision as dp
+#from odoo.addons import decimal_precision as dp
 from odoo import netsvc
 from odoo.exceptions import UserError, ValidationError
 import logging
@@ -86,7 +87,7 @@ class EngcOs(models.Model):
         required=True, 
         default=lambda self: self.env.company
     )
-    
+   
     client_id = fields.Many2one("res.partner", "Cliente")
 
     origin = fields.Char('Source Document', size=64, readonly=True, states={'draft': [('readonly', False)]},
@@ -121,15 +122,121 @@ class EngcOs(models.Model):
         string='Tipo de Garantia', selection=GARANTIA_SELECTION)
     date_request = fields.Datetime('Data Requisição', required=True, tracking=True)
     date_scheduled = fields.Datetime('Data Programada', required=True, tracking=True)
-    #TODO
-    # FAZER COM QUE A DATA DE EXECUÇÃO SEJA SEMPRE A DO RELATORIO DE ATENDIMENTO MAIS RECENTE
-    date_execution = fields.Datetime('Data de Execução', tracking=True)
-    #TODO
-    # FAZER COM QUE A DATA DE INICIO DA EXECUÇÃO SEJA A DATAHORA DE INICIO DO PRIMEIRO RELATORIO
-    date_start = fields.Datetime('Início da Execução',  tracking=True)
-    #TODO
-    # FAZER COM QUE A DATA DE INICIO DA EXECUÇÃO SEJA A DATAHORA DE FINAL DO ULTIMO RELATORIO
-    date_finish = fields.Datetime('Término da Execução', tracking=True)
+    date_execution = fields.Datetime('Data de Execução', compute="_compute_date_execution", tracking=True)
+    date_start = fields.Datetime('Início da Execução',  compute="_compute_date_start",tracking=True)
+       
+    @api.depends('relatorios_id', 'relatorios_id.data_atendimento')
+    def _compute_date_start(self):
+        """
+        Calcula o início da execução com base no início de atendimento 
+        do relatório de serviço mais antigo.
+        """
+        for record in self:
+            if record.relatorios_id:
+                # Filtra apenas relatórios com data_atendimento preenchida
+                relatorios_com_data = record.relatorios_id.filtered(lambda r: r.data_atendimento)
+                if relatorios_com_data:
+                    record.date_start = min(relatorios_com_data.mapped("data_atendimento"))
+                else:
+                    record.date_start = None
+            else:
+                record.date_start = None
+    
+    @api.depends('relatorios_id', 'relatorios_id.data_fim_atendimento')
+    def _compute_date_execution(self):
+        """
+        Calcula a data de execução com base no fim do atendimento 
+        do relatório de serviço mais novo.
+        """
+        for record in self:
+            if record.relatorios_id:
+                # Filtra apenas relatórios com data_fim_atendimento preenchida
+                relatorios_com_data = record.relatorios_id.filtered(lambda r: r.data_fim_atendimento)
+                if relatorios_com_data:
+                    record.date_execution = max(relatorios_com_data.mapped("data_fim_atendimento"))
+                else:   
+                    record.date_execution = None
+            else:   
+                record.date_execution = None
+                
+
+
+           
+
+    date_finish = fields.Datetime('Término da Execução', compute="_compute_date_finish", tracking=True)
+    
+    @api.depends('relatorios_id', 'relatorios_id.data_fim_atendimento')
+    def _compute_date_finish(self):
+        """
+        Calcula o término da execução com base no fim do atendimento 
+        do relatório de serviço mais novo.
+        """
+        for record in self:
+            if record.relatorios_id:
+                # Filtra apenas relatórios com data_fim_atendimento preenchida
+                relatorios_com_data = record.relatorios_id.filtered(lambda r: r.data_fim_atendimento)
+                if relatorios_com_data:
+                    record.date_finish = max(relatorios_com_data.mapped("data_fim_atendimento"))
+                else:
+                    record.date_finish = None
+            else:
+                record.date_finish = None
+    
+    # ******************************************
+    #  VALIDAÇÕES (CONSTRAINTS)
+    #
+    # ******************************************
+    
+    @api.constrains('date_request', 'date_scheduled')
+    def _check_date_request_vs_scheduled(self):
+        """
+        Valida que a Data Requisição não pode ser maior que a Data Programada.
+        """
+        for record in self:
+            if record.date_request and record.date_scheduled:
+                if record.date_request > record.date_scheduled:
+                    raise ValidationError(
+                        _('A Data Requisição não pode ser maior que a Data Programada.\n'
+                          'Data Requisição: %s\n'
+                          'Data Programada: %s') % (
+                            record.date_request.strftime('%d/%m/%Y %H:%M:%S'),
+                            record.date_scheduled.strftime('%d/%m/%Y %H:%M:%S')
+                        )
+                    )
+    
+    @api.constrains('date_request', 'date_start')
+    def _check_date_request_vs_start(self):
+        """
+        Valida que a Data Requisição não pode ser maior que o Início da Execução.
+        """
+        for record in self:
+            if record.date_request and record.date_start:
+                if record.date_request > record.date_start:
+                    raise ValidationError(
+                        _('A Data Requisição não pode ser maior que o Início da Execução.\n'
+                          'Data Requisição: %s\n'
+                          'Início da Execução: %s') % (
+                            record.date_request.strftime('%d/%m/%Y %H:%M:%S'),
+                            record.date_start.strftime('%d/%m/%Y %H:%M:%S')
+                        )
+                    )
+    
+    @api.constrains('date_start', 'date_finish')
+    def _check_date_start_vs_finish(self):
+        """
+        Valida que o Início da Execução deve ser antes do Término da Execução.
+        """
+        for record in self:
+            if record.date_start and record.date_finish:
+                if record.date_start >= record.date_finish:
+                    raise ValidationError(
+                        _('O Início da Execução deve ser anterior ao Término da Execução.\n'
+                          'Início da Execução: %s\n'
+                          'Término da Execução: %s') % (
+                            record.date_start.strftime('%d/%m/%Y %H:%M:%S'),
+                            record.date_finish.strftime('%d/%m/%Y %H:%M:%S')
+                        )
+                    )
           
     request_id = fields.Many2one(
          'engc.request.service', 'Solicitação Ref.',
@@ -145,6 +252,10 @@ class EngcOs(models.Model):
   
     tecnico_id = fields.Many2one(
         'hr.employee', string='Técnico',  tracking=True,
+    )
+    #TODO para serviços com mais de um tecnico auxiliando, ainda tem que passar para o relatorio esses técnicos
+    tecnico_aux_id = fields.Many2one(
+        'hr.employee', string='Técnico Aux ',  tracking=True,
     )
 
     empresa_manutencao = fields.Many2one(
@@ -221,6 +332,13 @@ class EngcOs(models.Model):
         for record in self:
             record.relatorios_count = self.env['engc.os.relatorios'].search_count(
                 [('os_id', '=', self.id)])
+
+    relatorios_time_execution = fields.Float(compute = "compute_relatorios_time_execution")
+
+    def compute_relatorios_time_execution(self):
+        for record in self:
+            record.relatorios_time_execution = sum(record.relatorios_id.mapped("time_execution"))
+            
     
     check_list_id = fields.One2many(
         string="Check-list",
@@ -254,14 +372,7 @@ class EngcOs(models.Model):
             record.request_parts_count = self.env['engc.os.request.parts'].search_count(
                 [('os_id', '=', self.id)])
 
-    @api.depends('relatorios')
-    def _compute_time_execution(self):
-        if self.relatorios:
-            tempo = 0.0
-            for rel in self.relatorios:
-                tempo += rel.time_execution
-            self.update({'time_execution': tempo})
-
+  
     #******************************************
     #  ONCHANGES
     #
@@ -278,17 +389,14 @@ class EngcOs(models.Model):
         else:
             self.date_scheduled = self.date_execution
 
+    @api.onchange('tecnico_id')
+    def onchange_tecnico_id(self):
+        self.signature = ""
+        
+        
    
-    @api.onchange('tecnicos_id')
-    def onchange_tecnicos_id(self):
-        _logger.debug(self.tecnicos_id)
-        list_tecnicos_name = []
-        for tecnico in self.tecnicos_id:
-            list_tecnicos_name.append(tecnico.name)
-        str_tecnicos = ", "
-        str_tecnicos = str_tecnicos.join(list_tecnicos_name)
-        body = "Modificado Tecnicos -> " + str_tecnicos
-        # self.message_post(body=body)
+  
+      
 
     def verify_execution_rules(self):
         """ Verifica as regras para início da execução da OS
@@ -299,6 +407,53 @@ class EngcOs(models.Model):
         if self.filtered(lambda engc_os: engc_os.state == 'under_repair'):
             raise UserError(_('O.S. já em execução.'))
         return
+    
+    def _check_checklist_preventive(self):
+        """
+        Valida o checklist para ordens de serviço de manutenção preventiva.
+        
+        Verifica se:
+        - Existe um checklist criado
+        - Todos os itens do checklist estão checkados
+        
+        Se todas as validações passarem, marca todos os itens como concluídos.
+        
+        Raises:
+            UserError: Se não houver checklist ou se houver itens não checkados.
+        """
+        for record in self:
+            if record.maintenance_type == 'preventive':
+                if not record.check_list_id:
+                    raise UserError(
+                        _("⚠️ Para finalizar uma O.S. de manutenção preventiva, é necessário ter um check-list criado."))
+                # Verifica se todos os itens do checklist estão checkados
+                itens_nao_checkados = record.check_list_id.filtered(lambda cl: not cl.check)
+                if itens_nao_checkados:
+                    # Monta lista de itens não checkados agrupados por seção
+                    itens_por_secao = {}
+                    for item in itens_nao_checkados:
+                        nome_item = item.instruction or _('Item sem descrição')
+                        nome_secao = item.section.name if item.section else _('Sem seção')
+                        if nome_secao not in itens_por_secao:
+                            itens_por_secao[nome_secao] = []
+                        itens_por_secao[nome_secao].append(nome_item)
+                    
+                    # Formata a mensagem agrupando por seção
+                    lista_formatada = []
+                    for secao, itens in itens_por_secao.items():
+                        lista_formatada.append(_("📋 Seção: %s") % secao)
+                        for item in itens:
+                            lista_formatada.append('  ❌ %s' % item)
+                    
+                    raise UserError(
+                        _("⚠️ Para finalizar uma O.S. de manutenção preventiva, todos os itens do check-list devem estar checkados.\n\n"
+                          "Itens não checkados (%d):\n%s") % (
+                            len(itens_nao_checkados),
+                            '\n'.join(lista_formatada)
+                        ))
+                # Marca todos os itens do checklist como concluídos
+                for cl in record.check_list_id:
+                    cl.state = 'done'
 
   
     #******************************************
@@ -326,6 +481,7 @@ class EngcOs(models.Model):
                 
             },
         }
+
     def action_go_relatorios(self):
         self.ensure_one()
         return {
@@ -336,6 +492,9 @@ class EngcOs(models.Model):
             'domain': [('os_id', '=', self.id)],
             'context': {
                 'default_os_id': self.id,
+                'default_data_atendimento': fields.Datetime.now(),
+                'default_data_fim_atendimento': fields.Datetime.now() + timedelta(hours=1),
+                'default_technicians': [(4, [self.tecnico_id.id])],
                 'create': False if self._verify_relatorio_aberto() else True
             },
         }
@@ -350,11 +509,42 @@ class EngcOs(models.Model):
             'domain': [('os_id', '=', self.id)],
             'context': "{'create': False,'delete': False,'edit':False}"
         }
-    def action_make_check_list(self):
-        self.create_checklist()
     
+    def action_relatorio_atendimento_resumo(self):
+        """
+        Abre o wizard para gerar relatório resumido de atendimentos.
+        
+        Returns:
+            dict: Action para abrir o wizard
+        """
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Relatório Resumido de Atendimentos'),
+            'res_model': 'wizard.relatorio.atendimento.resumo',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_company_id': self.env.company.id,
+            },
+        }
+
+    #TODO gerar o check list e abri-lo   
+    def action_make_check_list(self):
+
+        #verificando se os é de preventiva
+        if self.maintenance_type not in ['preventive']:
+            raise ValidationError(_("Esta OS não é de Manutenção Preventiva"))
+        
+        # verficando se há periodicidade cadastrada
+        if len(self.periodicity_ids) == 0:
+            raise ValidationError(_("Você deve selecionar Periodicidade da Preventiva para gerar Check-list"))
+        self.create_checklist()
+        return self.action_go_check_list()
+
+    #TODO VERIFICA SE ESSA FUNÇÃO ESTÁ FUNCIONANDO
     def action_make_calibration(self):
         _logger.info("chamando calibracao")
+        
 
         return {
             'name': _('Calibração'),
@@ -371,21 +561,7 @@ class EngcOs(models.Model):
                          },
         }
         
-        
-
-    def action_draft(self):
-        return self.action_repair_cancel_draft()
-    
-    
-
-    
-    def action_repair_cancel_draft(self):
-        if self.filtered(lambda engc_os: engc_os.state != 'cancel'):
-            raise UserError(
-                _("Repair must be canceled in order to reset it to draft."))
-        self.mapped('pecas').write({'state': 'draft'})
-        return self.write({'state': 'draft'})
-
+  
     
     def action_repair_pause(self):
         if self.filtered(lambda engc_os: engc_os.state != 'under_repair'):
@@ -394,48 +570,71 @@ class EngcOs(models.Model):
 
         return self.write({'state': 'pause_repair'})
 
-    def relatorio_service_start(self, type_report):
-        tecnicos_id = self.tecnicos_id
-        motivo_chamado = ''
-        servicos_executados = ''
-        tem_pendencias = False
-        pendencias=''
+    # def relatorio_service_start(self, type_report):
+    #     tecnicos_id = self.tecnicos_id
+    #     motivo_chamado = ''
+    #     servicos_executados = ''
+    #     tem_pendencias = False
+    #     pendencias=''
 
-        if type_report == 'quotation':
-            motivo_chamado = 'Realizar Orçamento'
-            servicos_executados = 'Orçamento'
-            tem_pendencias = True
-            pendencias = 'Aprovação do orçamento'
+    #     if type_report == 'quotation':
+    #         motivo_chamado = 'Realizar Orçamento'
+    #         servicos_executados = 'Orçamento'
+    #         tem_pendencias = True
+    #         pendencias = 'Aprovação do orçamento'
 
-        else:
-            if self.maintenance_type == 'preventive':
-                motivo_chamado = 'Realizar manutenção preventiva'
-                servicos_executados = 'Realizado Check-list de manutenção Preventiva'
-            if self.maintenance_type == 'instalacao':
-                motivo_chamado = 'Realizar Instalação'
-                servicos_executados = 'Realizado procedimentos e Check-list de instalação'
-            if self.maintenance_type == 'treinamento':
-                motivo_chamado = 'Realizar treinamento'
-                servicos_executados = 'Realizado treinamento operacional'
-            if self.maintenance_type == 'calibration':
-                motivo_chamado = 'Realizar Calibração'
-                servicos_executados = 'Realizado calibração conforme procedimentos padrão'
-            if self.maintenance_type == 'corrective':
-                motivo_chamado = self.description
-                servicos_executados = ''
-        self.env['engc.os.relatorio.servico'].create({
+    #     else:
+    #         if self.maintenance_type == 'preventive':
+    #             motivo_chamado = 'Realizar manutenção preventiva'
+    #             servicos_executados = 'Realizado Check-list de manutenção Preventiva'
+    #         if self.maintenance_type == 'instalacao':
+    #             motivo_chamado = 'Realizar Instalação'
+    #             servicos_executados = 'Realizado procedimentos e Check-list de instalação'
+    #         if self.maintenance_type == 'treinamento':
+    #             motivo_chamado = 'Realizar treinamento'
+    #             servicos_executados = 'Realizado treinamento operacional'
+    #         if self.maintenance_type == 'calibration':
+    #             motivo_chamado = 'Realizar Calibração'
+    #             servicos_executados = 'Realizado calibração conforme procedimentos padrão'
+    #         if self.maintenance_type == 'corrective':
+    #             motivo_chamado = self.description
+    #             servicos_executados = ''
+    #     self.env['engc.os.relatorio.servico'].create({
+    #         'os_id': self.id,
+    #         'type_report': type_report,
+    #         'cliente_id': self.cliente_id.id,
+    #         'equipment_id': self.equipment_id.id,
+    #         'tecnicos_id': tecnicos_id,
+    #         'motivo_chamado': motivo_chamado,
+    #         'servico_executados': servicos_executados,
+    #         'tem_pendencias': tem_pendencias,
+    #         'pendencias': pendencias,
+    #         'maintenance_duration': 1
+
+    #     })
+    def create_relatorio(self):
+
+        report_type = self.env.context.get('report_type')
+        
+        current_datetime = fields.Datetime.now()
+        employee = self.env['hr.employee'].search([('user_id', '=', self.env.user.id)], limit=1)
+        tecnico = employee if employee.id else self.tecnico_id
+        fault_description = "Manutenção Preventiva" if self.maintenance_type == 'preventive' else ""
+        service_summary = "Realizada Preventiva seguindo Check-list" if self.maintenance_type == 'preventive' else ""
+
+        return self.env['engc.os.relatorios'].create({
             'os_id': self.id,
-            'type_report': type_report,
-            'cliente_id': self.cliente_id.id,
-            'equipment_id': self.equipment_id.id,
-            'tecnicos_id': tecnicos_id,
-            'motivo_chamado': motivo_chamado,
-            'servico_executados': servicos_executados,
-            'tem_pendencias': tem_pendencias,
-            'pendencias': pendencias,
-            'maintenance_duration': 1
+            'report_type': report_type,
+            'data_atendimento': current_datetime,
+            'data_fim_atendimento': current_datetime + timedelta(hours=1) ,
+            
+            'technicians': [(4,tecnico.id)],
+            'fault_description': fault_description,
+            'service_summary': service_summary,
+           
 
         })
+    
 
     def _verify_relatorio_aberto(self):
         self.ensure_one()
@@ -471,20 +670,20 @@ class EngcOs(models.Model):
     def action_repair_aprove(self):
         self.message_post(body='Aprovado orçamento da ordem de serviço!')
         if self.state != 'done':
-            res = self.write({'state': 'execution_ready'})
-        return res
+            return self.write({'state': 'execution_ready'})
+       
     
     
     def action_repair_reprove(self):
         self.message_post(body='Reprovado o orçamento da ordem de serviço!')
         if self.state != 'reproved':
-            res = self.write({'state': 'reproved'})
-        return res
+            return self.write({'state': 'reproved'})
+        
     
     def action_wait_parts(self):
         self.message_post(body='Esperando peças chegar no estoque!')
-        res = self.write({'state': 'wait_parts'})
-        return res
+        return self.write({'state': 'wait_parts'})
+        
 
     
     def action_start_execution(self):
@@ -494,36 +693,31 @@ class EngcOs(models.Model):
         
 
         _logger.info("Iniciando Execução")
-        report_type = self.env.context.get('report_type')
-        
         current_datetime = fields.Datetime.now()
-        
+        report_type = self.env.context.get('report_type')
+        id_relatorio = self.create_relatorio()
+        if not id_relatorio:
+           raise UserError("Erro ao gerar relatório")
+        if self.maintenance_type == 'preventive':
+           self.action_make_check_list()
+
         self.write({
              'state':'under_budget' if report_type == 'orcamento' else 'under_repair',
-             'date_start': current_datetime.utcnow(),
+             'date_start': current_datetime,
              
         })
-        employee = self.env['hr.employee'].search([('user_id', '=', self.env.user.id)], limit=1)
-        if employee.id:
-            tecnico = employee
-        else:
-            tecnico = self.tecnico_id
+        
+        
         return {
+            'res_id': id_relatorio.id,
             'name': _('Iniciar Execução'),
             'type': 'ir.actions.act_window',
             'target':'current',
             'view_mode': 'form',
-            'res_model': 'engc.os.relatorios',
-           # 'domain': [('curso_matricula_id', '=', self.curso_matricula_id.id)],
-            'context': {
-                'default_os_id': self.id,
-                'default_technicians': [(4,[tecnico.id])],
-                'default_company_id': self.company_id.id,
-                'default_data_atendimento':current_datetime,
-                'default_report_type': report_type or None,
+            'res_model': 'engc.os.relatorios',   
      
-            }
         }
+        
         
 
     
@@ -537,9 +731,9 @@ class EngcOs(models.Model):
         return res
 
     
-    def action_repair_cancel(self):
-        self.mapped('pecas').write({'state': 'cancel'})
-        return self.write({'state': 'cancel'})
+    # def action_repair_cancel(self):
+    #     self.mapped('pecas').write({'state': 'cancel'})
+    #     return self.write({'state': 'cancel'})
 
     
     def action_repair_end(self):
@@ -558,11 +752,15 @@ class EngcOs(models.Model):
         if not self.relatorios_id:
             raise UserError(
                 _("Para finalizar O.S. deve-se incluir pelo menos um relatório de serviço."))
-            return False
+          
         if self.relatorios_id.filtered(lambda x: x.state == 'draft'):
             raise UserError(
                 _("Para finalizar O.S. deve-se concluir todos os relatorios de serviço."))
-            return False
+                
+        if self.request_parts.filtered(lambda x: x.state not in ['aplicada','cancel','nao_autorizada']):
+            raise UserError(
+                _("Para finalizar O.S. todas as peças devem ser aplicadas"))
+          
            
 
         # verificando se pecas foram aplicadas
@@ -570,43 +768,36 @@ class EngcOs(models.Model):
             if not p.state in ['aplicada','cancel','nao_autorizada']:
                 raise UserError(
                     _("Para finalizar O.S. todas as peças devem ser aplicadas"))
-                return False
-        # if self.check_list_created:
-        # for check in self.check_list:
-        #     if not check.check:
-        #         raise UserError(
-        #             _("Para finalizar O.S. todas as instruções do check-list devem estar concluídas"))
-        #         return False
+        
+        # verificando se todos check-list foram realizados (apenas para manutenção preventiva)
+        self._check_checklist_preventive()
+              
+       
 
         vals = {
             'state': 'done',
             'date_execution': time.strftime('%Y-%m-%d %H:%M:%S'),
         }
-        # self.action_repair_done()
+     
         res = self.write(vals)
-        # if res:
-        #     if self.request_id.id:
-        #         self.request_id.action_finish_request()
-        #         _logger.debug("Concluída Solicitação")
-        #     else:
-        #         _logger.debug("Não existe solicitação para OS. Continuando...")
-        #     _logger.debug("Finalizando relatorios.")
-        #     self.finish_report()
-        #     return True
-        # else:
-        #     _logger.debug("Erro ao atualizar OS.")
-        #     return False
+        if res:
+            # Verifica se há solicitação de serviço associada e finaliza
+            for record in self:
+                request_service = record.request_service_id or record.request_id
+                if request_service:
+                    request_service.finish_request()
+                    _logger.debug("Concluída Solicitação: %s" % request_service.name)
+                else:
+                    _logger.debug("Não existe solicitação para OS %s. Continuando..." % record.name)
+      
 
-    def repair_relatorio_service_start(self):
-        date_now = datetime.now()
-        type_report = 'repair'
-        self.relatorio_service_start(type_report)
+
                                    
       
     def finish_report(self):
         _logger.debug("Procurando relatorios...")
-        if self.relatorios:
-            for rec in self.relatorios:
+        if self.relatorios_id:
+            for rec in self.relatorios_id:
                 rec.state = 'done'
         return True
 
@@ -626,100 +817,100 @@ class EngcOs(models.Model):
         _logger.debug("os state=%s ", self.state)
 
 
-    def add_service(self):
-        """
-            Adiciona serviço de acordo com a OS
-            Verifica se equipamento em garantia, serviço em contrato e coloca o serviço adequado
-        """
-        _logger.debug("adicionando serviço...")
-        _logger.debug(self.contrato) 
-        _logger.debug("procurando serviço já adicionados na OS")
+    # def add_service(self):
+    #     """
+    #         Adiciona serviço de acordo com a OS
+    #         Verifica se equipamento em garantia, serviço em contrato e coloca o serviço adequado
+    #     """
+    #     _logger.debug("adicionando serviço...")
+      
+    #     _logger.debug("procurando serviço já adicionados na OS")
 
-        added_services = self.env['engc.os.servicos.line'].search([('os_id', '=',self.id )], offset=0, limit=None, order=None, count=False)
-        servicos_line = []
+    #     added_services = self.env['engc.os.servicos.line'].search([('os_id', '=',self.id )], offset=0, limit=None, order=None, count=False)
+    #     servicos_line = []
 
-        _logger.debug("Serviços achados para OS")
-        for serv_line in added_services: 
-            servicos_line.append(serv_line.product_id)
-            _logger.debug(serv_line.product_id.name)
+    #     _logger.debug("Serviços achados para OS")
+    #     for serv_line in added_services: 
+    #         servicos_line.append(serv_line.product_id)
+    #         _logger.debug(serv_line.product_id.name)
         
           
-        _logger.debug("Serviços Padrão")
-        service_default = self.env['product.product'].search([('name','ilike','Manutenção Geral')], limit=1)
-        _logger.debug(service_default.name)
+    #     _logger.debug("Serviços Padrão")
+    #     service_default = self.env['product.product'].search([('name','ilike','Manutenção Geral')], limit=1)
+    #     _logger.debug(service_default.name)
     
-        if not service_default.id:
-            raise UserError(_("Serviço padrão não configurado. Favor configurá-lo. Adicione o serviço 'Manutenção Geral'"))
-        product_id = service_default
+    #     if not service_default.id:
+    #         raise UserError(_("Serviço padrão não configurado. Favor configurá-lo. Adicione o serviço 'Manutenção Geral'"))
+    #     product_id = service_default
         
             
-        if self.contrato.id:
-            _logger.debug("Mudando serviço pois existe contrato para esse equipamento:")
-            _logger.debug("Colocando serviço padrão para contrato:")
-            if self.contrato.service_product_id.id:
-                #verificando se tem esse serviço ja foi adicionado
-                if self.contrato.service_product_id in servicos_line:
-                    _logger.debug("Já existe serviço adicionado: %s", self.contrato.service_product_id.name)
-                else:
-                    _logger.debug("Serviço adicionado: %s", self.contrato.service_product_id.name)
-                    product_id = self.contrato.service_product_id
-        if self.is_warranty:
-            if self.warranty_type == "fabrica":
-                _logger.debug("Serviço em garantia fabrica")
-                service_warranty = self.env['product.product'].search([('name','ilike','Serviço em garantia de fábrica')], limit=1)
-                if not service_warranty.id:
-                    raise UserError(_("Serviço garantia não configurado. Favor configurá-lo. Adicione o serviço 'Serviço em garantia de fábrica'"))
+    #     if self.contrato.id:
+    #         _logger.debug("Mudando serviço pois existe contrato para esse equipamento:")
+    #         _logger.debug("Colocando serviço padrão para contrato:")
+    #         if self.contrato.service_product_id.id:
+    #             #verificando se tem esse serviço ja foi adicionado
+    #             if self.contrato.service_product_id in servicos_line:
+    #                 _logger.debug("Já existe serviço adicionado: %s", self.contrato.service_product_id.name)
+    #             else:
+    #                 _logger.debug("Serviço adicionado: %s", self.contrato.service_product_id.name)
+    #                 product_id = self.contrato.service_product_id
+    #     if self.is_warranty:
+    #         if self.warranty_type == "fabrica":
+    #             _logger.debug("Serviço em garantia fabrica")
+    #             service_warranty = self.env['product.product'].search([('name','ilike','Serviço em garantia de fábrica')], limit=1)
+    #             if not service_warranty.id:
+    #                 raise UserError(_("Serviço garantia não configurado. Favor configurá-lo. Adicione o serviço 'Serviço em garantia de fábrica'"))
                 
-            else:
-                _logger.debug("Serviço em garantia própria")
-                service_warranty = self.env['product.product'].search([('name','ilike','Serviço em garantia')], limit=1)
-                if not service_warranty.id:
-                    raise UserError(_("Serviço garantia não configurado. Favor configurá-lo. Adicione o serviço 'Serviço em garantia'"))
+    #         else:
+    #             _logger.debug("Serviço em garantia própria")
+    #             service_warranty = self.env['product.product'].search([('name','ilike','Serviço em garantia')], limit=1)
+    #             if not service_warranty.id:
+    #                 raise UserError(_("Serviço garantia não configurado. Favor configurá-lo. Adicione o serviço 'Serviço em garantia'"))
 
-            product_id= service_warranty
+    #         product_id= service_warranty
             
-        _logger.debug("Verificando tempo para adicionar no serviço")
-        if self.time_execution > 0:
-            _logger.debug("Colocado tempo de execução no serviço: %s",self.time_execution )
-            product_uom_qty = self.time_execution
+    #     _logger.debug("Verificando tempo para adicionar no serviço")
+    #     if self.time_execution > 0:
+    #         _logger.debug("Colocado tempo de execução no serviço: %s",self.time_execution )
+    #         product_uom_qty = self.time_execution
             
-        else:
-            _logger.debug("Colocado tempo estimado no serviço: %s", self.maintenance_duration)
-            product_uom_qty = self.maintenance_duration
-        _logger.debug("Create servicos line:")
+    #     else:
+    #         _logger.debug("Colocado tempo estimado no serviço: %s", self.maintenance_duration)
+    #         product_uom_qty = self.maintenance_duration
+    #     _logger.debug("Create servicos line:")
 
-        if self.description:
-            name = self.description
-        else:
-            name = product_id.display_name
+    #     if self.description:
+    #         name = self.description
+    #     else:
+    #         name = product_id.display_name
 
-        if len(servicos_line) == 0:
-            _logger.debug("Serviços sera adicionado")
-            self.servicos = [(0,0,{
-                    'os_id' : self.id,
-                    'automatic': True,
-                    'name': name,
-                    'product_id' : product_id.id,
-                    'product_uom': product_id.uom_id.id,
-                    'product_uom_qty' : product_uom_qty
-                })]
-            _logger.debug( self.servicos)
-        else: 
-            _logger.debug("Serviços sera apenas atualizado")
-            for servico in added_services:
+    #     if len(servicos_line) == 0:
+    #         _logger.debug("Serviços sera adicionado")
+    #         self.servicos = [(0,0,{
+    #                 'os_id' : self.id,
+    #                 'automatic': True,
+    #                 'name': name,
+    #                 'product_id' : product_id.id,
+    #                 'product_uom': product_id.uom_id.id,
+    #                 'product_uom_qty' : product_uom_qty
+    #             })]
+    #         _logger.debug( self.servicos)
+    #     else: 
+    #         _logger.debug("Serviços sera apenas atualizado")
+    #         for servico in added_services:
              
-                if servico.automatic:
-                    _logger.debug("Encontrado servicos adicionados automaticamente, atualizando")
-                    self.servicos = [(1,servico.id,{
-                            'os_id' : self.id,
-                            'automatic': True,
-                            'name': name,
-                            'product_id' : product_id.id,
-                            'product_uom': product_id.uom_id.id,
-                            'product_uom_qty' : product_uom_qty
-                        })]
+    #             if servico.automatic:
+    #                 _logger.debug("Encontrado servicos adicionados automaticamente, atualizando")
+    #                 self.servicos = [(1,servico.id,{
+    #                         'os_id' : self.id,
+    #                         'automatic': True,
+    #                         'name': name,
+    #                         'product_id' : product_id.id,
+    #                         'product_uom': product_id.uom_id.id,
+    #                         'product_uom_qty' : product_uom_qty
+    #                     })]
 
-        return self.servicos
+    #     return self.servicos
 
     def create_checklist(self):
         """Cria a lista de verificacao caso a os seja preventiva."""
@@ -729,20 +920,43 @@ class EngcOs(models.Model):
                 raise ValidationError(_("Não está definido o campo equipamento na OS"))
             
             maintenance_plan = self.equipment_id.get_maintenance_plan()
+            _logger.debug(maintenance_plan)
             if not maintenance_plan:
                 raise ValidationError(_("Não há plano de manutenção configurado no equipamento ou na sua categoria"))
-            instructions = maintenance_plan.instrucion_ids
-
+            periodicity_ids = self.periodicity_ids.mapped('id')
+            instructions = maintenance_plan.instrucion_ids.filtered_domain([('periodicity','in',periodicity_ids)])
+            _logger.debug(instructions.mapped('display_name'))
            
             os_check_list = self.env['engc.os.verify.checklist'].search(
                 [('os_id', '=', self.id)])
             if os_check_list:
                 raise ValidationError(_("Check list já criado."))
             os_check_list_create = []
-
-            for i in instructions:
-                os_check_list_create.append({'os_id': self.id, 'instruction': i.name,'section': i.section.id })
-            instructions = os_check_list.create(os_check_list_create)
+            _logger.debug("instructions")
+            _logger.debug(instructions)
+            for index,i in enumerate(instructions):
+                os_check_list_create.append({'sequence':index,'os_id': self.id, 'instruction': i.name,'section': i.section.id })
+            
+            os_check_list.create(os_check_list_create)
                 
 
-           
+    def generate_report_and_attach(self):
+        for record in self:
+            # Gerar o relatório
+            report = self.env['ir.actions.report']  # Nome do seu relatório
+            # pdf_content, _ = report.qweb_render_view([record.id])  # Gera o PDF do relatório
+            pdf = report._render_qweb_pdf( 'engc_os.report_os_template',[record.id])
+            filename = "%s_concluida" % self.name
+            message = "OS concluida"
+            record.message_post(
+                attachments=[('%s.pdf' % filename, pdf[0])],
+                body=message,
+            )
+
+    def write(self, vals):
+        if vals.get('signature'):
+            for record in self:
+                record.generate_report_and_attach()    
+        return super(EngcOs, self).write(vals)
+
+    
