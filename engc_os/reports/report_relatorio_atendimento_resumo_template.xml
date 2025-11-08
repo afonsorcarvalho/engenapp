@@ -81,7 +81,7 @@
                                 
                                 <!-- Cabeçalho do Equipamento -->
                                 <div class="mt-4 mb-3">
-                                    <h4 class="bg-primary text-white" style="padding: 0.75rem; margin-bottom: 0; border-radius: 0.25rem;">
+                                    <h4 class="bg-primary" style="padding: 0.75rem; margin-bottom: 0; border-radius: 0.25rem;">
                                         <strong>Equipamento: <t t-esc="equipment_group['equipment_name']" /></strong>
                                     </h4>
                                 </div>
@@ -136,7 +136,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Tempo de Execução:</strong></td>
-                                                    <td><t t-esc="'%.2f' % os_group.get('time_execution', 0.0)" /> h</td>
+                                                    <td><t t-esc="os_group.get('time_execution_formatted', '00:00')" /></td>
                                                 </tr>
                                                 <tr t-if="os_group.get('problem_description')">
                                                     <td><strong>Descrição do Chamado:</strong></td>
@@ -231,7 +231,7 @@
                                                         <span t-field="relatorio.data_fim_atendimento" t-options="{'widget': 'datetime'}" />
                                                     </td>
                                                     <td class="text-right">
-                                                        <t t-esc="'%.2f' % relatorio.time_execution" />
+                                                        <t t-esc="relatorio_info.get('time_execution_formatted', '00:00')" />
                                                     </td>
                                                     <td>
                                                         <t t-set="rel_state" t-value="relatorio.state or ''" />
@@ -383,25 +383,25 @@
                                                     <tr>
                                                         <td style="width: 50%;"><strong>Tempo de Manutenção:</strong></td>
                                                         <td class="text-right">
-                                                            <t t-esc="'%.2f' % equipment_group['summary'].get('total_maintenance_time', 0.0)" /> h
+                                                            <t t-esc="equipment_group['summary'].get('total_maintenance_time_formatted', '00:00')" />
                                                         </td>
                                                     </tr>
                                                     <tr>
                                                         <td><strong>Tempo Parado:</strong></td>
                                                         <td class="text-right">
-                                                            <t t-esc="'%.2f' % equipment_group['summary'].get('total_downtime', 0.0)" /> h
+                                                            <t t-esc="equipment_group['summary'].get('total_downtime_formatted', '00:00')" />
                                                         </td>
                                                     </tr>
                                                     <tr>
                                                         <td><strong>Tempo Total Indisponível:</strong></td>
                                                         <td class="text-right">
-                                                            <t t-esc="'%.2f' % equipment_group['summary'].get('total_unavailable_time', 0.0)" /> h
+                                                            <t t-esc="equipment_group['summary'].get('total_unavailable_time_formatted', '00:00')" />
                                                         </td>
                                                     </tr>
                                                     <tr>
                                                         <td><strong>Período Total:</strong></td>
                                                         <td class="text-right">
-                                                            <t t-esc="'%.2f' % equipment_group['summary'].get('period_total_hours', 0.0)" /> h
+                                                            <t t-esc="equipment_group['summary'].get('period_total_hours_formatted', '00:00')" />
                                                         </td>
                                                     </tr>
                                                     <tr class="bg-light">
@@ -490,7 +490,7 @@
                             </table>
                             <p>
                                 <strong>Tempo Total de Atendimento no período:</strong>
-                                <t t-esc="'%.2f' % total_summary['total_time']" /> h
+                                <t t-esc="total_summary.get('total_time_formatted', '00:00')" />
                             </p>
                         </div>
                     </div>

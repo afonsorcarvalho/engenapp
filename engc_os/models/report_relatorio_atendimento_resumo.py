@@ -126,6 +126,8 @@ class ReportRelatorioAtendimentoResumo(models.AbstractModel):
                     grouped_data[equipment_id]['os_summary'][os_state] += 1
                     grouped_data[equipment_id]['os_summary']['total_os_count'] += 1
                 
+                time_execution = os_record.relatorios_time_execution if os_record else 0.0
+                
                 os_info = {
                     'os_id': os_id,
                     'os_name': os_name,
@@ -137,7 +139,8 @@ class ReportRelatorioAtendimentoResumo(models.AbstractModel):
                     'maintenance_type_label': self._get_maintenance_type_label(os_record.maintenance_type) if os_record else '',
                     'os_state': os_state,
                     'os_state_label': self._get_os_state_label(os_state) if os_state else '',
-                    'time_execution': os_record.relatorios_time_execution if os_record else 0.0,
+                    'time_execution': time_execution,
+                    'time_execution_formatted': self._format_hours_to_hhmm(time_execution),
                     'request_parts': [],  # Peças requisitadas
                     'applied_parts': [],  # Peças aplicadas
                     'relatorios': []
@@ -165,13 +168,17 @@ class ReportRelatorioAtendimentoResumo(models.AbstractModel):
                 grouped_data[equipment_id]['os_groups'][os_id] = os_info
             
             # Adiciona informações detalhadas do relatório
+            relatorio_time_execution = relatorio.time_execution or 0.0
+            
             relatorio_info = {
                 'relatorio': relatorio,
                 'fault_description': relatorio.fault_description if relatorio.fault_description else '',
                 'service_summary': relatorio.service_summary if relatorio.service_summary else '',
                 'pendency': relatorio.pendency if relatorio.pendency else '',
                 'state_equipment': relatorio.state_equipment if relatorio.state_equipment else False,
-                'state_equipment_label': self._get_equipment_state_label(relatorio.state_equipment) if relatorio.state_equipment else ''
+                'state_equipment_label': self._get_equipment_state_label(relatorio.state_equipment) if relatorio.state_equipment else '',
+                'time_execution': relatorio_time_execution,
+                'time_execution_formatted': self._format_hours_to_hhmm(relatorio_time_execution)
             }
             
             # Adiciona o relatório ao grupo da OS
@@ -295,6 +302,11 @@ class ReportRelatorioAtendimentoResumo(models.AbstractModel):
             equipment_group['summary']['total_unavailable_time'] = total_unavailable_time
             equipment_group['summary']['period_total_hours'] = period_total_hours
             equipment_group['summary']['availability_percent'] = availability_percent
+            # Adiciona versões formatadas em hh:mm
+            equipment_group['summary']['total_maintenance_time_formatted'] = self._format_hours_to_hhmm(total_maintenance_time)
+            equipment_group['summary']['total_downtime_formatted'] = self._format_hours_to_hhmm(total_downtime)
+            equipment_group['summary']['total_unavailable_time_formatted'] = self._format_hours_to_hhmm(total_unavailable_time)
+            equipment_group['summary']['period_total_hours_formatted'] = self._format_hours_to_hhmm(period_total_hours)
         
         # Converte o dicionário agrupado em lista ordenada (por nome do equipamento)
         grouped_list = []
@@ -328,6 +340,9 @@ class ReportRelatorioAtendimentoResumo(models.AbstractModel):
             equipment_group['applied_parts_summary'] = list(equipment_applied_parts.values())
             equipment_parts_summary[equipment_id] = equipment_applied_parts
             grouped_list.append(equipment_group)
+        
+        # Adiciona versão formatada do tempo total no resumo geral
+        total_summary['total_time_formatted'] = self._format_hours_to_hhmm(total_summary['total_time'])
         
         # Retorna os valores para o template
         result = {
@@ -396,4 +411,23 @@ class ReportRelatorioAtendimentoResumo(models.AbstractModel):
             'restricao': 'Funcionando com restrições',
         }
         return labels.get(state, state or '')
+    
+    def _format_hours_to_hhmm(self, hours):
+        """
+        Converte horas decimais para formato hh:mm.
+        
+        Args:
+            hours: Número de horas em formato decimal (ex: 2.5 = 2 horas e 30 minutos)
+        
+        Returns:
+            str: String formatada como "hh:mm"
+        """
+        if not hours or hours < 0:
+            return "00:00"
+        
+        total_minutes = int(hours * 60)
+        h = total_minutes // 60
+        m = total_minutes % 60
+        
+        return f"{h:02d}:{m:02d}"
 
