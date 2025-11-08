@@ -1,6 +1,6 @@
 
 from odoo import models, fields
-from odoo.addons import decimal_precision as dp
+#from odoo.addons import decimal_precision as dp
 
 class EngcEquipmentCategory(models.Model):
     _name = 'engc.equipment.category'

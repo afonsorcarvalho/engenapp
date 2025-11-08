@@ -10,7 +10,7 @@ from dateutil.relativedelta import relativedelta
 
 
 from odoo import models, fields, api, _
-from odoo.addons import decimal_precision as dp
+#from odoo.addons import decimal_precision as dp
 from odoo import netsvc
 
 from odoo.exceptions import UserError, ValidationError
@@ -93,16 +93,16 @@ class EngcCalibration(models.Model):
     #         raise UserError("Não pode deletar um instrumento que está em um medida adquirida ")
         
     @api.model
-    def create(self, vals):
+    def create(self, vals_list):
         """Salva ou atualiza os dados no banco de dados"""
-        if 'company_id' in vals:
-            vals['name'] = self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
+        if 'company_id' in vals_list:
+            vals_list['name'] = self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
                 'engc.calibration_sequence') or _('New')
         else:
-            vals['name'] = self.env['ir.sequence'].next_by_code('engc.calibration_sequence') or _('New')
+            vals_list['name'] = self.env['ir.sequence'].next_by_code('engc.calibration_sequence') or _('New')
         
         
-        result = super(EngcCalibration, self).create(vals)
+        result = super(EngcCalibration, self).create(vals_list)
         self.action_confirmed()
         return result
     
@@ -215,12 +215,12 @@ class CalibrationInstrumentCertificates(models.Model):
         comodel_name='engc.calibration.instruments.uncertainty.lines',
         inverse_name='certificate',
     )
-    is_valid = fields.Boolean("É válido", compute="_compute_is_valid")
+    is_valid = fields.Boolean(string="É válido", compute="_compute_is_valid")
 
     @api.depends('validate_calibration')
     def _compute_is_valid(self):
         if self.validate_calibration :
-            self.is_valid()
+            return self.verify_is_valid()
 
 
     @api.onchange('date_calibration')
@@ -229,9 +229,9 @@ class CalibrationInstrumentCertificates(models.Model):
             self.date_next_calibration = self.date_calibration + relativedelta(years=1)
             self.validate_calibration = self.date_calibration + relativedelta(years=1)
     
-    def is_valid(self):
-        for rec in self:
-            return rec.validate_calibration >= date.today()
+    def verify_is_valid(self):
+       # for rec in self:
+            return self.validate_calibration >= date.today()
 
         
   
@@ -378,7 +378,7 @@ class CalibrationMeasurement (models.Model):
         uncertainty_id_line = []
         certificates = self._search_certificates_valid()
         if len(certificates) == 0:
-            return [],[]
+            return uncertainty_id_line,[]
         
         uncertainty_id_line = certificates.uncertainty_lines
         if len(uncertainty_id_line) > 0:
@@ -409,16 +409,16 @@ class CalibrationMeasurement (models.Model):
             self.veff_instrument = uncertainty_id_line.veff
     
     @api.model
-    def create(self, vals):
+    def create(self, vals_list):
         """Salva ou atualiza os dados no banco de dados"""
-        if 'company_id' in vals:
-            vals['name'] = self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
+        if 'company_id' in vals_list:
+            vals_list['name'] = self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
                 'engc.calibration_measurement_sequence') or _('New')
         else:
-            vals['name'] = self.env['ir.sequence'].next_by_code('engc.calibration_measurement_sequence') or _('New')
+            vals_list['name'] = self.env['ir.sequence'].next_by_code('engc.calibration_measurement_sequence') or _('New')
         
         
-        result = super(CalibrationMeasurement, self).create(vals)
+        result = super(CalibrationMeasurement, self).create(vals_list)
         return result
    
 class CalibrationMeasurementLines (models.Model):
@@ -502,6 +502,7 @@ class CalibrationMeasurementProcedure (models.Model):
         ('emited', 'Emitido'),
         ('confered', 'Conferido'),
         ('aproved', 'Aprovado'),
+        ('cancel', 'Cancelado'),
     ]
     state = fields.Selection(string='State', selection=STATES, default="review", 
     required=True
@@ -538,16 +539,16 @@ class CalibrationMeasurementProcedure (models.Model):
         "Documento do PM", tracking=True)
 
     @api.model
-    def create(self, vals):
+    def create(self, vals_list):
         """Salva ou atualiza os dados no banco de dados"""
-        if 'company_id' in vals:
-            vals['name'] = self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
+        if 'company_id' in vals_list:
+            vals_list['name'] = self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
                 'engc.calibration_procedure_sequence') or _('New')
         else:
-            vals['name'] = self.env['ir.sequence'].next_by_code('engc.calibration_procedure_sequence') or _('New')
+            vals_list['name'] = self.env['ir.sequence'].next_by_code('engc.calibration_procedure_sequence') or _('New')
         
 
-        result = super(CalibrationMeasurementProcedure, self).create(vals)
+        result = super(CalibrationMeasurementProcedure, self).create(vals_list)
         return result
 
     #******************************************

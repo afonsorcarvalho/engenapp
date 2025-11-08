@@ -5,16 +5,18 @@
             <field name="name">Verify OS Checklist Tree View</field>
             <field name="model">engc.os.verify.checklist</field>
             <field name="arch" type="xml">
+            
                 <tree string="Verify OS Checklist" editable="top" multi_edit="1">
                     <field name="sequence" widget="handle"/>
                     <field name="section" optional="hide"/>
                     <field name="instruction"/>
-                    <field name="check"/>
+                    <field name="check" attrs="{'readonly': [('state','in',('done'))] }"/>
                     <field name="tem_medicao"/>
                     <field name="medicao"/>
                     <field name="magnitude"/>
                     <!-- <field name="tipo_de_campo"/> -->
                     <field name="observations"/>
+                    <field name="state" optional="hide"/>
                     <!-- <field name="troca_peca"/> -->
                     <!-- <field name="peca"/> -->
                     <!-- <field name="peca_qtd"/> -->

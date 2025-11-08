@@ -19,7 +19,6 @@ class Equipment(models.Model):
 
     STATES = [
        
-        ('draft', 'Rascunho'),
         ('in_use', 'Em uso'),
         ('out_of_use', 'Fora de uso'),
         ('useless', 'Inservível'),
@@ -36,7 +35,26 @@ class Equipment(models.Model):
     image_1920 = fields.Binary(
         string='avatar',
     )
-   
+    def name_get(self):
+        result = []
+        for record in self:
+            if self.env.context.get('show_apelido_first', True):
+                apelido = record.apelido or ""
+                nome = record.name or ""
+                if apelido and nome:
+                    display_name = f"{apelido} - {nome}"
+                elif apelido:
+                    display_name = apelido
+                elif nome:
+                    display_name = nome
+                else:
+                    display_name = f"Equipamento {record.id}"
+            else:
+                display_name = record.name or f"Equipamento {record.id}"
+            
+            result.append((record.id, display_name))
+        return result
+    
     category_id = fields.Many2one(
         'engc.equipment.category', 'Categoria', required=True)
     state  = fields.Selection(
@@ -165,16 +183,18 @@ class Equipment(models.Model):
     #     return result
 
     @api.model
-    def name_search(self, name, args=None, operator='ilike', limit=100):
+    def name_search(self, name=name, args=None, operator='ilike', limit=100):
         args = args or []
-
+        
         if operator == 'ilike' and not (name or '').strip():
             recs = self.search([] + args, limit=limit)
-        elif operator in ('ilike', 'like', '=', '=like', '=ilike'):
+            return recs.name_get()
+        if operator in ('ilike', 'like', '=', '=like', '=ilike'):
             recs = self.search(['|', '|', ('name', operator, name), (
                 'id', operator, name), ('serial_number', operator, name)] + args, limit=limit)
-
-        return recs.name_get()
+            return recs.name_get()
+        return []
+       
     
     '''
         Açao pra colocar equipamento em uso

@@ -11,12 +11,13 @@ class RequestParts(models.Model):
     name = fields.Char()
     
     
-    @api.depends('name', 'request_parts_id')
+    @api.depends('name')
     def name_get(self):
         result = []
+
         for record in self:
             
-            name = '[' + record.product_id.default_code + '] ' + record.product_id.name
+            name = f'[ {record.product_id.default_code } ]' if record.product_id.default_code else "" + record.product_id.name
             
             result.append((record.id, name))
         return result

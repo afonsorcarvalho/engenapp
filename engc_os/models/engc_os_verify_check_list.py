@@ -1,5 +1,5 @@
 from odoo import _,  fields, models
-import odoo.addons.decimal_precision as dp
+#import odoo.addons.decimal_precision as dp
 
 
 class VerifyOsCheckList(models.Model):
@@ -10,6 +10,7 @@ class VerifyOsCheckList(models.Model):
         comodel_name='engc.maintenance_plan.section',
     
     )
+    state = fields.Selection(selection=[('draft','Rascunho'),('done','concluido')])
     instruction = fields.Char('Instruções')
     check = fields.Boolean()
     sequence = fields.Integer(string='Sequence', default=10)
@@ -22,6 +23,6 @@ class VerifyOsCheckList(models.Model):
         default='checkbox'
     )
     observations = fields.Char()
-    troca_peca = fields.Boolean(string="Substituição de Peça?",required=False)    
+    troca_peca = fields.Boolean(string="Substituição de Peça?",required=False) 
     peca = fields.Many2one('product.product', u'Peça', required=False)
-    peca_qtd = fields.Float('Qtd', default=0.0,	digits=dp.get_precision('Product Unit of Measure'))
+    peca_qtd = fields.Float('Qtd', default=0.0)

@@ -4,11 +4,15 @@
             <field name="name">request.service.tree</field>
             <field name="model">engc.request.service</field>
             <field name="arch" type="xml">
-                <tree>
+                <tree default_order="create_date desc">
+                    <field name="state" widget="badge"
+                        decoration-info="state == 'new'"
+                        decoration-warning="state == 'in_progress'"
+                        decoration-success="state == 'done'"
+                        decoration-danger="state == 'cancel'" />
                     <field name="name" />
                     <field name="create_uid" />
                     <field name="requester" />
-                    <field name="state" />
                     <field name="request_date" />
                     <field name="schedule_date" />
                     <field name="priority" />
@@ -90,7 +94,9 @@
                         
                         <group string="Descrição da Solicitação">
 
-                            <field name="description" string="Descrição"/>
+                            <field name="description" string="Descrição" 
+                            required="1"
+                            />
                         </group>
                     </sheet>
                     <div class="oe_chatter">

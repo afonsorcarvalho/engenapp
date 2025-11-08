@@ -1,5 +1,4 @@
 from odoo import _, api,  fields, models
-import odoo.addons.decimal_precision as dp
 from odoo.exceptions import UserError
 
 import logging
@@ -36,7 +35,7 @@ class RequestService(models.Model):
                 vals['name'] = self.env['ir.sequence'].next_by_code('engc.service_request_sequence') or _('New')
             
 
-        result = super(RequestService, self).create(vals)
+        result = super(RequestService, self).create(vals_list)
         return result
     company_id = fields.Many2one(
         string='Instituição', 
@@ -100,7 +99,7 @@ class RequestService(models.Model):
     state = fields.Selection([('new', 'Nova Solicitação'), ('in_progress', 'Em andamento'),('done', 'Concluído'),('cancel', 'Cancelada')], default="new",tracking=True)
     request_date = fields.Date('Data da Solicitação',required=True,tracking=True , default=fields.Date.context_today)
     schedule_date = fields.Date("Scheduled Date",
-    required=True,tracking=True
+    tracking=True
     )
     close_date = fields.Date('Close Date')
     maintenance_type = fields.Selection([('corrective', 'Corretiva'), ('preventive', 'Preventiva'),('instalacao','Instalação'),('treinamento','Treinamento')], required=True, string='Tipo de Manutenção', default="corrective")
@@ -115,6 +114,8 @@ class RequestService(models.Model):
         ('name', 'unique (name)', 'The name of the Service Request must be unique!'),
     ]
     
+    
+
     def _check_validation_field(self):
         
         fields_not_validate = []
@@ -148,9 +149,7 @@ class RequestService(models.Model):
     
     def action_gera_os(self):
         self._check_validation_field()
-       
-        args = self.company_id and [('company_id', '=', self.company_id.id)] or []
-        warehouse = self.env['stock.warehouse'].search(args, limit=1)
+                    
         
         equipments = self.equipment_ids
         vals = []
@@ -185,4 +184,9 @@ class RequestService(models.Model):
         
 
         return self.action_go_os()
+
+    def finish_request(self):
+        self.write({
+            'state':'done'
+        })
 

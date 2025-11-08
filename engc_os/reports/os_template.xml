@@ -201,9 +201,13 @@
                                             </span>
                                         </div>
                                     </div>
+                                    
+                                   
+                                    
                                     <table class="table table-sm table-borderless mt-2 mb-1"
                                         t-if="o.relatorios_id" style="page-break-after:avoid">
                                         <t t-foreach="o.relatorios_id" t-as="line">
+                                            <t t-if="line.state != 'cancel'">
                                             <tr>
                                                 <td colspan="99">
                                                     <div class="border-bottom">
@@ -256,11 +260,15 @@
                                                     </div>
                                                 </td>
                                             </tr>
+                                            </t>
                                         </t>
                                     </table>
                                 </t>
                             </div>
                         </div>
+
+                        <t t-call="engc_os.report_checklist_template" />
+                        
                         <div class="row" t-if="o.request_parts">
 							<div class="col-12">
                                 <div class="row">
@@ -302,7 +310,7 @@
 												</td>
 												<td class="text-right">
 													<span t-field="line.product_uom_qty" />
-													<span t-field="line.product_uom" groups="product.group_uom" />
+													<!-- <span t-field="line.product_uom" groups="product.group_uom" /> -->
 												</td>
 											</tr>
 										</t>

@@ -5,31 +5,22 @@
             <div class="col-6">
                 <table class="table table-borderless" id="engc_os_assinaturas_table">
                     <tr>
-                        <td>Data:_______/_________/__________</td>
+                        <!-- <td>Data:_______/_________/__________</td> -->
                     </tr>
-                    <tr>
-                        <td></td>
+                   <tr>
+                         <td width="100%" class="text-center pl-5 pr-5">
+                          <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                              <img t-if="o.signature"  t-att-src="image_data_uri(o.signature)" style="max-height: 3.5cm; max-width: 8cm;"/>
+                              <div t-if="not o.signature" style="min-height: 60px; border-bottom: 1px solid #000; width: 75%;"></div>
+                          </div>
+                        </td> 
+                       
                     </tr>
-                   <!-- <tr>
-                         <td width="50%">
-                            <div t-foreach="o.tecnico_id" t-as="line">
-                                <img width="50%" class="img-fluid"
-                                t-att-src="'data:image/png;base64,%s' %
-                                to_text(line.user_id.digital_signature)"/>	
-                            </div>
-                        </td> 
-                        <<td>
-                            <img width="50%" class="img-fluid" t-att-src="'data:image/png;base64,%s' %
-                            to_text(o.digital_signature_client)"/>	
-                        </td> 
-                    </tr>-->
                     <tr t-foreach="o.tecnico_id" t-as="line">
-                        <td class="pl-5 pr-5">
-                            <div class="text-center mt-5">
-                                _____________________________________________________<br />
+                        <td class="pl-5 pr-5 text-center">
                                         <span
                                     t-field="line.name" />
-                            </div>
+                            
                         </td>
                         <!-- <td><span t-field="o.name_digital_signature_client"/></td> -->
                     </tr>

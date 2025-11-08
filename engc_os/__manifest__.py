@@ -40,7 +40,6 @@
         'views/request_service_views.xml',
         'views/preventiva_views.xml',
         'views/maintenance_plan.xml',
-        'views/menu_views.xml',
         'views/templates.xml',
         'wizards/relatorio_atendimento_resumo_wizard.xml',
         'reports/calibration_certificate_template.xml',
@@ -54,6 +53,7 @@
         'reports/cliente_equipment_template.xml',
         'reports/os_template.xml',
         'reports/engc_os_reports.xml',
+        'views/menu_views.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

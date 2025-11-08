@@ -2,6 +2,7 @@
 
 import random
 from odoo import models, fields, api, _
+
 from datetime import date
 from datetime import time
 from datetime import datetime
@@ -28,6 +29,7 @@ class EngcPreventiva(models.Model):
     _description = 'Preventiva'
     _order = 'dias_de_atraso ASC'
     _inherit =['mail.thread','mail.activity.mixin']
+
     _check_company_auto = True
 
    
@@ -87,6 +89,7 @@ class EngcPreventiva(models.Model):
         
     )
     
+    
     tecnico = fields.Many2one(
         string=u'Técnico',
         comodel_name='hr.employee',
@@ -112,31 +115,35 @@ class EngcPreventiva(models.Model):
     def _compute_tempo_estimado(self):
         for record in self:
             if record.data_programada_fim  and record.data_programada:
-                record.tempo_estimado = (record.data_programada_fim - record.data_programada).total_seconds()/3600.0
+                data_inicio = record.data_programada
+                data_fim = record.data_programada_fim
+                 # Calcular a diferença de tempo
+                diferenca = data_fim - data_inicio #type: ignore
+                record.tempo_estimado = diferenca.total_seconds()/3600.0
     
     
     data_programada = fields.Datetime(
         string=u'Data Programada',
 
-        default=fields.datetime.now(),tracking=True,
+        default=fields.Datetime.now(),tracking=True,
         help="Data e hora programada do início da preventiva.",
     )
 
     data_programada_fim = fields.Datetime(
         string=u'Data Programada fim',
-        default=fields.datetime.now(),tracking=True,
+        default=fields.Datetime.now(),tracking=True,
         help="Data e hora programada do fim da preventiva.",
     )
 
     data_execucao = fields.Datetime(
         string=u'Início Execução',
-        default=fields.datetime.now(),tracking=True,
+        default=fields.Datetime.now(),tracking=True,
         help="Data e hora do início da execuão da preventiva.",
     )
 
     data_execucao_fim = fields.Datetime(
         string=u'Fim da Execução',
-        default=fields.datetime.now(),tracking=True,
+        default=fields.Datetime.now(),tracking=True,
         help="Data e hora do fim da execuão da preventiva.",
     )
     
@@ -170,18 +177,19 @@ class EngcPreventiva(models.Model):
             # Neste exemplo, estamos gerando cores aleatórias.
             color = "#{:02x}{:02x}{:02x}".format(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             record.color = color
+            
     
     @api.onchange('data_programada')
     def _onchange_data_programada(self):
         tempo = timedelta(hours=1)
-        tempo_estimado = timedelta(hours=self.tempo_estimado)
+        tempo_estimado = timedelta(hours=self.tempo_estimado) 
         if tempo_estimado.total_seconds() > 3600:
             tempo = tempo_estimado
         self.data_programada_fim = self.data_programada + tempo
     
     @api.onchange('data_programada_fim')
     def _onchange_data_programada_fim(self):
-        tempo = self.data_programada_fim - self.data_programada
+        tempo: timedelta = self.data_programada_fim - self.data_programada
         if tempo.total_seconds() < 3600:
             tempo = timedelta(hours=1)
             self.data_programada_fim = self.data_programada + tempo
@@ -330,18 +338,18 @@ class EngcPreventiva(models.Model):
         for preventiva in self:
             if tipo == 'aviso':
                 _logger.info("Email de aviso de Preventivas.. ")
-                template_client_id = self.env.ref('engc.preventive.mail_aviso_preventiva_cliente')
-                template_tecnico_id = self.env.ref('engc.preventive.mail_aviso_preventiva_tecnico')
+                #template_client_id = self.env.ref('engc.preventive.mail_aviso_preventiva_cliente')
+                #template_tecnico_id = self.env.ref('engc.preventive.mail_aviso_preventiva_tecnico')
              
             if tipo == 'atraso':
                 _logger.info("Email de aviso de atraso de Preventivas.. ")
-                template_client_id = self.env.ref('engc.preventive.mail_aviso_atraso_preventiva_cliente')
-                template_tecnico_id = self.env.ref('engc.preventive.mail_aviso_atraso_preventiva_tecnico')
+                #template_client_id = self.env.ref('engc.preventive.mail_aviso_atraso_preventiva_cliente')
+                #template_tecnico_id = self.env.ref('engc.preventive.mail_aviso_atraso_preventiva_tecnico')
                 
             _logger.info("Eviando email para tecnico: ")
-            preventiva.message_post_with_template( template_tecnico_id.id)
+            #preventiva.message_post_with_template( template_tecnico_id.id)
             _logger.info("Eviando email para cliente: ")
-            preventiva.message_post_with_template( template_client_id.id)
+            #preventiva.message_post_with_template( template_client_id.id)
             
            
     
@@ -403,9 +411,9 @@ class EngcPreventiva(models.Model):
     #
     # *************************
     
-    def cron_agenda_preventiva(self):
-        dias_antecipa_gera_os = 5
-        dias_avisa_prev = 2
+    def cron_agenda_preventiva(self,dias_antecipa_gera_os = 5, dias_avisa_preventica = 2):
+        dias_antecipa_gera_os = dias_antecipa_gera_os
+        dias_avisa_prev = dias_avisa_preventica
         _logger.info("Entrou no agendamento da preventiva...")
         hoje = fields.Date.today()
         
@@ -481,17 +489,17 @@ class CronogramaPreventiva(models.Model):
 # funcão de criação do cronograma
 #
     @api.model
-    def create(self, vals):
+    def create(self, vals_list):
         """Salva ou atualiza os dados no banco de dados"""
-        if vals.get('name', _('New')) == _('New'):
-            if 'company_id' in vals:
-                vals['name'] = self.env['ir.sequence'].with_context(
-                    force_company=vals['company_id']).next_by_code('engc.preventive.cronograma') or _('New')
+        if vals_list.get('name', _('New')) == _('New'):
+            if 'company_id' in vals_list:
+                vals_list['name'] = self.env['ir.sequence'].with_context(
+                    force_company=vals_list['company_id']).next_by_code('engc.preventive.cronograma') or _('New')
             else:
-                vals['name'] = self.env['ir.sequence'].next_by_code(
+                vals_list['name'] = self.env['ir.sequence'].next_by_code(
                     'engc.preventive.cronograma') or _('New')
 
-        result = super(CronogramaPreventiva, self).create(vals)
+        result = super(CronogramaPreventiva, self).create(vals_list)
         return result
     
         
@@ -628,8 +636,8 @@ class CronogramaPreventiva(models.Model):
                                 _logger.info(f"Como esta concatenate_list[start]['periodicity'] = {concatenate_list[start]['periodicity']} e o k é {k}")                             
                                 periodicity_list = concatenate_list[start]['periodicity'] +[periodicity]
                                 concatenate_list[start]={'schedule': (start,conc_end + timedelta(hours=1)), 'periodicity': periodicity_list}
-                        else:
-                            _logger.info(f"Não tem no {periodicity}")
+                            else:
+                                _logger.info(f"Não tem no {periodicity}")
                             
         _logger.info(f"Lista concatenada: {concatenate_list}")
         return concatenate_list
@@ -719,7 +727,8 @@ class CronogramaPreventiva(models.Model):
         afternoon_end = 18
 
         # pegando feriados do periodo
-        br_holidays = holidays.BR(subdiv='MA', years=years_list).items()
+        
+        br_holidays = holidays.country_holidays(country="BR",subdiv='MA', years=years_list).items()
         holidays_list = list(map(lambda x: x[0].strftime('%Y-%m-%d'), br_holidays))
     
         # hora_ini_dia = time(8,0,0, tzinfo=local) # hora de início do dia
