@@ -27,7 +27,7 @@
                        
                         
                   <group>
-                        <field name="os_id"  />
+                        <field name="os_id" invisible="1" />
                         
                     </group>
                     <footer>

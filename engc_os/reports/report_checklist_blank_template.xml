@@ -108,15 +108,13 @@
 													<t t-if="line.tem_medicao == True">
 													</t>
 													<t t-else="">
-														xxxxxxx
 													</t>
 												</td>
 												<td>
 													<t t-if="line.tem_medicao == True">
-														<span t-field="line.unidade" />
+														<span t-field="line.magnitude" />
 													</t>
 													<t t-else="">
-														xxxxxxx
 													</t>
 												</td>
 												<td>

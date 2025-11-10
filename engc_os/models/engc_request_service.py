@@ -186,7 +186,24 @@ class RequestService(models.Model):
         return self.action_go_os()
 
     def finish_request(self):
+        """
+        Finaliza a solicitação de serviço e registra a data de conclusão.
+        """
         self.write({
-            'state':'done'
+            'state': 'done',
+            'close_date': fields.Date.today()
         })
+    
+    def write(self, vals):
+        """
+        Sobrescreve o método write para preencher automaticamente a data de conclusão
+        quando o estado for alterado para 'done'.
+        """
+        # Se o estado está sendo alterado para 'done' e não há data de conclusão, preenche automaticamente
+        if 'state' in vals and vals.get('state') == 'done':
+            for record in self:
+                if not record.close_date:
+                    vals['close_date'] = fields.Date.today()
+        
+        return super(RequestService, self).write(vals)
 

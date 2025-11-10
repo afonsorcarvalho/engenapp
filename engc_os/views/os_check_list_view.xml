@@ -6,17 +6,18 @@
             <field name="model">engc.os.verify.checklist</field>
             <field name="arch" type="xml">
             
-                <tree string="Verify OS Checklist" editable="top" multi_edit="1">
+                <tree string="Verify OS Checklist">
                     <field name="sequence" widget="handle"/>
                     <field name="section" optional="hide"/>
                     <field name="instruction"/>
-                    <field name="check" attrs="{'readonly': [('state','in',('done'))] }"/>
-                    <field name="tem_medicao"/>
-                    <field name="medicao"/>
-                    <field name="magnitude"/>
+                    <field name="check" readonly="true"/>
+                    <field name="tem_medicao" readonly="true"/>
+                    <field name="medicao" readonly="true"/>
+                    <field name="magnitude" readonly="true"/>
                     <!-- <field name="tipo_de_campo"/> -->
-                    <field name="observations"/>
+                    <field name="observations" readonly="true"/>
                     <field name="state" optional="hide"/>
+                    <field name="relatorio_id" string="Realizado por" readonly="true"/>
                     <!-- <field name="troca_peca"/> -->
                     <!-- <field name="peca"/> -->
                     <!-- <field name="peca_qtd"/> -->
@@ -51,21 +52,26 @@
             <field name="model">engc.os.verify.checklist</field>
             <field name="arch" type="xml">
                 <form string="Verify OS Checklist">
+                    <p class="alert alert-info">
+                        <strong>Modo Visualização:</strong> O checklist é editado apenas nos Relatórios de Atendimento.
+                        Aqui você pode visualizar o progresso geral da preventiva.
+                    </p>
                     <group>
                         <group>
-                            <field name="sequence"/>
-                            <field name="instruction"/>
-                            <field name="check"/>
-                            <field name="tem_medicao"/>
-                            <field name="medicao"/>
-                            <field name="magnitude"/>
+                            <field name="sequence" readonly="true"/>
+                            <field name="instruction" readonly="true"/>
+                            <field name="check" readonly="true"/>
+                            <field name="tem_medicao" readonly="true"/>
+                            <field name="medicao" readonly="true"/>
+                            <field name="magnitude" readonly="true"/>
                         </group>
                         <group>
-                            <field name="tipo_de_campo"/>
-                            <field name="observations"/>
-                            <field name="troca_peca"/>
-                            <field name="peca"/>
-                            <field name="peca_qtd"/>
+                            <field name="tipo_de_campo" readonly="true"/>
+                            <field name="observations" readonly="true"/>
+                            <field name="relatorio_id" readonly="true"/>
+                            <field name="troca_peca" readonly="true"/>
+                            <field name="peca" readonly="true"/>
+                            <field name="peca_qtd" readonly="true"/>
                         </group>
                     </group>
                 </form>

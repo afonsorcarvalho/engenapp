@@ -20,7 +20,7 @@
 
 
     # any module necessary for this one to work correctly
-    'depends': ['base','base_setup','product', 'contacts','mail','hr','web_domain_field','stock'],
+    'depends': ['base','base_setup','product', 'contacts','mail','hr','web_domain_field','stock','steril_stock'],
 
     # always loaded
     'data': [

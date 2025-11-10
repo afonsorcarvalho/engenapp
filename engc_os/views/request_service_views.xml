@@ -49,42 +49,47 @@
 
                                 <label for="company_id" class="oe_edit_only" />
                                 <h2>
-                                    <field name="company_id"  attrs="{'readonly': [('state','in',('done'))] }"
+                                    <field name="company_id"  attrs="{'readonly': [('state','!=','new')] }"
                                         options="{'no_create': True, 'no_create_edit':True}" />
                                 </h2>
                             
                         </div>
                         <group>
                             <group string="Dados da requisição">
-                                <field name="requester"/>
+                                <field name="requester" attrs="{'readonly': [('state','!=','new')]}"/>
                                 <field name="department" required="1"
+                                    attrs="{'readonly': [('state','!=','new')]}"
                                     options="{'no_create': True, 'no_open': True, 'no_create_edit': True}"
                                 />
                                 <field name="equipment_ids_domain" 
                                     invisible="1" 
                                 />
                                 <field name="equipment_ids" 
-                                    widget="many2many_tags"                
+                                    widget="many2many_tags"
+                                    attrs="{'readonly': [('state','!=','new')]}"
                                     options="{'no_create': True, 'no_open': True, 'no_create_edit': True}"
                                     domain = 'equipment_ids_domain'
                                 />
-                                <field name="maintenance_type"/>
+                                <field name="maintenance_type" attrs="{'readonly': [('state','!=','new')]}"/>
                                 <field name="maintenance_team_id" 
+                                    attrs="{'readonly': [('state','!=','new')]}"
                                     options="{'no_create': True, 'no_open': True, 'no_create_edit': True}"/>
-                                <field name="tecnicos"  
+                                <field name="tecnicos"
+                                    attrs="{'readonly': [('state','!=','new')]}"
                                     options="{'no_create': True, 'no_open': True, 'no_create_edit': True}"
                                     domain="[('company_id','=',company_id)]"
                                     /> 
                                 </group>
                                 <group string="Datas">
-                                    <field name="request_date" />
-                                    <field name="schedule_date" string="Dt. Programada"/>
-                                    <field name="close_date" string="Dt. Conclusão"/>
+                                    <field name="request_date" attrs="{'readonly': [('state','!=','new')]}"/>
+                                    <field name="schedule_date" string="Dt. Programada" attrs="{'readonly': [('state','!=','new')]}"/>
+                                    <field name="close_date" string="Dt. Conclusão" readonly="1"/>
                                     <field name="who_executor" 
                                     widget="radio"
+                                    attrs="{'readonly': [('state','!=','new')]}"
                                     />
-                                    <field name="os_gerada" groups="base.group_no_one"/>
-                                    <field name="priority" widget="priority"/>
+                                    <field name="os_gerada" groups="base.group_no_one" readonly="1"/>
+                                    <field name="priority" widget="priority" attrs="{'readonly': [('state','!=','new')]}"/>
                                 
                             </group>
 
@@ -96,6 +101,7 @@
 
                             <field name="description" string="Descrição" 
                             required="1"
+                            attrs="{'readonly': [('state','!=','new')]}"
                             />
                         </group>
                     </sheet>

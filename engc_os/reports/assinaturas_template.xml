@@ -5,7 +5,14 @@
             <div class="col-6">
                 <table class="table table-borderless" id="engc_os_assinaturas_table">
                     <tr>
-                        <!-- <td>Data:_______/_________/__________</td> -->
+                        <td>
+                            <t t-if="o.technician_signature_date">
+                                <strong>Data:</strong> <span t-field="o.technician_signature_date"/>
+                            </t>
+                            <t t-if="not o.technician_signature_date">
+                                Data:_______/_________/__________
+                            </t>
+                        </td>
                     </tr>
                    <tr>
                          <td width="100%" class="text-center pl-5 pr-5">
@@ -29,7 +36,14 @@
             <div class="col-6">
                 <table class="table table-borderless ">
                     <tr>
-                        <td>Data:_______/_________/__________</td>
+                        <td>
+                            <t t-if="o.supervisor_signature_date">
+                                <strong>Data:</strong> <span t-field="o.supervisor_signature_date"/>
+                            </t>
+                            <t t-if="not o.supervisor_signature_date">
+                                Data:_______/_________/__________
+                            </t>
+                        </td>
                     </tr>
                     <tr>
                         <td></td>

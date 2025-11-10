@@ -95,14 +95,69 @@ class Relatorios(models.Model):
                 # Aciona as validações
                 relatorio.os_id._check_date_start_vs_finish()
                 relatorio.os_id._check_date_request_vs_start()
+            
+            # Se há checklist_item_ids, define o relatorio_id nos itens do checklist
+            if relatorio.checklist_item_ids:
+                relatorio.checklist_item_ids.write({'relatorio_id': relatorio.id})
         return result
     
     def write(self, vals):
         """
         Sobrescreve o método write para acionar validações na OS 
         quando os campos de data dos relatórios forem alterados.
+        Também limpa os checks quando itens são removidos do checklist do relatório
+        e atualiza o resumo do atendimento.
         """
+        # Flag para indicar se houve remoção de itens do checklist
+        checklist_items_removed = False
+        
+        # Se checklist_item_ids foi alterado, verifica se algum item foi removido
+        if 'checklist_item_ids' in vals:
+            for relatorio in self:
+                # Guarda os IDs atuais antes da modificação
+                old_checklist_ids = set(relatorio.checklist_item_ids.ids)
+                
+                # Processa os comandos do many2many para identificar remoções
+                for command in vals['checklist_item_ids']:
+                    # Comando (3, id) ou (2, id) remove o item
+                    if command[0] in (2, 3):
+                        removed_item_id = command[1]
+                        # Limpa o check e medições do item removido
+                        removed_item = self.env['engc.os.verify.checklist'].browse(removed_item_id)
+                        removed_item.write({
+                            'check': False,
+                            'medicao': 0.0,
+                            'observations': '',
+                            'relatorio_id': False
+                        })
+                        checklist_items_removed = True
+                    # Comando (5,) ou (6, 0, [ids]) substitui todos
+                    elif command[0] == 5:
+                        # Remove todos - limpa todos os itens atuais
+                        for item in relatorio.checklist_item_ids:
+                            item.write({
+                                'check': False,
+                                'medicao': 0.0,
+                                'observations': '',
+                                'relatorio_id': False
+                            })
+                        checklist_items_removed = True
+                    elif command[0] == 6:
+                        # Substitui por nova lista - limpa os que não estão na nova lista
+                        new_ids = set(command[2])
+                        removed_ids = old_checklist_ids - new_ids
+                        if removed_ids:
+                            removed_items = self.env['engc.os.verify.checklist'].browse(list(removed_ids))
+                            removed_items.write({
+                                'check': False,
+                                'medicao': 0.0,
+                                'observations': '',
+                                'relatorio_id': False
+                            })
+                            checklist_items_removed = True
+        
         result = super(Relatorios, self).write(vals)
+        
         # Se as datas de atendimento foram alteradas, aciona validações na OS
         if 'data_atendimento' in vals or 'data_fim_atendimento' in vals:
             # Agrupa as OSs para evitar validações duplicadas
@@ -114,7 +169,109 @@ class Relatorios(models.Model):
                 # Aciona as validações
                 os_record._check_date_start_vs_finish()
                 os_record._check_date_request_vs_start()
+        
+        # Se checklist_item_ids foi alterado, atualiza o relatorio_id nos novos itens
+        if 'checklist_item_ids' in vals:
+            for relatorio in self:
+                if relatorio.checklist_item_ids:
+                    relatorio.checklist_item_ids.write({'relatorio_id': relatorio.id})
+                
+                # Se houve remoção de itens, atualiza o resumo do atendimento
+                if checklist_items_removed:
+                    relatorio._update_summary_from_checklist()
+        
         return result
+    
+    @api.onchange('os_id')
+    def _onchange_os_id_load_checklist(self):
+        """
+        Carrega automaticamente os itens do checklist da OS quando a OS é selecionada.
+        Filtra apenas os itens que ainda não foram marcados como realizados.
+        Para OS preventiva, preenche automaticamente descrição do defeito e resumo do atendimento.
+        """
+        if self.os_id:
+            # Se for manutenção preventiva, preenche os campos automaticamente
+            if self.os_id.maintenance_type == 'preventive':
+                # Preenche a descrição do defeito
+                self.fault_description = "Manutenção Preventiva"
+                
+                # Monta o resumo do atendimento com as periodicidades
+                if self.os_id.periodicity_ids:
+                    periodicity_names = self.os_id.periodicity_ids.mapped('name')
+                    periodicity_str = ', '.join(periodicity_names)
+                    self.service_summary = f"Realizada a Preventiva ({periodicity_str}) seguindo o check-list de preventiva do equipamento."
+                else:
+                    self.service_summary = "Realizada a Preventiva seguindo o check-list de preventiva do equipamento."
+            
+            # Carrega o checklist se existir
+            if self.os_id.check_list_id:
+                # Filtra apenas os itens do checklist que ainda não foram marcados
+                unchecked_items = self.os_id.check_list_id.filtered(lambda item: not item.check)
+                
+                if unchecked_items:
+                    checklist_ids = unchecked_items.ids
+                    self.checklist_item_ids = [(6, 0, checklist_ids)]
+                    # Define o relatorio_id nos itens do checklist para atualização automática do resumo
+                    # Isso só funciona se o relatório já existir (já foi salvo)
+                    if self.id:
+                        self.env['engc.os.verify.checklist'].browse(checklist_ids).write({
+                            'relatorio_id': self.id
+                        })
+                else:
+                    # Se todos os itens já foram checados, não carrega nenhum item
+                    self.checklist_item_ids = [(5, 0, 0)]
+    
+    def _update_summary_from_checklist(self):
+        """
+        Atualiza o resumo do atendimento com base nos itens do checklist marcados neste relatório.
+        """
+        self.ensure_one()
+        if not self.checklist_item_ids:
+            return
+
+        # Coleta os itens marcados do checklist neste relatório
+        checked_items = self.checklist_item_ids.filtered(lambda item: item.check)
+
+        # Monta o texto do resumo com os itens marcados
+        summary_lines = []
+        for item in checked_items.sorted('sequence'):
+            line = f"- {item.instruction}"
+            if item.observations:
+                line += f" ({item.observations})"
+            if item.tem_medicao and item.medicao:
+                magnitude = f" {item.magnitude}" if item.magnitude else ""
+                line += f" - Medição: {item.medicao}{magnitude}"
+            
+            summary_lines.append(line)
+
+        # Atualiza o resumo do atendimento
+        checklist_summary = "\n".join(summary_lines)
+        current_summary = self.service_summary or ""
+
+        # Remove o resumo anterior do checklist se existir
+        if "Checklist realizado:" in current_summary:
+            parts = current_summary.split("Checklist realizado:")
+            base_summary = parts[0].strip()
+            if checked_items:
+                if base_summary:
+                    self.service_summary = f"{base_summary}\n\nChecklist realizado:\n{checklist_summary}"
+                else:
+                    self.service_summary = f"Checklist realizado:\n{checklist_summary}"
+            else:
+                # Se não há itens marcados, remove a seção do checklist
+                self.service_summary = base_summary
+        else:
+            if checked_items:
+                if current_summary:
+                    self.service_summary = f"{current_summary}\n\nChecklist realizado:\n{checklist_summary}"
+                else:
+                    self.service_summary = f"Checklist realizado:\n{checklist_summary}"
+    
+    def action_update_summary_from_checklist(self):
+        """
+        Método público para atualizar o resumo do atendimento com base nos itens do checklist marcados.
+        """
+        self._update_summary_from_checklist()
 
     os_id = fields.Many2one(
         'engc.os', 'Ordem de Serviço',
@@ -129,6 +286,14 @@ class Relatorios(models.Model):
         help='Equipamento associado através da Ordem de Serviço'
     )
     
+    maintenance_type = fields.Selection(
+        string='Tipo de Manutenção',
+        related='os_id.maintenance_type',
+        store=True,
+        readonly=True,
+        help='Tipo de manutenção da Ordem de Serviço'
+    )
+    
     # TODO colocar tecnico na Os automaticamente, a media que ele vai
     #  sendo inserido aqui nos relatórios
     technicians = fields.Many2many(
@@ -141,6 +306,17 @@ class Relatorios(models.Model):
                                   required=True)
     fault_description = fields.Text("Descrição do defeito",
                                     required=True)
+    
+    # Campo para referenciar os itens do checklist da OS
+    checklist_item_ids = fields.Many2many(
+        string='Itens do Checklist',
+        comodel_name='engc.os.verify.checklist',
+        relation='relatorio_checklist_rel',
+        column1='relatorio_id',
+        column2='checklist_id',
+        domain="[('os_id', '=', os_id)]",
+        help='Itens do checklist da Ordem de Serviço que podem ser editados neste relatório'
+    )
 
     pendency = fields.Text("Pendência")
     state_equipment = fields.Selection(
@@ -219,9 +395,18 @@ class Relatorios(models.Model):
 
     @api.depends("request_parts")
     def compute_request_parts_count(self):
-        print(self)
-        self.request_parts_count = self.env['engc.os.request.parts'].search_count(
-            [('relatorio_request_id', '=', self.id)])
+        """
+        Calcula o total de peças manipuladas pelo relatório (requisitadas e aplicadas).
+        """
+        for relatorio in self:
+            # Busca todas as peças relacionadas ao relatório (requisitadas ou aplicadas)
+            # Remove duplicatas contando apenas uma vez se a peça foi requisitada e aplicada no mesmo relatório
+            all_parts = self.env['engc.os.request.parts'].search([
+                '|',
+                ('relatorio_request_id', '=', relatorio.id),
+                ('relatorio_application_id', '=', relatorio.id)
+            ])
+            relatorio.request_parts_count = len(all_parts)
         
     @api.depends("request_services")
     def compute_request_services_count(self):
@@ -281,20 +466,26 @@ class Relatorios(models.Model):
     # ******************************************
 
     def action_go_request_parts(self):
+        """
+        Abre a visualização de todas as peças manipuladas por este relatório.
+        """
         self.ensure_one()
         return {
             'type': 'ir.actions.act_window',
             'name': _('Peças'),
             'view_mode': 'tree,form',
             'res_model': 'engc.os.request.parts',
-            'domain': [('relatorio_request_id', '=', self.id)],
+            'domain': [
+                '|',
+                ('relatorio_request_id', '=', self.id),
+                ('relatorio_application_id', '=', self.id)
+            ],
             'context': {
                 'default_os_id': self.os_id.id,
                 'default_relatorio_request_id': self.id,
                 'create': False if self.state == 'done' else True,
                 'edit': False if self.state == 'done' else True,
                 'delete': False if self.state == 'done' else True,
-
             },
         }
     def action_go_request_services(self):
@@ -371,11 +562,71 @@ class Relatorios(models.Model):
         
 
     def action_done(self):
-        
-        
+        """
+        Marca o relatório como concluído e cria requisições de estoque para as peças requisitadas.
+        """
         self.write({
             'state': 'done'
         })
+        
+        # Cria requisições de estoque para as peças requisitadas neste relatório
+        self._create_stock_requests()
+    
+    def _create_stock_requests(self):
+        """
+        Cria requisições de estoque para as peças requisitadas no relatório.
+        """
+        self.ensure_one()
+        
+        # Verifica se o módulo stock.request está disponível
+        try:
+            StockRequest = self.env['stock.request']
+        except KeyError:
+            _logger.warning("Módulo stock.request não está disponível. Requisições de estoque não serão criadas.")
+            return
+        
+        # Busca todas as peças requisitadas neste relatório
+        parts_requested = self.env['engc.os.request.parts'].search([
+            ('relatorio_request_id', '=', self.id),
+            ('state', 'in', ['requisitada', 'autorizada'])
+        ])
+        
+        if not parts_requested:
+            return
+        
+        # Agrupa peças por produto para evitar duplicatas
+        parts_by_product = {}
+        for part in parts_requested:
+            if not part.product_id:
+                continue
+            if part.product_id.id not in parts_by_product:
+                parts_by_product[part.product_id.id] = {
+                    'product_id': part.product_id.id,
+                    'quantity': 0.0,
+                    'parts': []
+                }
+            parts_by_product[part.product_id.id]['quantity'] += part.product_uom_qty
+            parts_by_product[part.product_id.id]['parts'].append(part)
+        
+        # Cria uma requisição de estoque para cada produto
+        stock_requests_created = []
+        for product_id, data in parts_by_product.items():
+            try:
+                stock_request_vals = {
+                    'product_id': data['product_id'],
+                    'quantity': data['quantity'],
+                    'note': f"Requisição automática do relatório {self.name} - OS: {self.os_id.name if self.os_id else 'N/A'}",
+                    'state': 'draft',
+                    'company_id': self.company_id.id,
+                }
+                stock_request = StockRequest.create(stock_request_vals)
+                stock_requests_created.append(stock_request)
+                _logger.info(f"Requisição de estoque criada: {stock_request.id} para produto {data['product_id']}")
+            except Exception as e:
+                _logger.error(f"Erro ao criar requisição de estoque para produto {data['product_id']}: {str(e)}")
+        
+        if stock_requests_created:
+            _logger.info(f"Foram criadas {len(stock_requests_created)} requisições de estoque para o relatório {self.name}")
 
 
 class RelatoriosRequestApplicationParts(models.Model):

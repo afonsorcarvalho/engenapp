@@ -37,8 +37,8 @@
           <field name="state" optional="show" readonly="1" />
           <field name="os_id" optional="hide" readonly="1"
           />
-          <field name="relatorio_request_id" optional="hide"   readonly="1"/>
-          <field name="relatorio_application_id" optional="hide" readonly="1"/>
+          <field name="relatorio_request_id" string="Relatório Requisitante" optional="show" readonly="1"/>
+          <field name="relatorio_application_id" string="Relatório Aplicador" optional="show" readonly="1"/>
         </tree>
 
 

@@ -78,8 +78,8 @@
 							states="under_repair" type="object"  />
 						<!-- <widget name="signature" string="Sign" highlight="1" attrs="{'invisible': ['|', '|', ('id', '=', False), ('picking_type_code', '!=', 'outgoing'), ('state', '!=', 'done')]}" full_name="partner_id" /> -->
 						<widget name="signature" string="Assinar Documento" highlight="1"   />
-						<button name="action_make_check_list" string="Gerar Check-List" class="oe_highlight"
-							states="draft,under_repair,execution_ready" type="object"  />
+						<button name="action_go_check_list" string="Visualizar Check-List" class="oe_highlight"
+							states="draft,under_repair,execution_ready,under_budget,wait_authorization,wait_parts,execution_ready" type="object"  />
 						<button name="generate_report_and_attach" string="Gerar relatorio" class="oe_highlight"
 							 type="object"  />
 						<field name="state" widget="statusbar" statusbar_visible="draft"
@@ -184,7 +184,8 @@
 											}" />
 								<field name="periodicity_ids" widget="many2many_tags" 
 									attrs="{
-											'invisible':[('maintenance_type','not in',('preventive'))]
+											'invisible':[('maintenance_type','not in',('preventive'))],
+											'required':[('maintenance_type','=','preventive')]
 											}" />
 								<field name="priority" widget="priority" />
 							</group>
@@ -204,12 +205,11 @@
 						</group>
 						<group>
 							<group>
-
+								<field name="technician_signature_date" attrs="{'invisible': [('technician_signature_date', '=', False)]}" readonly="1"/>
 								<field name="signature" string="Assinatura Tecnico" widget="signature" />
 							</group>
 							<group>
-
-								
+								<field name="supervisor_signature_date" attrs="{'invisible': [('supervisor_signature_date', '=', False)]}" readonly="1"/>
 								<field name="signature2" string="Assinatura Supervisor" widget="signature" />
 							</group>
 							

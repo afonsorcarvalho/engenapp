@@ -237,6 +237,26 @@ class EngcOs(models.Model):
                             record.date_finish.strftime('%d/%m/%Y %H:%M:%S')
                         )
                     )
+    
+    @api.constrains('maintenance_type', 'periodicity_ids')
+    def _check_periodicity_required_for_preventive(self):
+        """
+        Valida que a Periodicidade é obrigatória quando o tipo de manutenção é Preventiva.
+        """
+        for record in self:
+            if record.maintenance_type == 'preventive':
+                if not record.periodicity_ids:
+                    raise ValidationError(
+                        _('⚠️ A Periodicidade é obrigatória para manutenção preventiva.')
+                    )
+    
+    @api.onchange('maintenance_type')
+    def _onchange_maintenance_type(self):
+        """
+        Preenche automaticamente a descrição do chamado quando o tipo de manutenção é Preventiva.
+        """
+        if self.maintenance_type == 'preventive':
+            self.problem_description = 'Manutenção preventiva conforme check-list'
           
     request_id = fields.Many2one(
          'engc.request.service', 'Solicitação Ref.',
@@ -366,6 +386,16 @@ class EngcOs(models.Model):
     request_parts_count = fields.Integer(compute='compute_request_parts_count')
     signature =  fields.Image('Signature', help='Signature', copy=False, attachment=True)
     signature2 =  fields.Image('Signature2', help='Signature', copy=False, attachment=True)
+    technician_signature_date = fields.Datetime(
+        string='Data da Assinatura do Técnico',
+        readonly=True,
+        help='Data em que o técnico assinou a ordem de serviço'
+    )
+    supervisor_signature_date = fields.Datetime(
+        string='Data da Assinatura do Supervisor',
+        readonly=True,
+        help='Data em que o supervisor assinou a ordem de serviço'
+    )
 
     def compute_request_parts_count(self):
         for record in self:
@@ -618,9 +648,29 @@ class EngcOs(models.Model):
         
         current_datetime = fields.Datetime.now()
         employee = self.env['hr.employee'].search([('user_id', '=', self.env.user.id)], limit=1)
-        tecnico = employee if employee.id else self.tecnico_id
-        fault_description = "Manutenção Preventiva" if self.maintenance_type == 'preventive' else ""
-        service_summary = "Realizada Preventiva seguindo Check-list" if self.maintenance_type == 'preventive' else ""
+        # Prioriza o técnico da OS, senão usa o funcionário logado
+        tecnico = self.tecnico_id if self.tecnico_id else employee
+        
+        # Prepara descrição e resumo para manutenção preventiva
+        fault_description = ""
+        service_summary = ""
+        
+        if self.maintenance_type == 'preventive':
+            fault_description = "Manutenção Preventiva"
+            
+            # Monta o resumo com as periodicidades selecionadas
+            if self.periodicity_ids:
+                periodicity_names = self.periodicity_ids.mapped('name')
+                periodicity_str = ', '.join(periodicity_names)
+                service_summary = f"Realizada a Preventiva ({periodicity_str}) seguindo o check-list de preventiva do equipamento."
+            else:
+                service_summary = "Realizada a Preventiva seguindo o check-list de preventiva do equipamento."
+        
+        # Prepara os técnicos (campo obrigatório)
+        # Prioriza o técnico da OS, senão usa o funcionário logado
+        technicians_vals = []
+        if tecnico:
+            technicians_vals = [(4, tecnico.id)]
 
         return self.env['engc.os.relatorios'].create({
             'os_id': self.id,
@@ -628,7 +678,7 @@ class EngcOs(models.Model):
             'data_atendimento': current_datetime,
             'data_fim_atendimento': current_datetime + timedelta(hours=1) ,
             
-            'technicians': [(4,tecnico.id)],
+            'technicians': technicians_vals,
             'fault_description': fault_description,
             'service_summary': service_summary,
            
@@ -690,32 +740,36 @@ class EngcOs(models.Model):
 
         #self.verify_execution_rules()
         #self.repair_relatorio_service_start()
-        
+
 
         _logger.info("Iniciando Execução")
         current_datetime = fields.Datetime.now()
         report_type = self.env.context.get('report_type')
+
+        # Se for manutenção preventiva, gera o checklist primeiro (se ainda não existir)
+        if self.maintenance_type == 'preventive' and not self.check_list_id:
+            self.action_make_check_list()
+
+        # Para todos os tipos de manutenção, cria o relatório
         id_relatorio = self.create_relatorio()
         if not id_relatorio:
-           raise UserError("Erro ao gerar relatório")
-        if self.maintenance_type == 'preventive':
-           self.action_make_check_list()
+            raise UserError("Erro ao gerar relatório")
 
         self.write({
              'state':'under_budget' if report_type == 'orcamento' else 'under_repair',
              'date_start': current_datetime,
-             
+
         })
-        
-        
+
+
         return {
             'res_id': id_relatorio.id,
             'name': _('Iniciar Execução'),
             'type': 'ir.actions.act_window',
             'target':'current',
             'view_mode': 'form',
-            'res_model': 'engc.os.relatorios',   
-     
+            'res_model': 'engc.os.relatorios',
+
         }
         
         
@@ -736,6 +790,16 @@ class EngcOs(models.Model):
     #     return self.write({'state': 'cancel'})
 
     
+    def _get_relatorios_nao_concluidos(self):
+        """
+        Retorna os relatórios de atendimento que ainda não foram concluídos.
+        
+        Returns:
+            recordset: Relatórios com estado 'draft' (não concluídos)
+        """
+        self.ensure_one()
+        return self.relatorios_id.filtered(lambda x: x.state == 'draft')
+    
     def action_repair_end(self):
         """Finaliza execução da ordem de serviço.
 
@@ -753,9 +817,12 @@ class EngcOs(models.Model):
             raise UserError(
                 _("Para finalizar O.S. deve-se incluir pelo menos um relatório de serviço."))
           
-        if self.relatorios_id.filtered(lambda x: x.state == 'draft'):
+        relatorios_nao_concluidos = self._get_relatorios_nao_concluidos()
+        if relatorios_nao_concluidos:
+            relatorios_lista = '\n'.join([f"- {r.name}" for r in relatorios_nao_concluidos])
             raise UserError(
-                _("Para finalizar O.S. deve-se concluir todos os relatorios de serviço."))
+                _("⚠️ Para finalizar O.S. deve-se concluir todos os relatórios de serviço.\n\n"
+                  "Relatórios não concluídos:\n%s") % relatorios_lista)
                 
         if self.request_parts.filtered(lambda x: x.state not in ['aplicada','cancel','nao_autorizada']):
             raise UserError(
@@ -954,9 +1021,27 @@ class EngcOs(models.Model):
             )
 
     def write(self, vals):
-        if vals.get('signature'):
+        # Se a assinatura foi preenchida, registra a data
+        if 'signature' in vals and vals.get('signature'):
             for record in self:
-                record.generate_report_and_attach()    
-        return super(EngcOs, self).write(vals)
+                record.generate_report_and_attach()
+        
+        result = super(EngcOs, self).write(vals)
+        
+        # Após salvar, atualiza a data de assinatura do técnico para os registros que receberam assinatura pela primeira vez
+        if 'signature' in vals and vals.get('signature'):
+            for record in self:
+                # Se há assinatura mas não há data, registra a data
+                if record.signature and not record.technician_signature_date:
+                    record.write({'technician_signature_date': fields.Datetime.now()})
+        
+        # Após salvar, atualiza a data de assinatura do supervisor para os registros que receberam assinatura pela primeira vez
+        if 'signature2' in vals and vals.get('signature2'):
+            for record in self:
+                # Se há assinatura mas não há data, registra a data
+                if record.signature2 and not record.supervisor_signature_date:
+                    record.write({'supervisor_signature_date': fields.Datetime.now()})
+        
+        return result
 
     
