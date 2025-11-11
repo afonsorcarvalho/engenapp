@@ -78,6 +78,9 @@
 							states="under_repair" type="object"  />
 						<!-- <widget name="signature" string="Sign" highlight="1" attrs="{'invisible': ['|', '|', ('id', '=', False), ('picking_type_code', '!=', 'outgoing'), ('state', '!=', 'done')]}" full_name="partner_id" /> -->
 						<widget name="signature" string="Assinar Documento" highlight="1"   />
+						<!-- Botão para gerar o check-list a partir do método action_make_check_list -->
+						<button name="action_make_check_list" string="Gerar Check-List" class="oe_highlight"
+							states="draft,under_repair,execution_ready,under_budget,wait_authorization,wait_parts" type="object"  />
 						<button name="action_go_check_list" string="Visualizar Check-List" class="oe_highlight"
 							states="draft,under_repair,execution_ready,under_budget,wait_authorization,wait_parts,execution_ready" type="object"  />
 						<button name="generate_report_and_attach" string="Gerar relatorio" class="oe_highlight"
