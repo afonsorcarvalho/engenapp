@@ -25,6 +25,7 @@
         'views/cycle_features_views.xml',
         'views/cycle_type_views.xml',
         'views/equipments_views.xml',
+        'views/indicador_biologico_views.xml',
         'views/wizard_ler_diretorio_ciclos_views.xml',
         'views/menu_views.xml',
         'views/supervisorio_ciclos_views.xml',

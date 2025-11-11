@@ -21,6 +21,11 @@ class CycleType(models.Model):
         tracking=True,
         help='Campo para armazenar a tag utilizada para identificar a data e hora de finalização do ciclo na fita digital. Este campo também está disponível no formulário.'
     )
+    abort_datetime_tag = fields.Char(
+        string='Tag da data e hora de abortação', 
+        tracking=True,
+        help='Campo para armazenar a tag utilizada para identificar a data e hora de abortação do ciclo na fita digital. Este campo também está disponível no formulário.'
+    )
     # Campos de controle
     sequence = fields.Integer(string='Sequência', default=10)
     active = fields.Boolean(string='Ativo', default=True, tracking=True)

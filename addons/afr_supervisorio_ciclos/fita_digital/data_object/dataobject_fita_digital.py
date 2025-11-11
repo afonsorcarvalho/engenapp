@@ -66,6 +66,11 @@ class DataObjectFitaDigital:
             
         self.reader_fita.size_header = size_header
         
+    def set_state_finalized_keys(self,state_finalized_keys):
+        self.reader_fita.set_state_finalized_keys(state_finalized_keys)
+    def set_state_aborted_keys(self,state_aborted_keys):
+        self.reader_fita.set_state_aborted_keys(state_aborted_keys)
+        
     def ler_diretorio_ciclos(self, directory_path="", extension_file_search=None, data_inicial=None, data_final=None):
         """
         Método para leitura recursiva de diretório de ciclos com filtro por data.
@@ -233,6 +238,7 @@ class DataObjectFitaDigital:
             # Extrai e converte os horários para datetime
             horarios = [linha[0] for linha in self.body_fita['data']]
             # Converte os horários para datetime utilizando como base a data do cabeçalho da fita
+         
             times = self.time_to_datetime(horarios, self.header_fita[self.reader_fita.header_fields.date_key])
             
             # Atualiza os horários no body_fita['data']
@@ -470,7 +476,7 @@ class DataObjectFitaDigital:
         except Exception as e:
             raise Exception(f"Erro ao calcular tempo total do ciclo: {str(e)}")
     
-    def time_to_datetime(self,times,start_date):
+    def time_to_datetime(self,times,start_date,format_date="%Y-%m-%d"):
         """
         Converte uma lista de strings de horários para objetos datetime, 
         adicionando a data de início fornecida.
@@ -488,11 +494,14 @@ class DataObjectFitaDigital:
             >>> time_to_datetime(times, start_date)
             [datetime(2024,1,1,10,30,0), datetime(2024,1,1,11,45,0)]
         """
+        
+        
         time_objects = [datetime.strptime(t, "%H:%M:%S") for t in times]
-        time_objects = self.replace_date_in_times(time_objects, start_date.strftime("%Y-%m-%d"))
+        
+        time_objects = self.replace_date_in_times(time_objects, start_date.strftime(format_date))
         return time_objects
 
-    def replace_date_in_times(self,time_objects, specific_date):
+    def replace_date_in_times(self,time_objects, specific_date,format_date="%Y-%m-%d"):
             """
             Substitui o ano, mês e dia em uma lista de objetos datetime por uma data específica.
 
@@ -504,7 +513,8 @@ class DataObjectFitaDigital:
                 list: Lista de objetos datetime com a data especificada e as horas originais.
             """
             # Converte a data específica para um objeto datetime
-            date_object = datetime.strptime(specific_date, "%Y-%m-%d")
+        
+            date_object = datetime.strptime(specific_date, format_date)
 
             # Substitui ano, mês e dia em cada objeto de tempo
             updated_datetimes = [

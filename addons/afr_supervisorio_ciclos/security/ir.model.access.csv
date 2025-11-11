@@ -8,3 +8,7 @@ access_afr_cycle_features_user,afr.cycle.features.user,model_afr_cycle_features,
 access_afr_supervisorio_ciclos_authenticity_check_user,afr.supervisorio.ciclos.authenticity.check.user,model_afr_supervisorio_ciclos_authenticity_check,base.group_user,1,1,1,0
 access_afr_public_authenticity_check_portal,afr.public.authenticity.check.portal,model_afr_public_authenticity_check,,1,1,1,0
 access_wizard_ler_diretorio_ciclos_system,wizard.ler.diretorio.ciclos.system,model_wizard_ler_diretorio_ciclos,base.group_system,1,1,1,1
+access_afr_indicador_biologico_user,afr.indicador.biologico.user,model_afr_indicador_biologico,base.group_user,1,1,1,1
+access_afr_indicador_biologico_system,afr.indicador.biologico.system,model_afr_indicador_biologico,base.group_system,1,1,1,1
+access_afr_ciclo_fotos_user,afr.ciclo.fotos.user,model_afr_ciclo_fotos,base.group_user,1,1,1,1
+access_afr_ciclo_fotos_system,afr.ciclo.fotos.system,model_afr_ciclo_fotos,base.group_system,1,1,1,1

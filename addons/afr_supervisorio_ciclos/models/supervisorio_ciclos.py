@@ -63,6 +63,59 @@ class SupervisorioCiclos(models.Model):
     operator_id = fields.Many2one('res.users', string='Operador', 
         default=lambda self: self.env.user, tracking=True)
     
+    # Campos de Indicador Biológico (IB)
+    # Relacionamento Many2one com o cadastro de Indicadores Biológicos
+    ib_lote = fields.Many2one(
+        'afr.indicador.biologico',
+        string='Lote do Indicador Biológico',
+        tracking=True,
+        help='Indicador biológico utilizado neste ciclo. Clique para cadastrar/selecionar.'
+    )
+    # Campos relacionados para exibir marca e modelo do IB selecionado
+    ib_marca = fields.Char(
+        related='ib_lote.marca',
+        string='Marca do IB',
+        readonly=True,
+        store=True
+    )
+    ib_modelo = fields.Char(
+        related='ib_lote.modelo',
+        string='Modelo do IB',
+        readonly=True,
+        store=True
+    )
+    # Data/hora de início da incubação do IB
+    ib_data_inicio = fields.Datetime(
+        string='Data de Início de Incubação',
+        tracking=True,
+        help='Momento em que a incubação do IB foi iniciada.'
+    )
+    # Data/hora de fim da incubação do IB
+    ib_data_fim = fields.Datetime(
+        string='Data de Fim de Incubação',
+        tracking=True,
+        help='Momento em que a incubação do IB foi finalizada.'
+    )
+    # Resultado do IB
+    ib_resultado = fields.Selection(
+        [
+            ('positivo', 'Positivo'),
+            ('negativo', 'Negativo'),
+        ],
+        string='Resultado do IB',
+        tracking=True,
+        help='Resultado do indicador biológico após incubação.'
+    )
+    
+    
+    # Relacionamento com fotos do ciclo
+    fotos_ids = fields.One2many(
+        'afr.ciclo.fotos',
+        'ciclo_id',
+        string='Fotos do Ciclo',
+        help='Fotos associadas a este ciclo'
+    )
+    
     # Campos de arquivo
     file_path = fields.Char(
         string='Caminho do Arquivo',
@@ -162,6 +215,7 @@ class SupervisorioCiclos(models.Model):
                 record.duration = round(duration, 2)
             else:
                 record.duration = 0.0
+    
    
 
     @api.depends('state')
@@ -255,7 +309,7 @@ class SupervisorioCiclos(models.Model):
             raise UserError('Apenas ciclos em andamento podem ser concluídos.')
         self.write({
             'state': 'concluido',
-            'end_date': fields.Datetime.now()
+            
         })
 
     def action_cancel(self):
@@ -264,7 +318,7 @@ class SupervisorioCiclos(models.Model):
             raise UserError('Este ciclo não pode ser cancelado.')
         self.write({
             'state': 'cancelado',
-            'end_date': fields.Datetime.now()
+           
         })
 
     def action_pause(self):
@@ -629,8 +683,14 @@ class SupervisorioCiclos(models.Model):
        
         do.register_reader_fita(reader_class(file_path), 
                                size_header=cycle_type_id.header_lines)
-       
-        
+        #definindo as chaves de estado finalizado e abortado
+        if cycle_type_id.end_datetime_tag:
+            # Converte a string com itens separados por vírgula em uma lista
+            state_finalized_keys_list = [key.strip() for key in cycle_type_id.end_datetime_tag.split(',')]
+            do.set_state_finalized_keys(state_finalized_keys_list)
+        if cycle_type_id.abort_datetime_tag:
+            state_aborted_keys_list = [key.strip() for key in cycle_type_id.abort_datetime_tag.split(',')]
+            do.set_state_aborted_keys(state_aborted_keys_list)
 
         return do
     
@@ -732,10 +792,21 @@ class SupervisorioCiclos(models.Model):
             _logger.info(f"Estatísticas calculadas para relatório {self.name}: {statistics}")
             _logger.info(f"Tipo das estatísticas: {type(statistics)}")
 
+            # Se vier como string, tentar converter para dict de forma segura
+            if isinstance(statistics, str):
+                try:
+                    import ast
+                    statistics_eval = ast.literal_eval(statistics)
+                    if isinstance(statistics_eval, dict):
+                        statistics = statistics_eval
+                        _logger.info("Estatísticas eram string; convertidas com sucesso para dict via literal_eval")
+                except Exception as conv_err:
+                    _logger.warning(f"Falha ao converter estatísticas string para dict: {conv_err}")
+
             # Construir estrutura dinâmica baseada nas chaves presentes nas estatísticas
             if isinstance(statistics, dict):
                 # Coletar variáveis na ordem de aparição (exclui Duration)
-                variables: list[str] = []
+                variables = []
                 for fase, dados in statistics.items():
                     if not isinstance(dados, dict):
                         continue

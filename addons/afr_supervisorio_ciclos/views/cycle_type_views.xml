@@ -28,13 +28,14 @@
                             <field name="code"/>
                             <field name="sequence"/>
                             <field name="color" widget="color_picker"/>
+                            <field name="fases_fita_digital" help="Fases da fita digital que serão utilizadas para criar os dados do ciclo. Exemplo: 'LEAKTEST','ACONDICIONAMENTO','ESTERILIZACAO','LAVAGEM','AERACAO' "/>
+                            <field name="end_datetime_tag" help="Tag da data e hora de finalização do ciclo na fita digital. Exemplo: 'FIM DO CICLO'"/>
                         </group>
                         <group>
                             <field name="reader_class_dataobject" help="Nome da classe que implementa a leitura da fita digital (ex: 'ReaderFitaDigitalAfr'). Esta classe deve estar definida no módulo fita_digital."/>
                             <field name="method_name_create_cycle" help="Nome do método que será chamado para processar os dados da fita e criar o ciclo (ex: 'create_cycle_data_vapor'). Este método deve estar implementado em um modelo que herda de 'afr.supervisorio.ciclos'."/>
-                            <field name="path_ciclo" help="Caminho completo do diretório onde serão armazenados os arquivos de ciclo para este tipo específico."/>
-                            <field name="fases_fita_digital" help="Fases da fita digital que serão utilizadas para criar os dados do ciclo. Exemplo: 'LEAKTEST','ACONDICIONAMENTO','ESTERILIZACAO','LAVAGEM','AERACAO' "/>
-                            <field name="end_datetime_tag" help="Tag da data e hora de finalização do ciclo na fita digital. Exemplo: 'FIM DO CICLO'"/>
+                            <field name="path_ciclo" help="Caminho completo do diretório onde serão armazenados os arquivos de ciclo para este tipo específico."/>                         
+                            <field name="abort_datetime_tag" help="Tag da data e hora de abortação do ciclo na fita digital. Exemplo: 'ABORTADO'"/>
                         </group>
                         <group>
                             <field name="header_lines" help="Número de linhas que compõem o cabeçalho na fita digital, separando os dados do ciclo."/>

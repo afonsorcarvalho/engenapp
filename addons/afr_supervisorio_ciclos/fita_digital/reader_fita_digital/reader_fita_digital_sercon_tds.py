@@ -218,7 +218,19 @@ class ReaderFitaDigitalSerconTds(ReaderFitaDigitalInterface):
         except Exception as e:
             _logger.error(f"Erro inesperado ao obter estado: {str(e)}")
             return 'erro'
-
+    def _get_fases_permitidas(self):
+        """
+        Obtém as fases permitidas para o ciclo.
+        """
+        return  [
+                'INICIO DE PRE-LAVAGEM',
+                
+                'INICIO DE ENXAGUE', 
+                'INICIO DE TERMODESINFECCAO',
+                'INICIO DA SECAGEM',
+                'FINAL  DE CICLO',
+                
+            ]
     def make_graph(self, header, body):
         """
         Gera um gráfico do ciclo de termodesinfecção.
@@ -283,13 +295,7 @@ class ReaderFitaDigitalSerconTds(ReaderFitaDigitalInterface):
             #ax2.set_ylim(0, 2.5)  # Escala de pressão
             
             # Adiciona as fases como linhas verticais
-            fases_permitidas = [
-                'INICIO DE PRE-LAVAGEM',
-                
-                'INICIO DE ENXAGUE', 
-                'INICIO DE TERMODESINFECCAO',
-                
-            ]
+            fases_permitidas = self._get_fases_permitidas()
             
             fases_validas = []
             for fase in body.get('fase', []):
@@ -323,13 +329,14 @@ class ReaderFitaDigitalSerconTds(ReaderFitaDigitalInterface):
             ax1.grid(True, alpha=0.3)
 
             #Adiciona set-point
-            ax1.axhline(y=header.get("SET-POINT", 0), color='black', linestyle='--', label='Set-Point')
+           # print(f"############## header['TEMPERATURA DA AGUA']: {header.get("TEMPERATURA DA AGUA", 0)}")
+           # ax1.axhline(y=header.get("TEMPERATURA DA AGUA", 0),xmin=0, color='black', linestyle='--', label=f"Set-Point: {header.get('TEMPERATURA DA AGUA', 0)}")
             
             # Adiciona título
             plt.title(f'Curvas Paramétricas do Ciclo - {header.get("file_name", "Ciclo")}')
             
             # Adiciona legendas
-            lines1, labels1 = ax1.get_legend_handles_labels()
+            lines1, labels1 = ax1.get_legend_handles_labels() 
             #lines2, labels2 = ax2.get_legend_handles_labels()
             ax1.legend(lines1, labels1, loc='upper left')
             

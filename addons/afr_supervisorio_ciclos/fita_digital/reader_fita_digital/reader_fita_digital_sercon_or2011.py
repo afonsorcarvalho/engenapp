@@ -257,7 +257,7 @@ class ReaderFitaDigitalSerconOr2011(ReaderFitaDigitalInterface):
                 
                 'INICIO DA HOMOGENIZACAO', 
                 'INICIO DA ESTERILIZACAO',
-                'TERMINO DA ESTERILIZACAO',
+                'INICIO DA DESCOMPRESSAO',
           
             ]
     def make_graph(self, header, body):
@@ -348,7 +348,7 @@ class ReaderFitaDigitalSerconOr2011(ReaderFitaDigitalInterface):
                 
                
                     
-                ax1.text(fase[0]+timedelta(seconds=10), ax1.get_ylim()[0] + 2,
+                ax1.text(fase[0]+timedelta(seconds=5), ax1.get_ylim()[0] + 0.5,
                         texto_fase,
                         rotation=90,
                         verticalalignment='bottom',
@@ -359,7 +359,8 @@ class ReaderFitaDigitalSerconOr2011(ReaderFitaDigitalInterface):
 
             #Adiciona set-point
             #TODO: Verificar se o header['TEMPERATURA DA AGUA'] se está pegando o valor correto
-            ax1.axhline(y=header.get(header['SET-POINT'], 0), color='black', linestyle='--', label='Set-Point')
+            print(f"############## header['SET-POINT']: {header['SET-POINT']}")
+            ax1.axhline(y=header.get('SET-POINT', 0), xmin=0, color='black', linestyle='--', label=f"Set-Point: {header.get('SET-POINT', 0)}")
             
             # Adiciona título
             plt.title(f'Curvas Paramétricas do Ciclo - {header.get("file_name", "Ciclo")}')
@@ -389,15 +390,22 @@ class ReaderFitaDigitalSerconOr2011(ReaderFitaDigitalInterface):
             cycle_graph = False
             return cycle_graph
 
-    def compute_statistics(self, phases=None, header=None, body=None):
+    def compute_statistics(self, phases=None, header=None, body=None, formated=True):
         """
         Calcula as estatísticas do ciclo (máximo, mínimo, média e moda) para cada variável.
 
         Args:
-            fases (list, opcional): Lista de fases para cálculo das estatísticas
+            phases (list, opcional): Lista de fases para cálculo das estatísticas
+            header (dict, opcional): Cabeçalho da fita digital
+            body (dict, opcional): Corpo da fita digital
+            formated (bool, opcional): Se True, retorna as estatísticas formatadas em colunas
 
         Returns:
-            dict: Dicionário com as estatísticas de cada variável do ciclo
+            tuple: (estatísticas, mensagens_erro)
+                Se formated=True: (str formatado, list de erros)
+                Se formated=False: (dict de estatísticas, list de erros)
+                
+                dict: Dicionário com as estatísticas de cada variável do ciclo
                 {   'ESTERILIZACAO': {'Duration': '00:00:00', 'PCI(Bar)': {'max': float, 'min': float, 'media': float, 'moda': float}, 
                     'TCI(Celsius)': {'max': float, 'min': float, 'media': float, 'moda': float},
                     'ETO(Kg)': {'max': float, 'min': float, 'media': float, 'moda': float},
@@ -414,7 +422,7 @@ class ReaderFitaDigitalSerconOr2011(ReaderFitaDigitalInterface):
         Exemplo:
             >>> do = DataObjectFitaDigital("/caminho/")
             >>> do.read_all_fita()
-            >>> stats = do.calcular_estatisticas_ciclo(fases=['ESTERILIZACAO','LAVAGEM','AERACAO'])
+            >>> stats, erros = do.compute_statistics(phases=['ESTERILIZACAO','LAVAGEM','AERACAO'])
             >>> print(stats['ESTERILIZACAO'])
             {'Duration': '00:00:00', 'PCI(Bar)': {'max': float, 'min': float, 'media': float, 'moda': float}, 
         """
@@ -427,7 +435,8 @@ class ReaderFitaDigitalSerconOr2011(ReaderFitaDigitalInterface):
 
         if not phases:
             raise ValueError("Lista de fases não fornecida")
-        #filtrando as fases de interesse no body_fita
+            
+        # Filtrando as fases de interesse no body_fita
         body_fases_filtradas = [x for x in body['fase'] if x[1] in phases]
         
         estatisticas = {}
@@ -438,50 +447,57 @@ class ReaderFitaDigitalSerconOr2011(ReaderFitaDigitalInterface):
     
             # Calcula a duração entre as fases usando os índices
             try:
-                idx_fase_atual = [f[1] for f in body['fase'] ].index(fase_atual)
+                idx_fase_atual = [f[1] for f in body['fase']].index(fase_atual)
                 print(f"idx_fase_atual: {idx_fase_atual}, fase_atual: {fase_atual}")
                 if idx_fase_atual is None:
-                    error_msg[i] = f"Não foi possível encontrar a fase {fase_atual}"
+                    error_msg.append(f"Não foi possível encontrar a fase {fase_atual}")
                     continue
                 print(f"idx_fase_atual: {idx_fase_atual}")
                 idx_fase_proxima = None
 
                 for fproxima in phases[i+1:]:
                     try:
-                        idx_fase_proxima =  [f[1] for f in body['fase']].index(fproxima)
+                        idx_fase_proxima = [f[1] for f in body['fase']].index(fproxima)
                         fase_proxima = fproxima
                         break
                     except ValueError as e:
-                        error_msg.append( f"Não foi possível encontrar a próxima fase {fproxima} para {fase_atual}: {str(e)}"  )  
+                        error_msg.append(f"Não foi possível encontrar a próxima fase {fproxima} para {fase_atual}: {str(e)}")
                         continue
                
-                    
+                # Verifica se encontrou a próxima fase
+                if fase_proxima is None:
+                    error_msg.append(f"Não foi possível encontrar a próxima fase para {fase_atual}. Calculando até o final do ciclo")
+                    continue
                     
                 print(f"idx_fase_proxima: {idx_fase_proxima}")
-                duration = self.calcular_tempo_entre_fases(fase_atual, fproxima)
+                duration = self.calcular_tempo_entre_fases(fase_atual, fase_proxima)
                 print(f"duration: {duration}")
            
             except ValueError as e:
-                error_msg.append( f"A fase {fase_atual} não foi encontrada: {str(e)}")
+                error_msg.append(f"A fase {fase_atual} não foi encontrada: {str(e)}")
                 continue
             except Exception as e:
-                error_msg.append( f"Erro ao calcular estatísticas do ciclo {fase_atual}: {str(e)}")
+                error_msg.append(f"Erro ao calcular estatísticas do ciclo {fase_atual}: {str(e)}")
+                continue
                 
             # Calcula as estatísticas entre as fases
-            if fase_proxima is None:
-                error_msg.append( f"Não foi possível encontrar a próxima fase para {fase_atual}. Calculando até o final do ciclo")
-
-                
-            duration = self.calcular_tempo_entre_fases(fase_atual, fase_proxima)
-            stats = self.compute_statistics_between_phases(fase_atual, fase_proxima,header,body)
-            # Adiciona as estatísticas ao dicionário
-            estatisticas[fase_atual] = {
-                'Duration': duration,
-                **stats
-               
-            }
+            try:
+                duration = self.calcular_tempo_entre_fases(fase_atual, fase_proxima)
+                stats = self.compute_statistics_between_phases(fase_atual, fase_proxima, header, body)
+                # Adiciona as estatísticas ao dicionário
+                estatisticas[fase_atual] = {
+                    'Duration': duration,
+                    **stats
+                }
+            except Exception as e:
+                error_msg.append(f"Erro ao calcular estatísticas entre fases {fase_atual} e {fase_proxima}: {str(e)}")
+                continue
         
-        return self.formatar_estatisticas_colunas(estatisticas),error_msg
+        # Retorna conforme o parâmetro formated
+        if formated:
+            return self.formatar_estatisticas_colunas(estatisticas), error_msg
+        else:
+            return estatisticas, error_msg
 
     def formatar_estatisticas_colunas(self,statistics):
         """

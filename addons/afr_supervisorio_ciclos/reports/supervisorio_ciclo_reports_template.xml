@@ -87,6 +87,56 @@
                             </div>
                      
                         </div>
+                        
+                        <!-- Seção de Indicador Biológico -->
+                        <div class="row mt-4" t-if="o.ib_lote">
+                            <div class="col-12">
+                                <h5 class="mb-3">Indicador Biológico</h5>
+                            </div>
+                        </div>
+                        <div class="row" t-if="o.ib_lote">
+                            <div class="col-2">
+                                <strong>Lote IB: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.ib_lote" />
+                            </div>
+                            <div class="col-2">
+                                <strong>Marca: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.ib_marca" />
+                            </div>
+                        </div>
+                        <div class="row" t-if="o.ib_lote">
+                            <div class="col-2">
+                                <strong>Modelo: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.ib_modelo" />
+                            </div>
+                            <div class="col-2">
+                                <strong>Resultado: </strong>
+                            </div>
+                            <div class="col-4">
+                                <t t-esc="o.ib_resultado"/>        
+                            </div>
+                        </div>
+                        <div class="row" t-if="o.ib_lote">
+                            <div class="col-2">
+                                <strong>Início Incubação: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.ib_data_inicio" />
+                            </div>
+                            <div class="col-2">
+                                <strong>Fim Incubação: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.ib_data_fim" />
+                            </div>
+                        </div>
+                        
                         <div class="row mt-3">
                             <div class="col-12">
                              
@@ -101,6 +151,8 @@
                         
                         <!-- Tabela de Estatísticas do Ciclo -->
                         <t t-set="cycle_stats" t-value="o.get_cycle_statistics_for_report()"/>
+                        <!-- debug -->
+                        <!-- <div>rows: <t t-esc="cycle_stats and cycle_stats.get('rows') and len(cycle_stats.get('rows'))"/> | vars: <t t-esc="cycle_stats and cycle_stats.get('variables') and len(cycle_stats.get('variables'))"/></div> -->
                         
                         <div class="row mt-3 mb-3" t-if="cycle_stats and cycle_stats.get('rows') and len(cycle_stats.get('rows')) > 0">
                             <div class="col-12">
@@ -127,12 +179,12 @@
                                             <t t-foreach="cycle_stats.get('rows')" t-as="r">
                                                 <tr>
                                                     <td t-esc="r.get('fase')"/>
-                                                    <td class="text-center" t-esc="r.get('duracao')"/>
+                                                    <td class="text-center" t-esc="(r.get('duracao') if r.get('duracao') else '-')"/>
                                                     <t t-foreach="cycle_stats.get('variables')" t-as="v">
                                                         <t t-set="m" t-value="r.get('metrics').get(v) if r.get('metrics') else {}"/>
-                                                        <td class="text-end" t-esc="'%.2f' % (((m and m.get('min')) or 0.0))"/>
-                                                        <td class="text-end" t-esc="'%.2f' % (((m and m.get('max')) or 0.0))"/>
-                                                        <td class="text-end" t-esc="'%.2f' % (((m and m.get('media')) or 0.0))"/>
+                                                        <td class="text-end" t-esc="(('%.2f' % m.get('min')) if (m is not None and m.get('min') is not None) else '-')"/>
+                                                        <td class="text-end" t-esc="(('%.2f' % m.get('max')) if (m is not None and m.get('max') is not None) else '-')"/>
+                                                        <td class="text-end" t-esc="(('%.2f' % m.get('media')) if (m is not None and m.get('media') is not None) else '-')"/>
                                                     </t>
                                                 </tr>
                                             </t>
@@ -164,10 +216,12 @@
                         </div>
                        
                         <div class="row mt-5">
-                            <div class="col-6  text-center" >
-                                <!-- ________________________________________<br/>
-                                 <span t-field="o.operator_id" /><br/> 
-                                Operador -->
+                            <div class="col-6  text-left" >
+                            <t t-if="o.notes">
+                            
+                               * Observações: 
+                                 <span t-field="o.notes" /><br/> 
+                            </t>  
                             </div>
                             <div class="col-6  text-center">
                                 ________________________________________<br/>
@@ -176,6 +230,53 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Seção de Anexo: Fotos do Ciclo (cada foto em uma página separada) -->
+                    <t t-if="o.fotos_ids">
+                        <t t-foreach="o.fotos_ids" t-as="foto">
+                            <div style="page-break-before: always;">
+                                <div class="row mt-4">
+                                    <div class="col-12 text-center">
+                                        <h4 class="mb-4"><span t-field="foto.titulo"/></h4>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-12">
+                                        <table class="table table-sm table-bordered">
+                                           
+                                            <tr t-if="foto.legenda">
+                                                <td class="font-weight-bold bg-light">Legenda:</td>
+                                                <td><span t-field="foto.legenda"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="font-weight-bold bg-light">Data:</td>
+                                                <td><span t-field="foto.data_criacao"/></td>
+                                            </tr>
+                                            
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-4">
+                                    <div class="col-12 text-center">
+                                        <img t-if="foto.imagem" t-attf-src="data:image/png;base64,{{foto.imagem}}" 
+                                             style="max-width: 100%; max-height: 800px; border: 1px solid #ddd; padding: 10px; background: white;"
+                                             t-att-alt="foto.titulo"/>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-12 text-center text-muted">
+                                        <small>
+                                            Foto <span t-esc="foto_index + 1"/> de <span t-esc="len(o.fotos_ids)"/>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+                    
                 </t>
             </t>
         </t>

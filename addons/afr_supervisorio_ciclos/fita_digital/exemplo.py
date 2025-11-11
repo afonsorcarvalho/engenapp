@@ -4,28 +4,32 @@ from reader_fita_digital.reader_fita_digital_afr13 import ReaderFitaDigitalAfr13
 from reader_fita_digital.reader_fita_digital_sercon_tds import ReaderFitaDigitalSerconTds
 from reader_fita_digital.reader_fita_digital_sercon_or2011 import ReaderFitaDigitalSerconOr2011
 from reader_fita_digital.reader_fita_digital_sercon_jp_lac210 import ReaderFitaDigitalSerconJpLac210
-
+from reader_fita_digital.reader_fita_digital_baumer_hivac2 import ReaderFitaDigitalBaumerHivac2
 #dir_path = "/home/afonso/docker/odoo_engenapp/data/odoo/filestore/odoo-steriliza/ciclos_processados/VAPOR01/"
-dir_path = "/home/afonso/docker/odoo_engenapp/data/odoo/filestore/odoo-steriliza/ciclos_processados/VAPOR02/"
+dir_path = "/home/afonso/docker/odoo_engenapp/data/odoo/filestore/odoo-steriliza/ciclos/ETO01/"
 #dir_path = "/home/afonso/docker/odoo_engenapp/data/odoo/filestore/odoo-steriliza/ciclos_processados/TERMO01/"
 #dir_path = "/home/afonso/docker/odoo_engenapp/data/odoo/filestore/odoo-steriliza/Ciclos/ETO01/"
 # Criando uma instância do DataObjectFitaDigital apontando para o diretório dos ciclos
 do = DataObjectFitaDigital(directory_path=dir_path)
 #modulo = __import__('reader_fita_digital.reader_fita_digital_sercon_tds')
-modulo = __import__('reader_fita_digital.reader_fita_digital_sercon_jp_lac210')
+#modulo = __import__('reader_fita_digital.reader_fita_digital_sercon_jp_lac210')
+#modulo = __import__('reader_fita_digital.reader_fita_digital_baumer_hivac2')
+
 #modulo = __import__('reader_fita_digital.reader_fita_digital_sercon_or2011')
-#modulo = __import__('reader_fita_digital.reader_fita_digital_afr13')
+modulo = __import__('reader_fita_digital.reader_fita_digital_afr13')
 # Lendo os arquivos do diretório ETO01
 lista_arquivos = do.ler_diretorio_ciclos(directory_path=dir_path)
+
 print(lista_arquivos)
 #print(lista_arquivos[2]['path'] +"/" + lista_arquivos[2]['name'])
 
 # Registrando o leitor de fita para o terceiro arquivo encontrado
 #do.register_reader_fita(ReaderFitaDigitalSerconTds(lista_arquivos[2]['path'] +"/" + lista_arquivos[2]['name']))
-do.register_reader_fita(ReaderFitaDigitalSerconJpLac210(lista_arquivos[2]['path'] +"/" + lista_arquivos[2]['name']))
+#do.register_reader_fita(ReaderFitaDigitalSerconJpLac210(lista_arquivos[2]['path'] +"/" + lista_arquivos[2]['name']))
+#do.register_reader_fita(ReaderFitaDigitalBaumerHivac2(lista_arquivos[0]['path'] +"/" + lista_arquivos[0]['name']))
 #do.register_reader_fita(ReaderFitaDigitalSerconOr2011(lista_arquivos[2]['path'] +"/" + lista_arquivos[2]['name']))
-#do.register_reader_fita(ReaderFitaDigitalAfr13(lista_arquivos[2]['path'] +"/" + lista_arquivos[2]['name']))
-do.set_size_header(25)
+do.register_reader_fita(ReaderFitaDigitalAfr13(lista_arquivos[2]['path'] +"/" + lista_arquivos[2]['name']))
+do.set_size_header(24)
 #do.set_size_header(20)
 print(do.reader_fita.read_header())
 print(do.read_all_fita())

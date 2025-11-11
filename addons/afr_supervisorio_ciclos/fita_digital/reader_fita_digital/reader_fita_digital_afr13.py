@@ -27,6 +27,13 @@ class ReaderFitaDigitalAfr13(ReaderFitaDigitalInterface):
         """
         super().__init__(full_path_file)
         self.size_header = 24
+        self.state_finalized_keys = ["CICLO FINALIZADO"]
+        self.state_aborted_keys = ["CICLO ABORTADO"]
+        self.header_fields.__setattr__("massa_eto_key", "Massa ETO:")
+        
+        
+        
+        
 
     def _process_header_line(self, lines_body, body_dict):
         """
@@ -125,6 +132,7 @@ class ReaderFitaDigitalAfr13(ReaderFitaDigitalInterface):
         header = super().read_header()
         _logger.debug(f"header: {header}")
         header[self.header_fields.date_key] = datetime.strptime(header[self.header_fields.date_key], '%d-%m-%Y')
+        
         
         return header
 
@@ -363,8 +371,9 @@ class ReaderFitaDigitalAfr13(ReaderFitaDigitalInterface):
             ax1.grid(True, alpha=0.5,linewidth=1)
 
             #Adiciona set-point
-           
-            #ax1.axhline(y=header.get('SETPOINT', 0), color='black', linestyle='--', label=f'Set-Point: {header.get("SETPOINT", 0)}')
+            #TODO: 
+            
+            #ax1.axhline(y=header.get('Massa ETO:', 0), xmin=0, color='black', linestyle='--', label=f"Set-Point: {header.get('Massa ETO:', 0)}")
             
             # Adiciona título
             plt.title(f'Curvas Paramétricas do Ciclo - {header.get("file_name", "Ciclo")}')

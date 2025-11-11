@@ -6,3 +6,5 @@ from . import authenticity_check
 from . import res_config_settings
 from . import public_authenticity_check
 from . import wizard_ler_diretorio_ciclos
+from . import indicador_biologico
+from . import ciclo_fotos

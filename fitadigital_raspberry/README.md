@@ -1,93 +1,115 @@
-# Documentação do Projeto FITADIGITAL
+# FITADIGITAL
+Sistema de monitoramento e processamento de dados para equipamentos médicos.
 
-## Visão Geral
+## Configuração do Serviço no Raspberry Pi
 
-O projeto `fitadigital.py` realiza a leitura de dados de uma porta serial e processa esses dados em arquivos, organizando-os em ciclos conforme regras específicas. O script é altamente configurável via um arquivo YAML (`config.yaml`) e utiliza multithreading para garantir que a leitura e o processamento ocorram de forma assíncrona e eficiente.
+### 1. Pré-requisitos
+```bash
+# Atualizar o sistema
+sudo apt-get update
+sudo apt-get upgrade
 
----
+# Instalar dependências do sistema
+sudo apt-get install -y \
+    openssl \
+    libssl-dev \
+    python3-dev \
+    python3-pip \
+    python3-venv \
+    python3-full \
+    build-essential \
+    vim-common \
+    xxd \
+    git
 
-## Estrutura do Script
-
-- **Configuração**: Carrega parâmetros do arquivo `config.yaml`, como porta serial, diretórios de entrada/saída, módulo de processamento de cabeçalho, entre outros.
-- **Logger**: Utiliza uma classe de logging customizada para registrar eventos e erros.
-- **Importação Dinâmica**: Carrega dinamicamente o módulo responsável por processar o cabeçalho dos arquivos.
-- **Classes Principais**:
-  - `SerialReader`: Thread responsável por ler continuamente dados da porta serial e salvar em arquivos diários.
-  - `FileProcessor`: Thread responsável por processar os arquivos de entrada, identificar ciclos e organizar os dados em arquivos separados por ciclo.
-
----
-
-## Descrição das Classes e Métodos
-
-### Classe: `SerialReader`
-
-- **Objetivo**: Ler dados da porta serial e salvar em arquivos de texto, um para cada dia.
-- **Principais métodos**:
-  - `__init__(self, serial_port, output_dir)`: Inicializa a thread com a porta serial e diretório de saída.
-  - `update_config(self, filename)`: Atualiza o arquivo de configuração com o nome do arquivo atualmente em uso.
-  - `run(self)`: Executa a leitura contínua da porta serial, salvando os dados no arquivo do dia correspondente.
-
-### Classe: `FileProcessor`
-
-- **Objetivo**: Processar arquivos de entrada, identificar ciclos e criar arquivos separados para cada ciclo.
-- **Principais métodos**:
-  - `__init__(self, input_dir, output_dir)`: Inicializa a thread com diretórios de entrada e saída.
-  - `update_config(self, filename, pointer_file)`: Atualiza o arquivo de configuração com o arquivo e ponteiro atual.
-  - `add_files_cycle(self, lines, cycles_print)`: Cria arquivos para cada ciclo identificado, escrevendo apenas se houver alteração.
-  - `file_processor_yesterday(self, file_name)`: Retorna o nome do arquivo do dia anterior ao arquivo atual.
-  - `run(self)`: Executa o processamento contínuo dos arquivos, concatenando dados do dia atual e anterior, identificando ciclos e salvando arquivos.
-
----
-
-## Fluxo de Execução
-
-1. **Carregamento de Configuração**: O script lê o arquivo `config.yaml` para obter parâmetros necessários.
-2. **Inicialização do Logger**: Cria um logger para registrar eventos.
-3. **Importação do Processador de Cabeçalho**: Carrega dinamicamente o módulo responsável por identificar ciclos nos dados.
-4. **Execução das Threads**:
-   - A thread `SerialReader` lê dados da serial e salva em arquivos diários.
-   - A thread `FileProcessor` processa os arquivos de entrada, identifica ciclos e organiza os dados em arquivos separados.
-
----
-
-## Observações Importantes
-
-- **Thread-Safety**: O acesso ao arquivo de configuração é protegido por locks para evitar condições de corrida.
-- **Modularidade**: O processamento do cabeçalho é feito por um módulo externo, permitindo fácil customização.
-- **Logs**: Todos os eventos importantes e erros são registrados em arquivos de log definidos na configuração.
-- **Ciclos**: Os dados são organizados em ciclos, que são identificados pelo processador de cabeçalho e salvos em arquivos próprios.
-
----
-
-## Exemplo de Configuração (`config.yaml`)
-
-```yaml
-current_file_input: output_2024-06-22.txt
-current_file_processor: output_2024-06-22.txt
-header_processor: header_baumer_hivac2_v1
-input_dir: input_dir
-path_log: logs
-pointer_file: 0
-processed_dir: ciclos
-serial_port: /dev/ttyS0
+# Verificar versão do OpenSSL
+openssl version
+# Deve ser OpenSSL 1.1.1 ou superior
 ```
 
----
+### 2. Configuração do Ambiente Python
+```bash
+# Criar diretório para o projeto (se ainda não existir)
+mkdir -p /home/pi/fitadigital_raspberry
+cd /home/pi/fitadigital_raspberry
+
+# Criar ambiente virtual
+python3 -m venv venv
+
+# Ativar o ambiente virtual
+source venv/bin/activate
+
+# Atualizar pip
+pip install --upgrade pip
+
+# Instalar todas as dependências Python
+pip install -r requirements.txt
+
+# Desativar o ambiente virtual (quando terminar)
+deactivate
+```
+
+### 3. Configuração do Serviço
+```bash
+# Copiar o arquivo de serviço
+sudo cp fitadigital.service /etc/systemd/system/
+
+# Editar o arquivo de serviço para usar o Python do ambiente virtual
+sudo nano /etc/systemd/system/fitadigital.service
+```
+
+Conteúdo do arquivo `fitadigital.service`:
+```ini
+[Unit]
+Description=Serviço Fitadigital para Raspberry Pi
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/fitadigital_raspberry
+ExecStart=/home/pi/fitadigital_raspberry/venv/bin/python /home/pi/fitadigital_raspberry/start_fitadigital.py
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=fitadigital
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+# Recarregar o systemd
+sudo systemctl daemon-reload
+
+# Habilitar o serviço para iniciar com o sistema
+sudo systemctl enable fitadigital.service
+
+# Iniciar o serviço
+sudo systemctl start fitadigital.service
+
+# Verificar status do serviço
+sudo systemctl status fitadigital.service
+```
 
 ## Dependências
 
-- `pyserial`
-- `pyyaml`
-- `threading`
-- `datetime`
-- `os`
-- `importlib`
-- Classe customizada `Logger` (em `lib/logger.py`)
+### Python
+Todas as dependências Python estão listadas no arquivo `requirements.txt`:
+- `pyserial` (>=3.5) - Para comunicação serial
+- `pyyaml` (>=6.0.1) - Para manipulação do arquivo config.yaml
+- `cryptography` (>=41.0.0) - Para operações criptográficas
+- `PyPDF2` (>=3.0.0) - Para manipulação de PDFs
+- `reportlab` (>=4.0.0) - Para geração de PDFs
 
----
+Dependências de desenvolvimento (opcional):
+- `pytest` (>=7.4.0) - Para testes unitários
+- `black` (>=23.7.0) - Para formatação de código
+- `flake8` (>=6.1.0) - Para verificação de estilo de código
 
-## Comentários Finais
-
-O script é robusto para aplicações industriais ou laboratoriais que necessitam de leitura e processamento contínuo de dados seriais, com organização eficiente dos dados em ciclos e logs detalhados para auditoria e troubleshooting.
-
-Se precisar de exemplos de uso, instruções de execução ou mais detalhes sobre algum método, consulte o código-fonte ou entre em contato com o autor.
+### Sistema
+- OpenSSL 1.1.1 ou superior
+- Python 3.8 ou superior
+- Git 2.25.0 ou superior
+- GCC/G++ 9.0 ou superior (para compilação de extensões Python)
