@@ -564,7 +564,18 @@ class Relatorios(models.Model):
     def action_done(self):
         """
         Marca o relatório como concluído e cria requisições de estoque para as peças requisitadas.
+        Valida se todos os itens do checklist estão marcados antes de concluir.
         """
+        # Validação: verifica se há itens do checklist e se todos estão marcados
+        if self.checklist_item_ids:
+            unchecked_items = self.checklist_item_ids.filtered(lambda item: not item.check)
+            if unchecked_items:
+                # Monta a lista de itens não marcados para exibir na mensagem de erro
+                items_list = '\n'.join([f"- {item.instruction}" for item in unchecked_items])
+                raise UserError(
+                    _("⚠️ Não é possível finalizar o relatório de serviço sem marcar todos os itens do checklist.\n\n"
+                      "Itens não marcados:\n%s") % items_list)
+        
         self.write({
             'state': 'done'
         })
