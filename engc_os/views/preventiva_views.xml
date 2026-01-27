@@ -259,6 +259,24 @@ CRONOGRAMA
                 <field name="date_stop" string="Fim"/>
               </group>
             </group>
+            <group>
+              <group col="12">
+                <label for="allowed_weekdays_ids" string="Dias da Semana Permitidos"/>
+                <div class="o_row">
+                  <field name="allowed_weekdays_ids" widget="many2many_checkboxes" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}" nolabel="1"/>
+                </div>
+              </group>
+            </group>
+            <group string="Horários de Trabalho">
+              <group>
+                <field name="morning_start_time" string="Início Manhã" placeholder="08:00"/>
+                <field name="morning_end_time" string="Fim Manhã" placeholder="12:00"/>
+              </group>
+              <group>
+                <field name="afternoon_start_time" string="Início Tarde" placeholder="14:00"/>
+                <field name="afternoon_end_time" string="Fim Tarde" placeholder="18:00"/>
+              </group>
+            </group>
         
             <notebook>
               

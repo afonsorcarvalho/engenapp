@@ -36,6 +36,7 @@
             <button name="action_out_of_use" string="Fora de uso" states="in_use,draft"
               type="object" />
             <button name="action_useless" string="Sucata" states="in_use,out_of_use" type="object" />
+            <button name="%(engc_os.report_equipment_cronograma)d" string="Imprimir Cronograma" type="action" class="oe_highlight" icon="fa-print"/>
             <field name="state" widget="statusbar" />
           </header>
           <sheet>

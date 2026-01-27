@@ -125,7 +125,8 @@ class SchedulePreventive:
     def __init__(self, name, periodicity_days=7, start_date=None, end_date=None,
                  preventive_duration_hours=1, morning_start=8, morning_end=12,
                  afternoon_start=14, afternoon_end=18, holidays=None,others_day_off=None,
-                 other_appointments=None, time_increment_minutes=15, not_weekend = True):
+                 other_appointments=None, time_increment_minutes=15, not_weekend = True,
+                 allowed_weekdays=None):
         # Inicialização dos atributos
         self.name = name
         self.periodicity_days = periodicity_days
@@ -144,6 +145,7 @@ class SchedulePreventive:
         self.other_appointments = other_appointments if other_appointments else []
         self.not_weekend = not_weekend
         self.time_increment_minutes = time_increment_minutes
+        self.allowed_weekdays = allowed_weekdays if allowed_weekdays else None
 
     # Métodos para definir e obter feriados
     def set_holidays(self, holidays):
@@ -229,6 +231,14 @@ class SchedulePreventive:
             while current_day.weekday() in [5,6]:
                 print(f"É final de semana {current_day.weekday()}")
                 current_day += timedelta(days=1)
+        # Se há dias da semana permitidos, pula dias não permitidos
+        if self.allowed_weekdays is not None:
+            max_iterations = 7  # Evita loop infinito
+            iterations = 0
+            while current_day.weekday() not in self.allowed_weekdays and iterations < max_iterations:
+                print(f"Dia da semana {current_day.weekday()} não está permitido")
+                current_day += timedelta(days=1)
+                iterations += 1
 
         return current_day
 
@@ -287,6 +297,11 @@ class SchedulePreventive:
             return False
         if current_date.strftime('%Y-%m-%d') in self.others_day_off:
             return False
+        # Verifica se o dia da semana está na lista de dias permitidos
+        if self.allowed_weekdays is not None:
+            weekday = current_date.weekday()  # 0=Segunda, 1=Terça, ..., 6=Domingo
+            if weekday not in self.allowed_weekdays:
+                return False
         return True
 
     def can_schedule_on_range_time_day(self, schedule_range):

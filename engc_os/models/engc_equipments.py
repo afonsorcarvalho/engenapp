@@ -1,6 +1,9 @@
 
 from odoo import models, fields, api
 import logging
+from datetime import datetime
+from calendar import monthrange, monthcalendar
+import calendar
 
 _logger = logging.getLogger(__name__)
 
@@ -11,6 +14,7 @@ class Equipment(models.Model):
     _check_company_auto = True
     _parent_name = "parent_id"
     _parent_store = True
+    _order = 'name ASC'
 
     
     
@@ -216,6 +220,120 @@ class Equipment(models.Model):
             rec.write({
                 'state':'out_of_use'
             })
+    
+    def get_preventivas_by_year(self, ano):
+        """
+        Retorna todas as preventivas do equipamento para um ano específico.
+        
+        Args:
+            ano: ano (int)
+            
+        Returns:
+            recordset: preventivas do equipamento no ano
+        """
+        self.ensure_one()
+        first_day = datetime(ano, 1, 1, 0, 0, 0, 0)
+        last_day = datetime(ano, 12, monthrange(ano, 12)[1], 23, 59, 59, 0)
+        
+        preventivas = self.env['engc.preventive'].search([
+            ('equipment', '=', self.id),
+            ('data_programada', '>=', first_day),
+            ('data_programada', '<=', last_day)
+        ], order='data_programada ASC')
+        
+        return preventivas
+    
+    def get_programmed_days_by_month(self, ano, mes):
+        """
+        Retorna uma lista com os dias programados de preventiva para um mês específico.
+        
+        Args:
+            ano: ano (int)
+            mes: mês (int, 1-12)
+            
+        Returns:
+            list: lista de dias do mês programados
+        """
+        self.ensure_one()
+        first_day = datetime(ano, mes, 1, 0, 0, 0, 0)
+        last_day = datetime(ano, mes, monthrange(ano, mes)[1], 23, 59, 59, 0)
+        
+        preventivas = self.env['engc.preventive'].search([
+            ('equipment', '=', self.id),
+            ('data_programada', '>=', first_day),
+            ('data_programada', '<=', last_day)
+        ])
+        
+        days = []
+        for prev in preventivas:
+            day = prev.data_programada.day
+            if day not in days:
+                days.append(day)
+        
+        days.sort()
+        return days
+    
+    def get_calendar_month(self, ano, mes):
+        """
+        Retorna o calendário de um mês específico organizado por semanas.
+        
+        Args:
+            ano: ano (int)
+            mes: mês (int, 1-12)
+            
+        Returns:
+            list: lista de semanas, cada semana é uma lista de 7 dias (0 = dia não do mês, 1-31 = dia do mês)
+        """
+        cal = calendar.Calendar()
+        return cal.monthdayscalendar(ano, mes)
+    
+    def get_months_with_preventivas(self, ano):
+        """
+        Retorna uma lista com os meses que têm preventivas programadas.
+        
+        Args:
+            ano: ano (int)
+            
+        Returns:
+            list: lista de meses (1-12) que têm preventivas
+        """
+        self.ensure_one()
+        preventivas = self.get_preventivas_by_year(ano)
+        
+        months = []
+        for prev in preventivas:
+            month = prev.data_programada.month
+            if month not in months:
+                months.append(month)
+        
+        months.sort()
+        return months
+    
+    def get_current_year(self):
+        """
+        Retorna o ano atual.
+        """
+        return datetime.now().year
+    
+    def get_cronograma_name(self, ano):
+        """
+        Retorna o nome do cronograma do equipamento para um ano específico.
+        Busca através das preventivas do equipamento.
+        
+        Args:
+            ano: ano (int)
+            
+        Returns:
+            str: nome do cronograma ou string vazia se não encontrar
+        """
+        self.ensure_one()
+        preventivas = self.get_preventivas_by_year(ano)
+        if preventivas:
+            # Pega o primeiro cronograma encontrado
+            cronograma = preventivas[0].cronograma
+            if cronograma:
+                return cronograma.name
+        return ''
 
 
 class MaintenanceTeam(models.Model):
@@ -391,7 +509,5 @@ class EquipmentsStopHistory(models.Model):
         default=fields.Datetime.now,
     )
     
-    
-
    
 

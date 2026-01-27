@@ -45,6 +45,7 @@ access_engc_preventive_user,engc_os.engc.preventive,model_engc_preventive,base.g
 access_engc_preventive_message_wizard_user,engc_os.engc.preventive.message.wizard,model_engc_preventive_message_wizard,base.group_user,1,1,1,1
 
 access_engc_preventive_cronograma_user,engc_os.engc.preventive.cronograma,model_engc_preventive_cronograma,base.group_user,1,1,1,1
+access_engc_preventive_cronograma_weekday_user,engc_os.engc.preventive.cronograma.weekday,model_engc_preventive_cronograma_weekday,base.group_user,1,1,1,1
 
 access_engc_maintenance_plan_user,engc_os.engc.maintenance_plan,model_engc_maintenance_plan,base.group_user,1,1,1,1
 access_engc_maintenance_plan_instruction_user,engc_os.engc.maintenance_plan.instruction,model_engc_maintenance_plan_instruction,base.group_user,1,1,1,1

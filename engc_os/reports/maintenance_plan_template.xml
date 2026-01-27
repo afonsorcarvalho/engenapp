@@ -1,0 +1,376 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- Template do relatório do plano de manutenção -->
+    <template id="report_maintenance_plan_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <style type="text/css">
+
+
+                        .table-borderless &gt; :not(caption) &gt; * &gt; * {
+                        border: 0;
+                        border-bottom-width: 0px;
+                        }
+                        .table-borderless &gt; :not(:first-child) {
+                        border: 0;
+                        border-bottom-width: 0px;
+                        }
+                        .table &gt; :not(caption) &gt; * &gt; * {
+                        padding: 0.1rem 0.1rem;
+
+                        border-bottom-width: 0px;
+
+                        }
+                        .table &gt; tbody {
+                        vertical-align: inherit;
+                        }
+                        .table &gt; thead {
+                        vertical-align: bottom;
+                        }
+                        .table &gt; :not(:first-child) {
+                        border-top: 2px solid currentColor;
+                        }
+
+
+                    </style>
+                    <div class="page">
+                        <!-- Cabeçalho do relatório -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h2>Plano de Manutenção: <span t-field="o.name" />
+                                </h2>
+                            </div>
+                        </div>
+                        
+                        <!-- Informações gerais do plano -->
+                        <div class="row">
+                            <div class="col-12 rounded border border-dark p-1 mt-2 mb-1">Dados do Plano de
+                                Manutenção - <span t-field="o.name" /></div>
+                        </div>
+                        <div class="row" id="engc_maintenance_plan_dados">
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td>
+                                            <span class="font-weight-light">Nome do Plano:</span>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <span t-field="o.name" />
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="font-weight-light">Estado:</span>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <t t-if="o.state == 'Criado'">Criado</t>
+                                                <t t-elif="o.state == 'vigente'">Vigente</t>
+                                                <t t-elif="o.state == 'obsoleto'">Obsoleto</t>
+                                                <t t-else=""><span t-field="o.state"/></t>
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="o.objective">
+                                        <td>
+                                            <span class="font-weight-light">Objetivo:</span>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                <span t-field="o.objective" />
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td width="30%">
+                                            <span class="font-weight-light">Instituição:</span>
+                                        </td>
+                                        <td width="70%">
+                                            <strong>
+                                                <span t-field="o.company_id.name" />
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Periodicidades -->
+                        <div class="row" t-if="o.periodicity_ids">
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-12 rounded border border-dark p-1 mt-2 mb-1">
+                                        Periodicidades - <span t-field="o.name" />
+                                    </div>
+                                </div>
+                                <table class="table table-sm table-condensed table-striped" t-if="o.periodicity_ids">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                <strong>
+                                                    Nome
+                                                </strong>
+                                            </th>
+                                            <th class="text-right">
+                                                <strong>
+                                                    Frequência (dias)
+                                                </strong>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="o.periodicity_ids.sorted(key=lambda x: x.frequency)" t-as="periodicity">
+                                            <tr>
+                                                <td><span t-field="periodicity.name"/></td>
+                                                <td class="text-right"><span t-field="periodicity.frequency"/></td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Seções e Instruções -->
+                        <div class="row" t-if="o.section_ids">
+                            <div class="col-12">
+                                <t t-set="section_num" t-value="0"/>
+                                <t t-foreach="o.section_ids.sorted('sequence')" t-as="section">
+                                    <t t-set="section_num" t-value="section_num + 1"/>
+                                    <p style="page-break-before:avoid" />
+                                    <div class="row">
+                                        <div class="col-12 rounded border border-dark p-1 mt-2 mb-1">
+                                            Seção: <span t-esc="section_num"/> - <span t-field="section.name"/>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Instruções da seção agrupadas por periodicidade -->
+                                    <t t-set="section_instructions" t-value="section.instrucion_ids.sorted('sequence')"/>
+                                    <t t-if="section_instructions">
+                                        <t t-set="grouped_instructions" t-value="o.get_section_instructions_grouped_by_periodicity(section)"/>
+                                        <t t-set="item_num" t-value="0"/>
+                                        <t t-foreach="grouped_instructions" t-as="group">
+                                            <div class="row mt-2 mb-1">
+                                                <div class="col-12">
+                                                    <strong>Periodicidade: <span t-esc="group['name']"/></strong>
+                                                </div>
+                                            </div>
+                                            <table class="table table-sm table-condensed table-striped mt-1 mb-2"
+                                                style="page-break-after:avoid">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="text-center" width="5%">
+                                                            <strong>Item</strong>
+                                                        </th>
+                                                        <th width="35%">
+                                                            <strong>Instrução</strong>
+                                                        </th>
+                                                        <th class="text-center" width="10%">
+                                                            <strong>Tempo</strong>
+                                                        </th>
+                                                        <th class="text-center" width="10%">
+                                                            <strong>Medição</strong>
+                                                        </th>
+                                                        <th width="20%">
+                                                            <strong>Grandeza</strong>
+                                                        </th>
+                                                        <th class="text-center" width="20%">
+                                                            <strong>Tipo Campo</strong>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <t t-foreach="group['instructions']" t-as="instruction">
+                                                        <t t-set="item_num" t-value="item_num + 1"/>
+                                                        <tr>
+                                                            <td class="text-center"><span t-esc="item_num"/></td>
+                                                            <td><span t-field="instruction.name"/></td>
+                                                            <td class="text-center">
+                                                                <t t-if="instruction.time_duration">
+                                                                    <span t-esc="o.format_time_duration(instruction.time_duration)"/>
+                                                                </t>
+                                                                <t t-else="">00:00</t>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <t t-if="instruction.is_measurement">Sim</t>
+                                                                <t t-else="">Não</t>
+                                                            </td>
+                                                            <td>
+                                                                <t t-if="instruction.magnitude">
+                                                                    <span t-field="instruction.magnitude.name"/>
+                                                                    <t t-if="instruction.magnitude.unit">
+                                                                        (<span t-field="instruction.magnitude.unit"/>)
+                                                                    </t>
+                                                                </t>
+                                                                <t t-else="">-</t>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <t t-if="instruction.tipo_de_campo == 'float'">Valor</t>
+                                                                <t t-elif="instruction.tipo_de_campo == 'checkbox'">Checkbox</t>
+                                                                <t t-elif="instruction.tipo_de_campo == 'selection'">Seleção</t>
+                                                                <t t-else="">-</t>
+                                                            </td>
+                                                        </tr>
+                                                    </t>
+                                                </tbody>
+                                            </table>
+                                        </t>
+                                    </t>
+                                    <t t-else="">
+                                        <p class="text-muted mt-2 mb-2">Nenhuma instrução cadastrada nesta seção.</p>
+                                    </t>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Instruções sem seção -->
+                        <t t-set="instructions_without_section" t-value="o.get_instructions_without_section()"/>
+                        <div class="row" t-if="instructions_without_section">
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-12 rounded border border-dark p-1 mt-2 mb-1">
+                                        Instruções sem Seção - <span t-field="o.name" />
+                                    </div>
+                                </div>
+                                <table class="table table-sm table-condensed table-striped mt-2 mb-1"
+                                    style="page-break-after:avoid">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center" width="5%">
+                                                <strong>Item</strong>
+                                            </th>
+                                            <th width="30%">
+                                                <strong>Instrução</strong>
+                                            </th>
+                                            <th class="text-center" width="15%">
+                                                <strong>Periodicidade</strong>
+                                            </th>
+                                            <th class="text-center" width="10%">
+                                                <strong>Tempo (h)</strong>
+                                            </th>
+                                            <th class="text-center" width="10%">
+                                                <strong>Medição</strong>
+                                            </th>
+                                            <th width="15%">
+                                                <strong>Grandeza</strong>
+                                            </th>
+                                            <th class="text-center" width="15%">
+                                                <strong>Tipo Campo</strong>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-set="item_num" t-value="0"/>
+                                        <t t-foreach="instructions_without_section" t-as="instruction">
+                                            <t t-set="item_num" t-value="item_num + 1"/>
+                                            <tr>
+                                                <td class="text-center"><span t-esc="item_num"/></td>
+                                                <td><span t-field="instruction.name"/></td>
+                                                <td class="text-center">
+                                                    <t t-if="instruction.periodicity">
+                                                        <span t-field="instruction.periodicity.name"/>
+                                                    </t>
+                                                    <t t-else="">-</t>
+                                                </td>
+                                                        <td class="text-center">
+                                                            <t t-if="instruction.time_duration">
+                                                                <span t-esc="o.format_time_duration(instruction.time_duration)"/>
+                                                            </t>
+                                                            <t t-else="">00:00</t>
+                                                        </td>
+                                                <td class="text-center">
+                                                    <t t-if="instruction.is_measurement">Sim</t>
+                                                    <t t-else="">Não</t>
+                                                </td>
+                                                <td>
+                                                    <t t-if="instruction.magnitude">
+                                                        <span t-field="instruction.magnitude.name"/>
+                                                        <t t-if="instruction.magnitude.unit">
+                                                            (<span t-field="instruction.magnitude.unit"/>)
+                                                        </t>
+                                                    </t>
+                                                    <t t-else="">-</t>
+                                                </td>
+                                                <td class="text-center">
+                                                    <t t-if="instruction.tipo_de_campo == 'float'">Valor</t>
+                                                    <t t-elif="instruction.tipo_de_campo == 'checkbox'">Checkbox</t>
+                                                    <t t-elif="instruction.tipo_de_campo == 'selection'">Seleção</t>
+                                                    <t t-else="">-</t>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Resumo por periodicidade -->
+                        <div class="row" t-if="o.periodicity_ids and o.instrucion_ids">
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-12 rounded bg-light border border-dark p-1 mt-2 mb-1">
+                                        Resumo de Tempo por Periodicidade - <span t-field="o.name" />
+                                    </div>
+                                </div>
+                                <table class="table table-sm table-condensed table-striped" t-if="o.periodicity_ids">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                <strong>
+                                                    Periodicidade
+                                                </strong>
+                                            </th>
+                                            <th class="text-right">
+                                                <strong>
+                                                    Tempo Total
+                                                </strong>
+                                            </th>
+                                            <th class="text-right">
+                                                <strong>
+                                                    Quantidade de Instruções
+                                                </strong>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="o.periodicity_ids.sorted(key=lambda x: x.frequency)" t-as="periodicity">
+                                            <t t-set="period_instructions" t-value="o.get_instructions_by_periodicity(periodicity)"/>
+                                            <t t-set="total_time" t-value="sum(period_instructions.mapped('time_duration'))"/>
+                                            <tr>
+                                                <td><span t-field="periodicity.name"/></td>
+                                                <td class="text-right">
+                                                    <span t-esc="o.format_time_duration(total_time)"/>
+                                                </td>
+                                                <td class="text-right">
+                                                    <span t-esc="len(period_instructions)"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <!-- Total geral -->
+                                        <t t-set="all_instructions" t-value="o.instrucion_ids"/>
+                                        <t t-set="total_all_time" t-value="sum(all_instructions.mapped('time_duration'))"/>
+                                        <tr>
+                                            <td><strong>TOTAL GERAL</strong></td>
+                                            <td class="text-right">
+                                                <strong><span t-esc="o.format_time_duration(total_all_time)"/></strong>
+                                            </td>
+                                            <td class="text-right">
+                                                <strong><span t-esc="len(all_instructions)"/></strong>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

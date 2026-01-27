@@ -27,7 +27,7 @@ _logger = logging.getLogger(__name__)
 class EngcPreventiva(models.Model):
     _name = 'engc.preventive'
     _description = 'Preventiva'
-    _order = 'dias_de_atraso ASC'
+    _order = 'data_programada DESC'
     _inherit =['mail.thread','mail.activity.mixin']
 
     _check_company_auto = True
@@ -454,12 +454,23 @@ class dgtPreventivaMessageWizard(models.TransientModel):
         return {'type': 'ir.actions.act_window_close'}       
 
 
+class CronogramaPreventivaWeekday(models.Model):
+    """Modelo para representar os dias da semana permitidos"""
+    _name = 'engc.preventive.cronograma.weekday'
+    _description = 'Dia da Semana para Cronograma'
+    _order = 'sequence'
+    
+    name = fields.Char(string='Nome', required=True)
+    weekday_number = fields.Integer(string='Número do Dia', required=True, help='0=Segunda, 1=Terça, 2=Quarta, 3=Quinta, 4=Sexta, 5=Sábado, 6=Domingo')
+    sequence = fields.Integer(string='Sequência', default=10)
+
+
 class CronogramaPreventiva(models.Model):
     _name = 'engc.preventive.cronograma'
     _description = u'Cronogramas de preventivas'
     _check_company_auto = True
     _rec_name = 'name'
-    _order = 'name ASC'
+    _order = 'create_date DESC'
     
     STATE_SELECTION = [
 		('draft', 'nova'),
@@ -489,6 +500,31 @@ class CronogramaPreventiva(models.Model):
 # funcão de criação do cronograma
 #
     @api.model
+    def default_get(self, fields_list):
+        """Define valores padrão ao criar um novo cronograma"""
+        res = super(CronogramaPreventiva, self).default_get(fields_list)
+        
+        # Define dias da semana padrão: Segunda a Sexta (0, 1, 2, 3, 4)
+        if 'allowed_weekdays_ids' in fields_list:
+            weekday_ids = self.env['engc.preventive.cronograma.weekday'].search([
+                ('weekday_number', 'in', [0, 1, 2, 3, 4])
+            ]).ids
+            if weekday_ids:
+                res['allowed_weekdays_ids'] = [(6, 0, weekday_ids)]
+        
+        # Define horários padrão
+        if 'morning_start_time' in fields_list and 'morning_start_time' not in res:
+            res['morning_start_time'] = '08:00'
+        if 'morning_end_time' in fields_list and 'morning_end_time' not in res:
+            res['morning_end_time'] = '12:00'
+        if 'afternoon_start_time' in fields_list and 'afternoon_start_time' not in res:
+            res['afternoon_start_time'] = '14:00'
+        if 'afternoon_end_time' in fields_list and 'afternoon_end_time' not in res:
+            res['afternoon_end_time'] = '18:00'
+        
+        return res
+    
+    @api.model
     def create(self, vals_list):
         """Salva ou atualiza os dados no banco de dados"""
         if vals_list.get('name', _('New')) == _('New'):
@@ -498,6 +534,28 @@ class CronogramaPreventiva(models.Model):
             else:
                 vals_list['name'] = self.env['ir.sequence'].next_by_code(
                     'engc.preventive.cronograma') or _('New')
+        
+        # Se não foram especificados dias da semana, define padrão: Segunda a Sexta
+        if isinstance(vals_list, dict):
+            vals_list = [vals_list]
+        
+        for vals in vals_list:
+            if 'allowed_weekdays_ids' not in vals or not vals.get('allowed_weekdays_ids'):
+                weekday_ids = self.env['engc.preventive.cronograma.weekday'].search([
+                    ('weekday_number', 'in', [0, 1, 2, 3, 4])
+                ]).ids
+                if weekday_ids:
+                    vals['allowed_weekdays_ids'] = [(6, 0, weekday_ids)]
+            
+            # Define horários padrão se não foram especificados
+            if 'morning_start_time' not in vals or not vals.get('morning_start_time'):
+                vals['morning_start_time'] = '08:00'
+            if 'morning_end_time' not in vals or not vals.get('morning_end_time'):
+                vals['morning_end_time'] = '12:00'
+            if 'afternoon_start_time' not in vals or not vals.get('afternoon_start_time'):
+                vals['afternoon_start_time'] = '14:00'
+            if 'afternoon_end_time' not in vals or not vals.get('afternoon_end_time'):
+                vals['afternoon_end_time'] = '18:00'
 
         result = super(CronogramaPreventiva, self).create(vals_list)
         return result
@@ -515,6 +573,37 @@ class CronogramaPreventiva(models.Model):
     tecnicos = fields.Many2many(
 		'hr.employee',	
 		string = 'Técnicos')
+    
+    allowed_weekdays_ids = fields.Many2many(
+        'engc.preventive.cronograma.weekday',
+        'cronograma_weekday_rel',
+        'cronograma_id',
+        'weekday_id',
+        string='Dias da Semana Permitidos',
+        help='Selecione os dias da semana em que as preventivas podem ser agendadas. Deixe vazio para permitir todos os dias.',
+    )
+    
+    # Horários de trabalho
+    morning_start_time = fields.Char(
+        string='Horário Início Manhã',
+        default='08:00',
+        help='Horário de início do período da manhã (formato HH:MM)'
+    )
+    morning_end_time = fields.Char(
+        string='Horário Fim Manhã',
+        default='12:00',
+        help='Horário de fim do período da manhã (formato HH:MM)'
+    )
+    afternoon_start_time = fields.Char(
+        string='Horário Início Tarde',
+        default='14:00',
+        help='Horário de início do período da tarde (formato HH:MM)'
+    )
+    afternoon_end_time = fields.Char(
+        string='Horário Fim Tarde',
+        default='18:00',
+        help='Horário de fim do período da tarde (formato HH:MM)'
+    )
     
     #TODO
     # Pegar o ano do cronograma
@@ -611,6 +700,68 @@ class CronogramaPreventiva(models.Model):
         res = len(monthcalendar(ano,mes))
         return res
     
+    def get_programmed_days_by_equipment_month(self, ano, mes):
+        """
+        Retorna um dicionário com os dias programados de preventiva por equipamento para um mês específico.
+        
+        Args:
+            ano: ano (int)
+            mes: mês (int, 1-12)
+            
+        Returns:
+            dict: {equipment_id: [lista de dias do mês programados]}
+        """
+        self.ensure_one()
+        first_day = datetime(ano, mes, 1, 0, 0, 0, 0)
+        last_day = datetime(ano, mes, monthrange(ano, mes)[1], 23, 59, 59, 0)
+        
+        preventivas = self.env['engc.preventive'].search([
+            ('cronograma', '=', self.id),
+            ('data_programada', '>=', first_day),
+            ('data_programada', '<=', last_day)
+        ])
+        
+        result = {}
+        for prev in preventivas:
+            if prev.equipment:
+                equipment_id = prev.equipment.id
+                # Obtém o dia do mês da data programada
+                day = prev.data_programada.day
+                
+                if equipment_id not in result:
+                    result[equipment_id] = []
+                if day not in result[equipment_id]:
+                    result[equipment_id].append(day)
+        
+        # Ordena os dias para cada equipamento
+        for equipment_id in result:
+            result[equipment_id].sort()
+        
+        return result
+    
+    def get_calendar_month(self, ano, mes):
+        """
+        Retorna o calendário de um mês específico organizado por semanas.
+        
+        Args:
+            ano: ano (int)
+            mes: mês (int, 1-12)
+            
+        Returns:
+            list: lista de semanas, cada semana é uma lista de 7 dias (0 = dia não do mês, 1-31 = dia do mês)
+        """
+        cal = calendar.Calendar()
+        return cal.monthdayscalendar(ano, mes)
+    
+    def get_year_from_cronograma(self):
+        """
+        Retorna o ano do cronograma baseado na data de início.
+        """
+        self.ensure_one()
+        if self.date_start:
+            return self.date_start.year
+        return datetime.now().year
+    
     def _concatenate_days_schedule(self,schedule_for_periodicity_equipment_list):
         concatenate_list ={}
         temporary_schedule = schedule_for_periodicity_equipment_list.copy()
@@ -682,13 +833,6 @@ class CronogramaPreventiva(models.Model):
             for day,data in schedule_equipment.items():
                 other_appointments.append(data['schedule'])
         return other_appointments
-
-
-
-    
-
-   
-
     
 #
 # funcão de gera cronograma de preventivas
@@ -721,10 +865,27 @@ class CronogramaPreventiva(models.Model):
         years_list = list(years)
         
         #configurando os periodos de preventiva hora de inicio e fim de cada 
-        morning_start = 8
-        morning_end = 12
-        afternoon_start = 14
-        afternoon_end = 18
+        # Converte strings 'HH:MM' para inteiros (horas)
+        def time_str_to_hour(time_str):
+            """Converte string 'HH:MM' para inteiro de horas"""
+            if not time_str:
+                return None
+            try:
+                # Remove espaços e extrai a parte das horas (antes do ':')
+                time_str = str(time_str).strip()
+                hour = int(time_str.split(':')[0])
+                return hour
+            except (ValueError, IndexError, AttributeError) as e:
+                _logger.warning(f"Erro ao converter horário '{time_str}': {e}")
+                return None
+        
+        # Usa os horários configurados no cronograma ou valores padrão
+        morning_start = time_str_to_hour(self.morning_start_time) or 8
+        morning_end = time_str_to_hour(self.morning_end_time) or 12
+        afternoon_start = time_str_to_hour(self.afternoon_start_time) or 14
+        afternoon_end = time_str_to_hour(self.afternoon_end_time) or 18
+        
+        _logger.info(f"Horários configurados - Manhã: {morning_start}:00 às {morning_end}:00 | Tarde: {afternoon_start}:00 às {afternoon_end}:00")
 
         # pegando feriados do periodo
         
@@ -768,6 +929,11 @@ class CronogramaPreventiva(models.Model):
                 _logger.info(f"Gerando {periodicity.name}")
                 
                 other_appointments = self._get_other_appointments(concatenate_schedule)
+                # Converte os dias da semana permitidos para lista de inteiros
+                allowed_weekdays_list = None
+                if self.allowed_weekdays_ids:
+                    allowed_weekdays_list = self.allowed_weekdays_ids.mapped('weekday_number')
+                
                 schedule = SchedulePreventive(
                             "Preventiva",
                             preventive_duration_hours=int(math.ceil(time_duration_list[periodicity.name])) if int(math.ceil(time_duration_list[periodicity.name])) else 1,
@@ -780,7 +946,8 @@ class CronogramaPreventiva(models.Model):
                             morning_start=morning_start,
                             morning_end=morning_end,
                             afternoon_start=afternoon_start,
-                            afternoon_end=afternoon_end)
+                            afternoon_end=afternoon_end,
+                            allowed_weekdays=allowed_weekdays_list)
                 schedule.generate_schedule() 
                 schedule_for_periodicity_equipment[periodicity.name] = {
                     'schedule' : schedule.get_schedule(),

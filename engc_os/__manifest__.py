@@ -26,8 +26,8 @@
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
+        'data/cronograma_weekdays.xml',
         'data/sequence.xml',
-        'views/equipments_views.xml',
         'views/equipment_category_view.xml',
         'views/calibration_views.xml',
         'views/calibration_procedure_views.xml',
@@ -52,13 +52,22 @@
         'reports/fotos_template.xml',
         'reports/cliente_equipment_template.xml',
         'reports/os_template.xml',
+        'reports/maintenance_plan_template.xml',
+        'reports/cronograma_preventiva_template.xml',
+        'reports/equipment_cronograma_template.xml',
         'reports/engc_os_reports.xml',
+        'views/equipments_views.xml',
         'views/menu_views.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
         'demo/demo.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'engc_os/static/src/css/weekdays_checkboxes.css',
+        ],
+    },
     'installable': True,
     'application': True,
 }

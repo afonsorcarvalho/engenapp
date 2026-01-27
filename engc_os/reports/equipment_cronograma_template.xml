@@ -1,0 +1,304 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- Template do relatório de cronograma de preventivas do equipamento -->
+    <template id="report_equipment_cronograma_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="equipment">
+                <t t-call="web.external_layout">
+                    <style type="text/css">
+                        /* Layout compacto para caber em uma página */
+                        .page {
+                            width: 100%;
+                            height: 100%;
+                            /* Respiro no topo para não encostar no cabeçalho */
+                            padding: 45px 0 0 0;
+                        }
+                        .calendar-container {
+                            width: 100%;
+                            height: calc(100% - 18px);
+                            margin-top: 0;
+                            border-collapse: separate;
+                            border-spacing: 1px;
+                            table-layout: fixed;
+                        }
+                        .calendar-row {
+                            height: 30%;
+                        }
+                        .month-calendar {
+                            width: 31%;
+                            vertical-align: top;
+                            padding: 1.5%;
+                            page-break-inside: avoid;
+                        }
+                        .month-title {
+                            text-align: center;
+                            font-weight: bold;
+                            font-size: 0.8em;
+                            padding: 2px 0;
+                            text-transform: uppercase;
+                            margin-bottom: 1px;
+                            line-height: 1.1;
+                            display: block;
+                        }
+                        .month-table {
+                            width: 100%;
+                            border: 1px solid currentColor;
+                            font-size: 0.8em;
+                            border-collapse: collapse;
+                            table-layout: fixed;
+                        }
+                        .day-header {
+                            text-align: center;
+                            font-weight: bold;
+                            font-size: 1.0em;
+                            padding: 1px;
+                            border: 1px solid currentColor;
+                            width: 14.28%;
+                            line-height: 1.6;
+                        }
+                        .calendar-day {
+                            text-align: center;
+                            padding: 1px 0;
+                            border: 1px solid currentColor;
+                            font-size: 0.7em;
+                            height: 11px;
+                            width: 14.28%;
+                            line-height: 1.1;
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
+                        }
+                        .calendar-day.programmed {
+                            font-weight: bold;
+                            border-width: 2px;
+                            
+                        }
+                        .calendar-day.programmed strong {
+                            display: block;
+                            width: 100%;
+                            height: 100%;
+                            line-height: 1.1;
+                           
+                        }
+                        .calendar-day.empty {
+                            border: none;
+                        }
+                        .report-title {
+                            font-size: 1.2em;
+                            font-weight: bold;
+                          
+                            margin: 0;
+                            text-align: center;
+                            line-height: 1;
+                        }
+                        .report-subtitle {
+                            font-size: 1.0em;
+                            margin: 0;
+                            text-align: center;
+                            line-height: 1;
+                        }
+                    </style>
+                    <div class="page">
+                        <!-- Cabeçalho do relatório -->
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <div class="report-title">
+                                    <t t-esc="equipment.get_current_year()"/> - CRONOGRAMA DE PREVENTIVA
+                                </div>
+                                <div class="report-subtitle">
+                                    <span t-field="equipment.name"/>
+                                    <t t-set="cronograma_nome" t-value="equipment.get_cronograma_name(equipment.get_current_year())"/>
+                                    <t t-if="cronograma_nome">
+                                        - <t t-esc="cronograma_nome"/>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grade de calendários: 3 colunas x 4 linhas -->
+                        <t t-set="ano" t-value="equipment.get_current_year()"/>
+                        <t t-set="meses_nome" t-value="['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']"/>
+                        <t t-set="meses_list" t-value="[1,2,3,4,5,6,7,8,9,10,11,12]"/>
+                        
+                        <table class="calendar-container">
+                            <!-- Primeira linha: Janeiro, Fevereiro, Março -->
+                            <tr class="calendar-row">
+                                <t t-foreach="[1,2,3]" t-as="mes_num">
+                                    <t t-set="mes_nome" t-value="meses_nome[mes_num - 1]"/>
+                                    <t t-set="programmed_days" t-value="equipment.get_programmed_days_by_month(ano, mes_num)"/>
+                                    <t t-set="calendar_weeks" t-value="equipment.get_calendar_month(ano, mes_num)"/>
+                                    
+                                    <td class="month-calendar">
+                                        <div class="month-title"><t t-esc="mes_nome"/></div>
+                                        <table class="month-table">
+                                            <thead>
+                                                <tr>
+                                                    <t t-foreach="['S','T','Q','Q','S','S','D']" t-as="dia_semana">
+                                                        <th class="day-header bg-light"><t t-esc="dia_semana"/></th>
+                                                    </t>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="calendar_weeks" t-as="week">
+                                                    <tr>
+                                                        <t t-foreach="week" t-as="day">
+                                                            <t t-set="is_programmed" t-value="day != 0 and day in programmed_days"/>
+                                                            <td class="calendar-day" t-att-class="'programmed' if is_programmed else ('empty' if day == 0 else '')">
+                                                                <t t-if="day != 0">
+                                                                    <t t-if="is_programmed">
+                                                                        <!-- Excecao: cor hardcoded para garantir fundo no PDF -->
+                                                                        <span class="programmed" style="display:block; width:100%; height:100%; background-color: #000000; color: #ffffff; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                                                                            <strong style="color: #ffffff;"><t t-esc="day"/></strong>
+                                                                        </span>
+                                                                    </t>
+                                                                    <t t-else="">
+                                                                        <t t-esc="day"/>
+                                                                    </t>
+                                                                </t>
+                                                            </td>
+                                                        </t>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </t>
+                            </tr>
+                            
+                            <!-- Segunda linha: Abril, Maio, Junho -->
+                            <tr class="calendar-row">
+                                <t t-foreach="[4,5,6]" t-as="mes_num">
+                                    <t t-set="mes_nome" t-value="meses_nome[mes_num - 1]"/>
+                                    <t t-set="programmed_days" t-value="equipment.get_programmed_days_by_month(ano, mes_num)"/>
+                                    <t t-set="calendar_weeks" t-value="equipment.get_calendar_month(ano, mes_num)"/>
+                                    
+                                    <td class="month-calendar">
+                                        <div class="month-title"><t t-esc="mes_nome"/></div>
+                                        <table class="month-table">
+                                            <thead>
+                                                <tr>
+                                                    <t t-foreach="['S','T','Q','Q','S','S','D']" t-as="dia_semana">
+                                                        <th class="day-header bg-light"><t t-esc="dia_semana"/></th>
+                                                    </t>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="calendar_weeks" t-as="week">
+                                                    <tr>
+                                                        <t t-foreach="week" t-as="day">
+                                                            <t t-set="is_programmed" t-value="day != 0 and day in programmed_days"/>
+                                                            <td class="calendar-day" t-att-class="'programmed' if is_programmed else ('empty' if day == 0 else '')">
+                                                                <t t-if="day != 0">
+                                                                    <t t-if="is_programmed">
+                                                                        <!-- Excecao: cor hardcoded para garantir fundo no PDF -->
+                                                                        <span class="programmed" style="display:block; width:100%; height:100%; background-color: #000000; color: #ffffff; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                                                                            <strong style="color: #ffffff;"><t t-esc="day"/></strong>
+                                                                        </span>
+                                                                    </t>
+                                                                    <t t-else="">
+                                                                        <t t-esc="day"/>
+                                                                    </t>
+                                                                </t>
+                                                            </td>
+                                                        </t>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </t>
+                            </tr>
+                            
+                            <!-- Terceira linha: Julho, Agosto, Setembro -->
+                            <tr class="calendar-row">
+                                <t t-foreach="[7,8,9]" t-as="mes_num">
+                                    <t t-set="mes_nome" t-value="meses_nome[mes_num - 1]"/>
+                                    <t t-set="programmed_days" t-value="equipment.get_programmed_days_by_month(ano, mes_num)"/>
+                                    <t t-set="calendar_weeks" t-value="equipment.get_calendar_month(ano, mes_num)"/>
+                                    
+                                    <td class="month-calendar">
+                                        <div class="month-title"><t t-esc="mes_nome"/></div>
+                                        <table class="month-table">
+                                            <thead>
+                                                <tr>
+                                                    <t t-foreach="['S','T','Q','Q','S','S','D']" t-as="dia_semana">
+                                                        <th class="day-header bg-light"><t t-esc="dia_semana"/></th>
+                                                    </t>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="calendar_weeks" t-as="week">
+                                                    <tr>
+                                                        <t t-foreach="week" t-as="day">
+                                                            <t t-set="is_programmed" t-value="day != 0 and day in programmed_days"/>
+                                                            <td class="calendar-day" t-att-class="'programmed' if is_programmed else ('empty' if day == 0 else '')">
+                                                                <t t-if="day != 0">
+                                                                    <t t-if="is_programmed">
+                                                                        <!-- Excecao: cor hardcoded para garantir fundo no PDF -->
+                                                                        <span class="programmed" style="display:block; width:100%; height:100%; background-color: #000000; color: #ffffff; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                                                                            <strong style="color: #ffffff;"><t t-esc="day"/></strong>
+                                                                        </span>
+                                                                    </t>
+                                                                    <t t-else="">
+                                                                        <t t-esc="day"/>
+                                                                    </t>
+                                                                </t>
+                                                            </td>
+                                                        </t>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </t>
+                            </tr>
+                            
+                            <!-- Quarta linha: Outubro, Novembro, Dezembro -->
+                            <tr class="calendar-row">
+                                <t t-foreach="[10,11,12]" t-as="mes_num">
+                                    <t t-set="mes_nome" t-value="meses_nome[mes_num - 1]"/>
+                                    <t t-set="programmed_days" t-value="equipment.get_programmed_days_by_month(ano, mes_num)"/>
+                                    <t t-set="calendar_weeks" t-value="equipment.get_calendar_month(ano, mes_num)"/>
+                                    
+                                    <td class="month-calendar">
+                                        <div class="month-title"><t t-esc="mes_nome"/></div>
+                                        <table class="month-table">
+                                            <thead>
+                                                <tr>
+                                                    <t t-foreach="['S','T','Q','Q','S','S','D']" t-as="dia_semana">
+                                                        <th class="day-header bg-light"><t t-esc="dia_semana"/></th>
+                                                    </t>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="calendar_weeks" t-as="week">
+                                                    <tr>
+                                                        <t t-foreach="week" t-as="day">
+                                                            <t t-set="is_programmed" t-value="day != 0 and day in programmed_days"/>
+                                                            <td class="calendar-day" t-att-class="'programmed' if is_programmed else ('empty' if day == 0 else '')">
+                                                                <t t-if="day != 0">
+                                                                    <t t-if="is_programmed">
+                                                                        <!-- Excecao: cor hardcoded para garantir fundo no PDF -->
+                                                                        <span class="programmed" style="display:block; width:100%; height:100%; background-color: #000000; color: #ffffff; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                                                                            <strong style="color: #ffffff;"><t t-esc="day"/></strong>
+                                                                        </span>
+                                                                    </t>
+                                                                    <t t-else="">
+                                                                        <t t-esc="day"/>
+                                                                    </t>
+                                                                </t>
+                                                            </td>
+                                                        </t>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </t>
+                            </tr>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
