@@ -53,6 +53,7 @@ PREVENTIVA
           
         <group>     
             <group>
+                <field name="company_id" invisible="1"/>
                 <field name="equipment"/>
                 <field name="client"/>
               <field name="tecnico"/>
@@ -140,6 +141,7 @@ PREVENTIVA
       decoration-success="state == 'done'"
       decoration-muted="state == 'cancel'"
       />
+      <field name="company_id" invisible="1"/>
       <field name="name"/>
       <field name="data_programada" string="Início"/>
       <field name="data_programada_fim" string="Fim"/>
@@ -175,6 +177,18 @@ PREVENTIVA
           <field name="dias_de_atraso" />
           <field name="data_programada" string="Início"/>
           
+          <filter string="Data de Início" name="filter_data_programada" date="data_programada"/>
+          <filter string="Ano Atual" name="filter_ano_atual" 
+                  domain="['&amp;', ('data_programada', '&gt;=', context_today().strftime('%Y-01-01')), ('data_programada', '&lt;=', context_today().strftime('%Y-12-31'))]"/>
+          
+          <separator/>
+          <filter string="Atrasadas" name="filter_atrasadas" domain="[('state', '=', 'atrasada')]"/>
+          <filter string="Programadas" name="filter_programadas" domain="[('state', '=', 'programada')]"/>
+          <filter string="Concluídas" name="filter_done" domain="[('state', '=', 'done')]"/>
+          
+          <group expand="0" string="Agrupar por">
+            <filter string="Data de Início" name="group_data_programada" context="{'group_by': 'data_programada'}"/>
+          </group>
         </search> 
     </field> 
 </record>
@@ -186,11 +200,13 @@ PREVENTIVA
       <calendar string="Preventivas" 
         date_start="data_programada" date_stop="data_programada_fim"
         quick_add = "False"
+        create = "false"
         color = "state"
         form_view_id = "dgt_preventiva_form"
         event_open_popup = "true"
         delete = "false"
         >
+          <field name="company_id" invisible="1"/>
           <field name="name"/>
           <field name="data_programada" string="Início"/>
           <field name="data_programada_fim" string="Fim"/>
@@ -241,7 +257,7 @@ CRONOGRAMA
 				<form>
          <header>
            <button name="action_gera_cronograma" type="object" string="Gerar Preventivas" class="oe_highlight" />
-                                                         
+           <button name="%(action_cronograma_preventiva_print_wizard)d" type="action" string="Imprimir Cronograma" class="btn-secondary" icon="fa-print"/>
            <field name="state" widget="statusbar"  />
          </header>
           <sheet>
@@ -319,6 +335,7 @@ CRONOGRAMA
       <field name="name">Preventivas</field>
       <field name="res_model">engc.preventive</field>
       <field name="view_mode">tree,form,calendar</field>
+      <field name="context">{'group_by': False, 'search_default_filter_ano_atual': 1}</field>
     </record>
     <record model="ir.actions.act_window" id="cronograma_preventiva_action_window">
       <field name="name">Cronogramas de preventivas</field>

@@ -1,6 +1,47 @@
 <?xml version='1.0' encoding='utf-8'?>
 <odoo>
     <data>
+    <!-- Paper Format para Cronograma de Equipamento em Paisagem -->
+        <record id="paperformat_equipment_cronograma_landscape" model="report.paperformat">
+            <field name="name">Cronograma Equipamento - Paisagem</field>
+            <field name="format">A4</field>
+            <field name="orientation">Landscape</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">1</field>
+            <field name="margin_right">1</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">1</field>
+            <field name="dpi">90</field>
+        </record>
+        
+        <!-- Paper Format para Cronograma de Preventiva em Paisagem -->
+        <record id="paperformat_cronograma_preventiva_landscape" model="report.paperformat">
+            <field name="name">Cronograma Preventiva - Paisagem</field>
+            <field name="format">A4</field>
+            <field name="orientation">Landscape</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">1</field>
+            <field name="margin_right">1</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">1</field>
+            <field name="dpi">90</field>
+        </record>
+        
+        <!-- Paper Format para Cronograma de Preventiva (Wizard) em Retrato -->
+        <record id="paperformat_cronograma_preventiva_wizard_portrait" model="report.paperformat">
+            <field name="name">Cronograma Preventiva (Wizard) - Retrato</field>
+            <field name="format">A4</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">10</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">1</field>
+            <field name="margin_right">1</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">10</field>
+            <field name="dpi">90</field>
+        </record>
         <record id="report_engc_os_calibration_certificate" model="ir.actions.report">
             <field name="name">Impressão de Certificado de Calibração</field>
             <field name="model">engc.calibration</field>
@@ -69,19 +110,7 @@
             <field name="binding_model_id" eval="ref('model_engc_preventive_cronograma', raise_if_not_found=False) or False"/>
             <field name="binding_type">report</field>
         </record>
-        <!-- Paper Format para Cronograma de Equipamento em Paisagem -->
-        <record id="paperformat_equipment_cronograma_landscape" model="report.paperformat">
-            <field name="name">Cronograma Equipamento - Paisagem</field>
-            <field name="format">A4</field>
-            <field name="orientation">Landscape</field>
-            <field name="margin_top">30</field>
-            <field name="margin_bottom">30</field>
-            <field name="margin_left">1</field>
-            <field name="margin_right">1</field>
-            <field name="header_line" eval="False"/>
-            <field name="header_spacing">20</field>
-            <field name="dpi">90</field>
-        </record>
+        
         
         <record id="report_equipment_cronograma" model="ir.actions.report">
             <field name="name">Cronograma de Preventivas do Equipamento</field>
@@ -93,6 +122,17 @@
             <field name="binding_model_id" eval="ref('model_engc_equipment', raise_if_not_found=False) or False"/>
             <field name="binding_type">report</field>
             <field name="paperformat_id" ref="paperformat_equipment_cronograma_landscape"/>
+        </record>
+        
+        <!-- Report para o wizard de impressão do cronograma -->
+        <record id="report_cronograma_preventiva_wizard" model="ir.actions.report">
+            <field name="name">Cronograma de Preventiva (Wizard)</field>
+            <field name="model">engc.preventive.cronograma</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">engc_os.report_cronograma_preventiva_wizard_template</field>
+            <field name="report_file">engc_os.report_cronograma_preventiva_wizard_template</field>
+            <field name="print_report_name">'Cronograma Preventiva - %s' % (object.name if object else 'Cronograma')</field>
+            <field name="paperformat_id" ref="paperformat_cronograma_preventiva_wizard_portrait"/>
         </record>
     </data>
 </odoo>
