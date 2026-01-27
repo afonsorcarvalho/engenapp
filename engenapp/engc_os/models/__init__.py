@@ -11,3 +11,4 @@ from . import engc_equipment_category
 from . import engc_preventive
 from . import engc_maintenance_plan
 from . import report_relatorio_atendimento_resumo
+from . import report_cronograma_preventiva_wizard

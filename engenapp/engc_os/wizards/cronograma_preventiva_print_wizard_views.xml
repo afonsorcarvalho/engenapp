@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Formulário do Wizard -->
+        <record id="cronograma_preventiva_print_wizard_form" model="ir.ui.view">
+            <field name="name">cronograma.preventiva.print.wizard.form</field>
+            <field name="model">cronograma.preventiva.print.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Opções de Impressão do Cronograma">
+                    <group>
+                        <group>
+                            <field name="cronograma_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="include_maintenance_plan"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="action_print_cronograma" 
+                                string="Imprimir" 
+                                type="object" 
+                                class="btn-primary"/>
+                        <button string="Cancelar" 
+                                class="btn-secondary" 
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Ação do Wizard -->
+        <record id="action_cronograma_preventiva_print_wizard" model="ir.actions.act_window">
+            <field name="name">Imprimir Cronograma de Preventiva</field>
+            <field name="res_model">cronograma.preventiva.print.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="binding_model_id" ref="model_engc_preventive_cronograma"/>
+            <field name="binding_view_types">form</field>
+        </record>
+    </data>
+</odoo>

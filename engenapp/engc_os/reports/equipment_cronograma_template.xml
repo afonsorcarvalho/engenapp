@@ -11,7 +11,7 @@
                             width: 100%;
                             height: 100%;
                             /* Respiro no topo para não encostar no cabeçalho */
-                            padding: 45px 0 0 0;
+                            padding: 0px 0 0 0;
                         }
                         .calendar-container {
                             width: 100%;

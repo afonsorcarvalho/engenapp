@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- Template do wizard de impressão do cronograma de preventiva -->
+    <!-- Este template pode incluir o cronograma e os planos de manutenção -->
+    <template id="report_cronograma_preventiva_wizard_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <!-- Obtém o flag de incluir planos de manutenção -->
+                <!-- Tenta obter do data primeiro, depois do contexto -->
+                <t t-set="include_maintenance_plan" t-value="(data and data.get('include_maintenance_plan', False)) or (o.env.context and o.env.context.get('include_maintenance_plan', False)) or False"/>
+                
+                <t t-call="web.external_layout">
+                    <!-- Chama o template interno do cronograma -->
+                    <t t-call="engc_os.report_cronograma_preventiva_content">
+                        <t t-set="docs" t-value="[o]"/>
+                    </t>
+                    
+                    <!-- Se solicitado, inclui os planos de manutenção -->
+                    <t t-if="include_maintenance_plan">
+                        <!-- Quebra de página antes dos planos -->
+                        <div style="page-break-before: always;"></div>
+                        
+                        <!-- Coleta os planos únicos dos equipamentos -->
+                        <t t-set="unique_plans" t-value="[]"/>
+                        <t t-foreach="o.equipments" t-as="equipment">
+                            <t t-set="plan" t-value="equipment.maintenance_plan or equipment.category_id.maintenance_plan"/>
+                            <t t-if="plan and plan not in unique_plans">
+                                <t t-set="unique_plans" t-value="unique_plans + [plan]"/>
+                            </t>
+                        </t>
+                        
+                        <!-- Renderiza cada plano de manutenção -->
+                        <t t-foreach="unique_plans" t-as="maintenance_plan">
+                            <!-- Quebra de página antes de cada plano (exceto o primeiro) -->
+                            <t t-if="maintenance_plan.id != unique_plans[0].id">
+                                <div style="page-break-before: always;"></div>
+                            </t>
+                            
+                            <!-- Chama o template interno do plano de manutenção -->
+                            <t t-call="engc_os.report_maintenance_plan_content">
+                                <t t-set="docs" t-value="[maintenance_plan]"/>
+                            </t>
+                        </t>
+                    </t>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -62,7 +62,7 @@ class EngcPreventiva(models.Model):
         string=u'Equipamento',
         comodel_name='engc.equipment',
         ondelete='cascade',
-        company_dependent=True
+        check_company=True
     )
     client = fields.Many2one(
         string=u'Cliente',
@@ -74,7 +74,7 @@ class EngcPreventiva(models.Model):
         string=u'Cronograma',
         comodel_name='engc.preventive.cronograma',
         ondelete='set null',
-        company_dependent=True
+        check_company=True
     )
     maintenance_plan = fields.Many2one(
         string=u'Cronograma',
@@ -439,6 +439,44 @@ class EngcPreventiva(models.Model):
         _logger.info("chamando aviso de atraso de preventiva...")        
         #aviso de manutenção preventiva atrasada
         self.aviso_preventiva_atrasada()
+    
+    @api.model
+    def cron_gera_os_preventivas_7_dias(self):
+        """
+        Ação agendada que verifica preventivas programadas em até 7 dias
+        e gera as OS automaticamente.
+        Executa diariamente às 02:00 da manhã.
+        """
+        _logger.info("Iniciando geração automática de OS para preventivas programadas em até 7 dias...")
+        hoje = fields.Date.today()
+        data_limite = hoje + timedelta(days=7)
+        
+        # Busca preventivas programadas que ainda não tiveram OS gerada
+        preventivas = self.env['engc.preventive'].search([
+            ('gerada_os', '=', False),
+            ('data_programada', '>=', hoje),
+            ('data_programada', '<=', data_limite),
+            ('state', '=', 'programada')
+        ])
+        
+        _logger.info(f"Encontradas {len(preventivas)} preventivas para gerar OS")
+        
+        os_geradas = 0
+        erros = 0
+        
+        for preventiva in preventivas:
+            try:
+                if not preventiva.gerada_os:
+                    os = preventiva.gera_os()
+                    if os:
+                        os_geradas += 1
+                        _logger.info(f"OS gerada para preventiva {preventiva.name} - Equipamento: {preventiva.equipment.name if preventiva.equipment else 'N/A'}")
+            except Exception as e:
+                erros += 1
+                _logger.error(f"Erro ao gerar OS para preventiva {preventiva.name}: {str(e)}")
+        
+        _logger.info(f"Processo concluído: {os_geradas} OS geradas, {erros} erros")
+        return True
 
 
 class dgtPreventivaMessageWizard(models.TransientModel):
@@ -573,6 +611,16 @@ class CronogramaPreventiva(models.Model):
     tecnicos = fields.Many2many(
 		'hr.employee',	
 		string = 'Técnicos')
+    
+    @api.constrains('date_start', 'date_stop')
+    def _check_date_range(self):
+        """Valida que a data de início não seja maior que a data de fim"""
+        for record in self:
+            if record.date_start and record.date_stop:
+                if record.date_start > record.date_stop:
+                    raise ValidationError(
+                        _('A data de início do cronograma não pode ser maior que a data de fim.')
+                    )
     
     allowed_weekdays_ids = fields.Many2many(
         'engc.preventive.cronograma.weekday',
@@ -726,12 +774,13 @@ class CronogramaPreventiva(models.Model):
             if prev.equipment:
                 equipment_id = prev.equipment.id
                 # Obtém o dia do mês da data programada
-                day = prev.data_programada.day
-                
-                if equipment_id not in result:
-                    result[equipment_id] = []
-                if day not in result[equipment_id]:
-                    result[equipment_id].append(day)
+                if prev.data_programada:
+                    day = prev.data_programada.day
+                    
+                    if equipment_id not in result:
+                        result[equipment_id] = []
+                    if day not in result[equipment_id]:
+                        result[equipment_id].append(day)
         
         # Ordena os dias para cada equipamento
         for equipment_id in result:
