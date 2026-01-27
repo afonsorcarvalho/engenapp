@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<template id="engc_os.report_pecas_template">
+		<div class="row">
+			<div class="col-12">
+                
+                <t t-set="lines" t-value="line._get_parts_report('request' ,'requisitada')" />
+				<t t-if="lines">
+					<t t-foreach="lines" t-as="line_pecas">
+								Requisitada - <span t-field="line_pecas.product_id" /> - QTD <span t-field="line_pecas.product_uom_qty" /> <br/>
+					</t>
+				</t>
+                <t t-set="lines" t-value="line._get_parts_report('application' ,'nao_autorizada')" />
+				<t t-if="lines">
+					<t t-foreach="lines" t-as="line_pecas">
+								Não autorizada - <span t-field="line_pecas.product_id" /> - QTD <span t-field="line_pecas.product_uom_qty" /> <br/>
+					</t>
+				</t>
+                <t t-set="lines" t-value="line._get_parts_report('application' ,'cancel')" />
+				<t t-if="lines">
+					<t t-foreach="lines" t-as="line_pecas">
+								Cancelada - <span t-field="line_pecas.product_id" /> - QTD <span t-field="line_pecas.product_uom_qty" /> <br/>
+					</t>
+				</t>
+                <t t-set="lines" t-value="line._get_parts_report('application' ,'aplicada')" />
+				<t t-if="lines">
+					<t t-foreach="lines" t-as="line_pecas">
+								Aplicada - <span t-field="line_pecas.product_id" /> - QTD <span t-field="line_pecas.product_uom_qty" /> <br/>
+					</t>
+				</t>
+                
+			</div>
+		</div>
+	</template>
+</odoo>

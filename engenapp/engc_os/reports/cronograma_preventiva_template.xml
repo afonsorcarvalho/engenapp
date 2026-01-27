@@ -1,0 +1,154 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- Template do relatório de cronograma de preventiva -->
+    <template id="report_cronograma_preventiva_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <style type="text/css">
+                        .table-borderless > :not(caption) > * > * {
+                            border: 0;
+                            border-bottom-width: 0px;
+                        }
+                        .table > :not(caption) > * > * {
+                            padding: 0.1rem 0.1rem;
+                            border-bottom-width: 0px;
+                        }
+                        .table > tbody {
+                            vertical-align: inherit;
+                        }
+                        .table > thead {
+                            vertical-align: bottom;
+                        }
+                        .table > :not(:first-child) {
+                            border-top: 2px solid currentColor;
+                        }
+                        .calendar-day {
+                            text-align: center;
+                            min-width: 25px;
+                            padding: 2px !important;
+                        }
+                        .calendar-day.programmed {
+                            background-color: #d3d3d3;
+                            font-weight: bold;
+                        }
+                        .calendar-day.empty {
+                            color: #ffffff;
+                        }
+                        .equipment-col {
+                            width: 250px;
+                            font-size: 0.85em;
+                        }
+                        .week-header {
+                            text-align: center;
+                            font-weight: bold;
+                            background-color: #f8f9fa;
+                        }
+                        .day-header {
+                            text-align: center;
+                            font-weight: bold;
+                            font-size: 0.9em;
+                        }
+                        .month-title {
+                            text-align: center;
+                            font-weight: bold;
+                            font-size: 1.2em;
+                            margin: 20px 0 10px 0;
+                            page-break-after: avoid;
+                        }
+                    </style>
+                    <div class="page">
+                        <!-- Cabeçalho do relatório -->
+                        <div class="row mb-3">
+                            <div class="col-12 text-center">
+                                <h1><t t-esc="o.get_year_from_cronograma()"/> - CRONOGRAMA DE PREVENTIVA <span t-field="o.company_id.name"/></h1>
+                                <!-- <h3>CRONOGRAMA DE PREVENTIVA <span t-field="o.company_id.name"/> - <t t-esc="o.get_year_from_cronograma()"/></h3> -->
+                            </div>
+                        </div>
+
+                        <!-- Loop pelos meses do ano -->
+                        <t t-set="ano" t-value="o.get_year_from_cronograma()"/>
+                        <t t-foreach="[1,2,3,4,5,6,7,8,9,10,11,12]" t-as="mes_num">
+                            <t t-set="mes_nome" t-value="o.meses_nome[mes_num - 1]"/>
+                            <t t-set="programmed_days" t-value="o.get_programmed_days_by_equipment_month(ano, mes_num)"/>
+                            <t t-set="calendar_weeks" t-value="o.get_calendar_month(ano, mes_num)"/>
+                            
+                            <!-- Título do mês -->
+                            <div class="month-title">
+                                <t t-esc="mes_nome"/>
+                            </div>
+                            
+                            <!-- Tabela do mês -->
+                            <table class="table table-sm table-bordered" style="font-size: 0.75em;">
+                                <thead>
+                                    <tr>
+                                        <th class="equipment-col">Equipamentos</th>
+                                        <t t-set="week_count" t-value="0"/>
+                                        <t t-foreach="calendar_weeks" t-as="week">
+                                            <t t-set="week_count" t-value="week_count + 1"/>
+                                            <th colspan="7" class="week-header">
+                                                Semana <t t-esc="week_count"/>
+                                            </th>
+                                        </t>
+                                    </tr>
+                                    <tr>
+                                        <th class="equipment-col"></th>
+                                        <t t-foreach="calendar_weeks" t-as="week">
+                                            <t t-foreach="['S','T','Q','Q','S','S','D']" t-as="dia_semana">
+                                                <th class="day-header"><t t-esc="dia_semana"/></th>
+                                            </t>
+                                        </t>
+                                    </tr>
+                                    <tr>
+                                        <th class="equipment-col"></th>
+                                        <t t-foreach="calendar_weeks" t-as="week">
+                                            <t t-foreach="week" t-as="day">
+                                                <th class="calendar-day">
+                                                    <t t-if="day != 0">
+                                                        <t t-esc="day"/>
+                                                    </t>
+                                                </th>
+                                            </t>
+                                        </t>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Loop pelos equipamentos -->
+                                    <t t-foreach="o.equipments.sorted('name')" t-as="equipment">
+                                        <tr>
+                                            <td class="equipment-col">
+                                                <span t-field="equipment.name"/>
+                                            </td>
+                                            <t t-foreach="calendar_weeks" t-as="week">
+                                                <t t-foreach="week" t-as="day">
+                                                    <td class="calendar-day">
+                                                        <t t-if="day != 0">
+                                                            <t t-set="equipment_id" t-value="equipment.id"/>
+                                                            <t t-set="is_programmed" t-value="equipment_id in programmed_days and day in programmed_days.get(equipment_id, [])"/>
+                                                            <t t-if="is_programmed">
+                                                                <span class="programmed">X</span>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <t t-esc="''"/>
+                                                            </t>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <t t-esc="''"/>
+                                                        </t>
+                                                    </td>
+                                                </t>
+                                            </t>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            
+                            <!-- Espaçamento entre meses -->
+                            <div style="margin-bottom: 30px;"></div>
+                        </t>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,315 @@
+<odoo>
+	<data>
+		<!-- explicit list view definition -->
+		<record model="ir.ui.view" id="engc_os.list">
+			<field name="name">Ordens de Serviço</field>
+			<field name="model">engc.os</field>
+			<field name="arch" type="xml">
+				<tree default_order="create_date desc">
+					<!-- <field name="name" /> -->
+					<field name="state" widget="badge"
+						decoration-danger="state == 'draft'" 
+						decoration-success="state == 'under_repair'" 
+						decoration-warning="state == 'execution_ready'"/>
+					<field name="name" string="Os nº" />
+					<field name="create_date" string="Criado em" />
+					<field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
+					<field name="company_id" string="Instituição" groups="base.group_multi_company" />
+					<!-- <field name="client_id" /> -->
+					<field name="equipment_id" />
+					<field name="equipment_apelido" />
+					<field name="equipment_serial_number" />
+					<field name="equipment_model" />
+					<field name="equipment_category" />
+					<field name="solicitante" />
+					<field name="date_request" widget="remaining_days" />
+					<field name="date_scheduled" widget="remaining_days" />
+					<field name="maintenance_type" />
+					
+					<!-- Aplicando cores -->
+				
+				</tree>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="engc_os.search">
+			<field name="name">Ordens de Serviço</field>
+			<field name="model">engc.os</field>
+			<field name="arch" type="xml">
+				<search>
+					<filter name="filter_create_date" date="create_date" string="Data de criação" />
+					<filter name="filter_request_date" date="date_request"
+						string="Data de programada" />
+					<filter name="filter_scheduled_date" date="date_scheduled"
+						string="Data de programada" />
+					<group expand="0" string="Group By">
+						<!-- <filter name="groupby_client" string="Cliente"
+							context="{'group_by': 'client_id'}" /> -->
+						<filter name="groupby_equipment" string="Equipamento"
+							context="{'group_by': 'equipment_id'}" />
+						<filter name="groupby_category" string="Categoria"
+							context="{'group_by': 'equipment_category'}" />
+						<filter name="groupby_maintenance_type" string="Tipo de manutenção"
+							context="{'group_by': 'maintenance_type'}" />
+
+					</group>
+					<searchpanel>
+						<field name="state" />
+						<field name="maintenance_type" />
+						<field name="company_id" groups="base.group_multi_company" />
+
+					</searchpanel>
+				</search>
+
+
+			</field>
+
+		</record>
+		<record model="ir.ui.view" id="engc_os.form">
+			<field name="name">Ordens de Serviço</field>
+			<field name="model">engc.os</field>
+			<field name="arch" type="xml">
+				<form string="Ordem de serviço" >
+					<header>
+						<button name="action_start_execution" string="Orçar" class="oe_highlight"
+							states="draft" type="object" context="{'report_type': 'orcamento'}"  />
+						<button name="action_start_execution" string="Executar" class="oe_highlight"
+							states="draft,under_budget,execution_ready" type="object" context="{'report_type': 'manutencao'}" />
+						<button name="action_repair_end" string="Finalizar Execução" class="oe_highlight"
+							states="under_repair" type="object"  />
+						<!-- <widget name="signature" string="Sign" highlight="1" attrs="{'invisible': ['|', '|', ('id', '=', False), ('picking_type_code', '!=', 'outgoing'), ('state', '!=', 'done')]}" full_name="partner_id" /> -->
+						<widget name="signature" string="Assinar Documento" highlight="1"   />
+						<!-- Botão para gerar o check-list a partir do método action_make_check_list -->
+						<button name="action_make_check_list" string="Gerar Check-List" class="oe_highlight"
+							states="draft,under_repair,execution_ready,under_budget,wait_authorization,wait_parts" type="object"  />
+						<button name="action_go_check_list" string="Visualizar Check-List" class="oe_highlight"
+							states="draft,under_repair,execution_ready,under_budget,wait_authorization,wait_parts,execution_ready" type="object"  />
+						<button name="generate_report_and_attach" string="Gerar relatorio" class="oe_highlight"
+							 type="object"  />
+						<field name="state" widget="statusbar" statusbar_visible="draft"
+							options="{'clickable': True}" />
+					</header>
+					<sheet string="Ordem de Serviço">
+					
+						<div name="button_box" position="inside">
+							<button class="oe_stat_button" string="Check-List" type="object"
+								name="action_go_check_list"
+								icon="fa-list">
+								<field string="Check-List" name="check_list_count" widget="statinfo" />
+							</button>
+							<button class="oe_stat_button" string="Relatórios" type="object"
+								name="action_go_relatorios"
+								icon="fa-book">
+								<field string="Relatórios" name="relatorios_count" widget="statinfo" />
+							</button>
+							<button class="oe_stat_button" string="Peças" type="object"
+								name="action_go_request_parts"
+								icon="fa-gears">
+								<field string="Peças" name="request_parts_count" widget="statinfo" />
+							</button>
+						</div>
+						<div class="oe_title col-6">
+							<h1>
+								<field name="name" />
+							</h1>
+							<label for="company_id" class="oe_edit_only" />
+							<h2>
+								<field name="company_id"  attrs="{'readonly': [('state','in',('done'))] }"
+									options="{'no_create': True, 'no_create_edit':True}" />
+							</h2>
+							<!-- <h2>
+								<field name="origin" readonly="1" />
+							</h2> -->
+							<!-- <label for="client_id" class="oe_edit_only" />
+							<h2>
+								<field name="client_id" />
+							</h2> -->
+						</div>
+						<group string="Dados do equipamento">
+							<group>
+							
+									<field name="equipment_id"
+										domain="[('company_id', '=', company_id)]"
+										options="{'no_create': True, 'no_create_edit':True}"
+										attrs="{'readonly': [('state','in',('done'))] }"
+																				/> 
+									<field name="equipment_apelido" />
+							
+								<field name="equipment_model" />
+								<field name="equipment_category" />
+							</group>
+							<group>
+								<field name="equipment_serial_number" />
+								<field name="equipment_patrimonio" string="Patrimônio" />
+								<field name="equipment_tag" string="Tag" />
+							</group>
+						</group>
+						<group string="Dados da OS">
+							<group>
+								<field name="solicitante" attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="who_executor" widget="selection" attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="tecnico_id"
+									attrs="{'invisible': [('who_executor','!=','own')], 'required':[('who_executor','=','own')],'readonly': [('state','in',('done'))]} "
+									options="{'no_create': True}" />
+								<field name="empresa_manutencao"
+									attrs="{'invisible': [('who_executor','!=','3rd_party')],'required':[('who_executor','=','3rd_party')],'readonly': [('state','in',('done'))]}" />
+								<label for="maintenance_type" />
+								<div class="o_row">
+									<field name="maintenance_type"
+										attrs="{'readonly':['|',('calibration_created','=',True),('state','in',('done'))]}" />
+										
+									<div
+										attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','not in',('New'))],'readonly': [('state','in',('done'))]}">
+										<p>
+											Salve a OS e volte aqui
+										</p>
+									</div>
+									<button name="action_make_calibration" class="oe_link"
+										string="gerar calibração" type="object"
+										attrs="{
+												'invisible': [
+												'|','|',
+												('maintenance_type','not in',('calibration')),
+												('calibration_created','=',True),
+												('name','in',('New'))],
+												'readonly': [('state','in',('done'))]}"
+																	icon="fa-plus">
+									</button>
+								</div>
+								<field name="calibration_created"
+									attrs="{
+											'invisible': [('maintenance_type','not in',('calibration'))],
+											'readonly':['|',('calibration_created','=',True),('state','in',('done'))]
+											}" />
+								<field name="calibration_id"
+									attrs="{
+											'invisible': [('calibration_created','==', False)],
+											'readonly':['|',('calibration_created','=',True),('state','in',('done'))]
+											}" />
+								<field name="periodicity_ids" widget="many2many_tags" 
+									attrs="{
+											'invisible':[('maintenance_type','not in',('preventive'))],
+											'required':[('maintenance_type','=','preventive')]
+											}" />
+								<field name="priority" widget="priority" />
+							</group>
+							<group>
+								<field name="date_request"  attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="date_scheduled" attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="date_execution" readonly="1"/>
+								<field name="date_start"  readonly="1" attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="date_finish" readonly="1"  attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="relatorios_time_execution" widget="float_time"/>
+								<field name="request_service_id" attrs="{'readonly': [('state','in',('done'))] }"/>
+							</group>
+						</group>
+						<group string="Solicitação">
+							<field name="problem_description" attrs="{'readonly': [('state','in',('done'))] }"/>
+							<!-- <field name="service_description" /> -->
+						</group>
+						<group>
+							<group>
+								<field name="technician_signature_date" attrs="{'invisible': [('technician_signature_date', '=', False)]}" readonly="1"/>
+								<field name="signature" string="Assinatura Tecnico" widget="signature" />
+							</group>
+							<group>
+								<field name="supervisor_signature_date" attrs="{'invisible': [('supervisor_signature_date', '=', False)]}" readonly="1"/>
+								<field name="signature2" string="Assinatura Supervisor" widget="signature" />
+							</group>
+							
+						</group>
+						<!-- <notebook>
+							<page string="Relatórios">
+								<field name="relatorios_id"
+									context="{'default_company_id': company_id }"
+									options="{'reload_on_button': True}"
+								>
+									<tree>
+										<field name="name" />
+										<field name="company_id" readonly="1" optional="hide" />
+										<field name="os_id" readonly="1" optional="hide" />
+										<field name="report_type" readonly="1" />
+
+										<field name="fault_description" />
+										<field name="data_atendimento" />
+										<field name="data_fim_atendimento" />
+										<field name="start_hour" optional="hide" />
+										<field name="final_hour" optional="hide" />
+										<field name="request_parts" string="Peças" optional="show" />
+									</tree>
+								</field>
+							</page>
+							<page string="Peças">
+								<field name="request_parts">
+									<tree>
+										<field name="name" />
+										<field name="os_id" readonly="1" />
+										<field name="product_id" />
+										<field name="product_uom_qty" />
+										<field name="product_uom" />
+										<field name="state" />
+										<field name="relatorio_request_id" />
+										<field name="relatorio_application_id" />
+										<field name="placed" />
+
+									</tree>
+								</field>
+							</page>
+						</notebook> -->
+					</sheet>
+					<div class="oe_chatter">
+						<field name="message_follower_ids" widget="mail_followers" />
+						<field name="message_ids" widget="mail_thread" />
+					</div>
+				</form>
+			</field>
+		</record>
+		<record model="ir.ui.view" id="engc_os.relatorio_list">
+			<field name="name">Relatórios de Serviço</field>
+			<field name="model">engc.os.relatorios</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="name" />
+					<field name="service_summary" />
+					<field name="technicians" widget="many2many" />
+					<control>
+						<create string="Adicionar relatório" />
+					</control>
+				</tree>
+			</field>
+		</record>
+		<record id="engc_os.request_parts_form" model="ir.ui.view">
+			<field name="name">request_parts.form</field>
+			<field name="model">engc.os.request.parts</field>
+			<field name="arch" type="xml">
+				<form string="">
+					<header>
+					</header>
+					<sheet>
+						<group>
+							<group>
+								<field name="product_id" />
+								<field name="product_uom_qty" />
+								<field name="product_uom" />
+								<field name="product_uom_category_id" />
+							</group>
+							<group>
+								<!-- <field name="name" /> -->
+								<field name="company_id"
+									invisible="1"
+								/>
+								<field name="placed"
+									invisible="1"
+								/>
+								<field name="os_id" />
+								<field name="relatorio_request_id" />
+								<field name="relatorio_application_id" />
+							</group>
+
+						</group>
+
+					</sheet>
+				</form>
+			</field>
+		</record>
+	</data>
+</odoo>

@@ -1,0 +1,206 @@
+<odoo>
+  <data>
+    <!-- explicit list view definition -->
+
+    <record model="ir.ui.view" id="engc_os.os_relatorio_list">
+      <field name="name">Relatório de Serviço</field>
+      <field name="model">engc.os.relatorios</field>
+      <field name="arch" type="xml">
+        <tree default_order="create_date desc"
+        decoration-danger="state=='draft'"
+        decoration-muted="state=='cancel'"
+        decoration-success="state=='done'"
+        
+        >
+
+          <field name="state" widget="badge"
+          decoration-danger="state=='draft'"
+          decoration-muted="state=='cancel'"
+          decoration-success="state=='done'" 
+           />
+          <field name="name" />
+          <field name="company_id" string="Instituição" groups="base.group_multi_company" />
+          <field name="os_id" string="Ordem de Serviço" />
+          <field name="equipment_id" string="Equipamento" />
+          <field name="data_atendimento" />
+          <field name="data_fim_atendimento" />
+          <field name="service_summary" />
+          <!-- <field name="start_hour" widget="float_time" />
+          <field name="final_hour" widget="float_time" /> -->
+
+        </tree>
+
+      </field>
+    </record>
+    <record model="ir.ui.view" id="engc_os.os_relatorio_form">
+      <field name="name">Relatório de serviço</field>
+      <field name="model">engc.os.relatorios</field>
+      <field name="arch" type="xml">
+
+
+
+        <form string="Relatório de serviço" >
+          <header>
+            <button name="action_add_request_parts" string="Requisitar peças" class="oe_highlight" 
+              type="object" />
+            <button name="action_application_parts" string="Aplicar peças" class="oe_highlight" 
+              type="object" />
+            <button name="action_done" string="Concluir" class="oe_highlight" states="draft"
+              type="object" />
+            <button name="action_cancel" string="Cancelar"  states="done"
+              type="object" />
+            <field name="state" widget="statusbar" />
+          </header>
+          <sheet string="Relatório de serviço" >
+            <div name="button_box" position="inside">
+							<button class="oe_stat_button" string="Peças" type="object"
+								name="action_go_request_parts"
+								icon="fa-gears">
+								<field string="Peças" name="request_parts_count" widget="statinfo" />
+							</button>
+							<!-- <button class="oe_stat_button" string="Serviços" type="object"
+								name="action_go_request_parts"
+								icon="fa-wrench">
+								<field string="Serviços Requisitados" name="request_services_count" widget="statinfo" />
+							</button> -->
+						</div>
+            <div class="oe_title">
+              <h1>
+                <field name="name"  />
+              </h1>
+              <label for="company_id" class="oe_edit_only" />
+              <h2>
+                <field name="company_id" attrs="{'readonly': [('state','not in',('draft'))] }" options="{'no_create': True, 'no_create_edit':True}" />
+              </h2>
+            </div>
+            <group string="Relatório"  >
+              <group >
+                <field name="data_atendimento"
+                  required="1" attrs="{'readonly': [('state','not in',('draft'))] }"
+                />
+                <field name="data_fim_atendimento"
+                  required="1" attrs="{'readonly': [('state','not in',('draft'))] }"
+                />
+                <field name="technicians" widget="many2many_tags"  attrs="{'readonly': [('state','not in',('draft'))] }"/>
+                <field name="report_type" attrs="{'readonly': [('state','not in',('draft'))] }" />
+              </group>
+              <group>
+                <field name="state_equipment" widget="radio" required="1" attrs="{'readonly': [('state','not in',('draft'))] }" />
+                <field name="restriction_type" 
+                attrs="{'invisible': [('state_equipment','not in',('restricao'))],'required': [('state_equipment','in',('restricao'))], 'readonly': [('state','not in',('draft'))] }"
+                help="Descreva qual restrição o equipamento se encontra"  />
+              </group>
+            </group>
+
+            <notebook>
+              <page string="Atendimento">
+                <group>
+                  <field name="fault_description" attrs="{'readonly': [('state','not in',('draft'))] }" />
+                  <field name="service_summary" attrs="{'readonly': [('state','not in',('draft'))] }" />
+                  <field name="observations" attrs="{'readonly': [('state','not in',('draft'))] }"/>
+                  <field name="pendency" attrs="{'readonly': [('state','not in',('draft'))] }" />
+                  <field name="os_id" required="1" attrs="{'readonly': [('state','not in',('draft'))] }"/>
+                  <field name="maintenance_type" invisible="1"/>
+                  
+                </group>
+              </page>
+              
+              <page string="Checklist" attrs="{'invisible': ['|', ('os_id', '=', False), ('maintenance_type', '!=', 'preventive')]}">
+                <div class="alert alert-info mb16" role="alert">
+                  <i class="fa fa-info-circle"></i>
+                  <strong>Nota:</strong> Marque os itens do checklist que foram realizados neste atendimento.
+                  Cada relatório pode trabalhar em diferentes partes do checklist.
+                </div>
+                <field name="checklist_item_ids" 
+                       nolabel="1"
+                       attrs="{'readonly': [('state','not in',('draft'))] }"
+                       context="{'default_relatorio_id': id, 'default_os_id': os_id}">
+                  <tree string="Checklist" editable="bottom" create="false" delete="false">
+                    <field name="sequence" widget="handle" readonly="true"/>
+                    <field name="section" optional="hide" readonly="true"/>
+                    <field name="instruction" readonly="true"/>
+                    <field name="check"/>
+                    <field name="tem_medicao" readonly="true" optional="hide"/>
+                    <field name="medicao" attrs="{'invisible': [('tem_medicao','=',False)], 'required': [('tem_medicao','=',True)]}"/>
+                    <field name="magnitude" readonly="true" attrs="{'invisible': [('tem_medicao','=',False)]}"/>
+                    <field name="observations"/>
+                    <field name="state" optional="hide" readonly="true"/>
+                    <field name="relatorio_id" readonly="true" optional="hide"/>
+                  </tree>
+                </field>
+                <div class="mt16 text-center" attrs="{'invisible': ['|', ('checklist_item_ids', '=', []), ('state', '=', 'done')]}">
+                  <button name="action_update_summary_from_checklist" 
+                          string="Atualizar Resumo do Atendimento" 
+                          type="object" 
+                          class="btn-secondary"
+                          icon="fa-refresh"/>
+                </div>
+              </page>
+
+              <page string="Fotos">
+                <field name="picture_ids" nolabel="1" attrs="{'readonly': [('state','not in',('draft'))] }">
+                  <kanban>
+                    <templates>
+                      <t t-name="kanban-box">
+                        <div
+                          class="oe_kanban_global_click o_kanban_record_has_image_fill o_hr_kanban_record">
+                          <field name="picture" widget="image" class="oe_avatar"
+                            options="{'zoom': true}" style="margin-right:50px" />
+                          <div class="oe_kanban_details">
+                            <div class="o_kanban_record_top">
+
+                              <div class="o_kanban_record_title">
+
+
+                                <b>
+                                  <field name="name" />
+                                </b>
+
+                              </div>
+
+
+                            </div>
+                            <div class="o_kanban_record_body">
+                              <field name="description" />
+                            </div>
+                          </div>
+                        </div>
+                      </t>
+                    </templates>
+                  </kanban>
+                  <form string="Fotos" create="true" delete="true" edit="true">
+                    <sheet>
+                      <div class="oe_title">
+                        <label for="name" class="oe_edit_only" />
+                        <h1>
+                          <field name="name" placeholder="Título da foto ..." />
+                        </h1>
+                      </div>
+                      <group>
+                        <field name="description" />
+                      </group>
+                      <group>
+                        <field name="picture" widget="image"
+                          options="{'zoom': True}"
+                        />
+                      </group>
+
+                    </sheet>
+                  </form>
+
+                </field>
+              </page>
+
+            </notebook>
+          </sheet>
+          <div class="oe_chatter">
+            <field name="message_follower_ids" widget="mail_followers" />
+            <field name="message_ids" widget="mail_thread" />
+          </div>
+        </form>
+      </field>
+    </record>
+
+
+  </data>
+</odoo>

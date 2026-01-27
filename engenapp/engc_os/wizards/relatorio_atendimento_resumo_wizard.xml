@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Form View do Wizard -->
+        <record id="view_relatorio_atendimento_resumo_wizard_form" model="ir.ui.view">
+            <field name="name">wizard.relatorio.atendimento.resumo.form</field>
+            <field name="model">wizard.relatorio.atendimento.resumo</field>
+            <field name="arch" type="xml">
+                <form string="Relatório Resumido de Atendimentos">
+                    <group>
+                        <group string="Filtros">
+                            <field name="company_id" 
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                            <field name="equipment_id" 
+                                   placeholder="Todos os equipamentos (opcional)"
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                            <field name="state" 
+                                   placeholder="Todos os status (opcional)"/>
+                        </group>
+                        <group string="Período">
+                            <field name="date_start" widget="datetime"/>
+                            <field name="date_end" widget="datetime"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="action_gerar_relatorio" 
+                                string="Gerar Relatório" 
+                                type="object" 
+                                class="btn-primary"/>
+                        <button string="Cancelar" 
+                                class="btn-secondary" 
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action para abrir o wizard -->
+        <record id="action_wizard_relatorio_atendimento_resumo" model="ir.actions.act_window">
+            <field name="name">Relatório Resumido de Atendimentos</field>
+            <field name="res_model">wizard.relatorio.atendimento.resumo</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+    </data>
+</odoo>
+

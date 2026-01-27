@@ -1,0 +1,513 @@
+
+from odoo import models, fields, api
+import logging
+from datetime import datetime
+from calendar import monthrange, monthcalendar
+import calendar
+
+_logger = logging.getLogger(__name__)
+
+class Equipment(models.Model):
+    _name = 'engc.equipment'
+    _inherit = ['mail.thread','mail.activity.mixin']
+    _description = 'Equipamento'
+    _check_company_auto = True
+    _parent_name = "parent_id"
+    _parent_store = True
+    _order = 'name ASC'
+
+    
+    
+    parent_left = fields.Integer('Left Parent', index=1)
+    parent_right = fields.Integer('Right Parent', index=1)
+
+    STATES = [
+       
+        ('in_use', 'Em uso'),
+        ('out_of_use', 'Fora de uso'),
+        ('useless', 'Inservível'),
+        
+    ]
+    name = fields.Char(compute="_compute_name", store=True)
+    apelido = fields.Char("apelido")
+    parent_id = fields.Many2one(
+        'engc.equipment',index=True,
+        string='Equipamento pai',
+        )
+    child_ids = fields.One2many('engc.equipment', "parent_id", string="Componentes")
+    parent_path = fields.Char(index=True, unaccent=False)
+    image_1920 = fields.Binary(
+        string='avatar',
+    )
+    def name_get(self):
+        result = []
+        for record in self:
+            if self.env.context.get('show_apelido_first', True):
+                apelido = record.apelido or ""
+                nome = record.name or ""
+                if apelido and nome:
+                    display_name = f"{apelido} - {nome}"
+                elif apelido:
+                    display_name = apelido
+                elif nome:
+                    display_name = nome
+                else:
+                    display_name = f"Equipamento {record.id}"
+            else:
+                display_name = record.name or f"Equipamento {record.id}"
+            
+            result.append((record.id, display_name))
+        return result
+    
+    category_id = fields.Many2one(
+        'engc.equipment.category', 'Categoria', required=True)
+    state  = fields.Selection(
+        string="Status",
+        selection=STATES,
+        required=True,
+        default='in_use',
+        tracking=True
+    )
+    company_id = fields.Many2one(
+        string='Instituição', 
+        comodel_name='res.company', 
+        required=True, 
+        default=lambda self: self.env.company
+    )
+    client_id = fields.Many2one("res.partner", "Cliente")
+    means_of_aquisition_id = fields.Many2one(
+        'engc.equipment.means.of.aquisition', 'Meio de Aquisição', required=True)
+    technician_id = fields.Many2one('hr.employee', 'Técnico',check_company=True)
+    maintenance_team_id = fields.Many2one(
+        'engc.equipment.maintenance.team', 'Equipe de Manutenção',check_company=True)
+    # section_id =  fields.Many2one(
+    #     'engc.equipment.section',
+    #     string='Departamento', check_company=True  )
+    department = fields.Many2one('hr.department', string="Departamento", check_company=True)
+    location_id = fields.Many2one(
+        'engc.equipment.location', 'Local de Uso', required=True, check_company=True)
+    marca_id = fields.Many2one('engc.equipment.marca', 'Marca', required=True)
+   
+    partner_reference = fields.Char('Referência de Fornecedor')
+    model = fields.Char('Modelo', required=True
+    )
+    serial_number = fields.Char('Número de Série', required=True)
+    anvisa_code = fields.Char('Reg Anvisa')
+    tag = fields.Char('Tag')
+    patrimony = fields.Char('Patrimonio')
+    manufacturing_date = fields.Date('Data de Fabricação')
+    instalation_date = fields.Date('Date de Instalação')
+    acquisition_date = fields.Date('Date de Aquisição')
+    warranty = fields.Date('Garantia')
+    extended_warranty = fields.Date('Garantia Extendida')
+    invoice_document = fields.Binary('Nota Fiscal')
+    next_maintenance = fields.Date('Próxima Manutenção Preventiva')
+    period = fields.Integer('Frequência de Manutenção')
+    
+    duration = fields.Float('Duração da Manutenção')
+    note = fields.Text()
+    
+    calibrations_ids = fields.One2many(
+        string="Calibrações",
+        comodel_name='engc.calibration',
+        inverse_name="equipment_id",
+        help="Calibrações e ensaios do equipamentos.",
+    )
+    oses = fields.One2many(
+        string='Ordens de serviço',
+        comodel_name='engc.os',
+        inverse_name='equipment_id',
+    )
+    color = fields.Char()
+
+
+
+    def _get_default_maintenace_plan(self):
+        return self.category_id.maintenance_plan.id
+   
+    maintenance_plan = fields.Many2one(
+        string='Plano de manutenção',
+        comodel_name='engc.maintenance_plan',
+        default =_get_default_maintenace_plan,
+        
+        
+    )
+    def get_maintenance_plan(self):
+        return self.maintenance_plan if self.maintenance_plan else self.category_id.maintenance_plan
+    
+    
+    
+    
+
+
+
+    picture_ids = fields.One2many('engc.equipment.pictures', 'equipment_id', "fotos")
+    # relatorios = fields.One2many(
+    #     'engc.os.relatorio.servico', 'equipment_id', u'Relatórios',
+    #     copy=True, 
+    #     readonly=False,
+    #     check_company=True,
+    #     tracking=True)
+    
+    stop_history_ids = fields.One2many(
+        comodel_name='engc.equipment.stop.history',
+        inverse_name='equipment_id',
+    )
+    
+    _sql_constraints = [
+        ('serial_marca_company_id_no_uniq',
+         'unique (serial_number,marca_id)',
+         'Número de série para cada fabricante deve ser único!')
+    ]
+
+    
+    
+      
+    
+    @api.depends('category_id','model','marca_id','serial_number')
+    def _compute_name(self):
+        
+        for record in self:
+            if not record.category_id.name or not record.model or not record.marca_id.name or not record.serial_number:
+                record.name = ""
+            else:
+                record.name = record.category_id.name + " " + record.model + " " + record.serial_number + " "  + record.marca_id.name
+    
+    
+    
+
+    # def name_get(self):
+    #     result = []
+    #     for record in self:
+    #         if record.name and record.serial_number:
+    #             result.append((record.id, str(record.id) + '/' +
+    #                            record.name + '/' + record.serial_number))
+    #         if record.name and not record.serial_number:
+    #             result.append((record.id, record.name))
+    #     return result
+
+    @api.model
+    def name_search(self, name=name, args=None, operator='ilike', limit=100):
+        args = args or []
+        
+        if operator == 'ilike' and not (name or '').strip():
+            recs = self.search([] + args, limit=limit)
+            return recs.name_get()
+        if operator in ('ilike', 'like', '=', '=like', '=ilike'):
+            recs = self.search(['|', '|', ('name', operator, name), (
+                'id', operator, name), ('serial_number', operator, name)] + args, limit=limit)
+            return recs.name_get()
+        return []
+       
+    
+    '''
+        Açao pra colocar equipamento em uso
+    '''
+
+    def action_in_use(self):
+        for rec in self:
+            rec.write({
+                'state':'in_use'
+            })
+
+    def action_useless(self):
+        for rec in self:
+            rec.write({
+                'state':'useless'
+            })
+    def action_out_of_use(self):
+        for rec in self:
+            rec.write({
+                'state':'out_of_use'
+            })
+    
+    def get_preventivas_by_year(self, ano):
+        """
+        Retorna todas as preventivas do equipamento para um ano específico.
+        
+        Args:
+            ano: ano (int)
+            
+        Returns:
+            recordset: preventivas do equipamento no ano
+        """
+        self.ensure_one()
+        first_day = datetime(ano, 1, 1, 0, 0, 0, 0)
+        last_day = datetime(ano, 12, monthrange(ano, 12)[1], 23, 59, 59, 0)
+        
+        preventivas = self.env['engc.preventive'].search([
+            ('equipment', '=', self.id),
+            ('data_programada', '>=', first_day),
+            ('data_programada', '<=', last_day)
+        ], order='data_programada ASC')
+        
+        return preventivas
+    
+    def get_programmed_days_by_month(self, ano, mes):
+        """
+        Retorna uma lista com os dias programados de preventiva para um mês específico.
+        
+        Args:
+            ano: ano (int)
+            mes: mês (int, 1-12)
+            
+        Returns:
+            list: lista de dias do mês programados
+        """
+        self.ensure_one()
+        first_day = datetime(ano, mes, 1, 0, 0, 0, 0)
+        last_day = datetime(ano, mes, monthrange(ano, mes)[1], 23, 59, 59, 0)
+        
+        preventivas = self.env['engc.preventive'].search([
+            ('equipment', '=', self.id),
+            ('data_programada', '>=', first_day),
+            ('data_programada', '<=', last_day)
+        ])
+        
+        days = []
+        for prev in preventivas:
+            day = prev.data_programada.day
+            if day not in days:
+                days.append(day)
+        
+        days.sort()
+        return days
+    
+    def get_calendar_month(self, ano, mes):
+        """
+        Retorna o calendário de um mês específico organizado por semanas.
+        
+        Args:
+            ano: ano (int)
+            mes: mês (int, 1-12)
+            
+        Returns:
+            list: lista de semanas, cada semana é uma lista de 7 dias (0 = dia não do mês, 1-31 = dia do mês)
+        """
+        cal = calendar.Calendar()
+        return cal.monthdayscalendar(ano, mes)
+    
+    def get_months_with_preventivas(self, ano):
+        """
+        Retorna uma lista com os meses que têm preventivas programadas.
+        
+        Args:
+            ano: ano (int)
+            
+        Returns:
+            list: lista de meses (1-12) que têm preventivas
+        """
+        self.ensure_one()
+        preventivas = self.get_preventivas_by_year(ano)
+        
+        months = []
+        for prev in preventivas:
+            month = prev.data_programada.month
+            if month not in months:
+                months.append(month)
+        
+        months.sort()
+        return months
+    
+    def get_current_year(self):
+        """
+        Retorna o ano atual.
+        """
+        return datetime.now().year
+    
+    def get_cronograma_name(self, ano):
+        """
+        Retorna o nome do cronograma do equipamento para um ano específico.
+        Busca através das preventivas do equipamento.
+        
+        Args:
+            ano: ano (int)
+            
+        Returns:
+            str: nome do cronograma ou string vazia se não encontrar
+        """
+        self.ensure_one()
+        preventivas = self.get_preventivas_by_year(ano)
+        if preventivas:
+            # Pega o primeiro cronograma encontrado
+            cronograma = preventivas[0].cronograma
+            if cronograma:
+                return cronograma.name
+        return ''
+
+
+class MaintenanceTeam(models.Model):
+    _name = 'engc.equipment.maintenance.team'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _description = 'Equipe de Manutenção'
+    _check_company_auto = True
+
+    name = fields.Char()
+  #  team_members = fields.Many2many(comodel_name='hr.employee', string='Membros', 
+ #   company_dependent=True
+ #   )
+   
+    members = fields.Many2many('hr.employee', 'maintenance_team_emp_rel', 'team_id', 'emp_id', string='Membro(s)')
+    
+    company_id = fields.Many2one(
+        string='Company', 
+        comodel_name='res.company', 
+        required=True, 
+        default=lambda self: self.env.company
+    )
+    
+
+
+class Location(models.Model):
+    _name = 'engc.equipment.location'
+    _description = "Localização dos equipamentos"
+    _check_company_auto = True
+
+    name = fields.Char('Local')
+    
+    company_id = fields.Many2one(
+        string='Company', 
+        comodel_name='res.company', 
+        required=True, 
+        default=lambda self: self.env.company
+    )
+    
+
+
+class Situation(models.Model):
+    _name = 'engc.equipment.situation'
+    _description = "Situação dos equipamentos"
+
+    name = fields.Char('Situação')
+    
+  
+    
+    _sql_constraints = [
+
+        ('situation_uniq', 'unique (name)', 'O nome já existe !')
+
+    ]
+class Marca(models.Model):
+    _name = 'engc.equipment.marca'
+    _description = "Marca dos equipamentos"
+
+    name = fields.Char('Marca')
+  
+    
+ 
+    _sql_constraints = [
+
+        ('situation_uniq', 'unique (name)', 'O nome já existe !')
+
+    ]
+
+
+class MeansOfAquisition(models.Model):
+    _name = 'engc.equipment.means.of.aquisition'
+    _description = "Meio de Aquisição dos equipamentos"
+
+    name = fields.Char('Meio de Aquisição')
+    
+   
+class EquipmentsSection(models.Model):
+    _name = 'engc.equipment.section'
+    _description = "setor do local equipamentos"
+    _parent_name = "section_parent"
+    _parent_store = True
+    _rec_name = 'complete_name'
+    _order = 'complete_name'
+    _check_company_auto = True
+
+    
+
+    name = fields.Char('Nome no setor', index='trigram', 
+    required=True
+    )
+    complete_name = fields.Char(
+        'Complete Name', compute='_compute_complete_name', recursive=True,
+        store=True)
+    company_id = fields.Many2one(
+        string='Company', 
+        comodel_name='res.company', 
+        required=True, 
+        default=lambda self: self.env.company
+    )
+    description = fields.Text('Descrição')
+    section_parent  = fields.Many2one(
+        'engc.equipment.section',
+        string='Setor Pai',
+        check_company=True
+        )
+    parent_path = fields.Char(index=True, unaccent=False)
+    child_id = fields.One2many('engc.equipment.section', 'section_parent', 'Child sections')
+    
+    @api.depends('name', 'section_parent.complete_name')
+    def _compute_complete_name(self):
+        for section in self:
+            if section.section_parent:
+                section.complete_name = '%s / %s' % (section.section_parent.complete_name, section.name)
+            else:
+                section.complete_name = section.name
+  
+    # @api.depends('name', 'section_parent')
+    # def name_get(self):
+    #     result = []
+    #     for record in self:
+    #         if record.section_parent:
+    #             name = record.section_parent.display_name + '/' + record.name
+    #         else:
+    #             name = record.name
+    #         result.append((record.id, name))
+    #     return result
+    
+    
+
+class EquipmentsPictures(models.Model):
+    _name = 'engc.equipment.pictures'
+    _description = "Fotos dos equipamentos"
+
+    name = fields.Char('Título da foto')
+    description = fields.Text('Descrição da foto')
+
+    
+    equipment_id = fields.Many2one(
+        string='Equipamento', 
+        comodel_name='engc.equipment', 
+        required=True, 
+       
+    )
+
+    picture = fields.Binary(string="Foto", 
+    required=True
+     )
+    
+class EquipmentsStopHistory(models.Model):
+    _name = 'engc.equipment.stop.history'
+    _description = "Histórico de parada do equipamento"
+
+    STATE_EQUIPMENT_SELECTION = [
+        ('parado', 'Parado'),
+        ('funcionando', 'Funcionando'),
+        ('restricao', 'Funcionando com restrições'), 
+    ]
+    
+
+    
+    equipment_id = fields.Many2one(
+        string='Equipamento', 
+        comodel_name='engc.equipment', 
+        required=True, 
+       
+    )
+
+    relatorio_id = fields.Many2one('engc.os.relatorios', 
+        required=True
+    )
+    state = fields.Selection(string="Estado do Equipamento",selection=STATE_EQUIPMENT_SELECTION)
+    date_time = fields.Datetime(
+        string='Data',
+        default=fields.Datetime.now,
+    )
+    
+   
+

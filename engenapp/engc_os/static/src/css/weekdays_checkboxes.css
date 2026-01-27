@@ -1,0 +1,18 @@
+/* Estilo para checkboxes de dias da semana em linha usando estilos nativos do Odoo */
+.o_row .o_field_many2many_checkboxes.o_field_widget {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.o_row .o_field_many2many_checkboxes.o_field_widget > div {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.o_row .o_field_many2many_checkboxes.o_field_widget > div > div {
+    flex: 0 0 auto;
+    width: auto;
+    margin-right: 20px;
+}
