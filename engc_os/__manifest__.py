@@ -36,6 +36,7 @@
         'wizards/application_parts_wizard.xml',
         'wizards/relatorio_atendimento_resumo_wizard.xml',
         'wizards/cronograma_preventiva_print_wizard_views.xml',
+        'wizards/copy_maintenance_plan_wizard_views.xml',
         'views/os_views.xml',
         'views/os_relatorio_views.xml',
         'views/os_relatorio_request_parts_views.xml',

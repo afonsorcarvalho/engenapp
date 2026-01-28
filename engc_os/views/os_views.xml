@@ -71,20 +71,41 @@
 				<form string="Ordem de serviço" >
 					<header>
 						<button name="action_start_execution" string="Orçar" class="oe_highlight"
-							states="draft" type="object" context="{'report_type': 'orcamento'}"  />
+							states="draft" type="object" context="{'report_type': 'orcamento'}"
+							icon="fa-calculator" />
 						<button name="action_start_execution" string="Executar" class="oe_highlight"
-							states="draft,under_budget,execution_ready" type="object" context="{'report_type': 'manutencao'}" />
+							states="draft,under_budget,execution_ready" type="object" context="{'report_type': 'manutencao'}"
+							icon="fa-play" />
 						<button name="action_repair_end" string="Finalizar Execução" class="oe_highlight"
-							states="under_repair" type="object"  />
+							states="under_repair" type="object"
+							icon="fa-check-circle" />
 						<!-- <widget name="signature" string="Sign" highlight="1" attrs="{'invisible': ['|', '|', ('id', '=', False), ('picking_type_code', '!=', 'outgoing'), ('state', '!=', 'done')]}" full_name="partner_id" /> -->
-						<widget name="signature" string="Assinar Documento" highlight="1"   />
+						<div class="o_signature_widget_wrapper">
+							<widget name="signature" string="Assinar Documento" highlight="1" />
+						</div>
+						<button name="action_add_new_relatorio" string="Adicionar Novo Relatório" class="oe_highlight"
+							type="object"
+							attrs="{'invisible': [('state', '=', 'done')]}"
+							icon="fa-plus-circle" />
 						<!-- Botão para gerar o check-list a partir do método action_make_check_list -->
 						<button name="action_make_check_list" string="Gerar Check-List" class="oe_highlight"
-							states="draft,under_repair,execution_ready,under_budget,wait_authorization,wait_parts" type="object"  />
+							type="object"
+							attrs="{'invisible': ['|', ('maintenance_type', '!=', 'preventive'), ('state', 'not in', ['draft', 'under_repair', 'execution_ready', 'under_budget', 'wait_authorization', 'wait_parts'])]}"
+							icon="fa-tasks" />
 						<button name="action_go_check_list" string="Visualizar Check-List" class="oe_highlight"
-							states="draft,under_repair,execution_ready,under_budget,wait_authorization,wait_parts,execution_ready" type="object"  />
+							type="object"
+							attrs="{'invisible': ['|', ('maintenance_type', '!=', 'preventive'), ('state', 'not in', ['draft', 'under_repair', 'execution_ready', 'under_budget', 'wait_authorization', 'wait_parts', 'execution_ready'])]}"
+							icon="fa-list" />
 						<button name="generate_report_and_attach" string="Gerar relatorio" class="oe_highlight"
-							 type="object"  />
+							 type="object"
+							 icon="fa-file-pdf-o" />
+						<style>
+							.o_signature_widget_wrapper button.o_sign_button::before {
+								content: "\f040";
+								font-family: "FontAwesome";
+								margin-right: 5px;
+							}
+						</style>
 						<field name="state" widget="statusbar" statusbar_visible="draft"
 							options="{'clickable': True}" />
 					</header>
@@ -93,7 +114,8 @@
 						<div name="button_box" position="inside">
 							<button class="oe_stat_button" string="Check-List" type="object"
 								name="action_go_check_list"
-								icon="fa-list">
+								icon="fa-list"
+								attrs="{'invisible': [('maintenance_type', '!=', 'preventive')]}">
 								<field string="Check-List" name="check_list_count" widget="statinfo" />
 							</button>
 							<button class="oe_stat_button" string="Relatórios" type="object"

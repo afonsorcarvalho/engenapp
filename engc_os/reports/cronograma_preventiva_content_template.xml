@@ -72,7 +72,7 @@
                 <t t-foreach="[1,2,3,4,5,6,7,8,9,10,11,12]" t-as="mes_num">
                     <t t-set="mes_nome" t-value="o.meses_nome[mes_num - 1]"/>
                     <t t-set="programmed_days" t-value="o.get_programmed_days_by_equipment_month(ano, mes_num)"/>
-                    <t t-set="calendar_weeks" t-value="o.get_calendar_month(ano, mes_num)"/>
+                    <t t-set="calendar_weeks" t-value="o.get_calendar_month_filtered(ano, mes_num)"/>
                     
                     <!-- Título do mês -->
                     <div class="month-title">
@@ -87,7 +87,8 @@
                                 <t t-set="week_count" t-value="0"/>
                                 <t t-foreach="calendar_weeks" t-as="week">
                                     <t t-set="week_count" t-value="week_count + 1"/>
-                                    <th colspan="7" class="week-header">
+                                    <t t-set="week_days_count" t-value="len(week)"/>
+                                    <th t-att-colspan="week_days_count" class="week-header">
                                         Semana <t t-esc="week_count"/>
                                     </th>
                                 </t>
@@ -95,20 +96,31 @@
                             <tr>
                                 <th class="equipment-col"></th>
                                 <t t-foreach="calendar_weeks" t-as="week">
-                                    <t t-foreach="['S','T','Q','Q','S','S','D']" t-as="dia_semana">
-                                        <th class="day-header"><t t-esc="dia_semana"/></th>
+                                    <t t-foreach="week" t-as="day_info">
+                                        <t t-if="day_info">
+                                            <t t-set="dia_semana_idx" t-value="day_info[1]"/>
+                                            <t t-set="dia_semana_letras" t-value="['S','T','Q','Q','S','S','D']"/>
+                                            <th class="day-header"><t t-esc="dia_semana_letras[dia_semana_idx]"/></th>
+                                        </t>
+                                        <t t-else="">
+                                            <th class="day-header"></th>
+                                        </t>
                                     </t>
                                 </t>
                             </tr>
                             <tr>
                                 <th class="equipment-col"></th>
                                 <t t-foreach="calendar_weeks" t-as="week">
-                                    <t t-foreach="week" t-as="day">
-                                        <th class="calendar-day">
-                                            <t t-if="day != 0">
+                                    <t t-foreach="week" t-as="day_info">
+                                        <t t-if="day_info">
+                                            <t t-set="day" t-value="day_info[0]"/>
+                                            <th class="calendar-day">
                                                 <t t-esc="day"/>
-                                            </t>
-                                        </th>
+                                            </th>
+                                        </t>
+                                        <t t-else="">
+                                            <th class="calendar-day"></th>
+                                        </t>
                                     </t>
                                 </t>
                             </tr>
@@ -122,17 +134,21 @@
                                         <span t-field="equipment.name"/>
                                     </td>
                                     <t t-foreach="calendar_weeks" t-as="week">
-                                        <t t-foreach="week" t-as="day">
-                                            <td class="calendar-day" t-att-class="'programmed' if (day != 0 and equipment.id in programmed_days and day in programmed_days.get(equipment.id, [])) else ('empty' if day == 0 else '')">
-                                                <t t-if="day != 0">
-                                                    <t t-set="equipment_id" t-value="equipment.id"/>
-                                                    <t t-set="equipment_days" t-value="programmed_days.get(equipment_id, [])"/>
-                                                    <t t-set="is_programmed" t-value="equipment_id in programmed_days and day in equipment_days"/>
+                                        <t t-foreach="week" t-as="day_info">
+                                            <t t-if="day_info">
+                                                <t t-set="day" t-value="day_info[0]"/>
+                                                <t t-set="equipment_id" t-value="equipment.id"/>
+                                                <t t-set="equipment_days" t-value="programmed_days.get(equipment_id, [])"/>
+                                                <t t-set="is_programmed" t-value="equipment_id in programmed_days and day in equipment_days"/>
+                                                <td class="calendar-day" t-att-class="'programmed' if is_programmed else ''">
                                                     <t t-if="is_programmed">
                                                         <strong style="font-size: 1.2em;">X</strong>
                                                     </t>
-                                                </t>
-                                            </td>
+                                                </td>
+                                            </t>
+                                            <t t-else="">
+                                                <td class="calendar-day"></td>
+                                            </t>
                                         </t>
                                     </t>
                                 </tr>

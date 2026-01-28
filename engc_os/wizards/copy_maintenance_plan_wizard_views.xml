@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de Formulário do Wizard -->
+    <record id="view_copy_maintenance_plan_wizard_form" model="ir.ui.view">
+        <field name="name">copy.maintenance.plan.wizard.form</field>
+        <field name="model">copy.maintenance.plan.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Copiar Plano de Manutenção">
+                <!-- <sheet> -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="maintenance_plan_id" readonly="1" nolabel="1"/>
+                        </h1>
+                        <p class="text-muted">
+                            Selecione o plano de manutenção do qual deseja copiar periodicidades, seções e instruções
+                        </p>
+                    </div>
+                    
+                    <group>
+                        <group string="Plano de Origem">
+                            <field name="source_plan_id" 
+                                   string="Plano de Manutenção a Copiar"
+                                   domain="[('id', '!=', maintenance_plan_id)]"
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                        </group>
+                        <group string="Opções de Cópia">
+                        
+                          
+                            
+                                <field name="copy_periodicities" 
+                                    string="Copiar Periodicidades"
+                                    widget="boolean_toggle"/>
+                                
+                                <field name="copy_sections" 
+                                    string="Copiar Seções"
+                                    widget="boolean_toggle"/>
+                                
+                                <field name="copy_instructions_without_section" 
+                                    string="Copiar Instruções sem Seção"
+                                    widget="boolean_toggle"/>
+                           
+                        </group>
+                    </group>
+                    
+                <!-- </sheet> -->
+                
+                <footer>
+                    <button name="action_copy_plan" 
+                            string="Copiar" 
+                            type="object" 
+                            class="btn-primary"
+                            icon="fa-copy"/>
+                    <button string="Cancelar" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Ação para abrir o Wizard -->
+    <record id="action_copy_maintenance_plan_wizard" model="ir.actions.act_window">
+        <field name="name">Copiar Plano de Manutenção</field>
+        <field name="res_model">copy.maintenance.plan.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_maintenance_plan_id': active_id}</field>
+    </record>
+</odoo>

@@ -529,6 +529,46 @@ class EngcOs(models.Model):
             },
         }
     
+    def action_add_new_relatorio(self):
+        """
+        Abre um formulário para criar um novo relatório de atendimento.
+        Este método é chamado pelo botão "Adicionar Novo Relatório" na view de OS.
+        
+        Returns:
+            dict: Ação para abrir o formulário de criação de relatório
+        """
+        self.ensure_one()
+        
+        # Verifica se a OS está finalizada
+        if self.state == 'done':
+            raise UserError(
+                _("⚠️ Não é possível adicionar relatórios em uma Ordem de Serviço finalizada."))
+        
+        # Prepara os valores padrão para o novo relatório
+        current_datetime = fields.Datetime.now()
+        employee = self.env['hr.employee'].search([('user_id', '=', self.env.user.id)], limit=1)
+        tecnico = self.tecnico_id if self.tecnico_id else employee
+        
+        # Prepara os técnicos
+        technicians_vals = []
+        if tecnico:
+            technicians_vals = [(4, tecnico.id)]
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Adicionar Novo Relatório'),
+            'view_mode': 'form',
+            'res_model': 'engc.os.relatorios',
+            'target': 'current',
+            'context': {
+                'default_os_id': self.id,
+                'default_company_id': self.company_id.id if self.company_id else False,
+                'default_data_atendimento': current_datetime,
+                'default_data_fim_atendimento': current_datetime + timedelta(hours=1),
+                'default_technicians': technicians_vals,
+            },
+        }
+    
     def action_go_request_parts(self):
         self.ensure_one()
         return {
@@ -802,6 +842,8 @@ class EngcOs(models.Model):
     
     def action_repair_end(self):
         """Finaliza execução da ordem de serviço.
+        
+        Verifica se há assinatura antes de concluir e gera/anexa o PDF da OS concluída.
 
         @return: True
         """
@@ -826,7 +868,7 @@ class EngcOs(models.Model):
                 
         if self.request_parts.filtered(lambda x: x.state not in ['aplicada','cancel','nao_autorizada']):
             raise UserError(
-                _("Para finalizar O.S. todas as peças devem ser aplicadas"))
+                _("Para finalizar O.S. todas as peças devem ser aplicadas. Crie um novo relatório para aplicação da peça  ou cancelamento da peça"))
           
            
 
@@ -834,10 +876,20 @@ class EngcOs(models.Model):
         for p in self.request_parts:
             if not p.state in ['aplicada','cancel','nao_autorizada']:
                 raise UserError(
-                    _("Para finalizar O.S. todas as peças devem ser aplicadas"))
+                    _("Para finalizar O.S. todas as peças devem ser aplicadas. Crie um novo relatório para aplicação da peça  ou cancelamento da peça"))
         
         # verificando se todos check-list foram realizados (apenas para manutenção preventiva)
         self._check_checklist_preventive()
+        
+        # Verifica se há assinatura antes de permitir concluir
+        # Recarrega os registros do banco para garantir que temos os dados mais recentes
+        self.invalidate_recordset(['signature'])
+        for record in self:
+            # Verifica se há assinatura salva no banco de dados
+            if not record.signature:
+                raise UserError(
+                    _("⚠️ Para finalizar a O.S., é obrigatório assinar o documento.\n\n"
+                      "Por favor, assine o documento e salve o formulário antes de concluir a ordem de serviço."))
               
        
 
@@ -849,6 +901,9 @@ class EngcOs(models.Model):
         res = self.write(vals)
         if res:
             # Verifica se há solicitação de serviço associada e finaliza
+            # Nota: O PDF da OS concluída é gerado automaticamente no método write()
+            # quando o estado muda para 'done', então não é necessário chamar
+            # generate_report_and_attach() aqui novamente
             for record in self:
                 request_service = record.request_service_id or record.request_id
                 if request_service:
@@ -1021,10 +1076,8 @@ class EngcOs(models.Model):
             )
 
     def write(self, vals):
-        # Se a assinatura foi preenchida, registra a data
-        if 'signature' in vals and vals.get('signature'):
-            for record in self:
-                record.generate_report_and_attach()
+        # Verifica se a OS está sendo concluída
+        os_being_concluded = 'state' in vals and vals.get('state') == 'done'
         
         result = super(EngcOs, self).write(vals)
         
@@ -1041,6 +1094,13 @@ class EngcOs(models.Model):
                 # Se há assinatura mas não há data, registra a data
                 if record.signature2 and not record.supervisor_signature_date:
                     record.write({'supervisor_signature_date': fields.Datetime.now()})
+        
+        # Se a OS foi concluída, gera e anexa o PDF
+        # Nota: O PDF também é gerado no action_repair_end, mas isso garante que seja gerado
+        # mesmo se a OS for concluída por outro método
+        if os_being_concluded:
+            for record in self:
+                record.generate_report_and_attach()
         
         return result
 

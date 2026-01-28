@@ -802,6 +802,55 @@ class CronogramaPreventiva(models.Model):
         cal = calendar.Calendar()
         return cal.monthdayscalendar(ano, mes)
     
+    def get_calendar_month_filtered(self, ano, mes):
+        """
+        Retorna o calendário de um mês específico organizado por semanas,
+        mas apenas com os dias que pertencem ao mês (remove os zeros).
+        Cada semana terá no mínimo 3 colunas. Se tiver menos dias do mês,
+        preenche com colunas vazias (None).
+        - Na primeira semana: células vazias vêm ANTES dos dias do mês
+        - Na última semana: células vazias vêm DEPOIS dos dias do mês
+        Também retorna informações sobre os dias da semana para cada dia.
+        
+        Args:
+            ano: ano (int)
+            mes: mês (int, 1-12)
+            
+        Returns:
+            list: lista de semanas, cada semana é uma lista de tuplas (dia, dia_semana) ou None
+                  onde dia é o número do dia (1-31) e dia_semana é o índice do dia da semana (0-6, 0=Segunda)
+                  None representa uma coluna vazia
+        """
+        cal = calendar.Calendar()
+        weeks = cal.monthdayscalendar(ano, mes)
+        
+        # Dias da semana em português (Segunda=0, Terça=1, Quarta=2, Quinta=3, Sexta=4, Sábado=5, Domingo=6)
+        filtered_weeks = []
+        
+        for week_idx, week in enumerate(weeks):
+            filtered_week = []
+            for idx, day in enumerate(week):
+                if day != 0:  # Apenas dias que pertencem ao mês
+                    # idx é o índice do dia da semana (0=Segunda, 6=Domingo)
+                    filtered_week.append((day, idx))
+            
+            # Garante que cada semana tenha no mínimo 3 colunas
+            if filtered_week:
+                is_first_week = (week_idx == 0)
+                is_last_week = (week_idx == len(weeks) - 1)
+                
+                while len(filtered_week) < 3:
+                    if is_first_week:
+                        # Na primeira semana: adiciona células vazias no INÍCIO
+                        filtered_week.insert(0, None)
+                    else:
+                        # Nas outras semanas (incluindo a última): adiciona no FINAL
+                        filtered_week.append(None)
+                
+                filtered_weeks.append(filtered_week)
+        
+        return filtered_weeks
+    
     def get_year_from_cronograma(self):
         """
         Retorna o ano do cronograma baseado na data de início.
