@@ -75,6 +75,8 @@
 			<field name="model">engc.os</field>
 			<field name="arch" type="xml">
 				<form string="Ordem de serviço" >
+					<!-- Campos usados apenas em attrs (devem existir na view) -->
+					<field name="check_list_count" invisible="1"/>
 					<header>
 						<button name="action_start_execution" string="Orçar" class="oe_highlight"
 							states="draft" type="object" context="{'report_type': 'orcamento'}"
