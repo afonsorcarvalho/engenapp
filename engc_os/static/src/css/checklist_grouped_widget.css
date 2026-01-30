@@ -1,0 +1,157 @@
+/* Estilos para o widget de checklist agrupado usando classes do Odoo */
+
+.checklist-grouped-widget {
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.checklist-section {
+    margin-bottom: 24px;
+}
+
+.checklist-section .o_list_group_header {
+    font-size: 0.9rem;
+    border-radius: 2px;
+}
+
+.checklist-section .o_list_table {
+    margin-top: 0;
+    width: 100%;
+    table-layout: auto;
+}
+
+.checklist-grouped-widget .checklist-sections {
+    width: 100%;
+    max-width: 100%;
+}
+
+.checklist-grouped-widget .nav-tabs {
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.checklist-grouped-widget .tab-content {
+    width: 100%;
+}
+
+.checklist-grouped-widget .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.checklist-grouped-widget .o_list_table {
+    width: 100%;
+    min-width: 100%;
+    table-layout: fixed;
+}
+
+.checklist-grouped-widget .o_list_table th,
+.checklist-grouped-widget .o_list_table td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Garante que o campo widget ocupe toda a largura */
+.checklist-grouped-widget.o_field_widget {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block;
+}
+
+/* Garante que o container do campo não limite a largura */
+.o_field_widget.checklist-grouped-widget {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.checklist-section .o_list_table thead th {
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.checklist-section .o_list_table tbody td {
+    vertical-align: middle;
+    padding: 8px 12px;
+}
+
+.checklist-section .o_list_table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.checklist-section .o_field_boolean input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.checklist-section .o_input {
+    border: 1px solid #ced4da;
+    border-radius: 2px;
+    padding: 4px 8px;
+    font-size: 0.875rem;
+}
+
+.checklist-section .o_input:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.checklist-section .o_input:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+/* Remove bordas dos campos de medição e observações */
+.checklist-grouped-widget .checklist-input-no-border {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 2px 4px !important;
+    outline: none !important;
+    width: 100% !important;
+    min-width: 100px;
+}
+
+.checklist-grouped-widget .checklist-input-no-border:focus {
+    border: none !important;
+    box-shadow: none !important;
+    background-color: #f8f9fa !important;
+    outline: none !important;
+}
+
+.checklist-grouped-widget .checklist-input-no-border:hover {
+    background-color: #f8f9fa !important;
+}
+
+.checklist-grouped-widget .checklist-input-no-border:disabled {
+    background: transparent !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.checklist-section .badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    font-weight: 500;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+    .checklist-grouped-widget .o_list_table {
+        font-size: 0.875rem;
+    }
+    
+    .checklist-grouped-widget .o_list_table th,
+    .checklist-grouped-widget .o_list_table td {
+        padding: 6px 8px;
+    }
+    
+    .checklist-grouped-widget .nav-tabs .nav-link {
+        padding: 8px 12px;
+        font-size: 0.875rem;
+    }
+}

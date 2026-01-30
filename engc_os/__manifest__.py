@@ -20,7 +20,7 @@
 
 
     # any module necessary for this one to work correctly
-    'depends': ['base','base_setup','product', 'contacts','mail','hr','web_domain_field','stock','steril_stock'],
+    'depends': ['base', 'base_setup', 'product', 'contacts', 'mail', 'hr', 'web', 'web_domain_field', 'stock', 'steril_stock'],
 
     # always loaded
     'data': [
@@ -71,6 +71,11 @@
     'assets': {
         'web.assets_backend': [
             'engc_os/static/src/css/weekdays_checkboxes.css',
+            'engc_os/static/src/css/stat_buttons_os.css',
+            'engc_os/static/src/css/checklist_grouped_widget.css',
+            'engc_os/static/src/js/checklist_grouped_widget.js',
+            # Patch do core: corrige aplicação do estilo no dropdown "Estilo" da assinatura.
+            'engc_os/static/src/js/signature_style_fix.js',
         ],
     },
     'installable': True,

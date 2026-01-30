@@ -8,9 +8,10 @@
 				<tree default_order="create_date desc">
 					<!-- <field name="name" /> -->
 					<field name="state" widget="badge"
-						decoration-danger="state == 'draft'" 
-						decoration-success="state == 'under_repair'" 
-						decoration-warning="state == 'execution_ready'"/>
+						decoration-danger="state in ('draft', 'reproved', 'cancel')"
+						decoration-success="state == 'under_repair'"
+						decoration-muted="state == 'done'"
+						decoration-warning="state in ('under_budget', 'pause_budget', 'wait_authorization', 'wait_parts', 'execution_ready', 'pause_repair')"/>
 					<field name="name" string="Os nº" />
 					<field name="create_date" string="Criado em" />
 					<field name="create_uid" string="Criado por" widget="many2one_avatar_user" />
@@ -24,7 +25,12 @@
 					<field name="solicitante" />
 					<field name="date_request" widget="remaining_days" />
 					<field name="date_scheduled" widget="remaining_days" />
-					<field name="maintenance_type" />
+					<field name="maintenance_type" widget="badge"
+						decoration-danger="maintenance_type == 'corrective'"
+						decoration-success="maintenance_type == 'preventive'"
+						decoration-info="maintenance_type == 'calibration'"
+						decoration-warning="maintenance_type in ('instalacao', 'treinamento')"
+						decoration-muted="maintenance_type in ('preditiva', 'qualification', 'loan')" />
 					
 					<!-- Aplicando cores -->
 				
@@ -76,27 +82,23 @@
 						<button name="action_start_execution" string="Executar" class="oe_highlight"
 							states="draft,under_budget,execution_ready" type="object" context="{'report_type': 'manutencao'}"
 							icon="fa-play" />
-						<button name="action_repair_end" string="Finalizar Execução" class="oe_highlight"
+						<button name="action_repair_end" string="Finalizar" class="oe_highlight"
 							states="under_repair" type="object"
 							icon="fa-check-circle" />
-						<!-- <widget name="signature" string="Sign" highlight="1" attrs="{'invisible': ['|', '|', ('id', '=', False), ('picking_type_code', '!=', 'outgoing'), ('state', '!=', 'done')]}" full_name="partner_id" /> -->
+						<!-- Widget signature com full_name: preenche o nome no diálogo e exibe o botão "Auto" para assinatura automática com o nome do técnico. -->
 						<div class="o_signature_widget_wrapper">
-							<widget name="signature" string="Assinar Documento" highlight="1" />
+							<widget name="signature" string="Assinar" highlight="1" full_name="tecnico_id" />
 						</div>
-						<button name="action_add_new_relatorio" string="Adicionar Novo Relatório" class="oe_highlight"
+						<button name="action_add_new_relatorio" string="Adicionar Relatório" class="oe_highlight"
 							type="object"
 							attrs="{'invisible': [('state', '=', 'done')]}"
 							icon="fa-plus-circle" />
-						<!-- Botão para gerar o check-list a partir do método action_make_check_list -->
+						<!-- Botão para gerar o check-list: oculto quando o checklist já foi gerado -->
 						<button name="action_make_check_list" string="Gerar Check-List" class="oe_highlight"
 							type="object"
-							attrs="{'invisible': ['|', ('maintenance_type', '!=', 'preventive'), ('state', 'not in', ['draft', 'under_repair', 'execution_ready', 'under_budget', 'wait_authorization', 'wait_parts'])]}"
+							attrs="{'invisible': ['|', '|', ('maintenance_type', '!=', 'preventive'), ('state', 'not in', ['draft', 'under_repair', 'execution_ready', 'under_budget', 'wait_authorization', 'wait_parts']), ('check_list_count', '>', 0)]}"
 							icon="fa-tasks" />
-						<button name="action_go_check_list" string="Visualizar Check-List" class="oe_highlight"
-							type="object"
-							attrs="{'invisible': ['|', ('maintenance_type', '!=', 'preventive'), ('state', 'not in', ['draft', 'under_repair', 'execution_ready', 'under_budget', 'wait_authorization', 'wait_parts', 'execution_ready'])]}"
-							icon="fa-list" />
-						<button name="generate_report_and_attach" string="Gerar relatorio" class="oe_highlight"
+						<button name="generate_report_and_attach" string="Gerar PDF" class="oe_highlight"
 							 type="object"
 							 icon="fa-file-pdf-o" />
 						<style>
@@ -109,24 +111,68 @@
 						<field name="state" widget="statusbar" statusbar_visible="draft"
 							options="{'clickable': True}" />
 					</header>
-					<sheet string="Ordem de Serviço">
-					
+					<sheet string="Ordem de Serviço" class="engc_os_sheet">
+						<!-- Ribbon conforme status da OS (mesmas cores da list view: danger/success/warning) -->
+						<widget name="web_ribbon" title="Criada" bg_color="bg-danger" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+						<widget name="web_ribbon" title="Em Orçamento" bg_color="bg-warning" attrs="{'invisible': [('state', '!=', 'under_budget')]}"/>
+						<widget name="web_ribbon" title="Orçamento Pausado" bg_color="bg-warning" attrs="{'invisible': [('state', '!=', 'pause_budget')]}"/>
+						<widget name="web_ribbon" title="Esperando aprovação" bg_color="bg-warning" attrs="{'invisible': [('state', '!=', 'wait_authorization')]}"/>
+						<widget name="web_ribbon" title="Esperando peças" bg_color="bg-warning" attrs="{'invisible': [('state', '!=', 'wait_parts')]}"/>
+						<widget name="web_ribbon" title="Pronta para Execução" bg_color="bg-warning" attrs="{'invisible': [('state', '!=', 'execution_ready')]}"/>
+						<widget name="web_ribbon" title="Em execução" bg_color="bg-success" attrs="{'invisible': [('state', '!=', 'under_repair')]}"/>
+						<widget name="web_ribbon" title="Execução Pausada" bg_color="bg-warning" attrs="{'invisible': [('state', '!=', 'pause_repair')]}"/>
+						<widget name="web_ribbon" title="Reprovada" bg_color="bg-danger" attrs="{'invisible': [('state', '!=', 'reproved')]}"/>
+						<widget name="web_ribbon" title="Concluída" bg_color="bg-secondary" attrs="{'invisible': [('state', '!=', 'done')]}"/>
+						<widget name="web_ribbon" title="Cancelada" bg_color="bg-danger" attrs="{'invisible': [('state', '!=', 'cancel')]}"/>
 						<div name="button_box" position="inside">
-							<button class="oe_stat_button" string="Check-List" type="object"
+							<!-- Check-list: bolinhas acima (ocultas quando zero), nome Checklist abaixo -->
+							<button class="oe_stat_button engc_stat_dual" type="object"
 								name="action_go_check_list"
 								icon="fa-list"
 								attrs="{'invisible': [('maintenance_type', '!=', 'preventive')]}">
-								<field string="Check-List" name="check_list_count" widget="statinfo" />
+								<span class="engc_dual_stat">
+									<div class="engc_stat_item engc_danger" title="Itens do check-list pendentes (não concluídos)"
+										attrs="{'invisible': [('check_list_pending_count', '=', 0)]}">
+										<span class="engc_dot"/><field name="check_list_pending_count" widget="statinfo" nolabel="1" string=""/>
+									</div>
+									<div class="engc_stat_item engc_success" title="Itens do check-list concluídos"
+										attrs="{'invisible': [('check_list_done_count', '=', 0)]}">
+										<span class="engc_dot"/><field name="check_list_done_count" widget="statinfo" nolabel="1" string=""/>
+									</div>
+								</span>
+								<span class="engc_stat_label">Check-List</span>
 							</button>
-							<button class="oe_stat_button" string="Relatórios" type="object"
+							<!-- Relatórios: bolinhas acima (ocultas quando zero), nome Relatórios abaixo -->
+							<button class="oe_stat_button engc_stat_dual" type="object"
 								name="action_go_relatorios"
 								icon="fa-book">
-								<field string="Relatórios" name="relatorios_count" widget="statinfo" />
+								<span class="engc_dual_stat">
+									<div class="engc_stat_item engc_danger" title="Relatórios não concluídos"
+										attrs="{'invisible': [('relatorios_pending_count', '=', 0)]}">
+										<span class="engc_dot"/><field name="relatorios_pending_count" widget="statinfo" nolabel="1" string=""/>
+									</div>
+									<div class="engc_stat_item engc_success" title="Relatórios concluídos"
+										attrs="{'invisible': [('relatorios_done_count', '=', 0)]}">
+										<span class="engc_dot"/><field name="relatorios_done_count" widget="statinfo" nolabel="1" string=""/>
+									</div>
+								</span>
+								<span class="engc_stat_label">Relatórios</span>
 							</button>
-							<button class="oe_stat_button" string="Peças" type="object"
+							<!-- Peças: bolinhas acima (ocultas quando zero), nome Peças abaixo -->
+							<button class="oe_stat_button engc_stat_dual" type="object"
 								name="action_go_request_parts"
 								icon="fa-gears">
-								<field string="Peças" name="request_parts_count" widget="statinfo" />
+								<span class="engc_dual_stat">
+									<div class="engc_stat_item engc_danger" title="Peças requisitadas (aguardando aplicação)"
+										attrs="{'invisible': [('request_parts_requested_count', '=', 0)]}">
+										<span class="engc_dot"/><field name="request_parts_requested_count" widget="statinfo" nolabel="1" string=""/>
+									</div>
+									<div class="engc_stat_item engc_success" title="Peças aplicadas"
+										attrs="{'invisible': [('request_parts_applied_count', '=', 0)]}">
+										<span class="engc_dot"/><field name="request_parts_applied_count" widget="statinfo" nolabel="1" string=""/>
+									</div>
+								</span>
+								<span class="engc_stat_label">Peças</span>
 							</button>
 						</div>
 						<div class="oe_title col-6">
@@ -135,7 +181,7 @@
 							</h1>
 							<label for="company_id" class="oe_edit_only" />
 							<h2>
-								<field name="company_id"  attrs="{'readonly': [('state','in',('done'))] }"
+								<field name="company_id"  attrs="{'readonly': [('state','in',('under_repair','done'))] }"
 									options="{'no_create': True, 'no_create_edit':True}" />
 							</h2>
 							<!-- <h2>
@@ -152,35 +198,35 @@
 									<field name="equipment_id"
 										domain="[('company_id', '=', company_id)]"
 										options="{'no_create': True, 'no_create_edit':True}"
-										attrs="{'readonly': [('state','in',('done'))] }"
+										attrs="{'readonly': [('state','in',('under_repair','done'))] }"
 																				/> 
-									<field name="equipment_apelido" />
+									<field name="equipment_apelido" attrs="{'readonly': [('state','in',('under_repair','done'))]}"/>
 							
-								<field name="equipment_model" />
-								<field name="equipment_category" />
+								<field name="equipment_model" attrs="{'readonly': [('state','in',('under_repair','done'))]}"/>
+								<field name="equipment_category" attrs="{'readonly': [('state','in',('under_repair','done'))]}"/>
 							</group>
 							<group>
-								<field name="equipment_serial_number" />
-								<field name="equipment_patrimonio" string="Patrimônio" />
-								<field name="equipment_tag" string="Tag" />
+								<field name="equipment_serial_number" attrs="{'readonly': [('state','in',('under_repair','done'))]}"/>
+								<field name="equipment_patrimonio" string="Patrimônio" attrs="{'readonly': [('state','in',('under_repair','done'))]}"/>
+								<field name="equipment_tag" string="Tag" attrs="{'readonly': [('state','in',('under_repair','done'))]}"/>
 							</group>
 						</group>
 						<group string="Dados da OS">
 							<group>
-								<field name="solicitante" attrs="{'readonly': [('state','in',('done'))] }"/>
-								<field name="who_executor" widget="selection" attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="solicitante" attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>
+								<field name="who_executor" widget="selection" attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>
 								<field name="tecnico_id"
-									attrs="{'invisible': [('who_executor','!=','own')], 'required':[('who_executor','=','own')],'readonly': [('state','in',('done'))]} "
+									attrs="{'invisible': [('who_executor','!=','own')], 'required':[('who_executor','=','own')],'readonly': [('state','in',('under_repair','done'))]} "
 									options="{'no_create': True}" />
 								<field name="empresa_manutencao"
-									attrs="{'invisible': [('who_executor','!=','3rd_party')],'required':[('who_executor','=','3rd_party')],'readonly': [('state','in',('done'))]}" />
+									attrs="{'invisible': [('who_executor','!=','3rd_party')],'required':[('who_executor','=','3rd_party')],'readonly': [('state','in',('under_repair','done'))]}" />
 								<label for="maintenance_type" />
 								<div class="o_row">
 									<field name="maintenance_type"
-										attrs="{'readonly':['|',('calibration_created','=',True),('state','in',('done'))]}" />
+										attrs="{'readonly':['|',('calibration_created','=',True),('state','in',('under_repair','done'))]}" />
 										
 									<div
-										attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','not in',('New'))],'readonly': [('state','in',('done'))]}">
+										attrs="{'invisible': ['|',('maintenance_type','not in',('calibration')),('name','not in',('New'))],'readonly': [('state','in',('under_repair','done'))]}">
 										<p>
 											Salve a OS e volte aqui
 										</p>
@@ -193,49 +239,50 @@
 												('maintenance_type','not in',('calibration')),
 												('calibration_created','=',True),
 												('name','in',('New'))],
-												'readonly': [('state','in',('done'))]}"
+												'readonly': [('state','in',('under_repair','done'))]}"
 																	icon="fa-plus">
 									</button>
 								</div>
 								<field name="calibration_created"
 									attrs="{
 											'invisible': [('maintenance_type','not in',('calibration'))],
-											'readonly':['|',('calibration_created','=',True),('state','in',('done'))]
+											'readonly':['|',('calibration_created','=',True),('state','in',('under_repair','done'))]
 											}" />
 								<field name="calibration_id"
 									attrs="{
 											'invisible': [('calibration_created','==', False)],
-											'readonly':['|',('calibration_created','=',True),('state','in',('done'))]
+											'readonly':['|',('calibration_created','=',True),('state','in',('under_repair','done'))]
 											}" />
 								<field name="periodicity_ids" widget="many2many_tags" 
 									attrs="{
 											'invisible':[('maintenance_type','not in',('preventive'))],
-											'required':[('maintenance_type','=','preventive')]
+											'required':[('maintenance_type','=','preventive')],
+											'readonly': [('state','in',('under_repair','done'))]
 											}" />
-								<field name="priority" widget="priority" />
+								<field name="priority" widget="priority" attrs="{'readonly': [('state','in',('under_repair','done'))]}"/>
 							</group>
 							<group>
-								<field name="date_request"  attrs="{'readonly': [('state','in',('done'))] }"/>
-								<field name="date_scheduled" attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="date_request"  attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>
+								<field name="date_scheduled" attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>
 								<field name="date_execution" readonly="1"/>
-								<field name="date_start"  readonly="1" attrs="{'readonly': [('state','in',('done'))] }"/>
-								<field name="date_finish" readonly="1"  attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="date_start"  readonly="1" attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>
+								<field name="date_finish" readonly="1"  attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>
 								<field name="relatorios_time_execution" widget="float_time"/>
-								<field name="request_service_id" attrs="{'readonly': [('state','in',('done'))] }"/>
+								<field name="request_service_id" attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>
 							</group>
 						</group>
 						<group string="Solicitação">
-							<field name="problem_description" attrs="{'readonly': [('state','in',('done'))] }"/>
+							<field name="problem_description" attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>
 							<!-- <field name="service_description" /> -->
 						</group>
 						<group>
 							<group>
 								<field name="technician_signature_date" attrs="{'invisible': [('technician_signature_date', '=', False)]}" readonly="1"/>
-								<field name="signature" string="Assinatura Tecnico" widget="signature" />
+								<field name="signature" string="Assinatura Tecnico" widget="signature" attrs="{'readonly': [('state','=','done')]}"/>
 							</group>
 							<group>
 								<field name="supervisor_signature_date" attrs="{'invisible': [('supervisor_signature_date', '=', False)]}" readonly="1"/>
-								<field name="signature2" string="Assinatura Supervisor" widget="signature" />
+								<field name="signature2" string="Assinatura Supervisor" widget="signature" attrs="{'readonly': [('state','=','done')]}"/>
 							</group>
 							
 						</group>

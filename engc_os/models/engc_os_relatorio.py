@@ -69,7 +69,16 @@ class Relatorios(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Salva ou atualiza os dados no banco de dados"""
+        """
+        Cria novos relatórios de atendimento.
+        
+        Validações:
+        - Ordem de serviço é obrigatória
+        - Ordem de serviço não pode estar concluída
+        
+        Raises:
+            ValidationError: Se a OS não for informada ou estiver concluída.
+        """
         # Processa cada registro na lista
         for vals in vals_list:
             # Valida que a ordem de serviço é obrigatória
@@ -77,6 +86,16 @@ class Relatorios(models.Model):
                 raise ValidationError(
                     _('⚠️ É obrigatório informar a Ordem de Serviço para criar um relatório de atendimento.')
                 )
+            
+            # Valida se a OS está concluída
+            os_id = vals.get('os_id')
+            if os_id:
+                os = self.env['engc.os'].browse(os_id)
+                if os.state == 'done':
+                    raise ValidationError(
+                        _('⚠️ Não é possível criar relatórios em uma Ordem de Serviço concluída.')
+                    )
+            
             if 'company_id' in vals:
                 vals['name'] = self.env['ir.sequence'].with_company(vals['company_id']).next_by_code(
                     'engc.os.relatorio_sequence') or _('New')
@@ -272,6 +291,130 @@ class Relatorios(models.Model):
         Método público para atualizar o resumo do atendimento com base nos itens do checklist marcados.
         """
         self._update_summary_from_checklist()
+    
+    def action_open_checklist_selection(self):
+        """
+        Abre uma view de seleção com os itens do checklist da OS que ainda não foram adicionados ao relatório.
+        Permite ao usuário selecionar quais itens adicionar ao relatório.
+        Usa o padrão do Odoo para Many2many fields com seleção múltipla.
+        """
+        self.ensure_one()
+        
+        if not self.os_id:
+            raise UserError(_("⚠️ Não há Ordem de Serviço associada ao relatório."))
+        
+        # Verifica se o checklist já existe na OS, se não, cria
+        existing_checklist = self.env['engc.os.verify.checklist'].search(
+            [('os_id', '=', self.os_id.id)], limit=1
+        )
+        if not existing_checklist:
+            # Cria o checklist se não existir
+            self.os_id.create_checklist()
+        
+        # Busca os itens do checklist da OS que ainda não foram associados a este relatório
+        domain = [
+            ('os_id', '=', self.os_id.id),
+            ('id', 'not in', self.checklist_item_ids.ids),
+        ]
+        
+        # Tenta obter a view, se não existir, usa None (Odoo usará a view padrão)
+        view_id = False
+        try:
+            view_id = self.env.ref('engc_os.view_verify_os_checklist_relatorio_tree').id
+        except Exception:
+            # Se a view não existir, usa a view padrão
+            _logger.warning("View 'engc_os.view_verify_os_checklist_relatorio_tree' não encontrada, usando view padrão")
+        
+        # Cria a ação para abrir a view de seleção no padrão Many2many do Odoo
+        # Usa o formato que o Odoo espera, seguindo o padrão das outras ações do código
+        action = {
+            'name': _('Adicionar Instruções do Checklist'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'engc.os.verify.checklist',
+            'views': [[view_id if view_id else False, 'tree']],
+            'view_mode': 'tree',
+            'domain': domain,
+            'context': {
+                'default_os_id': self.os_id.id,
+                'default_relatorio_id': self.id,
+                'create': False,
+                'no_create': True,
+                'no_edit': True,
+                'no_open': True,
+                # Contexto para Many2many selection
+                'active_id': self.id,
+                'active_model': 'engc.os.relatorios',
+                'active_field': 'checklist_item_ids',
+                # Permite seleção múltipla
+                'selection_mode': True,
+            },
+            'target': 'new',
+        }
+        
+        return action
+    
+    def action_add_checklist_items(self, checklist_ids):
+        """
+        Adiciona os itens de checklist selecionados ao relatório.
+        Chamado quando o usuário seleciona itens na view de seleção.
+        
+        :param checklist_ids: Lista de IDs dos itens de checklist a serem adicionados
+        :type checklist_ids: list
+        """
+        self.ensure_one()
+        if not checklist_ids:
+            return
+        
+        # Converte para lista se necessário
+        if not isinstance(checklist_ids, list):
+            checklist_ids = [checklist_ids]
+        
+        # Filtra apenas os IDs que ainda não estão no relatório
+        existing_ids = self.checklist_item_ids.ids
+        new_ids = [item_id for item_id in checklist_ids if item_id not in existing_ids]
+        
+        if new_ids:
+            # Adiciona os itens ao campo Many2many
+            self.checklist_item_ids = [(4, item_id) for item_id in new_ids]
+            # Atualiza o relatorio_id nos itens adicionados
+            self.env['engc.os.verify.checklist'].browse(new_ids).write({
+                'relatorio_id': self.id
+            })
+        
+        return {
+            'type': 'ir.actions.act_window_close',
+        }
+    
+    def action_remove_checklist_item(self, checklist_id):
+        """
+        Remove um item de checklist do relatório.
+        Chamado quando o usuário clica no botão de excluir.
+        
+        :param checklist_id: ID do item de checklist a ser removido
+        :type checklist_id: int
+        """
+        self.ensure_one()
+        if not checklist_id:
+            return
+        
+        # Verifica se o item está no relatório
+        if checklist_id not in self.checklist_item_ids.ids:
+            return
+        
+        # Remove o item do campo Many2many usando comando UNLINK (3, id)
+        self.checklist_item_ids = [(3, checklist_id)]
+        
+        # Limpa os dados do item removido
+        checklist_item = self.env['engc.os.verify.checklist'].browse(checklist_id)
+        if checklist_item.exists():
+            checklist_item.write({
+                'check': False,
+                'medicao': 0.0,
+                'observations': '',
+                'relatorio_id': False
+            })
+        
+        return True
 
     os_id = fields.Many2one(
         'engc.os', 'Ordem de Serviço',
@@ -565,6 +708,7 @@ class Relatorios(models.Model):
         """
         Marca o relatório como concluído e cria requisições de estoque para as peças requisitadas.
         Valida se todos os itens do checklist estão marcados antes de concluir.
+        Exibe toast de sucesso e retorna ação para fechar o formulário e voltar à tela de quem abriu o relatório.
         """
         # Validação: verifica se há itens do checklist e se todos estão marcados
         if self.checklist_item_ids:
@@ -582,6 +726,19 @@ class Relatorios(models.Model):
         
         # Cria requisições de estoque para as peças requisitadas neste relatório
         self._create_stock_requests()
+
+        # Toast de sucesso e volta para a tela de quem abriu o relatório (fecha o formulário).
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Relatório concluído'),
+                'message': _('O relatório de serviço foi concluído com sucesso.'),
+                'type': 'success',
+                'sticky': False,
+                'next': {'type': 'ir.actions.act_window_close'},
+            },
+        }
     
     def _create_stock_requests(self):
         """

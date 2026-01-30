@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="engc_os.ChecklistGroupedWidget">
+        <div class="checklist-grouped-widget">
+            <div t-if="state.loading" class="text-center p-3">
+                <i class="fa fa-spinner fa-spin"/> Carregando checklist...
+            </div>
+            
+            <div t-if="!state.loading and state.sections.length === 0" class="alert alert-info">
+                <i class="fa fa-info-circle"/> Nenhum item de checklist encontrado.
+            </div>
+            
+            <div t-if="!state.loading and state.sections.length > 0" class="checklist-sections">
+                <div t-foreach="state.sections" t-as="sectionName" t-key="sectionName" class="checklist-section mb-4">
+                    <!-- Cabeçalho da Seção -->
+                    <div class="checklist-section-header bg-light p-2 mb-2 rounded">
+                        <h5 class="mb-0">
+                            <i class="fa fa-folder-open me-2"/>
+                            <t t-esc="sectionName"/>
+                            <span class="badge bg-secondary ms-2">
+                                <t t-esc="state.groupedItems[sectionName].items.length"/> item(s)
+                            </span>
+                        </h5>
+                    </div>
+                    
+                    <!-- Itens da Seção -->
+                    <div class="checklist-items">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 5%;">Seq</th>
+                                    <th style="width: 40%;">Instrução</th>
+                                    <th style="width: 8%;" class="text-center">Check</th>
+                                    <th style="width: 15%;" class="text-center">Medição</th>
+                                    <th style="width: 12%;" class="text-center">Grandeza</th>
+                                    <th style="width: 20%;">Observações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="state.groupedItems[sectionName].items" t-as="item" t-key="item.id">
+                                    <td class="text-center">
+                                        <t t-esc="item.sequence"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="item.instruction"/>
+                                    </td>
+                                    <td class="text-center">
+                                        <input 
+                                            type="checkbox" 
+                                            t-att-checked="item.check"
+                                            t-att-disabled="isReadonly"
+                                            t-on-change="(ev) => this.onCheckChange(item, ev)"
+                                            class="form-check-input"/>
+                                    </td>
+                                    <td class="text-center">
+                                        <t t-if="item.tem_medicao">
+                                            <input 
+                                                type="number" 
+                                                step="0.01"
+                                                t-att-value="item.medicao || 0"
+                                                t-att-disabled="isReadonly"
+                                                t-on-change="(ev) => this.onMedicaoChange(item, ev)"
+                                                class="form-control form-control-sm text-end"
+                                                style="min-width: 80px;"/>
+                                        </t>
+                                        <span t-if="!item.tem_medicao" class="text-muted">-</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <t t-if="item.tem_medicao and item.magnitude">
+                                            <span class="badge bg-info">
+                                                <t t-esc="item.magnitude"/>
+                                            </span>
+                                        </t>
+                                        <span t-if="!item.tem_medicao or !item.magnitude" class="text-muted">-</span>
+                                    </td>
+                                    <td>
+                                        <input 
+                                            type="text" 
+                                            t-att-value="item.observations || ''"
+                                            t-att-disabled="isReadonly"
+                                            t-on-change="(ev) => this.onObservationsChange(item, ev)"
+                                            class="form-control form-control-sm"
+                                            placeholder="Observações..."/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

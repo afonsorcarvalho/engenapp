@@ -74,7 +74,8 @@
                             <td>CNPJ/CPF:</td>
                             <td>
                                 <b>
-                                    <span t-field="o.client_id.l10n_br_cnpj_cpf" />
+                                    <span t-if="'l10n_br_cnpj_cpf' in o.client_id._fields and o.client_id.l10n_br_cnpj_cpf" t-field="o.client_id.l10n_br_cnpj_cpf" />
+                                    <span t-if="'l10n_br_cnpj_cpf' not in o.client_id._fields or not o.client_id.l10n_br_cnpj_cpf">-</span>
                                 </b>
                             </td>
                             <td>Contato:</td>

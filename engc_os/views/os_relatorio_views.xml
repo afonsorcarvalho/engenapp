@@ -112,22 +112,10 @@
                   Cada relatório pode trabalhar em diferentes partes do checklist.
                 </div>
                 <field name="checklist_item_ids" 
+                       widget="checklist_grouped"
                        nolabel="1"
                        attrs="{'readonly': [('state','not in',('draft'))] }"
-                       context="{'default_relatorio_id': id, 'default_os_id': os_id}">
-                  <tree string="Checklist" editable="bottom" create="false" delete="false">
-                    <field name="sequence" widget="handle" readonly="true"/>
-                    <field name="section" optional="hide" readonly="true"/>
-                    <field name="instruction" readonly="true"/>
-                    <field name="check"/>
-                    <field name="tem_medicao" readonly="true" optional="hide"/>
-                    <field name="medicao" attrs="{'invisible': [('tem_medicao','=',False)], 'required': [('tem_medicao','=',True)]}"/>
-                    <field name="magnitude" readonly="true" attrs="{'invisible': [('tem_medicao','=',False)]}"/>
-                    <field name="observations"/>
-                    <field name="state" optional="hide" readonly="true"/>
-                    <field name="relatorio_id" readonly="true" optional="hide"/>
-                  </tree>
-                </field>
+                       context="{'default_relatorio_id': id, 'default_os_id': os_id}"/>
                 <div class="mt16 text-center" attrs="{'invisible': ['|', ('checklist_item_ids', '=', []), ('state', '=', 'done')]}">
                   <button name="action_update_summary_from_checklist" 
                           string="Atualizar Resumo do Atendimento" 

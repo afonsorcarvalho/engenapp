@@ -220,26 +220,60 @@ class EngcPreventiva(models.Model):
         
     
     def write(self, vals):
-        self.ensure_one()
-        
-        
-        if self.gerada_os == True and self.preventiva_executada == False:
-            if ('data_programada' in vals):
-                self.os_id.date_scheduled = vals['data_programada']
-                self.os_id.date_start = vals['data_programada']
-            if ('data_programada_fim' in vals):
-                self.os_id.date_execution = vals['data_programada_fim']
-                #todo não está funcionando colocar o tempo estimado na OS
-            if ('tempo_estimado' in vals):
-                self.os_id.maintenance_duration = vals['tempo_estimado']
-            #self.calc_dias_de_atraso()
-            
-            
-        if self.preventiva_executada == True:
-            raise UserError(
-                _("Não pode alterar preventiva que já tem OS executada"))    
+        """
+        Sobrescreve write para:
+        1) Impedir alteração de data quando a preventiva já está concluída.
+        2) Sincronizar a data programada da OS relacionada quando a preventiva
+           tiver sua data alterada e já possuir OS gerada.
+        """
+        for record in self:
+            record._check_write_preventiva_concluida(vals)
+            record._sync_os_dates_on_preventiva_change(vals)
+
         result = super(EngcPreventiva, self).write(vals)
         return result
+
+    def _check_write_preventiva_concluida(self, vals):
+        """
+        Impede alteração de data programada quando a preventiva já está concluída.
+        """
+        self.ensure_one()
+        if not (self.state == 'done' or self.preventiva_executada):
+            return
+        blocked = []
+        if vals.get('data_programada') is not None:
+            blocked.append(_('Data programada (início)'))
+        if vals.get('data_programada_fim') is not None:
+            blocked.append(_('Data programada (fim)'))
+        if blocked:
+            raise UserError(
+                _("Não é permitido alterar a data da preventiva quando ela já está concluída.\n"
+                  "Campos bloqueados: %s") % ', '.join(blocked)
+            )
+
+    def _sync_os_dates_on_preventiva_change(self, vals):
+        """
+        Quando a preventiva tem OS gerada e ainda não está concluída,
+        atualiza a data programada da OS relacionada ao alterar data da preventiva.
+        """
+        self.ensure_one()
+        if self.preventiva_executada or self.state == 'done':
+            return
+        if not self.gerada_os or not self.os_id:
+            return
+
+        os_vals = {}
+        if 'data_programada' in vals and vals['data_programada'] is not None:
+            os_vals['date_scheduled'] = vals['data_programada']
+        if 'tempo_estimado' in vals and vals.get('tempo_estimado') is not None:
+            os_vals['maintenance_duration'] = vals['tempo_estimado']
+
+        if os_vals:
+            self.os_id.write(os_vals)
+            _logger.info(
+                "OS %s (ID: %s) atualizada com data programada da preventiva %s (ID: %s)",
+                self.os_id.name, self.os_id.id, self.name, self.id
+            )
     
     
     
@@ -271,60 +305,131 @@ class EngcPreventiva(models.Model):
     # Colocar serviço de manutenção preventiva default do contrato na service.line da Ordem de serviço
     
     def gera_os(self):
-        rec = self
-        _logger.info("PROCURANDO INSTRUÇÕES DO PLANO DE MANUTENÇÃO...")
-        _logger.info(rec.maintenance_plan)
-      
-      
-        instructions_list = [] 
-        periodicity_list = []
-        tecnicos = []
-        who_executor = 'own'
-        date_request = datetime.now()
+        """
+        Gera uma ordem de serviço automaticamente para a preventiva.
         
-        for instructions in rec.maintenance_plan.instrucion_ids:
-            _logger.debug("INSTRUÇÕES %s", instructions.name)
-            instructions_list.append(instructions.id)
-        periodicity_list = rec.maintenance_plan.periodicity_ids.mapped('id')    
-        
-        #pdb.set_trace()
-        #_logger.debug("Tecnico da preventiva %s", rec.tecnicos.name)
-        #for tecnico in rec.tecnicos:
-        #    tecnicos = tecnico.id
-
-        
-        
-
-        description = 'Manutenção Preventiva referente ao mês ' + rec.data_programada.strftime('%m/%Y')
+        Returns:
+            recordset: Ordem de serviço criada.
             
-        os = self.env['engc.os'].create({
-                'origin':rec.name,
-                'maintenance_type':'preventive',
-                'solicitante':'Automático',
-              #  'cliente_id': rec.client.id if rec.client.id else None ,
-                'problem_description': description,
-                'who_executor' : who_executor,
-                'periodicity_ids':[(6, 0, periodicity_list)],
-              #  'description': description,
-                
-                
-                
-                'equipment_id': rec.equipment.id,
-                'date_request':  date_request,
-                'date_scheduled':  rec.data_programada,
-                'date_execution':  rec.data_programada,
-                'check_list_id': [(6, 0, instructions_list)],
-               
-                #'tecnico_id': [(6,0,tecnicos)],
-                
-
-                'state':'execution_ready',
+        Raises:
+            ValidationError: Se faltarem dados necessários para criar a OS.
+        """
+        rec = self
+        self.ensure_one()
+        
+        _logger.info("Gerando OS para preventiva: %s", rec.name)
+        
+        # Validações antes de criar a OS
+        if not rec.equipment:
+            raise ValidationError(
+                _('⚠️ Não é possível gerar OS: Equipamento não informado na preventiva %s.') % rec.name
+            )
+        
+        if not rec.data_programada:
+            raise ValidationError(
+                _('⚠️ Não é possível gerar OS: Data programada não informada na preventiva %s.') % rec.name
+            )
+        
+        # Busca o plano de manutenção: primeiro na preventiva, depois no equipamento, depois na categoria
+        maintenance_plan = rec.maintenance_plan
+        if not maintenance_plan and rec.equipment:
+            # Usa o método do equipamento que busca no equipamento ou na categoria
+            maintenance_plan = rec.equipment.get_maintenance_plan()
+        
+        if not maintenance_plan:
+            raise ValidationError(
+                _('⚠️ Não é possível gerar OS: Plano de manutenção não encontrado.\n'
+                  'Verifique se o plano está configurado na preventiva, no equipamento %s ou na sua categoria.') % 
+                (rec.equipment.name if rec.equipment else 'N/A')
+            )
+        
+        _logger.info("Plano de manutenção encontrado: %s", maintenance_plan.name)
+        
+        # Prepara listas de instruções e periodicidades
+        instructions_list = []
+        periodicity_list = []
+        
+        for instruction in maintenance_plan.instrucion_ids:
+            _logger.debug("INSTRUÇÃO: %s", instruction.name)
+            instructions_list.append(instruction.id)
+        
+        periodicity_list = maintenance_plan.periodicity_ids.mapped('id')
+        
+        if not periodicity_list:
+            raise ValidationError(
+                _('⚠️ Não é possível gerar OS: Plano de manutenção não possui periodicidades cadastradas.')
+            )
+        
+        # Prepara dados para criação da OS
+        who_executor = 'own'
+        current_datetime = fields.Datetime.now()
+        
+        # A data de requisição deve ser sempre menor ou igual à data programada
+        # Se a data programada for no futuro, usa a data atual
+        # Se a data programada for no passado ou hoje, usa a data programada
+        if rec.data_programada >= current_datetime:
+            date_request = current_datetime
+        else:
+            date_request = rec.data_programada
+        
+        description = 'Manutenção Preventiva referente ao mês ' + rec.data_programada.strftime('%m/%Y')
+        
+        # Prepara valores para criação da OS
+        os_vals = {
+            'origin': rec.name,
+            'maintenance_type': 'preventive',
+            'solicitante': 'Automático',
+            'problem_description': description,
+            'who_executor': who_executor,
+            'periodicity_ids': [(6, 0, periodicity_list)],
+            'equipment_id': rec.equipment.id,
+            'date_request': date_request,
+            'date_scheduled': rec.data_programada,
+            'date_execution': rec.data_programada,
+            'state': 'execution_ready',
+            'company_id': rec.company_id.id if rec.company_id else False,
+        }
+        
+        # Adiciona cliente se existir
+        if rec.client:
+            os_vals['client_id'] = rec.client.id
+        
+        # Adiciona técnico se existir
+        if rec.tecnico:
+            os_vals['tecnico_id'] = rec.tecnico.id
+            
+        # Cria a ordem de serviço
+        try:
+            os = self.env['engc.os'].create(os_vals)
+            _logger.info("OS criada com sucesso: %s (ID: %s) para preventiva %s", os.name, os.id, rec.name)
+            
+            # IMPORTANTE: Atualiza a preventiva para marcar que a OS foi gerada
+            # Atualiza gerada_os=True e os_id com o ID da OS gerada
+            rec.write({
+                'gerada_os': True,
+                'state': 'programada',
+                'os_id': os.id
             })
-        
-        
-
-        #rec.write({'gerada_os': True,'state':'programada', 'os_id': os.id})
-        return os
+            
+            # Força flush para garantir que a atualização foi persistida no banco
+            self.env.flush_all()
+            
+            # Invalida o cache para garantir que os dados estão atualizados
+            rec.invalidate_recordset(['gerada_os', 'os_id', 'state'])
+            
+            # Log detalhado da atualização
+            _logger.info("Preventiva %s (ID: %s) atualizada com sucesso:", rec.name, rec.id)
+            _logger.info("  - gerada_os: %s", rec.gerada_os)
+            _logger.info("  - os_id: %s (OS nº: %s)", rec.os_id.id if rec.os_id else None, rec.os_id.name if rec.os_id else None)
+            _logger.info("  - state: %s", rec.state)
+            
+            return os
+            
+        except Exception as e:
+            _logger.error("Erro ao criar OS para preventiva %s: %s", rec.name, str(e))
+            raise ValidationError(
+                _('⚠️ Erro ao gerar OS para preventiva %s:\n%s') % (rec.name, str(e))
+            )
     
     
     def set_preventiva_atrasada(self):
@@ -452,11 +557,12 @@ class EngcPreventiva(models.Model):
         data_limite = hoje + timedelta(days=7)
         
         # Busca preventivas programadas que ainda não tiveram OS gerada
+        # Nota: state pode ser 'draft' ou outros estados, mas não 'programada' (que é setado após gerar OS)
         preventivas = self.env['engc.preventive'].search([
             ('gerada_os', '=', False),
             ('data_programada', '>=', hoje),
             ('data_programada', '<=', data_limite),
-            ('state', '=', 'programada')
+            ('state', 'in', ['draft', 'reagendada']),  # Estados válidos antes de gerar OS
         ])
         
         _logger.info(f"Encontradas {len(preventivas)} preventivas para gerar OS")
@@ -467,15 +573,60 @@ class EngcPreventiva(models.Model):
         for preventiva in preventivas:
             try:
                 if not preventiva.gerada_os:
+                    _logger.info(f"Gerando OS para preventiva {preventiva.name} (ID: {preventiva.id})")
                     os = preventiva.gera_os()
                     if os:
-                        os_geradas += 1
-                        _logger.info(f"OS gerada para preventiva {preventiva.name} - Equipamento: {preventiva.equipment.name if preventiva.equipment else 'N/A'}")
+                        # Força flush para garantir que a atualização foi persistida
+                        self.env.flush_all()
+                        
+                        # Recarrega o registro para garantir que os dados estão atualizados
+                        preventiva.invalidate_recordset(['gerada_os', 'os_id', 'state'])
+                        
+                        # Valida se os campos foram atualizados corretamente
+                        if preventiva.gerada_os and preventiva.os_id:
+                            os_geradas += 1
+                            _logger.info(f"✓ OS gerada com sucesso para preventiva {preventiva.name} (ID: {preventiva.id}):")
+                            _logger.info(f"  - OS nº: {preventiva.os_id.name}")
+                            _logger.info(f"  - Equipamento: {preventiva.equipment.name if preventiva.equipment else 'N/A'}")
+                            _logger.info(f"  - gerada_os: {preventiva.gerada_os}")
+                            _logger.info(f"  - os_id: {preventiva.os_id.id}")
+                            _logger.info(f"  - state: {preventiva.state}")
+                        else:
+                            erros += 1
+                            _logger.error(f"✗ Erro: OS criada mas campos não foram atualizados na preventiva {preventiva.name} (ID: {preventiva.id})")
+                            _logger.error(f"  - gerada_os: {preventiva.gerada_os} (esperado: True)")
+                            _logger.error(f"  - os_id: {preventiva.os_id.id if preventiva.os_id else None} (esperado: {os.id if os else None})")
+                            _logger.error(f"  - state: {preventiva.state} (esperado: 'programada')")
+                    else:
+                        erros += 1
+                        _logger.error(f"✗ Erro: gera_os() retornou None para preventiva {preventiva.name}")
             except Exception as e:
                 erros += 1
-                _logger.error(f"Erro ao gerar OS para preventiva {preventiva.name}: {str(e)}")
+                _logger.error(f"✗ Erro ao gerar OS para preventiva {preventiva.name} (ID: {preventiva.id}): {str(e)}")
+                import traceback
+                _logger.error(traceback.format_exc())
         
         _logger.info(f"Processo concluído: {os_geradas} OS geradas, {erros} erros")
+        
+        # Atualiza o status das preventivas para verificar se já estão atrasadas
+        _logger.info("Iniciando atualização de status das preventivas (verificação de atrasos)...")
+        preventivas_nao_executadas = self.env['engc.preventive'].search([
+            ('preventiva_executada', '=', False)
+        ])
+        
+        if preventivas_nao_executadas:
+            _logger.info(f"Verificando {len(preventivas_nao_executadas)} preventivas não executadas para atualizar status de atraso...")
+            preventivas_nao_executadas.calc_dias_de_atraso()
+            
+            # Conta quantas preventivas foram marcadas como atrasadas
+            preventivas_atrasadas = self.env['engc.preventive'].search([
+                ('preventiva_executada', '=', False),
+                ('state', '=', 'atrasada')
+            ])
+            _logger.info(f"Atualização concluída: {len(preventivas_atrasadas)} preventivas marcadas como atrasadas")
+        else:
+            _logger.info("Nenhuma preventiva não executada encontrada para verificação de atraso")
+        
         return True
 
 

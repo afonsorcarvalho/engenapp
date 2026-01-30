@@ -1,10 +1,6 @@
-import time
-import base64
-from datetime import date, datetime, timedelta
+from datetime import timedelta
 
-from odoo import models, fields,  api, _, SUPERUSER_ID
-#from odoo.addons import decimal_precision as dp
-from odoo import netsvc
+from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 import logging
 
@@ -33,7 +29,7 @@ class EngcOs(models.Model):
         ('cancel', 'Cancelada'),
     ]
 
-    # TODO Transformar o tipo de manutenção em uma classe será que é preciso?
+    # Constantes para seleção de tipos de manutenção
     MAINTENANCE_TYPE_SELECTION = [
         ('corrective', 'Corretiva'),
         ('preventive', 'Preventiva'),
@@ -59,17 +55,24 @@ class EngcOs(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Salva ou atualiza os dados no banco de dados"""
-        for vals in vals_list:
-            if 'company_id' in vals:
-                vals['name'] = self.env['ir.sequence'].with_company(self.company_id.id).next_by_code(
-                    'engc.os_sequence') or _('New')
-            else:
-                vals['name'] = self.env['ir.sequence'].next_by_code('engc.os_sequence') or _('New')
+        """
+        Cria novas ordens de serviço e gera automaticamente o número da sequência.
+        
+        Args:
+            vals_list: Lista de dicionários com os valores para criar as OS.
             
-
-        result = super(EngcOs, self).create(vals_list)
-        return result
+        Returns:
+            recordset: Registros criados.
+        """
+        for vals in vals_list:
+            if 'name' not in vals or vals.get('name') == _('New'):
+                company_id = vals.get('company_id')
+                if company_id:
+                    vals['name'] = self.env['ir.sequence'].with_company(company_id).next_by_code(
+                        'engc.os_sequence') or _('New')
+                else:
+                    vals['name'] = self.env['ir.sequence'].next_by_code('engc.os_sequence') or _('New')
+        return super(EngcOs, self).create(vals_list)
 
     # @api.model
     # def _gera_qr(self):
@@ -132,32 +135,18 @@ class EngcOs(models.Model):
         do relatório de serviço mais antigo.
         """
         for record in self:
-            if record.relatorios_id:
-                # Filtra apenas relatórios com data_atendimento preenchida
-                relatorios_com_data = record.relatorios_id.filtered(lambda r: r.data_atendimento)
-                if relatorios_com_data:
-                    record.date_start = min(relatorios_com_data.mapped("data_atendimento"))
-                else:
-                    record.date_start = None
-            else:
-                record.date_start = None
+            relatorios_com_data = record.relatorios_id.filtered('data_atendimento')
+            record.date_start = min(relatorios_com_data.mapped("data_atendimento")) if relatorios_com_data else False
     
     @api.depends('relatorios_id', 'relatorios_id.data_fim_atendimento')
     def _compute_date_execution(self):
         """
         Calcula a data de execução com base no fim do atendimento 
-        do relatório de serviço mais novo.
+        do relatório de serviço mais recente.
         """
         for record in self:
-            if record.relatorios_id:
-                # Filtra apenas relatórios com data_fim_atendimento preenchida
-                relatorios_com_data = record.relatorios_id.filtered(lambda r: r.data_fim_atendimento)
-                if relatorios_com_data:
-                    record.date_execution = max(relatorios_com_data.mapped("data_fim_atendimento"))
-                else:   
-                    record.date_execution = None
-            else:   
-                record.date_execution = None
+            relatorios_com_data = record.relatorios_id.filtered('data_fim_atendimento')
+            record.date_execution = max(relatorios_com_data.mapped("data_fim_atendimento")) if relatorios_com_data else False
                 
 
 
@@ -169,86 +158,87 @@ class EngcOs(models.Model):
     def _compute_date_finish(self):
         """
         Calcula o término da execução com base no fim do atendimento 
-        do relatório de serviço mais novo.
+        do relatório de serviço mais recente.
+        Nota: Atualmente usa a mesma lógica de _compute_date_execution.
         """
         for record in self:
-            if record.relatorios_id:
-                # Filtra apenas relatórios com data_fim_atendimento preenchida
-                relatorios_com_data = record.relatorios_id.filtered(lambda r: r.data_fim_atendimento)
-                if relatorios_com_data:
-                    record.date_finish = max(relatorios_com_data.mapped("data_fim_atendimento"))
-                else:
-                    record.date_finish = None
-            else:
-                record.date_finish = None
+            relatorios_com_data = record.relatorios_id.filtered('data_fim_atendimento')
+            record.date_finish = max(relatorios_com_data.mapped("data_fim_atendimento")) if relatorios_com_data else False
     
-    # ******************************************
+    # ==========================================
     #  VALIDAÇÕES (CONSTRAINTS)
-    #
-    # ******************************************
+    # ==========================================
     
     @api.constrains('date_request', 'date_scheduled')
     def _check_date_request_vs_scheduled(self):
         """
         Valida que a Data Requisição não pode ser maior que a Data Programada.
+        
+        Raises:
+            ValidationError: Se a data de requisição for posterior à data programada.
         """
         for record in self:
-            if record.date_request and record.date_scheduled:
-                if record.date_request > record.date_scheduled:
-                    raise ValidationError(
-                        _('A Data Requisição não pode ser maior que a Data Programada.\n'
-                          'Data Requisição: %s\n'
-                          'Data Programada: %s') % (
-                            record.date_request.strftime('%d/%m/%Y %H:%M:%S'),
-                            record.date_scheduled.strftime('%d/%m/%Y %H:%M:%S')
-                        )
+            if record.date_request and record.date_scheduled and record.date_request > record.date_scheduled:
+                raise ValidationError(
+                    _('A Data Requisição não pode ser maior que a Data Programada.\n'
+                      'Data Requisição: %s\n'
+                      'Data Programada: %s') % (
+                        record.date_request.strftime('%d/%m/%Y %H:%M:%S'),
+                        record.date_scheduled.strftime('%d/%m/%Y %H:%M:%S')
                     )
+                )
     
     @api.constrains('date_request', 'date_start')
     def _check_date_request_vs_start(self):
         """
         Valida que a Data Requisição não pode ser maior que o Início da Execução.
+        
+        Raises:
+            ValidationError: Se a data de requisição for posterior ao início da execução.
         """
         for record in self:
-            if record.date_request and record.date_start:
-                if record.date_request > record.date_start:
-                    raise ValidationError(
-                        _('A Data Requisição não pode ser maior que o Início da Execução.\n'
-                          'Data Requisição: %s\n'
-                          'Início da Execução: %s') % (
-                            record.date_request.strftime('%d/%m/%Y %H:%M:%S'),
-                            record.date_start.strftime('%d/%m/%Y %H:%M:%S')
-                        )
+            if record.date_request and record.date_start and record.date_request > record.date_start:
+                raise ValidationError(
+                    _('A Data Requisição não pode ser maior que o Início da Execução.\n'
+                      'Data Requisição: %s\n'
+                      'Início da Execução: %s') % (
+                        record.date_request.strftime('%d/%m/%Y %H:%M:%S'),
+                        record.date_start.strftime('%d/%m/%Y %H:%M:%S')
                     )
+                )
     
     @api.constrains('date_start', 'date_finish')
     def _check_date_start_vs_finish(self):
         """
-        Valida que o Início da Execução deve ser antes do Término da Execução.
+        Valida que o Início da Execução deve ser anterior ao Término da Execução.
+        
+        Raises:
+            ValidationError: Se o início da execução for igual ou posterior ao término.
         """
         for record in self:
-            if record.date_start and record.date_finish:
-                if record.date_start >= record.date_finish:
-                    raise ValidationError(
-                        _('O Início da Execução deve ser anterior ao Término da Execução.\n'
-                          'Início da Execução: %s\n'
-                          'Término da Execução: %s') % (
-                            record.date_start.strftime('%d/%m/%Y %H:%M:%S'),
-                            record.date_finish.strftime('%d/%m/%Y %H:%M:%S')
-                        )
+            if record.date_start and record.date_finish and record.date_start >= record.date_finish:
+                raise ValidationError(
+                    _('O Início da Execução deve ser anterior ao Término da Execução.\n'
+                      'Início da Execução: %s\n'
+                      'Término da Execução: %s') % (
+                        record.date_start.strftime('%d/%m/%Y %H:%M:%S'),
+                        record.date_finish.strftime('%d/%m/%Y %H:%M:%S')
                     )
+                )
     
     @api.constrains('maintenance_type', 'periodicity_ids')
     def _check_periodicity_required_for_preventive(self):
         """
         Valida que a Periodicidade é obrigatória quando o tipo de manutenção é Preventiva.
+        
+        Raises:
+            ValidationError: Se a manutenção for preventiva e não houver periodicidade definida.
         """
         for record in self:
-            if record.maintenance_type == 'preventive':
-                if not record.periodicity_ids:
-                    raise ValidationError(
-                        _('⚠️ A Periodicidade é obrigatória para manutenção preventiva.')
-                    )
+            if record.maintenance_type == 'preventive' and not record.periodicity_ids:
+                raise ValidationError(
+                    _('⚠️ A Periodicidade é obrigatória para manutenção preventiva.')
+                )
     
     @api.onchange('maintenance_type')
     def _onchange_maintenance_type(self):
@@ -346,16 +336,32 @@ class EngcOs(models.Model):
         help="Relatórios de atendimento",
         check_company=True
     )
-    relatorios_count = fields.Integer(compute='compute_relatorios_count')
+    relatorios_count = fields.Integer(compute='_compute_relatorios_count')
+    relatorios_pending_count = fields.Integer(compute='_compute_relatorios_pending_done')
+    relatorios_done_count = fields.Integer(compute='_compute_relatorios_pending_done')
 
-    def compute_relatorios_count(self):
+    @api.depends('relatorios_id')
+    def _compute_relatorios_count(self):
+        """Calcula a quantidade de relatórios associados à OS."""
         for record in self:
-            record.relatorios_count = self.env['engc.os.relatorios'].search_count(
-                [('os_id', '=', self.id)])
+            record.relatorios_count = len(record.relatorios_id)
 
-    relatorios_time_execution = fields.Float(compute = "compute_relatorios_time_execution")
+    @api.depends('relatorios_id', 'relatorios_id.state')
+    def _compute_relatorios_pending_done(self):
+        """Quantidade de relatórios não concluídos (vermelho) e concluídos (verde)."""
+        for record in self:
+            record.relatorios_pending_count = len(
+                record.relatorios_id.filtered(lambda r: r.state != 'done')
+            )
+            record.relatorios_done_count = len(
+                record.relatorios_id.filtered(lambda r: r.state == 'done')
+            )
 
-    def compute_relatorios_time_execution(self):
+    relatorios_time_execution = fields.Float(compute="_compute_relatorios_time_execution")
+
+    @api.depends('relatorios_id', 'relatorios_id.time_execution')
+    def _compute_relatorios_time_execution(self):
+        """Calcula o tempo total de execução de todos os relatórios."""
         for record in self:
             record.relatorios_time_execution = sum(record.relatorios_id.mapped("time_execution"))
             
@@ -367,12 +373,22 @@ class EngcOs(models.Model):
         help="Check List de instruções",
         check_company=True
     )
-    check_list_count = fields.Integer(compute='compute_check_list_count')
+    check_list_count = fields.Integer(compute='_compute_check_list_count')
+    check_list_pending_count = fields.Integer(compute='_compute_check_list_pending_done')
+    check_list_done_count = fields.Integer(compute='_compute_check_list_pending_done')
 
-    def compute_check_list_count(self):
+    @api.depends('check_list_id')
+    def _compute_check_list_count(self):
+        """Calcula a quantidade de itens do checklist associados à OS."""
         for record in self:
-            record.check_list_count = self.env['engc.os.verify.checklist'].search_count(
-                [('os_id', '=', self.id)])
+            record.check_list_count = len(record.check_list_id)
+
+    @api.depends('check_list_id', 'check_list_id.check')
+    def _compute_check_list_pending_done(self):
+        """Quantidade de itens do checklist pendentes (vermelho) e concluídos (verde)."""
+        for record in self:
+            record.check_list_pending_count = len(record.check_list_id.filtered(lambda c: not c.check))
+            record.check_list_done_count = len(record.check_list_id.filtered(lambda c: c.check))
 
     calibration_created = fields.Boolean("Calibração criada")
     calibration_id = fields.Many2one(
@@ -384,6 +400,8 @@ class EngcOs(models.Model):
 
     request_parts = fields.One2many(comodel_name='engc.os.request.parts',inverse_name="os_id",check_company=True)
     request_parts_count = fields.Integer(compute='compute_request_parts_count')
+    request_parts_requested_count = fields.Integer(compute='_compute_request_parts_requested_applied')
+    request_parts_applied_count = fields.Integer(compute='_compute_request_parts_requested_applied')
     signature =  fields.Image('Signature', help='Signature', copy=False, attachment=True)
     signature2 =  fields.Image('Signature2', help='Signature', copy=False, attachment=True)
     technician_signature_date = fields.Datetime(
@@ -397,26 +415,39 @@ class EngcOs(models.Model):
         help='Data em que o supervisor assinou a ordem de serviço'
     )
 
+    @api.depends('request_parts')
     def compute_request_parts_count(self):
+        """Calcula a quantidade de solicitações de peças associadas à OS."""
         for record in self:
-            record.request_parts_count = self.env['engc.os.request.parts'].search_count(
-                [('os_id', '=', self.id)])
+            record.request_parts_count = len(record.request_parts)
 
-  
-    #******************************************
+    @api.depends('request_parts', 'request_parts.state')
+    def _compute_request_parts_requested_applied(self):
+        """Quantidade de peças requisitadas (vermelho) e aplicadas (verde)."""
+        for record in self:
+            record.request_parts_requested_count = len(
+                record.request_parts.filtered(
+                    lambda p: p.state in ('requisitada', 'autorizada')
+                )
+            )
+            record.request_parts_applied_count = len(
+                record.request_parts.filtered(lambda p: p.state == 'aplicada')
+            )
+
+    # ==========================================
     #  ONCHANGES
-    #
-    #******************************************
+    # ==========================================
 
     @api.onchange('date_scheduled')
     def onchange_scheduled_date(self):
-        self.date_execution = self.date_scheduled
+        """Atualiza a data de execução quando a data programada é alterada."""
+        if self.date_scheduled:
+            self.date_execution = self.date_scheduled
 
     @api.onchange('date_execution')
     def onchange_execution_date(self):
-        if self.state == 'draft':
-            self.date_scheduled = self.date_execution
-        else:
+        """Atualiza a data programada quando a data de execução é alterada."""
+        if self.date_execution:
             self.date_scheduled = self.date_execution
 
     @api.onchange('tecnico_id')
@@ -429,14 +460,19 @@ class EngcOs(models.Model):
       
 
     def verify_execution_rules(self):
-        """ Verifica as regras para início da execução da OS
-        
         """
-        if self.filtered(lambda engc_os: engc_os.state == 'done'):
+        Verifica as regras para início da execução da OS.
+        
+        Raises:
+            UserError: Se a OS já estiver concluída ou em execução.
+        """
+        os_done = self.filtered(lambda os: os.state == 'done')
+        if os_done:
             raise UserError(_("O.S já concluída."))
-        if self.filtered(lambda engc_os: engc_os.state == 'under_repair'):
+        
+        os_in_repair = self.filtered(lambda os: os.state == 'under_repair')
+        if os_in_repair:
             raise UserError(_('O.S. já em execução.'))
-        return
     
     def _check_checklist_preventive(self):
         """
@@ -486,10 +522,9 @@ class EngcOs(models.Model):
                     cl.state = 'done'
 
   
-    #******************************************
+    # ==========================================
     #  ACTIONS
-    #
-    #******************************************
+    # ==========================================
     
     def action_go_check_list(self):
         self.ensure_one()
@@ -513,7 +548,17 @@ class EngcOs(models.Model):
         }
 
     def action_go_relatorios(self):
+        """
+        Abre a lista de relatórios de atendimento da ordem de serviço.
+        
+        Returns:
+            dict: Ação para abrir a lista de relatórios.
+        """
         self.ensure_one()
+        
+        # Verifica se a OS está finalizada para desabilitar criação de novos relatórios
+        can_create = False if (self.state == 'done' or self._verify_relatorio_aberto()) else True
+        
         return {
             'type': 'ir.actions.act_window',
             'name': _('Relatorios'),
@@ -524,8 +569,8 @@ class EngcOs(models.Model):
                 'default_os_id': self.id,
                 'default_data_atendimento': fields.Datetime.now(),
                 'default_data_fim_atendimento': fields.Datetime.now() + timedelta(hours=1),
-                'default_technicians': [(4, [self.tecnico_id.id])],
-                'create': False if self._verify_relatorio_aberto() else True
+                'default_technicians': [(4, [self.tecnico_id.id])] if self.tecnico_id else [],
+                'create': can_create
             },
         }
     
@@ -634,10 +679,19 @@ class EngcOs(models.Model):
   
     
     def action_repair_pause(self):
-        if self.filtered(lambda engc_os: engc_os.state != 'under_repair'):
+        """
+        Pausa a execução da ordem de serviço.
+        
+        Raises:
+            UserError: Se a OS não estiver em execução.
+            
+        Returns:
+            bool: True se a operação foi bem-sucedida.
+        """
+        os_not_in_repair = self.filtered(lambda os: os.state != 'under_repair')
+        if os_not_in_repair:
             raise UserError(
-                _("Repair must be canceled in order to reset it to draft."))
-
+                _("A ordem de serviço deve estar em execução para ser pausada."))
         return self.write({'state': 'pause_repair'})
 
     # def relatorio_service_start(self, type_report):
@@ -683,15 +737,57 @@ class EngcOs(models.Model):
 
     #     })
     def create_relatorio(self):
-
+        """
+        Cria um novo relatório de atendimento para a ordem de serviço.
+        
+        Raises:
+            UserError: Se a OS estiver concluída.
+            
+        Returns:
+            recordset: Relatório criado.
+        """
+        self.ensure_one()
+        
+        # Valida se a OS está concluída
+        if self.state == 'done':
+            raise UserError(
+                _("⚠️ Não é possível criar relatórios em uma Ordem de Serviço concluída."))
+        
+        # Constante para duração padrão do atendimento (1 hora)
+        DEFAULT_ATTENDANCE_DURATION_HOURS = 1
+        
         report_type = self.env.context.get('report_type')
-        
         current_datetime = fields.Datetime.now()
-        employee = self.env['hr.employee'].search([('user_id', '=', self.env.user.id)], limit=1)
-        # Prioriza o técnico da OS, senão usa o funcionário logado
-        tecnico = self.tecnico_id if self.tecnico_id else employee
         
-        # Prepara descrição e resumo para manutenção preventiva
+        # Busca o técnico: prioriza o técnico da OS, senão usa o funcionário logado
+        employee = self.env['hr.employee'].search(
+            [('user_id', '=', self.env.user.id)], limit=1
+        )
+        tecnico = self.tecnico_id or employee
+        
+        # Prepara descrição e resumo baseado no tipo de manutenção
+        fault_description, service_summary = self._prepare_relatorio_descriptions()
+        
+        # Prepara os técnicos (campo obrigatório)
+        technicians_vals = [(4, tecnico.id)] if tecnico else []
+
+        return self.env['engc.os.relatorios'].create({
+            'os_id': self.id,
+            'report_type': report_type,
+            'data_atendimento': current_datetime,
+            'data_fim_atendimento': current_datetime + timedelta(hours=DEFAULT_ATTENDANCE_DURATION_HOURS),
+            'technicians': technicians_vals,
+            'fault_description': fault_description,
+            'service_summary': service_summary,
+        })
+    
+    def _prepare_relatorio_descriptions(self):
+        """
+        Prepara a descrição do defeito e o resumo do serviço baseado no tipo de manutenção.
+        
+        Returns:
+            tuple: (fault_description, service_summary)
+        """
         fault_description = ""
         service_summary = ""
         
@@ -702,59 +798,57 @@ class EngcOs(models.Model):
             if self.periodicity_ids:
                 periodicity_names = self.periodicity_ids.mapped('name')
                 periodicity_str = ', '.join(periodicity_names)
-                service_summary = f"Realizada a Preventiva ({periodicity_str}) seguindo o check-list de preventiva do equipamento."
+                service_summary = (
+                    f"Realizada a Preventiva ({periodicity_str}) "
+                    f"seguindo o check-list de preventiva do equipamento."
+                )
             else:
-                service_summary = "Realizada a Preventiva seguindo o check-list de preventiva do equipamento."
+                service_summary = (
+                    "Realizada a Preventiva seguindo o check-list de preventiva do equipamento."
+                )
         
-        # Prepara os técnicos (campo obrigatório)
-        # Prioriza o técnico da OS, senão usa o funcionário logado
-        technicians_vals = []
-        if tecnico:
-            technicians_vals = [(4, tecnico.id)]
-
-        return self.env['engc.os.relatorios'].create({
-            'os_id': self.id,
-            'report_type': report_type,
-            'data_atendimento': current_datetime,
-            'data_fim_atendimento': current_datetime + timedelta(hours=1) ,
-            
-            'technicians': technicians_vals,
-            'fault_description': fault_description,
-            'service_summary': service_summary,
-           
-
-        })
+        return fault_description, service_summary
     
 
     def _verify_relatorio_aberto(self):
+        """
+        Verifica se existe algum relatório aberto (não concluído e não cancelado).
+        
+        Returns:
+            int: Quantidade de relatórios abertos.
+        """
         self.ensure_one()
-        domain = [('os_id','=', self.id), ('state','not in',['done','cancel'])]
-        relatorios_count = self.env['engc.os.relatorios'].search_count(domain)
-        return relatorios_count
+        relatorios_abertos = self.relatorios_id.filtered(
+            lambda r: r.state not in ['done', 'cancel']
+        )
+        return len(relatorios_abertos)
     
    
     def verify_others_os_open(self):
-        domain = ['&',
+        """
+        Verifica se existem outras OS de manutenção corretiva abertas para o mesmo equipamento.
+        
+        Raises:
+            UserError: Se existirem outras OS corretivas abertas para o equipamento.
+        """
+        estados_finais = ['draft', 'cancel', 'done', 'reproved', 'wait_authorization', 'wait_parts']
+        
+        domain = [
             ('maintenance_type', '=', 'corrective'),
             ('equipment_id', '=', self.equipment_id.id),
-            ('state', '!=', 'draft'),
-            ('state', '!=', 'cancel'),
-            ('state', '!=', 'done'),
-            ('state', '!=', 'reproved'),
-            ('state', '!=', 'wait_authorization'),
-            ('state', '!=', 'wait_parts'),
+            ('state', 'not in', estados_finais),
             ('id', '!=', self.id),
         ]
-        result = self.env['engc.os'].search(domain)
-        _logger.debug("Verificando outras OSES")
-        _logger.debug(result)
-        message_oses = 'Não é possível executar ação. Já existe(m) OS(s) para manutenção corretiva aberta desse equipamento:\n '
         
-        for res in result:
-            message_oses += res.name + '\n'
+        outras_os_abertas = self.env['engc.os'].search(domain)
         
-        if len(result) > 0:
-            raise UserError(message_oses)
+        if outras_os_abertas:
+            _logger.debug("Encontradas outras OS corretivas abertas: %s", outras_os_abertas.mapped('name'))
+            os_lista = '\n'.join([f"- {os.name}" for os in outras_os_abertas])
+            raise UserError(
+                _('Não é possível executar ação. Já existe(m) OS(s) para manutenção corretiva '
+                  'aberta desse equipamento:\n%s') % os_lista
+            )
 
     
     def action_repair_aprove(self):
@@ -786,14 +880,20 @@ class EngcOs(models.Model):
         current_datetime = fields.Datetime.now()
         report_type = self.env.context.get('report_type')
 
-        # Se for manutenção preventiva, gera o checklist primeiro (se ainda não existir)
+        # Se for manutenção preventiva, gera o checklist primeiro (se ainda não existir), sem abrir a tela do checklist
         if self.maintenance_type == 'preventive' and not self.check_list_id:
-            self.action_make_check_list()
+            self.create_checklist()
 
         # Para todos os tipos de manutenção, cria o relatório
         id_relatorio = self.create_relatorio()
         if not id_relatorio:
             raise UserError("Erro ao gerar relatório")
+
+        # Se for preventiva e há checklist na OS, adiciona todas as instruções do checklist ao relatório
+        if self.maintenance_type == 'preventive' and self.check_list_id:
+            id_relatorio.write({
+                'checklist_item_ids': [(6, 0, self.check_list_id.ids)],
+            })
 
         self.write({
              'state':'under_budget' if report_type == 'orcamento' else 'under_repair',
@@ -816,13 +916,22 @@ class EngcOs(models.Model):
 
     
     def action_pause_repair_executar(self):
-
+        """
+        Retoma a execução da ordem de serviço após pausa.
+        
+        Raises:
+            UserError: Se as regras de execução não forem atendidas.
+            
+        Returns:
+            bool: True se a operação foi bem-sucedida.
+        """
         self.verify_execution_rules()
         self.create_checklist()
-        self.message_post(body='Pausada execução da ordem de serviço!')
-        res = self.write(
-            {'state': 'under_repair', 'date_start': time.strftime('%Y-%m-%d %H:%M:%S')})
-        return res
+        self.message_post(body='Retomada execução da ordem de serviço!')
+        return self.write({
+            'state': 'under_repair',
+            'date_start': fields.Datetime.now()
+        })
 
     
     # def action_repair_cancel(self):
@@ -838,7 +947,18 @@ class EngcOs(models.Model):
             recordset: Relatórios com estado 'draft' (não concluídos)
         """
         self.ensure_one()
-        return self.relatorios_id.filtered(lambda x: x.state == 'draft')
+        return self.relatorios_id.filtered(lambda r: r.state == 'draft')
+    
+    def _get_pecas_nao_aplicadas(self):
+        """
+        Retorna as peças que ainda não foram aplicadas, canceladas ou não autorizadas.
+        
+        Returns:
+            recordset: Peças que não estão em estados finais válidos.
+        """
+        self.ensure_one()
+        estados_validos = ['aplicada', 'cancel', 'nao_autorizada']
+        return self.request_parts.filtered(lambda p: p.state not in estados_validos)
     
     def action_repair_end(self):
         """Finaliza execução da ordem de serviço.
@@ -866,17 +986,12 @@ class EngcOs(models.Model):
                 _("⚠️ Para finalizar O.S. deve-se concluir todos os relatórios de serviço.\n\n"
                   "Relatórios não concluídos:\n%s") % relatorios_lista)
                 
-        if self.request_parts.filtered(lambda x: x.state not in ['aplicada','cancel','nao_autorizada']):
+        # Verifica se todas as peças foram aplicadas, canceladas ou não autorizadas
+        pecas_nao_aplicadas = self._get_pecas_nao_aplicadas()
+        if pecas_nao_aplicadas:
             raise UserError(
-                _("Para finalizar O.S. todas as peças devem ser aplicadas. Crie um novo relatório para aplicação da peça  ou cancelamento da peça"))
-          
-           
-
-        # verificando se pecas foram aplicadas
-        for p in self.request_parts:
-            if not p.state in ['aplicada','cancel','nao_autorizada']:
-                raise UserError(
-                    _("Para finalizar O.S. todas as peças devem ser aplicadas. Crie um novo relatório para aplicação da peça  ou cancelamento da peça"))
+                _("Para finalizar O.S. todas as peças devem ser aplicadas. "
+                  "Crie um novo relatório para aplicação da peça ou cancelamento da peça."))
         
         # verificando se todos check-list foram realizados (apenas para manutenção preventiva)
         self._check_checklist_preventive()
@@ -895,7 +1010,7 @@ class EngcOs(models.Model):
 
         vals = {
             'state': 'done',
-            'date_execution': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'date_execution': fields.Datetime.now(),
         }
      
         res = self.write(vals)
@@ -926,17 +1041,21 @@ class EngcOs(models.Model):
     # utilizado na venda para atorizar Ordem de serviço
     
     def approve(self):
-        _logger.debug("Mudando state da os %s", self.name)
+        """
+        Aprova a ordem de serviço, mudando seu estado para 'execution_ready'.
+        Envia notificação para o parceiro configurado.
+        """
+        _logger.debug("Aprovando OS: %s", self.name)
         for item in self:
             if item.state != 'done':
                 item.write({'state': 'execution_ready'})
-                post_vars = {'subject': "Ordem Aprovada",
-                            'body': "A cotação foi aprovada pelo cliente, favor agendar execução",
-                           } # Where "4" adds the ID to the list 
-                                       # of followers and "3" is the partner ID 
-                
-                item.message_post(body="A cotação foi aprovada pelo cliente, favor agendar execução",subject="Ordem Aprovada",partner_ids=[3])
-        _logger.debug("os state=%s ", self.state)
+                item.message_post(
+                    body="A cotação foi aprovada pelo cliente, favor agendar execução",
+                    subject="Ordem Aprovada",
+                    # TODO: Substituir partner_ids=[3] por uma configuração dinâmica
+                    partner_ids=[3]
+                )
+        _logger.debug("Estado da OS após aprovação: %s", self.state)
 
 
     # def add_service(self):
@@ -1035,72 +1154,156 @@ class EngcOs(models.Model):
     #     return self.servicos
 
     def create_checklist(self):
-        """Cria a lista de verificacao caso a os seja preventiva."""
-        if self.maintenance_type == 'preventive' or self.maintenance_type == 'loan' or self.maintenance_type == 'calibration':
-            _logger.debug("Criando Checklist")
-            if not self.equipment_id:
-                raise ValidationError(_("Não está definido o campo equipamento na OS"))
+        """
+        Cria a lista de verificação (checklist) para OS de manutenção preventiva, 
+        comodato ou calibração.
+        
+        Raises:
+            ValidationError: Se não houver equipamento definido, plano de manutenção,
+                           ou se o checklist já existir.
+        """
+        tipos_com_checklist = ['preventive', 'loan', 'calibration']
+        
+        if self.maintenance_type not in tipos_com_checklist:
+            return
+        
+        _logger.debug("Criando Checklist para OS: %s", self.name)
+        
+        if not self.equipment_id:
+            raise ValidationError(_("Não está definido o campo equipamento na OS"))
+        
+        maintenance_plan = self.equipment_id.get_maintenance_plan()
+        if not maintenance_plan:
+            raise ValidationError(
+                _("Não há plano de manutenção configurado no equipamento ou na sua categoria")
+            )
+        
+        # Verifica se o checklist já existe
+        existing_checklist = self.env['engc.os.verify.checklist'].search(
+            [('os_id', '=', self.id)], limit=1
+        )
+        if existing_checklist:
+            raise ValidationError(_("Check list já criado."))
+        
+        # Filtra as instruções baseadas nas periodicidades selecionadas
+        periodicity_ids = self.periodicity_ids.mapped('id')
+        instructions = maintenance_plan.instrucion_ids.filtered_domain(
+            [('periodicity', 'in', periodicity_ids)]
+        )
+        
+        _logger.debug("Instruções encontradas: %s", instructions.mapped('display_name'))
+        
+        # Cria os itens do checklist
+        checklist_vals = []
+        for sequence, instruction in enumerate(instructions):
+            checklist_item = {
+                'sequence': sequence,
+                'os_id': self.id,
+                'instruction': instruction.name,
+                'section': instruction.section.id if instruction.section else False,
+                # Copia informações de medição da instrução para o checklist
+                'tem_medicao': instruction.is_measurement if instruction.is_measurement else False,
+                'tipo_de_campo': instruction.tipo_de_campo if instruction.tipo_de_campo else 'checkbox',
+            }
             
-            maintenance_plan = self.equipment_id.get_maintenance_plan()
-            _logger.debug(maintenance_plan)
-            if not maintenance_plan:
-                raise ValidationError(_("Não há plano de manutenção configurado no equipamento ou na sua categoria"))
-            periodicity_ids = self.periodicity_ids.mapped('id')
-            instructions = maintenance_plan.instrucion_ids.filtered_domain([('periodicity','in',periodicity_ids)])
-            _logger.debug(instructions.mapped('display_name'))
-           
-            os_check_list = self.env['engc.os.verify.checklist'].search(
-                [('os_id', '=', self.id)])
-            if os_check_list:
-                raise ValidationError(_("Check list já criado."))
-            os_check_list_create = []
-            _logger.debug("instructions")
-            _logger.debug(instructions)
-            for index,i in enumerate(instructions):
-                os_check_list_create.append({'sequence':index,'os_id': self.id, 'instruction': i.name,'section': i.section.id })
+            # Copia a grandeza se for medição
+            if instruction.is_measurement and instruction.magnitude:
+                checklist_item['magnitude'] = instruction.magnitude.name
             
-            os_check_list.create(os_check_list_create)
+            checklist_vals.append(checklist_item)
+        
+        if checklist_vals:
+            self.env['engc.os.verify.checklist'].create(checklist_vals)
+            _logger.debug("Checklist criado com %d itens", len(checklist_vals))
                 
 
     def generate_report_and_attach(self):
+        """
+        Gera o PDF do relatório da OS concluída e anexa como mensagem.
+        """
+        report_name = 'engc_os.report_os_template'
+        
         for record in self:
-            # Gerar o relatório
-            report = self.env['ir.actions.report']  # Nome do seu relatório
-            # pdf_content, _ = report.qweb_render_view([record.id])  # Gera o PDF do relatório
-            pdf = report._render_qweb_pdf( 'engc_os.report_os_template',[record.id])
-            filename = "%s_concluida" % self.name
-            message = "OS concluida"
-            record.message_post(
-                attachments=[('%s.pdf' % filename, pdf[0])],
-                body=message,
-            )
+            try:
+                report = self.env['ir.actions.report']
+                pdf_result = report._render_qweb_pdf(report_name, [record.id])
+                
+                if pdf_result and pdf_result[0]:
+                    filename = f"{record.name}_concluida.pdf"
+                    record.message_post(
+                        attachments=[(filename, pdf_result[0])],
+                        body=_("OS concluída - Relatório gerado automaticamente."),
+                    )
+                    _logger.debug("PDF gerado e anexado para OS: %s", record.name)
+                else:
+                    _logger.warning("Falha ao gerar PDF para OS: %s", record.name)
+            except Exception as e:
+                _logger.error("Erro ao gerar PDF para OS %s: %s", record.name, str(e))
+                # Não levanta exceção para não bloquear a conclusão da OS
 
     def write(self, vals):
+        """
+        Sobrescreve o método write para:
+        - Registrar datas de assinatura quando assinaturas são adicionadas
+        - Gerar e anexar PDF quando a OS é concluída
+        
+        Args:
+            vals: Dicionário com os valores a serem escritos.
+            
+        Returns:
+            bool: True se a operação foi bem-sucedida.
+        """
         # Verifica se a OS está sendo concluída
-        os_being_concluded = 'state' in vals and vals.get('state') == 'done'
+        os_being_concluded = vals.get('state') == 'done'
         
         result = super(EngcOs, self).write(vals)
         
-        # Após salvar, atualiza a data de assinatura do técnico para os registros que receberam assinatura pela primeira vez
+        # Atualiza a data de assinatura do técnico quando a assinatura é adicionada pela primeira vez
         if 'signature' in vals and vals.get('signature'):
-            for record in self:
-                # Se há assinatura mas não há data, registra a data
-                if record.signature and not record.technician_signature_date:
-                    record.write({'technician_signature_date': fields.Datetime.now()})
+            records_with_signature = self.filtered(
+                lambda r: r.signature and not r.technician_signature_date
+            )
+            if records_with_signature:
+                records_with_signature.write({
+                    'technician_signature_date': fields.Datetime.now()
+                })
         
-        # Após salvar, atualiza a data de assinatura do supervisor para os registros que receberam assinatura pela primeira vez
+        # Atualiza a data de assinatura do supervisor quando a assinatura é adicionada pela primeira vez
         if 'signature2' in vals and vals.get('signature2'):
-            for record in self:
-                # Se há assinatura mas não há data, registra a data
-                if record.signature2 and not record.supervisor_signature_date:
-                    record.write({'supervisor_signature_date': fields.Datetime.now()})
+            records_with_signature2 = self.filtered(
+                lambda r: r.signature2 and not r.supervisor_signature_date
+            )
+            if records_with_signature2:
+                records_with_signature2.write({
+                    'supervisor_signature_date': fields.Datetime.now()
+                })
         
         # Se a OS foi concluída, gera e anexa o PDF
         # Nota: O PDF também é gerado no action_repair_end, mas isso garante que seja gerado
         # mesmo se a OS for concluída por outro método
         if os_being_concluded:
+            self.generate_report_and_attach()
+            
+            # Atualiza a preventiva relacionada se a OS for de manutenção preventiva
             for record in self:
-                record.generate_report_and_attach()
+                if record.maintenance_type == 'preventive':
+                    # Busca a preventiva relacionada através do campo os_id
+                    preventiva = self.env['engc.preventive'].search([
+                        ('os_id', '=', record.id)
+                    ], limit=1)
+                    
+                    if preventiva:
+                        preventiva.write({
+                            'state': 'done',
+                            'preventiva_executada': True,
+                            'data_execucao': record.date_start if record.date_start else fields.Datetime.now(),
+                            'data_execucao_fim': record.date_finish if record.date_finish else fields.Datetime.now(),
+                        })
+                        _logger.info("Preventiva %s (ID: %s) atualizada para 'concluída' após finalização da OS %s", 
+                                   preventiva.name, preventiva.id, record.name)
+                    else:
+                        _logger.warning("OS %s (ID: %s) é de manutenção preventiva mas não foi encontrada preventiva relacionada", 
+                                      record.name, record.id)
         
         return result
 
