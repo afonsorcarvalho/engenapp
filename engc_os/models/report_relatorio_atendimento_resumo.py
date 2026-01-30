@@ -51,10 +51,11 @@ class ReportRelatorioAtendimentoResumo(models.AbstractModel):
         
         _logger.debug("docids final a ser usado: %s", docids)
         
-        # Busca os relatórios
+        # Busca os relatórios e exclui cancelados (não entram no resumo)
         relatorios = self.env['engc.os.relatorios'].browse(docids) if docids else self.env['engc.os.relatorios']
+        relatorios = relatorios.filtered(lambda r: r.state != 'cancel')
         
-        _logger.debug("Relatórios carregados: %d", len(relatorios))
+        _logger.debug("Relatórios carregados (excl. cancelados): %d", len(relatorios))
         _logger.debug("IDs dos relatórios: %s", relatorios.ids)
         if relatorios:
             _logger.debug("Nomes dos relatórios: %s", [r.name for r in relatorios[:5]])

@@ -42,9 +42,9 @@
         <form string="Relatório de serviço" >
           <header>
             <button name="action_add_request_parts" string="Requisitar peças" class="oe_highlight" 
-              type="object" attrs="{'invisible': [('state', '=', 'done')]}" />
+              type="object" attrs="{'invisible': [('state', 'in', ['done', 'cancel'])]}" />
             <button name="action_application_parts" string="Aplicar peças" class="oe_highlight" 
-              type="object" attrs="{'invisible': [('state', '=', 'done')]}" />
+              type="object" attrs="{'invisible': [('state', 'in', ['done', 'cancel'])]}" />
             <button name="action_done" string="Concluir" class="oe_highlight" states="draft"
               type="object" />
             <button name="action_cancel" string="Cancelar"  states="done"

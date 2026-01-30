@@ -53,6 +53,11 @@ class VerifyOsCheckList(models.Model):
         
         result = super(VerifyOsCheckList, self).write(vals)
 
+        # Quando há medição na instrução e o valor foi inserido, marca o check automaticamente
+        medicao_val = vals.get('medicao')
+        if 'medicao' in vals and medicao_val is not None and medicao_val != 0:
+            self.filtered('tem_medicao').write({'check': True})
+
         # Se check, observations ou medicao foram alterados, atualiza o resumo dos relatórios afetados
         if any(field in vals for field in ['check', 'observations', 'medicao', 'instruction']):
             # Agrupa por relatorio_id para evitar atualizações duplicadas
