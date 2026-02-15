@@ -7,7 +7,7 @@
             </div>
             
             <div t-if="!state.loading and state.sections.length === 0" class="alert alert-info">
-                <i class="fa fa-info-circle"/> Nenhum item de checklist encontrado.
+                <i class="fa fa-info-circle"/> Não há nenhuma instrução de manutenção pendente.
             </div>
             
             <div t-if="!state.loading and state.sections.length > 0" class="checklist-sections">

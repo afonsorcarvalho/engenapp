@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Grupo: usuários que recebem push ao criar Solicitação de Serviço -->
+        <record id="group_fcm_request_service_notify" model="res.groups">
+            <field name="name">Receber notificações push de Solicitação de Serviço</field>
+            <field name="category_id" ref="base.module_category_services"/>
+            <field name="comment">Usuários com este grupo e com token FCM registrado recebem push quando uma nova Solicitação de Serviço é criada.</field>
+        </record>
+    </data>
+</odoo>

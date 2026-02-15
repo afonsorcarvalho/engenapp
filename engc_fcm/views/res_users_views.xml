@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Campo fcm_token no formulário de usuário (somente leitura para não expor edição direta) -->
+    <record id="view_users_form_fcm_token" model="ir.ui.view">
+        <field name="name">res.users.form.fcm</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='login']" position="after">
+                <label for="fcm_token" string="Token FCM"/>
+                <field name="fcm_token" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

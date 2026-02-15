@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_engc_fcm_test_wizard_form" model="ir.ui.view">
+        <field name="name">engc.fcm.test.wizard.form</field>
+        <field name="model">engc.fcm.test.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Testar notificação FCM">
+                <group>
+                    <field name="state" invisible="1"/>
+                    <field name="result_message" invisible="1"/>
+                    <field name="user_id" options="{'no_create': True}"/>
+                </group>
+                <group attrs="{'invisible': [('state', '!=', 'draft')]}">
+                    <p class="text-muted">
+                        Envia uma notificação de teste para o dispositivo do usuário selecionado.
+                        O usuário deve ter token FCM registrado (app mobile após login).
+                    </p>
+                </group>
+                <group attrs="{'invisible': [('state', '=', 'draft')]}">
+                    <field name="result_message" readonly="1" nolabel="1"/>
+                </group>
+                <footer>
+                    <button name="action_send_test" string="Enviar notificação de teste" type="object" class="btn-primary" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                    <button string="Fechar" class="btn-secondary" special="cancel" attrs="{'invisible': [('state', '=', 'draft')]}"/>
+                    <button string="Fechar" class="btn-secondary" special="cancel" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_engc_fcm_test_wizard" model="ir.actions.act_window">
+        <field name="name">Testar notificação FCM</field>
+        <field name="res_model">engc.fcm.test.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Envie uma notificação de teste para validar a configuração do FCM.
+            </p>
+            <p>
+                Selecione o usuário que receberá a notificação (deve ter token FCM registrado pelo app)
+                e clique em <strong>Enviar notificação de teste</strong>.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu em Configurações do engc_os -->
+    <menuitem id="menu_engc_fcm_test_wizard"
+        name="Testar notificação FCM"
+        parent="engc_os.configuracoes_menu"
+        action="action_engc_fcm_test_wizard"
+        sequence="50"/>
+</odoo>

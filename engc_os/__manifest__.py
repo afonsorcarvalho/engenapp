@@ -68,6 +68,7 @@
     'demo': [
         'demo/demo.xml',
     ],
+    'odoo': '16.0',
     'assets': {
         'web.assets_backend': [
             'engc_os/static/src/css/weekdays_checkboxes.css',

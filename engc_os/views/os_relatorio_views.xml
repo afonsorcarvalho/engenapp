@@ -47,8 +47,8 @@
               type="object" attrs="{'invisible': [('state', 'in', ['done', 'cancel'])]}" />
             <button name="action_done" string="Concluir" class="oe_highlight" states="draft"
               type="object" />
-            <button name="action_cancel" string="Cancelar"  states="done"
-              type="object" />
+            <button name="action_cancel" string="Cancelar" type="object"
+              attrs="{'invisible': [('state', '=', 'cancel')]}"/>
             <field name="state" widget="statusbar" />
           </header>
           <sheet string="Relatório de serviço" >
@@ -70,24 +70,24 @@
               </h1>
               <label for="company_id" class="oe_edit_only" />
               <h2>
-                <field name="company_id" attrs="{'readonly': [('state','not in',('draft'))] }" options="{'no_create': True, 'no_create_edit':True}" />
+                <field name="company_id" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}" options="{'no_create': True, 'no_create_edit':True}" />
               </h2>
             </div>
             <group string="Relatório"  >
               <group >
                 <field name="data_atendimento"
-                  required="1" attrs="{'readonly': [('state','not in',('draft'))] }"
+                  required="1" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}"
                 />
                 <field name="data_fim_atendimento"
-                  required="1" attrs="{'readonly': [('state','not in',('draft'))] }"
+                  required="1" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}"
                 />
-                <field name="technicians" widget="many2many_tags"  attrs="{'readonly': [('state','not in',('draft'))] }"/>
-                <field name="report_type" attrs="{'readonly': [('state','not in',('draft'))] }" />
+                <field name="technicians" widget="many2many_tags" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}"/>
+                <field name="report_type" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}" />
               </group>
               <group>
-                <field name="state_equipment" widget="radio" required="1" attrs="{'readonly': [('state','not in',('draft'))] }" />
+                <field name="state_equipment" widget="radio" required="1" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}" />
                 <field name="restriction_type" 
-                attrs="{'invisible': [('state_equipment','not in',('restricao'))],'required': [('state_equipment','in',('restricao'))], 'readonly': [('state','not in',('draft'))] }"
+                attrs="{'invisible': [('state_equipment','not in',('restricao'))],'required': [('state_equipment','in',('restricao'))], 'readonly': [('state', 'in', ['done', 'cancel'])]}"
                 help="Descreva qual restrição o equipamento se encontra"  />
               </group>
             </group>
@@ -95,28 +95,24 @@
             <notebook>
               <page string="Atendimento">
                 <group>
-                  <field name="fault_description" attrs="{'readonly': [('state','not in',('draft'))] }" />
-                  <field name="service_summary" attrs="{'readonly': [('state','not in',('draft'))] }" />
-                  <field name="observations" attrs="{'readonly': [('state','not in',('draft'))] }"/>
-                  <field name="pendency" attrs="{'readonly': [('state','not in',('draft'))] }" />
-                  <field name="os_id" required="1" attrs="{'readonly': [('state','not in',('draft'))] }"/>
+                  <field name="fault_description" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}" />
+                  <field name="service_summary" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}" />
+                  <field name="observations" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}"/>
+                  <field name="pendency" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}" />
+                  <field name="os_id" required="1" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}"/>
                   <field name="maintenance_type" invisible="1"/>
                   
                 </group>
               </page>
               
               <page string="Checklist" attrs="{'invisible': ['|', ('os_id', '=', False), ('maintenance_type', '!=', 'preventive')]}">
-                <div class="alert alert-info mb16" role="alert">
-                  <i class="fa fa-info-circle"></i>
-                  <strong>Nota:</strong> Marque os itens do checklist que foram realizados neste atendimento.
-                  Cada relatório pode trabalhar em diferentes partes do checklist.
-                </div>
+                <field name="has_pending_maintenance_instructions" invisible="1"/>
                 <field name="checklist_item_ids" 
                        widget="checklist_grouped"
                        nolabel="1"
-                       attrs="{'readonly': [('state','not in',('draft'))] }"
+                       attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}"
                        context="{'default_relatorio_id': id, 'default_os_id': os_id}"/>
-                <div class="mt16 text-center" attrs="{'invisible': ['|', ('checklist_item_ids', '=', []), ('state', '=', 'done')]}">
+                <div class="mt16 text-center" attrs="{'invisible': ['|', ('checklist_item_ids', '=', []), ('state', 'in', ['done', 'cancel'])]}">
                   <button name="action_update_summary_from_checklist" 
                           string="Atualizar Resumo do Atendimento" 
                           type="object" 
@@ -126,7 +122,7 @@
               </page>
 
               <page string="Fotos">
-                <field name="picture_ids" nolabel="1" attrs="{'readonly': [('state','not in',('draft'))] }">
+                <field name="picture_ids" nolabel="1" attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}">
                   <kanban>
                     <templates>
                       <t t-name="kanban-box">

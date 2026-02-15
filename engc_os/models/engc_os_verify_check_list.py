@@ -32,13 +32,33 @@ class VerifyOsCheckList(models.Model):
     troca_peca = fields.Boolean(string="Substituição de Peça?",required=False) 
     peca = fields.Many2one('product.product', u'Peça', required=False)
     peca_qtd = fields.Float('Qtd', default=0.0)
-    
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Impede associar itens a relatórios cancelados."""
+        for vals in vals_list:
+            if vals.get('relatorio_id'):
+                relatorio = self.env['engc.os.relatorios'].browse(vals['relatorio_id'])
+                if relatorio.exists() and relatorio.state == 'cancel':
+                    raise ValidationError(
+                        _('⚠️ Não é possível adicionar itens a um relatório cancelado.')
+                    )
+        return super().create(vals_list)
+
     def write(self, vals):
         """
         Sobrescreve o método write para atualizar automaticamente o resumo do relatório
         quando um item do checklist for marcado ou atualizado.
         Também protege o campo tem_medicao quando a instrução é do tipo medição.
+        Impede associar itens a relatórios cancelados.
         """
+        # Não permite associar a um relatório cancelado
+        if vals.get('relatorio_id'):
+            relatorio = self.env['engc.os.relatorios'].browse(vals['relatorio_id'])
+            if relatorio.exists() and relatorio.state == 'cancel':
+                raise ValidationError(
+                    _('⚠️ Não é possível adicionar itens a um relatório cancelado.')
+                )
         # Protege o campo tem_medicao quando a instrução é medição
         # Não permite alterar se já está marcado como medição (instrução de medição)
         if 'tem_medicao' in vals:
@@ -71,20 +91,9 @@ class VerifyOsCheckList(models.Model):
             for relatorio in relatorios_to_update.values():
                 relatorio._update_summary_from_checklist()
 
-        # Se um item foi marcado, garante que outros relatórios não tenham o mesmo item marcado
-        if 'check' in vals and vals.get('check'):
-            for record in self:
-                if record.check and record.relatorio_id:
-                    # Busca outros itens marcados do mesmo checklist na mesma OS
-                    other_checked = self.env['engc.os.verify.checklist'].search([
-                        ('os_id', '=', record.os_id.id),
-                        ('instruction', '=', record.instruction),
-                        ('check', '=', True),
-                        ('id', '!=', record.id)
-                    ])
-                    # Desmarca os outros
-                    if other_checked:
-                        other_checked.write({'check': False})
+        # Cada item do checklist é independente: marcar um não desmarca outros.
+        # (Removida a lógica que desmarcava itens com a mesma descrição, o que
+        # causava bug quando havia instruções repetidas, ex.: Medição F1, F2, F3.)
 
         return result
     

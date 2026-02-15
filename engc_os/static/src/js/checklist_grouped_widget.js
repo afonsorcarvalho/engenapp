@@ -551,6 +551,14 @@ export class ChecklistGroupedWidget extends Component {
         const state = this.props.record.data.state;
         return state && state !== "draft";
     }
+
+    /**
+     * Indica se há instruções do plano de manutenção pendentes para carregar.
+     * Quando falso, o botão "Carregar Instruções" não é exibido.
+     */
+    get hasPendingInstructions() {
+        return this.props.record?.data?.has_pending_maintenance_instructions === true;
+    }
     
     /**
      * Ativa uma aba específica
@@ -567,8 +575,8 @@ ChecklistGroupedWidget.template = xml`
         </div>
         
         <div t-if="!state.loading and state.sections.length === 0" class="alert alert-info" style="width: 100%;">
-            <i class="fa fa-info-circle"/> Nenhum item de checklist encontrado.
-            <div class="mt-2" t-if="!isReadonly">
+            <i class="fa fa-info-circle"/> Não há nenhuma instrução de manutenção pendente.
+            <div class="mt-2" t-if="!isReadonly and hasPendingInstructions">
                 <button 
                     type="button"
                     class="btn btn-primary btn-sm"
@@ -580,8 +588,8 @@ ChecklistGroupedWidget.template = xml`
         </div>
         
         <div t-if="!state.loading and state.sections.length > 0" class="checklist-sections" style="width: 100%;">
-            <!-- Botão para carregar instruções -->
-            <div class="mb-3 text-end" t-if="!isReadonly" style="width: 100%;">
+            <!-- Botão para carregar instruções (só aparece se há instruções pendentes) -->
+            <div class="mb-3 text-end" t-if="!isReadonly and hasPendingInstructions" style="width: 100%;">
                 <button 
                     type="button"
                     class="btn btn-primary"

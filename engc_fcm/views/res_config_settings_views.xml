@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Configuração FCM: mesmo padrão do base_setup (app_settings_block, h2, o_setting_box, o_setting_right_pane). -->
+    <record id="res_config_settings_view_form_fcm" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.fcm</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" data-string="Push (FCM)" string="Push (FCM)" data-key="engc_fcm">
+                    <div id="fcm_settings">
+                        <h2>Firebase Cloud Messaging</h2>
+                        <div class="row mt16 o_settings_container" name="fcm_setting_container">
+                            <div class="col-12 col-lg-6 o_setting_box" id="fcm_service_account_path_setting">
+                                <div class="o_setting_right_pane">
+                                    <label for="fcm_service_account_path" string="Caminho do arquivo JSON (Service Account)"/>
+                                    <div class="text-muted">Caminho no servidor para o arquivo JSON do Firebase. Ou use o campo abaixo para colar o conteúdo.</div>
+                                    <field name="fcm_service_account_path" class="w-100"/>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-6 o_setting_box" id="fcm_service_account_json_setting">
+                                <div class="o_setting_right_pane">
+                                    <label for="fcm_service_account_json" string="Conteúdo do JSON (Service Account)"/>
+                                    <div class="text-muted">Conteúdo completo do JSON. Se preenchido, tem prioridade sobre o caminho.</div>
+                                    <field name="fcm_service_account_json" class="w-100" nolabel="1"/>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-6 o_setting_box" id="fcm_project_id_setting">
+                                <div class="o_setting_right_pane">
+                                    <label for="fcm_project_id" string="Firebase Project ID"/>
+                                    <div class="text-muted">ID do projeto Firebase. Opcional se o JSON já contiver project_id.</div>
+                                    <field name="fcm_project_id" class="w-100"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

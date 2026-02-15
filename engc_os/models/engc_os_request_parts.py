@@ -98,6 +98,27 @@ class RequestParts(models.Model):
     relatorio_request_id = fields.Many2one('engc.os.relatorios', 'Relatório Solicitante')
     relatorio_application_id = fields.Many2one('engc.os.relatorios', 'Relatório Aplicado')
 
+    def _check_relatorio_not_cancelled(self, vals):
+        """Impede vincular peças a relatórios cancelados."""
+        Relatorios = self.env['engc.os.relatorios']
+        for field in ('relatorio_request_id', 'relatorio_application_id'):
+            if vals.get(field):
+                relatorio = Relatorios.browse(vals[field])
+                if relatorio.exists() and relatorio.state == 'cancel':
+                    raise UserError(
+                        _('⚠️ Não é possível adicionar peças a um relatório cancelado.')
+                    )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            self._check_relatorio_not_cancelled(vals)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        self._check_relatorio_not_cancelled(vals)
+        return super().write(vals)
+
     #******************************************
     #  ACTIONS
     #

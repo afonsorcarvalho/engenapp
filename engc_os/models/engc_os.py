@@ -128,24 +128,26 @@ class EngcOs(models.Model):
     date_execution = fields.Datetime('Data de Execução', compute="_compute_date_execution", tracking=True)
     date_start = fields.Datetime('Início da Execução',  compute="_compute_date_start",tracking=True)
        
-    @api.depends('relatorios_id', 'relatorios_id.data_atendimento')
+    @api.depends('relatorios_id', 'relatorios_id.data_atendimento', 'relatorios_id.state')
     def _compute_date_start(self):
         """
         Calcula o início da execução com base no início de atendimento 
-        do relatório de serviço mais antigo.
+        do relatório de serviço mais antigo (exclui cancelados).
         """
         for record in self:
-            relatorios_com_data = record.relatorios_id.filtered('data_atendimento')
+            relatorios_ativos = record.relatorios_id.filtered(lambda r: r.state != 'cancel')
+            relatorios_com_data = relatorios_ativos.filtered('data_atendimento')
             record.date_start = min(relatorios_com_data.mapped("data_atendimento")) if relatorios_com_data else False
     
-    @api.depends('relatorios_id', 'relatorios_id.data_fim_atendimento')
+    @api.depends('relatorios_id', 'relatorios_id.data_fim_atendimento', 'relatorios_id.state')
     def _compute_date_execution(self):
         """
         Calcula a data de execução com base no fim do atendimento 
-        do relatório de serviço mais recente.
+        do relatório de serviço mais recente (exclui cancelados).
         """
         for record in self:
-            relatorios_com_data = record.relatorios_id.filtered('data_fim_atendimento')
+            relatorios_ativos = record.relatorios_id.filtered(lambda r: r.state != 'cancel')
+            relatorios_com_data = relatorios_ativos.filtered('data_fim_atendimento')
             record.date_execution = max(relatorios_com_data.mapped("data_fim_atendimento")) if relatorios_com_data else False
                 
 
@@ -154,15 +156,16 @@ class EngcOs(models.Model):
 
     date_finish = fields.Datetime('Término da Execução', compute="_compute_date_finish", tracking=True)
     
-    @api.depends('relatorios_id', 'relatorios_id.data_fim_atendimento')
+    @api.depends('relatorios_id', 'relatorios_id.data_fim_atendimento', 'relatorios_id.state')
     def _compute_date_finish(self):
         """
         Calcula o término da execução com base no fim do atendimento 
-        do relatório de serviço mais recente.
+        do relatório de serviço mais recente (exclui cancelados).
         Nota: Atualmente usa a mesma lógica de _compute_date_execution.
         """
         for record in self:
-            relatorios_com_data = record.relatorios_id.filtered('data_fim_atendimento')
+            relatorios_ativos = record.relatorios_id.filtered(lambda r: r.state != 'cancel')
+            relatorios_com_data = relatorios_ativos.filtered('data_fim_atendimento')
             record.date_finish = max(relatorios_com_data.mapped("data_fim_atendimento")) if relatorios_com_data else False
     
     # ==========================================
@@ -340,30 +343,35 @@ class EngcOs(models.Model):
     relatorios_pending_count = fields.Integer(compute='_compute_relatorios_pending_done')
     relatorios_done_count = fields.Integer(compute='_compute_relatorios_pending_done')
 
-    @api.depends('relatorios_id')
+    @api.depends('relatorios_id', 'relatorios_id.state')
     def _compute_relatorios_count(self):
-        """Calcula a quantidade de relatórios associados à OS."""
+        """Calcula a quantidade de relatórios associados à OS (exclui cancelados)."""
         for record in self:
-            record.relatorios_count = len(record.relatorios_id)
+            record.relatorios_count = len(
+                record.relatorios_id.filtered(lambda r: r.state != 'cancel')
+            )
 
     @api.depends('relatorios_id', 'relatorios_id.state')
     def _compute_relatorios_pending_done(self):
-        """Quantidade de relatórios não concluídos (vermelho) e concluídos (verde)."""
+        """Quantidade de relatórios não concluídos (vermelho) e concluídos (verde).
+        Relatórios cancelados não são contabilizados em nenhuma das bolinhas."""
         for record in self:
+            relatorios_ativos = record.relatorios_id.filtered(lambda r: r.state != 'cancel')
             record.relatorios_pending_count = len(
-                record.relatorios_id.filtered(lambda r: r.state != 'done')
+                relatorios_ativos.filtered(lambda r: r.state != 'done')
             )
             record.relatorios_done_count = len(
-                record.relatorios_id.filtered(lambda r: r.state == 'done')
+                relatorios_ativos.filtered(lambda r: r.state == 'done')
             )
 
     relatorios_time_execution = fields.Float(compute="_compute_relatorios_time_execution")
 
-    @api.depends('relatorios_id', 'relatorios_id.time_execution')
+    @api.depends('relatorios_id', 'relatorios_id.time_execution', 'relatorios_id.state')
     def _compute_relatorios_time_execution(self):
-        """Calcula o tempo total de execução de todos os relatórios."""
+        """Calcula o tempo total de execução de todos os relatórios (exclui cancelados)."""
         for record in self:
-            record.relatorios_time_execution = sum(record.relatorios_id.mapped("time_execution"))
+            relatorios_ativos = record.relatorios_id.filtered(lambda r: r.state != 'cancel')
+            record.relatorios_time_execution = sum(relatorios_ativos.mapped("time_execution"))
             
     
     check_list_id = fields.One2many(
@@ -389,6 +397,36 @@ class EngcOs(models.Model):
         for record in self:
             record.check_list_pending_count = len(record.check_list_id.filtered(lambda c: not c.check))
             record.check_list_done_count = len(record.check_list_id.filtered(lambda c: c.check))
+
+    def get_checklist_grouped_by_section(self):
+        """
+        Retorna os itens do checklist agrupados por seção, ordenados por seção e sequence.
+        Usado no template do relatório para exibir o checklist agrupado.
+        """
+        self.ensure_one()
+        if not self.check_list_id:
+            return []
+        
+        # Agrupa por seção preservando a ordem de aparição
+        section_order = []
+        by_section = {}
+        for item in self.check_list_id.sorted('sequence'):
+            sec = item.section
+            sec_name = sec.name if sec else _("Sem Seção")
+            sec_id = sec.id if sec else 0
+            if sec_id not in by_section:
+                by_section[sec_id] = {
+                    'name': sec_name,
+                    'items': []
+                }
+                section_order.append(sec_id)
+            by_section[sec_id]['items'].append(item)
+        
+        # Retorna lista de dicionários com seção e itens
+        result = []
+        for sec_id in section_order:
+            result.append(by_section[sec_id])
+        return result
 
     calibration_created = fields.Boolean("Calibração criada")
     calibration_id = fields.Many2one(
