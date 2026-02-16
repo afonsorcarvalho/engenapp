@@ -119,3 +119,14 @@ pip install google-auth requests
 
 - **Registro do token:** RPC em `res.users` → `register_fcm_token` com `args: [[uid], token]`.
 - **Notificações:** o app deve tratar mensagens FCM cujo `data.type == "new_request_service"` e `data.request_service_id` (string numérica). Opcionalmente usar `data.title` e `data.body` para exibir a notificação.
+
+## Exemplos oficiais Firebase (referência)
+
+- **Flutter (receber mensagens):** [firebase/quickstart-flutter – messaging](https://github.com/firebase/quickstart-flutter/tree/main/messaging)  
+  - `FirebaseMessaging.onMessage` para mensagens em **primeiro plano** (no exemplo só faz `debugPrint`; para o usuário ver algo, é preciso exibir notificação local, ex.: `flutter_local_notifications`).  
+  - `FirebaseMessaging.onBackgroundMessage` para mensagens em **segundo plano**.  
+  - No sample, a observação: *"On Android, foreground notifications are not shown, only when the app is backgrounded"* — por isso, em primeiro plano o app precisa mostrar a notificação manualmente a partir do payload `data`.
+
+- **Python (enviar mensagens):** [firebase/quickstart-python – messaging](https://github.com/firebase/quickstart-python/tree/master/messaging)  
+  - Usa Service Account + OAuth2 + `POST` em `https://fcm.googleapis.com/v1/projects/<id>/messages:send` (mesmo padrão do módulo Odoo).  
+  - O exemplo envia mensagens com `notification` (title/body) para **tópico**; o Odoo envia apenas **data** para **token**, para o app decidir como exibir.

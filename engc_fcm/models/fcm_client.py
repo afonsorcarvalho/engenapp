@@ -135,10 +135,12 @@ def send_fcm_data_message(env, fcm_token, data_dict, project_id=None):
         'Authorization': 'Bearer %s' % token,
         'Content-Type': 'application/json; UTF-8',
     }
+    # analytics_label permite filtrar nos Relatórios do Firebase (Messaging > Reports)
     body = {
         'message': {
             'token': fcm_token,
             'data': data_str,
+            'fcm_options': {'analytics_label': 'odoo_engc'},
         }
     }
 
