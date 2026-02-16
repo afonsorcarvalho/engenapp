@@ -21,8 +21,8 @@
                             <div class="col-12 col-lg-6 o_setting_box" id="fcm_service_account_json_setting">
                                 <div class="o_setting_right_pane">
                                     <label for="fcm_service_account_json" string="Conteúdo do JSON (Service Account)"/>
-                                    <div class="text-muted">Conteúdo completo do JSON. Se preenchido, tem prioridade sobre o caminho.</div>
-                                    <field name="fcm_service_account_json" class="w-100" nolabel="1"/>
+                                    <div class="text-muted">Cole aqui o JSON completo do Service Account (Firebase Console → Configurações do projeto → Contas de serviço → Gerar nova chave). É obrigatório clicar em <strong>Salvar</strong> após colar para que o envio FCM funcione.</div>
+                                    <field name="fcm_service_account_json" class="w-100" nolabel="1" placeholder="Cole o JSON do Service Account e clique em Salvar..."/>
                                 </div>
                             </div>
                             <div class="col-12 col-lg-6 o_setting_box" id="fcm_project_id_setting">

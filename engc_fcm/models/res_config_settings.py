@@ -3,7 +3,10 @@
 Configuração do FCM (Service Account) em Configurações gerais.
 Os parâmetros são armazenados em ir.config_parameter.
 """
+import logging
 from odoo import fields, models
+
+_logger = logging.getLogger(__name__)
 
 
 class ResConfigSettings(models.TransientModel):
@@ -36,4 +39,9 @@ class ResConfigSettings(models.TransientModel):
     def set_values(self):
         super(ResConfigSettings, self).set_values()
         IrConfig = self.env['ir.config_parameter'].sudo()
-        IrConfig.set_param('engc_fcm.service_account_json', self.fcm_service_account_json or '')
+        json_val = self.fcm_service_account_json or ''
+        IrConfig.set_param('engc_fcm.service_account_json', json_val)
+        if json_val:
+            _logger.info("FCM: configuração salva (Service Account JSON com %s caracteres).", len(json_val))
+        else:
+            _logger.info("FCM: conteúdo do JSON foi limpo (configuração removida).")

@@ -56,6 +56,13 @@ def _get_credentials(env):
             _logger.warning("Erro ao carregar Service Account de %s: %s", path, e)
             return None
 
+    _logger.info(
+        "FCM: Service Account não encontrado. JSON em ir.config_parameter tem %s caracteres; "
+        "caminho configurado: %s; arquivo existe: %s.",
+        len(json_str or ''),
+        bool(path),
+        os.path.isfile(path) if path else False,
+    )
     return None
 
 
