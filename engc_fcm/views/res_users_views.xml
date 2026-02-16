@@ -6,7 +6,7 @@
         <field name="model">res.users</field>
         <field name="inherit_id" ref="base.view_users_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='partner_id']" position="berfore">
+            <xpath expr="//field[@name='partner_id']" position="before">
                 <label for="fcm_token" string="Token FCM"/>
                 <field name="fcm_token" readonly="1"/>
             </xpath>
