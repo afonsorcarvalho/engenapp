@@ -8,6 +8,8 @@ import json
 import logging
 import os
 
+from odoo import _
+
 _logger = logging.getLogger(__name__)
 
 # Escopo necessário para FCM (documentação Firebase)
@@ -94,26 +96,29 @@ def send_fcm_data_message(env, fcm_token, data_dict, project_id=None):
     :param fcm_token: token do dispositivo FCM
     :param data_dict: dict com chaves/valores string (ex.: type, request_service_id, title, body)
     :param project_id: opcional; se não informado, usa credenciais ou ir.config_parameter
-    :return: True se enviado com sucesso, False caso contrário (erro logado)
+    :return: tupla (sucesso: bool, detalhe: str | None). Em falha, detalhe traz status e corpo da resposta para exibir ao usuário.
     """
     if not fcm_token or not isinstance(data_dict, dict):
         _logger.debug("send_fcm_data_message: token ou data inválidos.")
-        return False
+        return False, _("Token ou payload inválidos.")
 
     credentials = _get_credentials(env)
     if credentials is None:
-        _logger.warning("FCM não configurado: Service Account ausente. Configure em Configurações > Geral > Push (FCM).")
-        return False
+        msg = _("Service Account não configurado. Configure em Configurações > Geral > Push (FCM).")
+        _logger.warning("FCM: %s", msg)
+        return False, msg
 
     pid = project_id or _get_project_id(env, credentials)
     if not pid:
-        _logger.warning("FCM: project_id não definido (configure engc_fcm.project_id ou use JSON com project_id).")
-        return False
+        msg = _("Project ID não definido. Preencha no Push (FCM) ou use um JSON com project_id.")
+        _logger.warning("FCM: %s", msg)
+        return False, msg
 
     token = get_access_token(env)
     if not token:
-        _logger.warning("FCM: não foi possível obter access token (verifique o JSON do Service Account).")
-        return False
+        msg = _("Não foi possível obter access token. Verifique o JSON do Service Account (chave privada e client_email).")
+        _logger.warning("FCM: %s", msg)
+        return False, msg
 
     # Garantir que todos os valores em data são string (requisito FCM)
     data_str = {k: (v if isinstance(v, str) else str(v)) for k, v in data_dict.items()}
@@ -139,13 +144,23 @@ def send_fcm_data_message(env, fcm_token, data_dict, project_id=None):
                 "Se o dispositivo não exibir: app em primeiro plano pode precisar mostrar notificação local.",
                 (fcm_token or '')[:30]
             )
-            return True
-        _logger.warning(
-            "FCM falhou: status=%s, body=%s",
-            resp.status_code,
-            resp.text[:500] if resp.text else ''
-        )
-        return False
+            return True, None
+
+        # Montar detalhe para o usuário (ex.: 401 = credenciais; 403 = SENDER_ID_MISMATCH)
+        body_preview = (resp.text or '')[:400]
+        _logger.warning("FCM falhou: status=%s, body=%s", resp.status_code, resp.text[:500] if resp.text else '')
+        try:
+            err_json = resp.json()
+            err_msg = err_json.get('error', {}).get('message', body_preview)
+            details = err_json.get('error', {}).get('details', [])
+            if details and isinstance(details[0], dict):
+                err_code = details[0].get('errorCode', '')
+                if err_code:
+                    err_msg = '%s (%s)' % (err_msg, err_code)
+        except Exception:
+            err_msg = body_preview or 'HTTP %s' % resp.status_code
+        detail = _("FCM retornou %(status)s: %(message)s") % {'status': resp.status_code, 'message': err_msg}
+        return False, detail
     except Exception as e:
         _logger.warning("FCM exceção ao enviar: %s", e, exc_info=True)
-        return False
+        return False, str(e)

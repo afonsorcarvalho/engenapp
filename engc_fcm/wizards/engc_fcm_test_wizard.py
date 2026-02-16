@@ -55,7 +55,7 @@ class EngcFcmTestWizard(models.TransientModel):
             'title': _('Teste FCM'),
             'body': _('Notificação de teste enviada pelo Odoo.'),
         }
-        success = fcm_client.send_fcm_data_message(self.env, user.fcm_token, data)
+        success, detail = fcm_client.send_fcm_data_message(self.env, user.fcm_token, data)
         if success:
             self.write({
                 'state': 'sent',
@@ -68,12 +68,15 @@ class EngcFcmTestWizard(models.TransientModel):
             })
             _logger.info("FCM teste enviado para user_id=%s (login=%s)", user.id, user.login)
         else:
+            result_msg = _(
+                'Falha ao enviar.\n\n'
+                'Detalhe da API FCM:\n%(detail)s\n\n'
+                'Dicas: (1) Configurações > Geral > Push (FCM) — JSON do Service Account completo e Project ID do projeto engeapp-odoo; '
+                '(2) Token FCM deve ser do mesmo projeto; (3) Veja os logs do servidor para mais detalhes.'
+            ) % {'detail': detail or _('Erro desconhecido.')}
             self.write({
                 'state': 'error',
-                'result_message': _(
-                    'Falha ao enviar. Verifique: (1) Configurações FCM (Service Account) em Configurações > Geral > Push (FCM); '
-                    '(2) token do usuário ainda válido; (3) logs do servidor.'
-                ),
+                'result_message': result_msg,
             })
         return {
             'type': 'ir.actions.act_window',

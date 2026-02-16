@@ -71,6 +71,6 @@ class RequestService(models.Model):
         for user in users:
             if not user.fcm_token:
                 continue
-            success = fcm_client.send_fcm_data_message(record.env, user.fcm_token, data)
+            success, detail = fcm_client.send_fcm_data_message(record.env, user.fcm_token, data)
             if not success:
-                _logger.debug("FCM não enviado para user_id=%s (token pode ser inválido).", user.id)
+                _logger.warning("FCM não enviado para user_id=%s: %s", user.id, detail or "erro desconhecido")
