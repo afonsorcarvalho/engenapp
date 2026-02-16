@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
-        <!-- Grupo: usuários que recebem push ao criar Solicitação de Serviço -->
+        <!-- Grupo: usuários que recebem push ao criar/atualizar Solicitação de Serviço -->
         <record id="group_fcm_request_service_notify" model="res.groups">
             <field name="name">Receber notificações push de Solicitação de Serviço</field>
             <field name="category_id" ref="base.module_category_services"/>
-            <field name="comment">Usuários com este grupo e com token FCM registrado recebem push quando uma nova Solicitação de Serviço é criada.</field>
+            <field name="comment">Usuários com este grupo e com token FCM registrado recebem push quando uma nova Solicitação de Serviço é criada ou atualizada.</field>
+        </record>
+        <!-- Grupo: usuários que recebem push ao criar/atualizar Ordem de Serviço -->
+        <record id="group_fcm_os_notify" model="res.groups">
+            <field name="name">Receber notificações push de Ordem de Serviço</field>
+            <field name="category_id" ref="base.module_category_services"/>
+            <field name="comment">Usuários com este grupo e com token FCM recebem push quando uma OS é criada ou o status é alterado (inclui data programada e data conclusão).</field>
+        </record>
+        <!-- Grupo: usuários que recebem push ao criar/atualizar Relatório de Atendimento -->
+        <record id="group_fcm_relatorio_atendimento_notify" model="res.groups">
+            <field name="name">Receber notificações push de Relatório de Atendimento</field>
+            <field name="category_id" ref="base.module_category_services"/>
+            <field name="comment">Usuários com este grupo e com token FCM recebem push quando um relatório de atendimento é criado ou concluído (inclui datas de atendimento).</field>
         </record>
     </data>
 </odoo>

@@ -13,8 +13,8 @@
                     <field name="name" />
                     <field name="create_uid" />
                     <field name="requester" />
-                    <field name="request_date" />
-                    <field name="schedule_date" />
+                    <field name="request_date" widget="datetime" />
+                    <field name="schedule_date" widget="datetime" />
                     <field name="priority" />
                 </tree>
             </field>
@@ -80,10 +80,11 @@
                                     domain="[('company_id','=',company_id)]"
                                     /> 
                                 </group>
+                                <!-- Campos datetime: request_date, schedule_date, close_date (engc.request.service) -->
                                 <group string="Datas">
-                                    <field name="request_date" attrs="{'readonly': [('state','!=','new')]}"/>
-                                    <field name="schedule_date" string="Dt. Programada" attrs="{'readonly': [('state','!=','new')]}"/>
-                                    <field name="close_date" string="Dt. Conclusão" readonly="1"/>
+                                    <field name="request_date" widget="datetime" attrs="{'readonly': [('state','!=','new')]}"/>
+                                    <field name="schedule_date" string="Dt. Programada" widget="datetime" attrs="{'readonly': [('state','!=','new')]}"/>
+                                    <field name="close_date" string="Dt. Conclusão" widget="datetime" readonly="1"/>
                                     <field name="who_executor" 
                                     widget="radio"
                                     attrs="{'readonly': [('state','!=','new')]}"

@@ -97,11 +97,19 @@ class RequestService(models.Model):
        
     description = fields.Text('Repair Description')
     state = fields.Selection([('new', 'Nova Solicitação'), ('in_progress', 'Em andamento'),('done', 'Concluído'),('cancel', 'Cancelada')], default="new",tracking=True)
-    request_date = fields.Date('Data da Solicitação',required=True,tracking=True , default=fields.Date.context_today)
-    schedule_date = fields.Date("Scheduled Date",
-    tracking=True
+    # Datas como datetime para compatibilidade com engc.os (date_request, date_scheduled)
+    # e registro de data/hora. Consumidores: action_gera_os (engc.os), finish_request/write (close_date).
+    request_date = fields.Datetime(
+        'Data da Solicitação',
+        required=True,
+        tracking=True,
+        default=fields.Datetime.now,
     )
-    close_date = fields.Date('Close Date')
+    schedule_date = fields.Datetime(
+        'Data Programada',
+        tracking=True,
+    )
+    close_date = fields.Datetime('Data de Conclusão')
     maintenance_type = fields.Selection([('corrective', 'Corretiva'), ('preventive', 'Preventiva'),('instalacao','Instalação'),('treinamento','Treinamento')], required=True, string='Tipo de Manutenção', default="corrective")
     who_executor = fields.Selection(WHO_EXECUTOR_SELECTION, string='Manutenção',
                              copy=False, tracking=True 
@@ -148,9 +156,8 @@ class RequestService(models.Model):
         }
     
     def action_gera_os(self):
+        """Gera OS a partir da solicitação. Repassa request_date/schedule_date (Datetime) para engc.os."""
         self._check_validation_field()
-                    
-        
         equipments = self.equipment_ids
         vals = []
 
@@ -191,7 +198,7 @@ class RequestService(models.Model):
         """
         self.write({
             'state': 'done',
-            'close_date': fields.Date.today()
+            'close_date': fields.Datetime.now(),
         })
     
     def write(self, vals):
@@ -203,7 +210,7 @@ class RequestService(models.Model):
         if 'state' in vals and vals.get('state') == 'done':
             for record in self:
                 if not record.close_date:
-                    vals['close_date'] = fields.Date.today()
+                    vals['close_date'] = fields.Datetime.now()
         
         return super(RequestService, self).write(vals)
 

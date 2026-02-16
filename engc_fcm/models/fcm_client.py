@@ -8,9 +8,30 @@ import json
 import logging
 import os
 
-from odoo import _
+from odoo import _, fields
 
 _logger = logging.getLogger(__name__)
+
+
+def format_datetime_for_fcm(record, dt, user=None):
+    """
+    Converte dt (UTC, armazenado no banco) para o fuso horário do usuário e formata (dd/mm/yyyy HH:MM).
+    Usado nas notificações FCM para que cada destinatário veja a data no seu fuso.
+    :param record: registro com .env
+    :param dt: datetime em UTC (naive) ou None
+    :param user: res.users destinatário; se None, usa record.env.user
+    :return: string formatada ou ''
+    """
+    if not dt:
+        return ''
+    try:
+        if user is not None:
+            record = record.with_env(record.env(user=user))
+        local_dt = fields.Datetime.context_timestamp(record, dt)
+        return local_dt.strftime('%d/%m/%Y %H:%M')
+    except Exception as e:
+        _logger.debug("FCM: fallback format_datetime sem TZ para %s: %s", dt, e)
+        return dt.strftime('%d/%m/%Y %H:%M')
 
 # Escopo necessário para FCM (documentação Firebase)
 FCM_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging'
@@ -127,6 +148,8 @@ def send_fcm_data_message(env, fcm_token, data_dict, project_id=None):
         _logger.warning("FCM: %s", msg)
         return False, msg
 
+    _logger.info("FCM: [OAUTH] access token obtido (Bearer ...%s)", (token or '')[-8:] if token else '')
+
     # Garantir que todos os valores em data são string (requisito FCM)
     data_str = {k: (v if isinstance(v, str) else str(v)) for k, v in data_dict.items()}
 
@@ -135,29 +158,69 @@ def send_fcm_data_message(env, fcm_token, data_dict, project_id=None):
         'Authorization': 'Bearer %s' % token,
         'Content-Type': 'application/json; UTF-8',
     }
-    # analytics_label permite filtrar nos Relatórios do Firebase (Messaging > Reports)
-    body = {
-        'message': {
-            'token': fcm_token,
-            'data': data_str,
-            'fcm_options': {'analytics_label': 'odoo_engc'},
-        }
+    # Incluir "notification" para o sistema exibir a notificação quando o app está em segundo plano ou fechado.
+    # Mantemos "data" para o app usar (type, request_service_id, etc.).
+    message_payload = {
+        'token': fcm_token,
+        'data': data_str,
+        'fcm_options': {'analytics_label': 'odoo_engc'},
     }
+    notif_title = data_str.get('title') or ''
+    notif_body = data_str.get('body') or ''
+    if notif_title or notif_body:
+        message_payload['notification'] = {
+            'title': notif_title[:100],
+            'body': (notif_body[:200]) if notif_body else notif_title[:200],
+        }
+    body = {'message': message_payload}
+
+    body_json = json.dumps(body)
+
+    # Log completo da comunicação com o Firebase (token mascarado no log)
+    body_log = {'message': {'token': (fcm_token or '')[:30] + '...[MASKED]' if fcm_token and len(fcm_token) > 30 else (fcm_token or ''), 'data': data_str, 'fcm_options': message_payload['fcm_options']}}
+    if 'notification' in message_payload:
+        body_log['message']['notification'] = message_payload['notification']
+    _logger.info(
+        "FCM: [REQUEST] POST %s",
+        url,
+    )
+    _logger.info(
+        "FCM: [REQUEST HEADERS] Content-Type=application/json; UTF-8, Authorization=Bearer ***",
+    )
+    _logger.info(
+        "FCM: [REQUEST BODY] %s",
+        json.dumps(body_log, ensure_ascii=False),
+    )
 
     try:
         import requests
-        resp = requests.post(url, headers=headers, data=json.dumps(body), timeout=10)
+        resp = requests.post(url, headers=headers, data=body_json, timeout=10)
+
+        _logger.info(
+            "FCM: [RESPONSE] status=%s | url=%s",
+            resp.status_code,
+            url,
+        )
+        _logger.info(
+            "FCM: [RESPONSE BODY] %s",
+            (resp.text or '(vazio)')[:1000],
+        )
+
         if resp.status_code == 200:
             _logger.info(
-                "FCM enviado com sucesso (user token prefix: %s...). "
-                "Se o dispositivo não exibir: app em primeiro plano pode precisar mostrar notificação local.",
-                (fcm_token or '')[:30]
+                "FCM: mensagem aceita pelo Firebase (HTTP 200). token_prefix=%s... "
+                "Se não aparecer no celular: app em primeiro plano precisa tratar onMessage e exibir notificação local.",
+                (fcm_token or '')[:24],
             )
             return True, None
 
         # Montar detalhe para o usuário (ex.: 401 = credenciais; 403 = SENDER_ID_MISMATCH)
         body_preview = (resp.text or '')[:400]
-        _logger.warning("FCM falhou: status=%s, body=%s", resp.status_code, resp.text[:500] if resp.text else '')
+        _logger.warning(
+            "FCM: envio falhou | status=%s | body=%s",
+            resp.status_code,
+            resp.text[:500] if resp.text else '',
+        )
         try:
             err_json = resp.json()
             err_msg = err_json.get('error', {}).get('message', body_preview)

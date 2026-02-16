@@ -16,9 +16,31 @@ Módulo Odoo que implementa suporte a push notifications via Firebase Cloud Mess
      - `type`: `"new_request_service"`
      - `request_service_id`: ID do registro criado em string (ex.: `"123"`)
      - `title`: (opcional) ex.: "Nova Solicitação de Serviço"
-     - `body`: (opcional) ex.: nome/código da solicitação
+     - `body`: (opcional) ex.: nome/código + "Programada: dd/mm/yyyy HH:MM" quando houver data programada
+     - `schedule_date`: (opcional) data/hora programada formatada (dd/mm/yyyy HH:MM) quando preenchida
 
-3. **API utilizada**
+3. **Envio de push ao atualizar Solicitação de Serviço (técnico ou status)**
+   - Ao alterar o **técnico** (`tecnicos`) ou o **status** (`state`) de uma Solicitação de Serviço, o módulo envia uma mensagem FCM para os mesmos usuários do grupo acima.
+   - Payload **data** da mensagem de atualização:
+     - `type`: `"request_service_updated"`
+     - `request_service_id`: ID do registro em string
+     - `title`: ex.: "Solicitação de Serviço: técnico alterado" ou "Solicitação de Serviço: status atualizado"
+     - `body`: ex.: código + status; quando status = Concluído inclui "Data conclusão: dd/mm/yyyy HH:MM"
+     - `event_type`: `"technician"` ou `"status"`
+     - `state`: (apenas quando `event_type` = `"status"`) novo valor do status (ex.: `"in_progress"`, `"done"`, `"cancel"`)
+     - `close_date`: (apenas quando status = `"done"`) data de conclusão formatada (dd/mm/yyyy HH:MM)
+
+4. **Envio de push ao criar/atualizar Ordem de Serviço (engc.os)**
+   - Ao **criar** uma OS: notificação para usuários do grupo **"Receber notificações push de Ordem de Serviço"** (`engc_fcm.group_fcm_os_notify`).
+   - Ao **alterar o status** da OS: mesma audiência. Quando status = Concluída, o body inclui a data de conclusão (`date_finish`).
+   - Payload **data**: `type`: `"new_os"` ou `"os_updated"`, `os_id`, `title`, `body`, `schedule_date` (data programada), e quando concluída `state`, `close_date`.
+
+5. **Envio de push ao criar/atualizar Relatório de Atendimento (engc.os.relatorios)**
+   - Ao **criar** um relatório: notificação para usuários do grupo **"Receber notificações push de Relatório de Atendimento"** (`engc_fcm.group_fcm_relatorio_atendimento_notify`).
+   - Ao **alterar o status** (ex.: Concluído): mesma audiência. Quando status = Concluído, o body inclui a data de conclusão (`data_fim_atendimento`).
+   - Payload **data**: `type`: `"new_relatorio_atendimento"` ou `"relatorio_atendimento_updated"`, `relatorio_id`, `os_id`, `title`, `body`, `data_atendimento`, `data_fim_atendimento`, e quando concluído `state`, `close_date`.
+
+6. **API utilizada**
    - FCM HTTP v1: `POST https://fcm.googleapis.com/v1/projects/<project_id>/messages:send`
    - Autenticação: OAuth2 com Service Account do Firebase (Google Auth).
 
@@ -108,7 +130,13 @@ pip install google-auth requests
 
 2. **Confirmar token no Odoo:** Usuários → edite o usuário (ex.: afonso@jgma.com.br) e confira se o campo "Token FCM" está preenchido após o login pelo app.
 
-3. **Logs do servidor:** Ao enviar o teste, o módulo grava mensagens em log (sucesso ou falha). Execute o teste e consulte o log do container/servidor Odoo.
+3. **Configurar o usuário para receber push (obrigatório):** Para receber cada tipo de notificação, o usuário precisa ter **Token FCM** preenchido e estar no grupo correspondente. Em **Configurações** → **Usuários e empresas** → **Usuários**, aba **Outros** (ou **Grupos**):
+   - **Solicitação de Serviço:** marque **"Receber notificações push de Solicitação de Serviço"**.
+   - **Ordem de Serviço:** marque **"Receber notificações push de Ordem de Serviço"**.
+   - **Relatório de Atendimento:** marque **"Receber notificações push de Relatório de Atendimento"**.
+   Salve. Sem o grupo, o usuário não recebe aquele tipo de push.
+
+4. **Logs do servidor:** Ao enviar o teste, o módulo grava mensagens em log (sucesso ou falha). Execute o teste e consulte o log do container/servidor Odoo.
 
 ## Segurança
 
@@ -118,7 +146,13 @@ pip install google-auth requests
 ## Resumo para o app Flutter
 
 - **Registro do token:** RPC em `res.users` → `register_fcm_token` com `args: [[uid], token]`.
-- **Notificações:** o app deve tratar mensagens FCM cujo `data.type == "new_request_service"` e `data.request_service_id` (string numérica). Opcionalmente usar `data.title` e `data.body` para exibir a notificação.
+- **Notificações:** o app deve tratar:
+  - `data.type == "new_request_service"`: nova solicitação criada; usar `data.request_service_id`, `data.title`, `data.body`, `data.schedule_date`.
+  - `data.type == "request_service_updated"`: solicitação atualizada (técnico ou status); usar `data.event_type`, `data.request_service_id`, `data.title`, `data.body`, `data.state`, `data.close_date` (quando concluído).
+  - `data.type == "new_os"`: nova ordem de serviço; usar `data.os_id`, `data.title`, `data.body`, `data.schedule_date`.
+  - `data.type == "os_updated"`: OS atualizada (status); usar `data.os_id`, `data.title`, `data.body`, `data.state`, `data.close_date` (quando concluída).
+  - `data.type == "new_relatorio_atendimento"`: novo relatório de atendimento; usar `data.relatorio_id`, `data.os_id`, `data.title`, `data.body`, `data.data_atendimento`, `data.data_fim_atendimento`.
+  - `data.type == "relatorio_atendimento_updated"`: relatório atualizado (status); usar `data.relatorio_id`, `data.os_id`, `data.title`, `data.body`, `data.state`, `data.close_date` (quando concluído).
 
 ## Exemplos oficiais Firebase (referência)
 

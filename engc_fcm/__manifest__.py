@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 {
     'name': "Engc FCM - Push Notifications (Firebase)",
-    'summary': "Registro de token FCM em usuários e envio de push ao criar Solicitação de Serviço.",
+    'summary': "Registro de token FCM e push para Solicitação de Serviço, Ordem de Serviço e Relatório de Atendimento.",
     'description': """
         Integração com Firebase Cloud Messaging (FCM) para o app mobile Flutter.
         - Campo fcm_token em res.users e método register_fcm_token para o app registrar o token após login.
-        - Ao criar um registro em engc.request.service (Solicitação de Serviço), envia notificação FCM
-          para usuários elegíveis (grupo de notificação) com payload data: type, request_service_id, title, body.
-        - Utiliza FCM HTTP v1 API com autenticação via Service Account (OAuth2).
-        Ver README ou doc do módulo para configurar credenciais (Service Account JSON ou variáveis de ambiente).
+        - Push ao criar/atualizar: Solicitação de Serviço (engc.request.service), Ordem de Serviço (engc.os),
+          Relatório de Atendimento (engc.os.relatorios). Inclui data programada e data conclusão quando aplicável.
+        - Grupos de notificação por tipo; FCM HTTP v1 com Service Account (OAuth2).
+        Ver README para configurar credenciais e grupos.
     """,
     'author': "Afonso Carvalho",
     'website': "http://www.jgma.com.br",
