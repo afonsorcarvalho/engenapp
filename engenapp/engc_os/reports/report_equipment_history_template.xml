@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Relatório PDF: histórico de atendimentos do equipamento (por data decrescente) -->
+    <template id="report_equipment_history_template">
+        <t t-call="web.html_container">
+            <t t-foreach="equipment" t-as="eq">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <h2>Histórico de Atendimentos do Equipamento</h2>
+                            </div>
+                        </div>
+                        <div class="row mt-2 mb-3">
+                            <div class="col-12">
+                                <table class="table table-sm table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Equipamento:</strong></td>
+                                            <td><span t-field="eq.name"/></td>
+                                        </tr>
+                                        <tr t-if="eq.serial_number">
+                                            <td><strong>Nº Série:</strong></td>
+                                            <td><span t-field="eq.serial_number"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <t t-set="lines" t-value="lines_by_equipment.get(eq.id, [])"/>
+                        <div class="row">
+                            <div class="col-12">
+                                <t t-if="lines">
+                                    <table class="table table-sm table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Nº Relatório</th>
+                                                <th>Ordem de Serviço</th>
+                                                <th>Data do Atendimento</th>
+                                                <th>Duração</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="lines" t-as="line">
+                                                <tr>
+                                                    <td><t t-esc="line['name']"/></td>
+                                                    <td><t t-esc="line['os_name']"/></td>
+                                                    <td><t t-esc="line['data_atendimento']"/></td>
+                                                    <td><t t-esc="line['time_execution']"/></td>
+                                                </tr>
+                                                <th colspan="4">Resumo do Atendimento</th>
+                                                <tr>
+                                                    <td colspan="4" style="white-space: pre-line; vertical-align: top;">
+                                                        <t t-esc="line['service_summary']"/>
+                                                        <t t-if="line.get('parts_by_state')">
+                                                            <table class="table table-sm table-bordered mt-2 mb-0" style="line-height: 1.2;">
+                                                                <thead>
+                                                                    <tr><th colspan="3">Peças Utilizadas</th></tr>
+                                                                    <tr style="line-height: 1.2;">
+                                                                        <th style="width: 15%; padding: 2px 6px; vertical-align: middle;">Status</th>
+                                                                        <th style="width: 65%; padding: 2px 6px; vertical-align: middle;">Descrição</th>
+                                                                        <th style="width: 20%; padding: 2px 6px; vertical-align: middle;">Quantidade</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <t t-foreach="line['parts_by_state']" t-as="state_group">
+                                                                        <t t-set="part_items" t-value="state_group.get('items', [])"/>
+                                                                        <t t-foreach="part_items" t-as="item">
+                                                                            <tr style="line-height: 1.2;">
+                                                                                <td style="padding: 2px 6px; vertical-align: middle;"><t t-esc="state_group['label']"/></td>
+                                                                                <td style="padding: 2px 6px; vertical-align: middle; word-break: break-word;"><t t-esc="item['desc']"/></td>
+                                                                                <td style="padding: 2px 6px; vertical-align: middle; text-align: left;">
+                                                                                    <t t-if="item.get('qty')">
+                                                                                        <t t-esc="item['qty']"/> <t t-esc="item.get('uom') or ''"/>
+                                                                                    </t>
+                                                                                    <t t-else="">—</t>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </t>
+                                                                    </t>
+                                                                </tbody>
+                                                            </table>
+                                                        </t>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </t>
+                                <t t-else="">
+                                    <p class="text-muted">Nenhum relatório de atendimento encontrado para este equipamento.</p>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

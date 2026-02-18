@@ -21,6 +21,12 @@ class EngcEquipmentCategory(models.Model):
     #     comodel_name='engc.equipment.category.instruction',  inverse_name='category_id'
     #    ,
     #     )
+    maintenance_team_id = fields.Many2one(
+        string='Equipe de manutenção',
+        comodel_name='engc.equipment.maintenance.team',
+        ondelete='set null',
+        help="Equipe de manutenção responsável pela categoria de equipamentos",
+    )
     maintenance_plan = fields.Many2one(
         string='Plano de manutenção',
         comodel_name='engc.maintenance_plan',

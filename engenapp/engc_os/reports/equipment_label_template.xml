@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!--  Sub-template: Etiqueta individual de equipamento            -->
+    <!--  Chamado pelo template principal para cada equipamento.      -->
+    <!--  Espera a variavel 'eq' no contexto.                         -->
+    <!-- ============================================================ -->
+
+    <!-- Subtemplate: uma etiqueta (espera variável 'eq' no contexto). -->
+    <template id="equipment_label_single">
+        <!-- URL base para o link do QR: request.url_root ou parâmetro web.base.url (sem getattr, não disponível no QWeb) -->
+        <t t-set="base_url" t-value="(request and request.httprequest and (request.httprequest.url_root or '') or (eq.env['ir.config_parameter'].sudo().get_param('web.base.url') or '')).rstrip('/')"/>
+        <!-- Link do portal para nova solicitação com este equipamento pré-selecionado -->
+        <t t-set="qr_url" t-value="'%s/my/request-service/new?equipment_id=%s' % (base_url, eq.id)"/>
+        <t t-set="barcode_src" t-value="'/report/barcode/?barcode_type=QR&amp;value=%s&amp;width=400&amp;height=400' % qr_url"/>
+  
+        <table style="width: 95mm; border: 1pt solid #333;
+                      border-radius: 3mm; border-collapse: separate;
+                      border-spacing: 0; overflow: hidden;"
+               cellpadding="0" cellspacing="0">
+
+            <!-- TOPO: Logo + Empresa -->
+            <tr>
+                <td colspan="2" style="padding: 2.5mm 3mm;">
+                    <table class="table-borderless" style="width: 100%; border: none;" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td style="width: 18mm; vertical-align: middle;">
+                                <img t-if="eq.company_id.logo"
+                                     t-att-src="'/web/image/res.company/%s/logo' % eq.company_id.id"
+                                     style="max-width: 16mm; max-height: 12mm;"
+                                     alt="Logo"/>
+                            </td>
+                            <td style="vertical-align: middle; padding-left: 2mm;
+                                       font-size: 10pt; font-weight: bold; color: #222;">
+                                <t t-out="eq.company_id.name"/>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <!-- CORPO: QR Code + Dados -->
+            <tr>
+                <!-- QR Code -->
+                <td style="width: 32mm; vertical-align: top; padding: 2mm 2mm;">
+                    <img t-att-src="barcode_src"
+                         style="width: 27mm; height: 27mm; display: block; margin: 0 auto;"/>
+                    <p style="font-size: 5.5pt; color: #888; text-align: center;
+                              margin: 0.8mm 0 0 0; line-height: 1.2;">
+                        <t t-out="'Escaneie para'"/><br/>
+                        <t t-out="'solicitar serviço'"/>
+                    </p>
+                    <p style="font-size: 4.5pt; color: #aaa; text-align: center;
+                              margin: 0.3mm 0 0 0; line-height: 1.1;
+                              word-break: break-all;">
+                        <t t-out="qr_url"/>
+                    </p>
+                </td>
+
+                <!-- Dados do equipamento -->
+                <td style="vertical-align: top; padding: 2mm 0mm 1mm 1mm;
+                           font-size: 8pt; line-height: 1.45; color: #111;">
+
+                    <t t-if="eq.apelido">
+                        <div style="font-size: 10pt; font-weight: bold;
+                                    color: #000; margin-bottom: 0.8mm;
+                                    border-bottom: 0.5pt solid #eee;
+                                    padding-bottom: 0.8mm;">
+                            <t t-out="eq.apelido"/>
+                        </div>
+                    </t>
+
+                    <div style="margin-bottom: 0.3mm;">
+                        <span style="font-weight: bold; color: #555;">Equip: </span>
+                        <t t-out="eq.category_id.name"/>
+                        <t t-if="eq.model">
+                            <t t-out="' '"/><t t-out="eq.model"/>
+                        </t>
+                    </div>
+
+                    <t t-if="eq.marca_id">
+                        <div style="margin-bottom: 0.3mm;">
+                            <span style="font-weight: bold; color: #555;">Marca: </span>
+                            <t t-out="eq.marca_id.name"/>
+                        </div>
+                    </t>
+
+                    <div style="margin-bottom: 0.3mm;">
+                        <span style="font-weight: bold; color: #555;">S/N: </span>
+                        <t t-out="eq.serial_number"/>
+                    </div>
+
+                    <t t-if="eq.tag">
+                        <div style="margin-bottom: 0.3mm;">
+                            <span style="font-weight: bold; color: #555;">Tag: </span>
+                            <t t-out="eq.tag"/>
+                        </div>
+                    </t>
+
+                    <t t-if="eq.patrimony">
+                        <div style="margin-bottom: 0.3mm;">
+                            <span style="font-weight: bold; color: #555;">Patrim.: </span>
+                            <t t-out="eq.patrimony"/>
+                        </div>
+                    </t>
+                </td>
+            </tr>
+
+            <!-- RODAPE -->
+            <tr>
+                <td colspan="2"
+                    style="padding: 1.2mm 3mm; border-top: 1pt solid #ccc;
+                           font-size: 6.5pt; color: #888; text-align: center;">
+                    <t t-out="'Identificação do Equipamento'"/>
+                </td>
+            </tr>
+
+        </table>
+    </template>
+
+</odoo>

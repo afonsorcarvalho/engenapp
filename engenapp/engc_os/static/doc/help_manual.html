@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manual do Usuário — Engenharia Clínica</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.65; margin: 1em auto; max-width: 920px; padding: 0 1.2em; color: #333; }
+        h1 { font-size: 1.6em; border-bottom: 2px solid #2c5282; padding-bottom: 0.4em; color: #2c5282; }
+        h2 { font-size: 1.25em; margin-top: 1.8em; color: #2d3748; }
+        h3 { font-size: 1.1em; margin-top: 1.2em; color: #4a5568; }
+        h4 { font-size: 1em; margin-top: 0.8em; color: #718096; }
+        nav.sumario { background: #ebf8ff; padding: 1.2em; border-radius: 8px; margin-bottom: 1.8em; border: 1px solid #90cdf4; }
+        nav.sumario ul { margin: 0.5em 0 0 0; padding-left: 1.5em; }
+        nav.sumario a { color: #2b6cb0; text-decoration: none; font-weight: 500; }
+        nav.sumario a:hover { text-decoration: underline; }
+        section { margin-bottom: 1.8em; }
+        .figura { margin: 1em 0; text-align: center; }
+        .figura img { max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .figura .legenda { font-size: 0.9em; color: #718096; margin-top: 0.4em; }
+        .dica { background: #f0fff4; border-left: 4px solid #48bb78; padding: 0.8em 1em; margin: 1em 0; border-radius: 0 6px 6px 0; }
+        .passo { background: #faf5ff; border-left: 4px solid #9f7aea; padding: 0.8em 1em; margin: 0.6em 0; border-radius: 0 6px 6px 0; }
+        .onde { background: #fffaf0; border-left: 4px solid #ed8936; padding: 0.6em 1em; margin: 0.6em 0; border-radius: 0 6px 6px 0; }
+        ul { margin: 0.4em 0; padding-left: 1.5em; }
+        li { margin: 0.25em 0; }
+        .back-top { margin-top: 2em; font-size: 0.9em; }
+        .back-top a { color: #2b6cb0; }
+        p { margin: 0.5em 0; }
+        .bloco-campo { margin: 0.6em 0; padding: 0.5em 0; border-bottom: 1px solid #e2e8f0; }
+        .bloco-campo strong { color: #2d3748; }
+    </style>
+</head>
+<body>
+    <h1 id="topo">Manual do Usuário — Engenharia Clínica</h1>
+    <p>Este manual ajuda você a usar o aplicativo <strong>Engenharia Clínica</strong>: onde clicar, o que preencher e como acompanhar ordens de serviço, equipamentos, preventivas e calibrações. Use o <strong>sumário</strong> abaixo para ir direto ao assunto.</p>
+
+    <nav class="sumario" aria-label="Sumário">
+        <h2>Sumário</h2>
+        <ul>
+            <li><a href="#visao-geral">1. Começando: onde está tudo no menu</a></li>
+            <li><a href="#ordem-servico">2. Ordem de Serviço (OS)</a></li>
+            <li><a href="#solicitacao-servico">3. Solicitação de Serviço</a></li>
+            <li><a href="#relatorios-atendimento">4. Relatórios de Atendimento</a></li>
+            <li><a href="#preventivas">5. Preventivas</a></li>
+            <li><a href="#equipamentos">6. Equipamentos</a></li>
+            <li><a href="#calibracao">7. Calibração e Ensaios</a></li>
+            <li><a href="#relatorios-menu">8. Relatórios e impressões</a></li>
+            <li><a href="#configuracoes">9. Configurações</a></li>
+            <li><a href="#regras-validacoes">10. Dicas importantes (regras do sistema)</a></li>
+        </ul>
+    </nav>
+
+    <section id="visao-geral">
+        <h2>1. Começando: onde está tudo no menu</h2>
+        <p>No topo da tela você verá o menu <strong>Engenharia Clínica</strong>. Ao clicar nele, abre uma lista com as principais áreas do aplicativo:</p>
+        <ul>
+            <li><strong>Serviços</strong> — onde ficam as Ordens de Serviço, Solicitações e Relatórios de Atendimento.</li>
+            <li><strong>Preventivas</strong> — cronogramas e planos de manutenção preventiva.</li>
+            <li><strong>Equipamentos</strong> — cadastro de equipamentos e categorias.</li>
+            <li><strong>Calibração e Ensaios</strong> — calibrações, procedimentos e instrumentos.</li>
+            <li><strong>Relatórios</strong> — relatórios resumidos e impressões.</li>
+            <li><strong>Configurações</strong> — unidades de medida, equipes, departamentos etc.</li>
+            <li><strong>Ajuda</strong> — é por aqui que você abriu este manual.</li>
+        </ul>
+        <div class="figura">
+            <img src="/engc_os/static/doc/menu_estrutura.png" alt="Menu Engenharia Clínica aberto mostrando os submenus: Serviços, Preventivas, Equipamentos, Calibração e Ensaios, Relatórios, Configurações e Ajuda." width="700">
+            <p class="legenda">Figura 1 — Onde encontrar cada parte do aplicativo no menu.</p>
+        </div>
+        <p class="back-top"><a href="#topo">↑ Voltar ao sumário</a></p>
+    </section>
+
+    <section id="ordem-servico">
+        <h2>2. Ordem de Serviço (OS)</h2>
+        <p>A <strong>Ordem de Serviço</strong> é o registro que acompanha um atendimento em um equipamento: desde a abertura até a conclusão, com datas, técnico, descrição do problema e relatórios.</p>
+
+        <div class="onde">
+            <strong>Onde acessar:</strong> Menu <strong>Engenharia Clínica</strong> → <strong>Serviços</strong> → <strong>Ordens de Serviço</strong>. Para criar uma nova, use o botão <strong>Criar</strong>.
+        </div>
+
+        <h3 id="estados-os">Como a OS anda: os “estados” (status)</h3>
+        <p>Cada ordem passa por várias etapas. A barra de status no topo da ficha mostra em que etapa ela está. O fluxo geral é:</p>
+        <ul>
+            <li><strong>Criada</strong> — acabou de ser aberta.</li>
+            <li><strong>Em Orçamento</strong> / <strong>Orçamento Pausado</strong> — fase de orçamento.</li>
+            <li><strong>Esperando aprovação</strong> — aguardando alguém aprovar.</li>
+            <li><strong>Esperando peças</strong> — peças solicitadas ainda não aplicadas.</li>
+            <li><strong>Pronta para Execução</strong> — pode iniciar o serviço.</li>
+            <li><strong>Em execução</strong> / <strong>Execução Pausada</strong> — serviço em andamento.</li>
+            <li><strong>Concluída</strong> — serviço finalizado. Também é possível <strong>Reprovar</strong> ou <strong>Cancelar</strong>.</li>
+        </ul>
+        <div class="figura">
+            <img src="/engc_os/static/doc/fluxo_estados_os.png" alt="Fluxograma mostrando o caminho da OS: Criada, Em Orçamento, Esperando aprovação, Pronta para Execução, Em execução, Concluída." width="700">
+            <p class="legenda">Figura 2 — Caminho típico de uma Ordem de Serviço.</p>
+        </div>
+
+        <h3 id="campos-os">O que preencher na tela da OS</h3>
+        <p>A tela da ordem está dividida em blocos. A figura abaixo resume onde ficam as principais informações.</p>
+        <div class="figura">
+            <img src="/engc_os/static/doc/tela_ordem_servico.png" alt="Esquema da tela da Ordem de Serviço com áreas indicadas: número da OS, dados do equipamento, datas, técnico, descrição do chamado e botões de ação." width="700">
+            <p class="legenda">Figura 3 — Visão geral da tela da Ordem de Serviço.</p>
+        </div>
+
+        <h4>Dados do equipamento</h4>
+        <p>Você escolhe o <strong>Equipamento</strong> na lista (obrigatório). O sistema mostra automaticamente: apelido, modelo, categoria, número de série, patrimônio e tag. A <strong>Instituição</strong> define a empresa/unidade (geralmente já vem preenchida).</p>
+
+        <h4>Quem faz o serviço e quando</h4>
+        <div class="bloco-campo"><strong>Solicitante</strong> — Nome de quem pediu o serviço. Obrigatório.</div>
+        <div class="bloco-campo"><strong>Manutenção</strong> — Se o serviço será feito pela equipe interna (<strong>Própria</strong>) ou por <strong>Terceirizada</strong>. Se for própria, escolha o <strong>Técnico</strong>; se for terceirizada, escolha a <strong>Empresa</strong>.</div>
+        <div class="bloco-campo"><strong>Tipo de Manutenção</strong> — Corretiva (quebra/defeito), Preventiva (programada), Instalação, Treinamento, Calibração, etc. Para <strong>Preventiva</strong>, é obrigatório informar a <strong>Periodicidade</strong> (ex.: mensal, semestral).</div>
+        <div class="bloco-campo"><strong>Prioridade</strong> — Normal, Baixa, Alta ou Muito Alta.</div>
+        <div class="bloco-campo"><strong>Data Requisição</strong> — Quando a OS foi solicitada.</div>
+        <div class="bloco-campo"><strong>Data Programada</strong> — Quando está previsto fazer o serviço. O sistema usa essa data e o técnico para criar um compromisso na <strong>agenda</strong>.</div>
+        <div class="bloco-campo"><strong>Tempo estimado de Execução</strong> — Quanto tempo deve levar (em horas). Ex.: 1,5 = 1 hora e 30 minutos.</div>
+        <p>As datas de <strong>Início da Execução</strong> e <strong>Término da Execução</strong> são preenchidas automaticamente com base nos relatórios de atendimento.</p>
+
+        <h4>Descrição do chamado</h4>
+        <p>No espaço <strong>Descrição do chamado</strong>, escreva o que foi solicitado ou o problema relatado. Em OS de manutenção preventiva, o sistema pode preencher automaticamente com “Manutenção preventiva conforme check-list”.</p>
+
+        <h4>Assinaturas</h4>
+        <p>Quando a OS for concluída, o <strong>Técnico</strong> e o <strong>Supervisor</strong> podem assinar na própria tela. As datas de assinatura são registradas automaticamente.</p>
+
+        <h4>Calibração e Check-list</h4>
+        <p>Se o tipo de manutenção for <strong>Calibração</strong>, depois de salvar a OS você pode usar o botão <strong>gerar calibração</strong> para criar o registro de calibração vinculado. Para <strong>Preventiva</strong>, use o botão <strong>Gerar Check-List</strong> para criar os itens a partir do plano da categoria do equipamento. Os botões <strong>Check-List</strong>, <strong>Relatórios</strong> e <strong>Peças</strong> ao lado abrem as listas correspondentes (com contadores de pendentes e concluídos).</p>
+
+        <h3 id="botoes-acao-os">Botões principais na ficha da OS</h3>
+        <ul>
+            <li><strong>Orçar</strong> — Leva a OS para a etapa de orçamento.</li>
+            <li><strong>Executar</strong> — Inicia o fluxo de execução (abre relatório de manutenção).</li>
+            <li><strong>Finalizar</strong> — Marca a OS como concluída. Em preventiva, todos os itens do check-list precisam estar concluídos.</li>
+            <li><strong>Assinar</strong> — Abre o espaço para o técnico assinar.</li>
+            <li><strong>Adicionar Relatório</strong> — Cria um novo relatório de atendimento para esta OS (não aparece quando a OS já está concluída).</li>
+            <li><strong>Gerar Check-List</strong> — Cria os itens do check-list para preventiva (quando ainda não existem).</li>
+            <li><strong>Gerar PDF</strong> — Gera o PDF da OS e anexa na ficha.</li>
+        </ul>
+        <p class="back-top"><a href="#topo">↑ Voltar ao sumário</a></p>
+    </section>
+
+    <section id="solicitacao-servico">
+        <h2>3. Solicitação de Serviço</h2>
+        <div class="onde">
+            <strong>Onde acessar:</strong> Engenharia Clínica → Serviços → <strong>Solicitação de Serviço</strong>.
+        </div>
+        <p>Aqui você registra o <strong>pedido</strong> de serviço (quem pediu, departamento, equipamentos, prioridade). Depois, usa a opção <strong>Gerar OS</strong> para criar uma ou mais Ordens de Serviço a partir dessa solicitação.</p>
+        <div class="dica"><strong>Dica:</strong> Crie primeiro a solicitação, preencha os dados e só então clique em Gerar OS para criar as ordens.</div>
+        <p class="back-top"><a href="#topo">↑ Voltar ao sumário</a></p>
+    </section>
+
+    <section id="relatorios-atendimento">
+        <h2>4. Relatórios de Atendimento</h2>
+        <div class="onde">
+            <strong>Onde acessar:</strong> Engenharia Clínica → Serviços → <strong>Relatórios de Atendimento</strong>. Também é possível abrir pela ficha da OS (botão Relatórios).
+        </div>
+        <p>Cada vez que um técnico faz um atendimento (orçamento, manutenção, instalação, treinamento, calibração etc.), isso é registrado em um <strong>Relatório de Atendimento</strong> ligado à OS. No relatório você informa: tipo do atendimento, data de início e fim, estado do equipamento (parado, funcionando, com restrições), itens do checklist, resumo, peças usadas e fotos.</p>
+        <p><strong>Principais ações:</strong> atualizar resumo a partir do checklist, adicionar itens ao checklist, abrir requisição de peças, aplicar peças, concluir ou cancelar o relatório.</p>
+        <p class="back-top"><a href="#topo">↑ Voltar ao sumário</a></p>
+    </section>
+
+    <section id="preventivas">
+        <h2>5. Preventivas</h2>
+        <div class="onde">
+            <strong>Onde acessar:</strong> Engenharia Clínica → <strong>Preventivas</strong>.
+        </div>
+        <p><strong>Listar Preventivas</strong> — Mostra as preventivas programadas (por equipamento, cronograma, plano, periodicidade, técnico). Daqui você pode <strong>Gerar OS</strong> para criar a ordem de serviço da preventiva.</p>
+        <p><strong>Cronogramas</strong> — Para ver e imprimir cronogramas de preventivas. Há relatórios vinculados ao cronograma e ao equipamento, e um assistente de impressão para gerar o PDF do cronograma (com opção de incluir planos de manutenção).</p>
+        <p><strong>Planos de Manutenção</strong> — Cadastro dos planos (seções, periodicidades, instruções). Você pode copiar um plano de outro e imprimir o relatório do plano na ficha.</p>
+        <p class="back-top"><a href="#topo">↑ Voltar ao sumário</a></p>
+    </section>
+
+    <section id="equipamentos">
+        <h2>6. Equipamentos</h2>
+        <div class="onde">
+            <strong>Onde acessar:</strong> Engenharia Clínica → <strong>Equipamentos</strong>.
+        </div>
+        <p><strong>Equipamentos</strong> — Cadastro dos equipamentos: categoria, cliente, técnico, equipe, departamento, local, marca, modelo, número de série, patrimônio, garantia, próxima preventiva, frequência. Na ficha do equipamento há a ação para imprimir o <strong>Cronograma de Preventivas do Equipamento</strong>.</p>
+        <p><strong>Categorias</strong> — Agrupa os equipamentos por tipo e permite vincular um plano de manutenção e as instruções de manutenção da categoria.</p>
+        <p class="back-top"><a href="#topo">↑ Voltar ao sumário</a></p>
+    </section>
+
+    <section id="calibracao">
+        <h2>7. Calibração e Ensaios</h2>
+        <div class="onde">
+            <strong>Onde acessar:</strong> Engenharia Clínica → <strong>Calibração e Ensaios</strong>.
+        </div>
+        <p><strong>Calibrações</strong> — Registro das calibrações (OS, cliente, equipamento, técnico, data da calibração, próxima calibração, instrumentos padrão, norma/procedimento, medidas, condições ambientais). Na ficha é possível imprimir o <strong>Certificado de Calibração</strong>.</p>
+        <p><strong>Procedimentos de Medição</strong> e <strong>Instrumentos</strong> — Cadastros usados nas calibrações (normas e instrumentos padrão).</p>
+        <p class="back-top"><a href="#topo">↑ Voltar ao sumário</a></p>
+    </section>
+
+    <section id="relatorios-menu">
+        <h2>8. Relatórios e impressões</h2>
+        <div class="onde">
+            <strong>Onde acessar:</strong> Engenharia Clínica → <strong>Relatórios</strong>.
+        </div>
+        <p><strong>Resumo de Relatórios de Atendimento</strong> — Abre um assistente em que você informa o período (data início e fim) e, se quiser, equipamento e status. Ao confirmar, o sistema gera o PDF do <strong>Relatório Resumido de Atendimentos</strong>.</p>
+        <p>Outros relatórios e impressões estão nas fichas dos próprios registros:</p>
+        <ul>
+            <li>Na <strong>Ordem de Serviço</strong>: impressão da OS, checklist em branco, relatório de atendimento em branco.</li>
+            <li>No <strong>Plano de Manutenção</strong>: relatório do plano.</li>
+            <li>No <strong>Cronograma</strong>: cronograma de preventiva (e pelo assistente, cronograma com wizard).</li>
+            <li>No <strong>Equipamento</strong>: cronograma de preventivas do equipamento.</li>
+            <li>Na <strong>Calibração</strong>: certificado de calibração.</li>
+        </ul>
+        <p class="back-top"><a href="#topo">↑ Voltar ao sumário</a></p>
+    </section>
+
+    <section id="configuracoes">
+        <h2>9. Configurações</h2>
+        <div class="onde">
+            <strong>Onde acessar:</strong> Engenharia Clínica → <strong>Configurações</strong>.
+        </div>
+        <p>Aqui ficam cadastros gerais usados no aplicativo:</p>
+        <ul>
+            <li><strong>Unidades de Medida (Calibração)</strong> — Unidades usadas em calibração.</li>
+            <li><strong>Meios de Aquisição</strong> — Como os equipamentos foram adquiridos.</li>
+            <li><strong>Departamento Equipamentos</strong> — Departamentos para organizar equipamentos.</li>
+            <li><strong>Equipes de Manutenção</strong> — Equipes que realizam os serviços.</li>
+        </ul>
+        <p class="back-top"><a href="#topo">↑ Voltar ao sumário</a></p>
+    </section>
+
+    <section id="regras-validacoes">
+        <h2>10. Dicas importantes (regras do sistema)</h2>
+        <p>O aplicativo segue algumas regras para manter os dados consistentes. Vale lembrar:</p>
+        <ul>
+            <li>
+                <strong>Ordem de Serviço:</strong> 
+                <ul>
+                    <li>
+                        <strong>Datas obrigatórias e sua ordem:</strong>
+                        <ul>
+                            <li>
+                                <strong>Data de requisição</strong> (quando a OS foi solicitada) <u>não pode ser posterior</u> à <strong>data programada</strong> (quando está planejado que o serviço ocorra). Sempre o pedido acontece antes ou no mesmo dia do agendamento.
+                            </li>
+                            <li>
+                                <strong>Data de requisição</strong> também <u>não pode ser posterior</u> ao <strong>início da execução</strong> (data/hora em que o atendimento de fato começou). Ou seja, não é possível começar a atender antes de formalizar o pedido.
+                            </li>
+                            <li>
+                                O <strong>início da execução</strong> deve sempre <u>ocorrer antes</u> do <strong>término</strong> (não é possível finalizar algo que ainda não começou).
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        Para <strong>OS do tipo manutenção preventiva</strong>, o preenchimento do campo <strong>Periodicidade</strong> é <u>obrigatório</u>. Isso garante o controle correto dos planos e ciclos de manutenção.
+                    </li>
+                    <li>
+                        <strong>Relatórios de atendimento</strong>: Não é possível criar um novo relatório em uma OS que já esteja concluída. Caso precise adicionar informações após o encerramento, será necessário reabrir a OS se as permissões permitirem.
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <strong>Relatório de Atendimento:</strong> 
+                <ul>
+                    <li>Cada relatório precisa obrigatoriamente estar vinculado a uma Ordem de Serviço (OS);</li>
+                    <li>Não é possível criar relatório em uma OS já concluída;</li>
+                    <li>Se o relatório estiver com status "cancelado", não é permitido modificar checklist, inserir fotos ou editar outros campos do relatório.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Calibração:</strong>
+                <ul>
+                    <li>A data da calibração deve ser anterior ou igual à data da próxima calibração. Não é permitido que a data da calibração seja posterior à próxima.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Resumo de Relatórios:</strong>
+                <ul>
+                    <li>No assistente de resumo, a data de início precisa ser sempre anterior à data de término/fim.</li>
+                </ul>
+            </li>
+        </ul>
+        <p class="back-top"><a href="#topo">↑ Voltar ao sumário</a></p>
+    </section>
+
+    <p style="margin-top: 2em; font-size: 0.9em; color: #718096;">Manual do aplicativo Engenharia Clínica. Em caso de dúvidas sobre permissões ou funcionalidades não listadas, consulte o administrador do sistema.</p>
+</body>
+</html>

@@ -1,0 +1,29 @@
+
+
+/* Bolinha vermelha (pendentes / não concluídos / requisitadas) */
+.oe_stat_button.engc_stat_dual .engc_stat_item.engc_danger .engc_dot::before {
+    content: "\25CF";
+    color: #d9534f;
+    font-size: 0.85em;
+    margin-right: 2px;
+}
+
+/* Bolinha verde (concluídos / aplicadas) */
+.oe_stat_button.engc_stat_dual .engc_stat_item.engc_success .engc_dot::before {
+    content: "\25CF";
+    color: #5cb85c;
+    font-size: 0.85em;
+    margin-right: 2px;
+}
+
+/* Ribbon da OS: posiciona abaixo dos smart buttons (não sobrepõe) */
+.engc_os_sheet .ribbon.ribbon-top-right {
+    top: 42px;
+    margin-top: 0;
+}
+
+/* Ribbon Concluída: forçar cinza visível (bg-secondary pode ficar branco no tema) */
+.engc_os_sheet .ribbon .bg-secondary {
+    background-color: #6c757d !important;
+    color: #fff !important;
+}

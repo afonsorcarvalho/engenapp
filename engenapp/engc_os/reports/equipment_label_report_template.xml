@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!--  Template principal: Grid 2 colunas x 4 linhas por p&#225;gina -->
+    <!--  Imprime 8 etiquetas por p&#225;gina A4.                     -->
+    <!--  Se apenas 1 equipamento, imprime centralizado.              -->
+    <!-- ============================================================ -->
+
+    <!-- Relatório: Etiqueta de identificação do equipamento (grid 2x4 por página A4) -->
+    <template id="report_equipment_label_template">
+        <t t-call="web.html_container">
+            <t t-call="web.internal_layout">
+                <style type="text/css">
+                    .label-page {
+                        padding-top: 5mm;
+                    }
+                    .label-grid {
+                        width: 200mm;
+                        margin: 0 auto;
+                        border-collapse: separate;
+                        border-spacing: 4mm;
+                    }
+                    .label-grid td {
+                        vertical-align: top;
+                        width: 50%;
+                        padding: 0;
+                    }
+                    .label-page-break {
+                        page-break-before: always;
+                        padding-top: 5mm;
+
+                    }
+                    .page {
+                        width: 100%;
+                        height: 100%;
+                        /* Respiro no topo para não encostar no cabeçalho */
+                        padding: 10mm 0 0 0;
+                    }                    
+                </style>
+
+            <div class="page" >
+                <!-- Converte recordset em lista Python para indexar -->
+                <t t-set="eq_list" t-value="list(docs)"/>
+                <t t-set="total" t-value="len(eq_list)"/>
+                <t t-set="per_page" t-value="8"/>
+                <!-- Itera p&#225;ginas (0, 8, 16, ...) -->
+                <t t-foreach="range(0, total, per_page)" t-as="page_start">
+
+                    <div t-attf-class="label-page #{'label-page-break' if page_start &gt; 0 else ''}">
+                        <table class="label-grid">
+
+                            <!-- 4 linhas por p&#225;gina -->
+                            <t t-foreach="range(4)" t-as="row_idx">
+                                <t t-set="idx_left" t-value="page_start + row_idx * 2"/>
+                                <t t-set="idx_right" t-value="page_start + row_idx * 2 + 1"/>
+
+                                <!-- S&#243; renderiza a linha se houver pelo menos 1 item -->
+                                <t t-if="idx_left &lt; total">
+                                    <tr>
+                                        <!-- Coluna esquerda -->
+                                        <td>
+                                            <t t-set="eq" t-value="eq_list[idx_left]"/>
+                                            <t t-call="engc_os.equipment_label_single"/>
+                                        </td>
+
+                                        <!-- Coluna direita -->
+                                        <td>
+                                            <t t-if="idx_right &lt; total">
+                                                <t t-set="eq" t-value="eq_list[idx_right]"/>
+                                                <t t-call="engc_os.equipment_label_single"/>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+
+                        </table>
+                    </div>
+                </t>
+            </div>
+            </t>
+        </t>
+    </template>
+</odoo>

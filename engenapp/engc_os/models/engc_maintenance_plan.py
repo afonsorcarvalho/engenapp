@@ -64,6 +64,20 @@ class MaintencePlan(models.Model):
         
         return super(MaintencePlan, self).copy()
     
+    def action_open_copy_wizard(self):
+        """Abre o wizard para copiar plano de manutenção"""
+        self.ensure_one()
+        return {
+            'name': 'Copiar Plano de Manutenção',
+            'type': 'ir.actions.act_window',
+            'res_model': 'copy.maintenance.plan.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_maintenance_plan_id': self.id,
+            }
+        }
+    
     def get_time_duration(self, periodicitys = [] ):
         result =[]
         time_duration_list = {}
@@ -158,6 +172,54 @@ class MaintencePlan(models.Model):
         result = list(grouped.values())
         result.sort(key=lambda x: x['frequency'])
         return result
+    
+    def get_total_man_hours_per_year(self):
+        """
+        Calcula o total de horas de mão de obra por ano para o plano de manutenção.
+        
+        Para cada instrução, calcula quantas vezes ela será executada por ano baseado
+        na periodicidade e multiplica pelo tempo de duração.
+        
+        Returns:
+            float: total de horas de mão de obra por ano
+        """
+        self.ensure_one()
+        total_hours = 0.0
+        days_per_year = 365.0
+        
+        # Agrupa instruções por periodicidade
+        instructions_by_periodicity = {}
+        for instruction in self.instrucion_ids:
+            if instruction.periodicity:
+                periodicity_id = instruction.periodicity.id
+                frequency = instruction.periodicity.frequency
+            else:
+                # Instruções sem periodicidade não são contabilizadas
+                continue
+            
+            if periodicity_id not in instructions_by_periodicity:
+                instructions_by_periodicity[periodicity_id] = {
+                    'frequency': frequency,
+                    'instructions': []
+                }
+            instructions_by_periodicity[periodicity_id]['instructions'].append(instruction)
+        
+        # Calcula horas por ano para cada periodicidade
+        for periodicity_data in instructions_by_periodicity.values():
+            frequency = periodicity_data['frequency']
+            if frequency > 0:
+                # Quantas vezes por ano essa periodicidade ocorre
+                times_per_year = days_per_year / frequency
+                
+                # Soma o tempo de todas as instruções dessa periodicidade
+                # Como é uma lista, usamos list comprehension ao invés de .mapped()
+                total_time_per_execution = sum(inst.time_duration or 0.0 for inst in periodicity_data['instructions'])
+                
+                # Total de horas por ano para essa periodicidade
+                hours_per_year = total_time_per_execution * times_per_year
+                total_hours += hours_per_year
+        
+        return total_hours
 
 
 class MaintencePlanInstruction(models.Model):

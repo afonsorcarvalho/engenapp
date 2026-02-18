@@ -69,7 +69,16 @@ class Relatorios(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Salva ou atualiza os dados no banco de dados"""
+        """
+        Cria novos relatórios de atendimento.
+        
+        Validações:
+        - Ordem de serviço é obrigatória
+        - Ordem de serviço não pode estar concluída
+        
+        Raises:
+            ValidationError: Se a OS não for informada ou estiver concluída.
+        """
         # Processa cada registro na lista
         for vals in vals_list:
             # Valida que a ordem de serviço é obrigatória
@@ -77,6 +86,16 @@ class Relatorios(models.Model):
                 raise ValidationError(
                     _('⚠️ É obrigatório informar a Ordem de Serviço para criar um relatório de atendimento.')
                 )
+            
+            # Valida se a OS está concluída
+            os_id = vals.get('os_id')
+            if os_id:
+                os = self.env['engc.os'].browse(os_id)
+                if os.state == 'done':
+                    raise ValidationError(
+                        _('⚠️ Não é possível criar relatórios em uma Ordem de Serviço concluída.')
+                    )
+            
             if 'company_id' in vals:
                 vals['name'] = self.env['ir.sequence'].with_company(vals['company_id']).next_by_code(
                     'engc.os.relatorio_sequence') or _('New')
@@ -107,10 +126,18 @@ class Relatorios(models.Model):
         quando os campos de data dos relatórios forem alterados.
         Também limpa os checks quando itens são removidos do checklist do relatório
         e atualiza o resumo do atendimento.
+        Impede adicionar checklist, peças ou fotos a relatórios cancelados.
         """
+        # Relatório cancelado não pode receber novas associações (checklist, fotos, etc.)
+        relatorios_cancelados = self.filtered(lambda r: r.state == 'cancel')
+        if relatorios_cancelados:
+            campos_bloqueados = {'checklist_item_ids', 'picture_ids'}
+            if any(k in vals for k in campos_bloqueados):
+                raise UserError(
+                    _("⚠️ Não é possível adicionar ou alterar itens em um relatório cancelado.")
+                )
         # Flag para indicar se houve remoção de itens do checklist
         checklist_items_removed = False
-        
         # Se checklist_item_ids foi alterado, verifica se algum item foi removido
         if 'checklist_item_ids' in vals:
             for relatorio in self:
@@ -224,28 +251,41 @@ class Relatorios(models.Model):
     def _update_summary_from_checklist(self):
         """
         Atualiza o resumo do atendimento com base nos itens do checklist marcados neste relatório.
+        Agrupa as instruções por seção e mantém a sequência em que aparecem no checklist.
         """
         self.ensure_one()
         if not self.checklist_item_ids:
             return
 
-        # Coleta os itens marcados do checklist neste relatório
-        checked_items = self.checklist_item_ids.filtered(lambda item: item.check)
+        # Coleta os itens marcados do checklist neste relatório, na ordem do checklist (sequence)
+        checked_items = self.checklist_item_ids.filtered(lambda item: item.check).sorted('sequence')
 
-        # Monta o texto do resumo com os itens marcados
+        # Agrupa por seção preservando a ordem de aparição no checklist
+        section_order = []
+        by_section = {}
+        for item in checked_items:
+            sec = item.section
+            sec_name = sec.name if sec else _("Sem Seção")
+            if sec_name not in by_section:
+                by_section[sec_name] = []
+                section_order.append(sec_name)
+            by_section[sec_name].append(item)
+
+        # Monta o texto do resumo: seção como título, depois itens da seção na sequência
         summary_lines = []
-        for item in checked_items.sorted('sequence'):
-            line = f"- {item.instruction}"
-            if item.observations:
-                line += f" ({item.observations})"
-            if item.tem_medicao and item.medicao:
-                magnitude = f" {item.magnitude}" if item.magnitude else ""
-                line += f" - Medição: {item.medicao}{magnitude}"
-            
-            summary_lines.append(line)
+        for sec_name in section_order:
+            summary_lines.append(sec_name)
+            for item in by_section[sec_name]:
+                line = f"- {item.instruction}"
+                if item.observations:
+                    line += f" ({item.observations})"
+                if item.tem_medicao and item.medicao:
+                    magnitude = f" {item.magnitude}" if item.magnitude else ""
+                    line += f" - Medição: {item.medicao}{magnitude}"
+                summary_lines.append(line)
+            summary_lines.append("")  # linha em branco entre seções
 
-        # Atualiza o resumo do atendimento
-        checklist_summary = "\n".join(summary_lines)
+        checklist_summary = "\n".join(summary_lines).rstrip()
         current_summary = self.service_summary or ""
 
         # Remove o resumo anterior do checklist se existir
@@ -271,7 +311,157 @@ class Relatorios(models.Model):
         """
         Método público para atualizar o resumo do atendimento com base nos itens do checklist marcados.
         """
+        if self.state == 'cancel':
+            raise UserError(
+                _("⚠️ Não é possível alterar um relatório cancelado.")
+            )
         self._update_summary_from_checklist()
+    
+    def action_open_checklist_selection(self):
+        """
+        Abre uma view de seleção com os itens do checklist da OS que ainda não foram
+        adicionados ao relatório e que ainda não foram realizados (check=False).
+        Permite ao usuário selecionar quais itens adicionar ao relatório.
+        Usa o padrão do Odoo para Many2many fields com seleção múltipla.
+        """
+        self.ensure_one()
+        if self.state == 'cancel':
+            raise UserError(
+                _("⚠️ Não é possível adicionar itens a um relatório cancelado.")
+            )
+        if not self.os_id:
+            raise UserError(_("⚠️ Não há Ordem de Serviço associada ao relatório."))
+        
+        # Verifica se o checklist já existe na OS, se não, cria
+        existing_checklist = self.env['engc.os.verify.checklist'].search(
+            [('os_id', '=', self.os_id.id)], limit=1
+        )
+        if not existing_checklist:
+            # Cria o checklist se não existir
+            self.os_id.create_checklist()
+        
+        # Busca os itens do checklist da OS que ainda não foram associados a este relatório
+        # e que ainda não foram realizados (check=False) - só aparecem as instruções pendentes
+        domain = [
+            ('os_id', '=', self.os_id.id),
+            ('id', 'not in', self.checklist_item_ids.ids),
+            ('check', '=', False),
+        ]
+        
+        # Verifica se há itens pendentes para concluir
+        pending_count = self.env['engc.os.verify.checklist'].search_count(domain)
+        if pending_count == 0:
+            raise UserError(
+                _("Não há instruções pendentes para concluir. "
+                  "Todas as instruções do checklist já foram realizadas (marcadas como concluídas).")
+            )
+        
+        # Tenta obter a view, se não existir, usa None (Odoo usará a view padrão)
+        view_id = False
+        try:
+            view_id = self.env.ref('engc_os.view_verify_os_checklist_relatorio_tree').id
+        except Exception:
+            # Se a view não existir, usa a view padrão
+            _logger.warning("View 'engc_os.view_verify_os_checklist_relatorio_tree' não encontrada, usando view padrão")
+        
+        # Cria a ação para abrir a view de seleção no padrão Many2many do Odoo
+        # Usa o formato que o Odoo espera, seguindo o padrão das outras ações do código
+        action = {
+            'name': _('Adicionar Instruções do Checklist'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'engc.os.verify.checklist',
+            'views': [[view_id if view_id else False, 'tree']],
+            'view_mode': 'tree',
+            'domain': domain,
+            'context': {
+                'default_os_id': self.os_id.id,
+                'default_relatorio_id': self.id,
+                'create': False,
+                'no_create': True,
+                'no_edit': True,
+                'no_open': True,
+                # Contexto para Many2many selection
+                'active_id': self.id,
+                'active_model': 'engc.os.relatorios',
+                'active_field': 'checklist_item_ids',
+                # Permite seleção múltipla
+                'selection_mode': True,
+            },
+            'target': 'new',
+        }
+        
+        return action
+    
+    def action_add_checklist_items(self, checklist_ids):
+        """
+        Adiciona os itens de checklist selecionados ao relatório.
+        Chamado quando o usuário seleciona itens na view de seleção.
+        
+        :param checklist_ids: Lista de IDs dos itens de checklist a serem adicionados
+        :type checklist_ids: list
+        """
+        self.ensure_one()
+        if self.state == 'cancel':
+            raise UserError(
+                _("⚠️ Não é possível adicionar itens a um relatório cancelado.")
+            )
+        if not checklist_ids:
+            return
+        
+        # Converte para lista se necessário
+        if not isinstance(checklist_ids, list):
+            checklist_ids = [checklist_ids]
+        
+        # Filtra apenas os IDs que ainda não estão no relatório
+        existing_ids = self.checklist_item_ids.ids
+        new_ids = [item_id for item_id in checklist_ids if item_id not in existing_ids]
+        
+        if new_ids:
+            # Adiciona os itens ao campo Many2many
+            self.checklist_item_ids = [(4, item_id) for item_id in new_ids]
+            # Atualiza o relatorio_id nos itens adicionados
+            self.env['engc.os.verify.checklist'].browse(new_ids).write({
+                'relatorio_id': self.id
+            })
+        
+        return {
+            'type': 'ir.actions.act_window_close',
+        }
+    
+    def action_remove_checklist_item(self, checklist_id):
+        """
+        Remove um item de checklist do relatório.
+        Chamado quando o usuário clica no botão de excluir.
+        
+        :param checklist_id: ID do item de checklist a ser removido
+        :type checklist_id: int
+        """
+        self.ensure_one()
+        if self.state == 'cancel':
+            raise UserError(
+                _("⚠️ Não é possível alterar itens de um relatório cancelado.")
+            )
+        if not checklist_id:
+            return
+        
+        # Verifica se o item está no relatório
+        if checklist_id not in self.checklist_item_ids.ids:
+            return
+        
+        # Remove o item do campo Many2many usando comando UNLINK (3, id)
+        self.checklist_item_ids = [(3, checklist_id)]
+        
+        # Limpa os dados do item removido
+        checklist_item = self.env['engc.os.verify.checklist'].browse(checklist_id)
+        if checklist_item.exists():
+            checklist_item.write({
+                'check': False,
+                'medicao': 0.0,
+                'observations': '',
+                'relatorio_id': False
+            })
+        
+        return True
 
     os_id = fields.Many2one(
         'engc.os', 'Ordem de Serviço',
@@ -317,6 +507,36 @@ class Relatorios(models.Model):
         domain="[('os_id', '=', os_id)]",
         help='Itens do checklist da Ordem de Serviço que podem ser editados neste relatório'
     )
+
+    # Indica se existem instruções do plano de manutenção pendentes para carregar no relatório.
+    # Usado pelo widget do checklist para exibir ou ocultar o botão "Carregar Instruções".
+    has_pending_maintenance_instructions = fields.Boolean(
+        string='Há instruções pendentes para carregar',
+        compute='_compute_has_pending_maintenance_instructions',
+        help='True se a OS possui itens de checklist não concluídos que ainda não foram adicionados a este relatório.'
+    )
+
+    @api.depends('os_id', 'checklist_item_ids', 'os_id.check_list_id', 'os_id.check_list_id.check')
+    def _compute_has_pending_maintenance_instructions(self):
+        """
+        Calcula se há itens do checklist da OS (não concluídos e ainda não no relatório)
+        disponíveis para carregar neste relatório.
+        """
+        for rel in self:
+            if not rel.os_id:
+                rel.has_pending_maintenance_instructions = False
+                continue
+            # Garante que o checklist existe na OS
+            if not rel.os_id.check_list_id:
+                rel.os_id.create_checklist()
+            domain = [
+                ('os_id', '=', rel.os_id.id),
+                ('id', 'not in', rel.checklist_item_ids.ids),
+                ('check', '=', False),
+            ]
+            rel.has_pending_maintenance_instructions = (
+                self.env['engc.os.verify.checklist'].search_count(domain) > 0
+            )
 
     pendency = fields.Text("Pendência")
     state_equipment = fields.Selection(
@@ -483,11 +703,12 @@ class Relatorios(models.Model):
             'context': {
                 'default_os_id': self.os_id.id,
                 'default_relatorio_request_id': self.id,
-                'create': False if self.state == 'done' else True,
-                'edit': False if self.state == 'done' else True,
-                'delete': False if self.state == 'done' else True,
+                'create': self.state not in ('done', 'cancel'),
+                'edit': self.state not in ('done', 'cancel'),
+                'delete': self.state not in ('done', 'cancel'),
             },
         }
+
     def action_go_request_services(self):
         self.ensure_one()
         return {
@@ -499,16 +720,19 @@ class Relatorios(models.Model):
             'context': {
                 'default_os_id': self.os_id.id,
                 'default_relatorio_request_id': self.id,
-                'create': False if self.state == 'done' else True,
-                'edit': False if self.state == 'done' else True,
-                'delete': False if self.state == 'done' else True,
-
+                'create': self.state not in ('done', 'cancel'),
+                'edit': self.state not in ('done', 'cancel'),
+                'delete': self.state not in ('done', 'cancel'),
             },
         }
 
     def action_add_request_parts(self):
+        self.ensure_one()
+        if self.state == 'cancel':
+            raise UserError(
+                _("⚠️ Não é possível adicionar peças a um relatório cancelado.")
+            )
         _logger.info("Requisitar peças")
-       
         return {
             'name': _('Requisitar Peças'),
             'type': 'ir.actions.act_window',
@@ -519,13 +743,13 @@ class Relatorios(models.Model):
             'context': {
                  'default_os_id': self.os_id.id,
                  'default_relatorio_request_id': self.id,
-                 'create': False if self.state == 'done' else True,
-                 'edit': False if self.state == 'done' else True,
-                 'delete': False if self.state == 'done' else True,
-
-                          },
-            'domain':[('relatorio_request_id','=',self.id)]
+                 'create': self.state not in ('done', 'cancel'),
+                 'edit': self.state not in ('done', 'cancel'),
+                 'delete': self.state not in ('done', 'cancel'),
+            },
+            'domain': [('relatorio_request_id', '=', self.id)]
         }
+
     def _get_parts_requests(self):
         result = self.env['engc.os.request.parts'].search([
             ('os_id', '=', self.os_id.id),
@@ -538,8 +762,12 @@ class Relatorios(models.Model):
         return result
 
     def action_application_parts(self):
+        self.ensure_one()
+        if self.state == 'cancel':
+            raise UserError(
+                _("⚠️ Não é possível adicionar peças a um relatório cancelado.")
+            )
         _logger.info("Aplicar peças")
-
         return {
             'name': _('Aplicar Peças'),
             'type': 'ir.actions.act_window',
@@ -556,22 +784,61 @@ class Relatorios(models.Model):
         }
 
     def action_cancel(self):
+        """
+        Cancela o relatório e:
+        - Desmarca (check=False) todos os itens do checklist associados a este relatório.
+        - Retira as peças do relatório: desvincula requisições/aplicações deste relatório
+          e remove os registros de relação (request_application.parts).
+        """
+        RequestParts = self.env['engc.os.request.parts']
+        RequestApplicationParts = self.env['engc.os.relatorios.request_application.parts']
+        for relatorio in self:
+            # Desmarca os itens do checklist que estavam associados a este relatório
+            itens_marcados = relatorio.checklist_item_ids.filtered(lambda item: item.check)
+            if itens_marcados:
+                itens_marcados.write({'check': False})
+            # Retira as peças do relatório: desvincula relatorio_request_id e relatorio_application_id
+            partes_requisitadas = RequestParts.search([('relatorio_request_id', '=', relatorio.id)])
+            if partes_requisitadas:
+                partes_requisitadas.write({'relatorio_request_id': False})
+            partes_aplicadas = RequestParts.search([('relatorio_application_id', '=', relatorio.id)])
+            if partes_aplicadas:
+                partes_aplicadas.write({'relatorio_application_id': False})
+            # Remove os registros de relação relatório <-> peças
+            request_app_parts = RequestApplicationParts.search([('relatorio_id', '=', relatorio.id)])
+            if request_app_parts:
+                request_app_parts.unlink()
         self.write({
             'state': 'cancel'
         })
-        
 
     def action_done(self):
         """
         Marca o relatório como concluído e cria requisições de estoque para as peças requisitadas.
         Valida se todos os itens do checklist estão marcados antes de concluir.
+        Exibe toast de sucesso e retorna ação para fechar o formulário e voltar à tela de quem abriu o relatório.
         """
         # Validação: verifica se há itens do checklist e se todos estão marcados
         if self.checklist_item_ids:
             unchecked_items = self.checklist_item_ids.filtered(lambda item: not item.check)
             if unchecked_items:
-                # Monta a lista de itens não marcados para exibir na mensagem de erro
-                items_list = '\n'.join([f"- {item.instruction}" for item in unchecked_items])
+                # Agrupa os itens não marcados por seção (ordem do checklist)
+                unchecked_sorted = unchecked_items.sorted('sequence')
+                section_order = []
+                by_section = {}
+                for item in unchecked_sorted:
+                    sec = item.section
+                    sec_name = sec.name if sec else _("Sem Seção")
+                    if sec_name not in by_section:
+                        by_section[sec_name] = []
+                        section_order.append(sec_name)
+                    by_section[sec_name].append(item)
+                lines = []
+                for sec_name in section_order:
+                    lines.append(sec_name)
+                    for item in by_section[sec_name]:
+                        lines.append(f"  - {item.instruction}")
+                items_list = "\n".join(lines)
                 raise UserError(
                     _("⚠️ Não é possível finalizar o relatório de serviço sem marcar todos os itens do checklist.\n\n"
                       "Itens não marcados:\n%s") % items_list)
@@ -582,6 +849,19 @@ class Relatorios(models.Model):
         
         # Cria requisições de estoque para as peças requisitadas neste relatório
         self._create_stock_requests()
+
+        # Toast de sucesso e volta para a tela de quem abriu o relatório (fecha o formulário).
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Relatório concluído'),
+                'message': _('O relatório de serviço foi concluído com sucesso.'),
+                'type': 'success',
+                'sticky': False,
+                'next': {'type': 'ir.actions.act_window_close'},
+            },
+        }
     
     def _create_stock_requests(self):
         """
@@ -657,12 +937,23 @@ class RelatoriosRequestApplicationParts(models.Model):
         comodel_name='engc.os.relatorios',
         required=True,
         check_company=True
-
     )
 
     request_parts_id = fields.Many2one('engc.os.request.parts',  'Peças', check_company=True,
                                        #domain=lambda self: [('os_id','=',self.os_id.id)]
                                        )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Impede vincular peças a relatórios cancelados."""
+        for vals in vals_list:
+            if vals.get('relatorio_id'):
+                relatorio = self.env['engc.os.relatorios'].browse(vals['relatorio_id'])
+                if relatorio.exists() and relatorio.state == 'cancel':
+                    raise UserError(
+                        _('⚠️ Não é possível adicionar peças a um relatório cancelado.')
+                    )
+        return super(RelatoriosRequestApplicationParts, self).create(vals_list)
 
     @api.constrains('request_parts_id')
     def _check_request_parts_id(self):

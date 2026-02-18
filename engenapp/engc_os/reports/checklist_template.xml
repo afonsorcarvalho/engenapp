@@ -50,53 +50,60 @@
                     </thead>
                     <tbody>
                         <t t-if="o.check_list_id">
-                            <!--
-                            <tr>
-                            <td colspan="4"><strong>Peças Programadas</strong></td>
-                            </tr>
-                            -->
+                            <t t-set="grouped_sections" t-value="o.get_checklist_grouped_by_section()" />
                             <t t-set="i" t-value="1" />
-                            <tr t-foreach="o.check_list_id" t-as="line">
-                                <td>
-                                    <span t-esc="i" />
-                                    <t t-set="i" t-value="i+1" />
-                                </td>
-                                <td>
-                                    <span t-field="line.instruction" />
-                                </td>
-                                <td>
-                                    <t t-if="line.check == True">
-                                        Sim
-                                    </t>
-                                    <t t-else="">
-                                        Não
-                                    </t>
-                                </td>
-                                <td>
-                                    <t t-if="line.tem_medicao == True">
-                                        <t t-if="line.check == True">
-                                            <span t-field="line.medicao" />
-                                        </t>
-                                        <t t-else="">
-                                            Não Medido
-                                        </t>
-                                    </t>
-                                    <t t-else="">
-                                        -
-                                    </t>
-                                </td>
-                                <td>
-                                    <t t-if="line.tem_medicao == True">
-                                        <span t-field="line.magnitude" />
-                                    </t>
-                                    <t t-else="">
-                                        -
-                                    </t>
-                                </td>
-                                <td>
-                                    <span t-field="line.observations" />
-                                </td>
-                            </tr>
+                            <t t-foreach="grouped_sections" t-as="section_group">
+                                <!-- Cabeçalho da seção -->
+                                <tr style="font-weight: bold;">
+                                    <td colspan="6">
+                                        # <t t-esc="section_group['name']" />
+                                    </td>
+                                </tr>
+                                <!-- Itens da seção -->
+                                <t t-foreach="section_group['items']" t-as="line">
+                                    <tr>
+                                        <td>
+                                            <span t-esc="i" />
+                                            <t t-set="i" t-value="i+1" />
+                                        </td>
+                                        <td>
+                                            <span t-field="line.instruction" />
+                                        </td>
+                                        <td>
+                                            <t t-if="line.check == True">
+                                                Sim
+                                            </t>
+                                            <t t-else="">
+                                                Não
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <t t-if="line.tem_medicao == True">
+                                                <t t-if="line.check == True">
+                                                    <span t-field="line.medicao" />
+                                                </t>
+                                                <t t-else="">
+                                                    Não Medido
+                                                </t>
+                                            </t>
+                                            <t t-else="">
+                                                -
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <t t-if="line.tem_medicao == True">
+                                                <span t-field="line.magnitude" />
+                                            </t>
+                                            <t t-else="">
+                                                -
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <span t-field="line.observations" />
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
                         </t>
                     </tbody>
                 </table>

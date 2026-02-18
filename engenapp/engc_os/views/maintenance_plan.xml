@@ -41,6 +41,12 @@ PREVENTIVA
                
                 help="Gerar Ordem de Serviço para essa preventiva imediatamente.
                 Lembrando que ela será gerada automaticamente pelo sistema" /> -->
+            <button name="action_open_copy_wizard" 
+                    type="object" 
+                    string="Copiar Plano de Manutenção" 
+                    class="btn-secondary"
+                    icon="fa-copy"
+                    help="Copiar periodicidades, seções e instruções de outro plano de manutenção"/>
             <field name="state" widget="statusbar" />
           </header>
           <sheet>

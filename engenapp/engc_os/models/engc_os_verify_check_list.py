@@ -1,4 +1,5 @@
-from odoo import _,  fields, models, api
+from odoo import _, fields, models, api
+from odoo.exceptions import ValidationError
 #import odoo.addons.decimal_precision as dp
 
 
@@ -31,13 +32,51 @@ class VerifyOsCheckList(models.Model):
     troca_peca = fields.Boolean(string="Substituição de Peça?",required=False) 
     peca = fields.Many2one('product.product', u'Peça', required=False)
     peca_qtd = fields.Float('Qtd', default=0.0)
-    
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Impede associar itens a relatórios cancelados."""
+        for vals in vals_list:
+            if vals.get('relatorio_id'):
+                relatorio = self.env['engc.os.relatorios'].browse(vals['relatorio_id'])
+                if relatorio.exists() and relatorio.state == 'cancel':
+                    raise ValidationError(
+                        _('⚠️ Não é possível adicionar itens a um relatório cancelado.')
+                    )
+        return super().create(vals_list)
+
     def write(self, vals):
         """
         Sobrescreve o método write para atualizar automaticamente o resumo do relatório
         quando um item do checklist for marcado ou atualizado.
+        Também protege o campo tem_medicao quando a instrução é do tipo medição.
+        Impede associar itens a relatórios cancelados.
         """
+        # Não permite associar a um relatório cancelado
+        if vals.get('relatorio_id'):
+            relatorio = self.env['engc.os.relatorios'].browse(vals['relatorio_id'])
+            if relatorio.exists() and relatorio.state == 'cancel':
+                raise ValidationError(
+                    _('⚠️ Não é possível adicionar itens a um relatório cancelado.')
+                )
+        # Protege o campo tem_medicao quando a instrução é medição
+        # Não permite alterar se já está marcado como medição (instrução de medição)
+        if 'tem_medicao' in vals:
+            for record in self:
+                if record.tem_medicao:
+                    # Se já está marcado como medição, não permite alteração
+                    if vals.get('tem_medicao') != record.tem_medicao:
+                        raise ValidationError(
+                            _('⚠️ Não é possível alterar o campo "tem medição?" para instruções de medição.\n'
+                              'Este campo é definido automaticamente pelo plano de manutenção.')
+                        )
+        
         result = super(VerifyOsCheckList, self).write(vals)
+
+        # Quando há medição na instrução e o valor foi inserido, marca o check automaticamente
+        medicao_val = vals.get('medicao')
+        if 'medicao' in vals and medicao_val is not None and medicao_val != 0:
+            self.filtered('tem_medicao').write({'check': True})
 
         # Se check, observations ou medicao foram alterados, atualiza o resumo dos relatórios afetados
         if any(field in vals for field in ['check', 'observations', 'medicao', 'instruction']):
@@ -52,20 +91,47 @@ class VerifyOsCheckList(models.Model):
             for relatorio in relatorios_to_update.values():
                 relatorio._update_summary_from_checklist()
 
-        # Se um item foi marcado, garante que outros relatórios não tenham o mesmo item marcado
-        if 'check' in vals and vals.get('check'):
-            for record in self:
-                if record.check and record.relatorio_id:
-                    # Busca outros itens marcados do mesmo checklist na mesma OS
-                    other_checked = self.env['engc.os.verify.checklist'].search([
-                        ('os_id', '=', record.os_id.id),
-                        ('instruction', '=', record.instruction),
-                        ('check', '=', True),
-                        ('id', '!=', record.id)
-                    ])
-                    # Desmarca os outros
-                    if other_checked:
-                        other_checked.write({'check': False})
+        # Cada item do checklist é independente: marcar um não desmarca outros.
+        # (Removida a lógica que desmarcava itens com a mesma descrição, o que
+        # causava bug quando havia instruções repetidas, ex.: Medição F1, F2, F3.)
 
         return result
+    
+    def action_add_to_relatorio(self):
+        """
+        Adiciona os itens de checklist selecionados ao relatório especificado no contexto.
+        Chamado quando o usuário clica no botão "Adicionar" na view de seleção.
+        Este método é chamado para cada registro selecionado, então precisamos usar active_ids.
+        """
+        # Obtém o relatório do contexto
+        relatorio_id = self.env.context.get('default_relatorio_id') or self.env.context.get('active_id')
+        if not relatorio_id:
+            raise ValidationError(_('⚠️ Relatório não especificado no contexto.'))
+        
+        relatorio = self.env['engc.os.relatorios'].browse(relatorio_id)
+        if not relatorio.exists():
+            raise ValidationError(_('⚠️ Relatório não encontrado.'))
+        
+        # Obtém os IDs dos registros selecionados do contexto (active_ids)
+        # Se não houver active_ids, usa os IDs dos registros atuais
+        checklist_ids = self.env.context.get('active_ids', [])
+        if not checklist_ids:
+            checklist_ids = self.ids if self else []
+        
+        if not checklist_ids:
+            raise ValidationError(_('⚠️ Nenhum item selecionado. Por favor, selecione pelo menos um item antes de adicionar.'))
+        
+        # Chama o método do relatório para adicionar os itens
+        relatorio.action_add_checklist_items(checklist_ids)
+        
+        # Retorna ação para fechar a view e forçar recarregamento
+        # O infos contém informações que podem ser usadas pelo frontend para recarregar
+        return {
+            'type': 'ir.actions.act_window_close',
+            'infos': {
+                'message': _('Itens adicionados com sucesso'),
+                'reload': True,
+                'relatorio_id': relatorio_id,
+            },
+        }
     

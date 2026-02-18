@@ -85,6 +85,13 @@
   </field>
 </record>
 
+    <!-- Ação URL: abre o Manual do Usuário (página de ajuda) em nova aba -->
+    <record id="engc_os.action_help_manual" model="ir.actions.act_url">
+        <field name="name">Ajuda</field>
+        <field name="url">/engc_os/help</field>
+        <field name="target">new</field>
+    </record>
+
   
 
    
@@ -119,6 +126,7 @@
     <menuitem name="Calibração e Ensaios" id="engc_os.calibration_menu" parent="engc_os.menu_root" />
     <menuitem name="Relatórios" id="engc_os.relatorios_menu" parent="engc_os.menu_root" />
     <menuitem name="Configurações" id="engc_os.configuracoes_menu" parent="engc_os.menu_root" sequence="100"  />
+    <menuitem name="Ajuda" id="engc_os.ajuda_menu" parent="engc_os.menu_root" action="engc_os.action_help_manual" sequence="101" />
 
     
     <!-- Servicos -->

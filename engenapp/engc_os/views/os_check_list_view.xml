@@ -24,6 +24,37 @@
                 </tree>
             </field>
         </record>
+        
+        <!-- View específica para checklist no relatório com agrupamento por seção -->
+        <record id="view_verify_os_checklist_relatorio_tree" model="ir.ui.view">
+            <field name="name">Verify OS Checklist Relatório Tree View (Grouped)</field>
+            <field name="model">engc.os.verify.checklist</field>
+            <field name="arch" type="xml">
+                <tree string="Checklist" 
+                      create="false" 
+                      delete="false"
+                      default_order="section,sequence"
+                      multi_edit="0">
+                    <header>
+                        <button name="action_add_to_relatorio" 
+                                string="Adicionar Selecionados" 
+                                type="object" 
+                                class="btn-primary"
+                                icon="fa-check"/>
+                    </header>
+                    <field name="sequence" widget="handle" readonly="true"/>
+                    <field name="section" readonly="true"/>
+                    <field name="instruction" readonly="true"/>
+                    <field name="check"/>
+                    <field name="tem_medicao" readonly="true" optional="hide"/>
+                    <field name="medicao" attrs="{'invisible': [('tem_medicao','=',False)], 'required': [('tem_medicao','=',True)]}"/>
+                    <field name="magnitude" readonly="true" attrs="{'invisible': [('tem_medicao','=',False)]}"/>
+                    <field name="observations"/>
+                    <field name="state" optional="hide" readonly="true"/>
+                    <field name="relatorio_id" readonly="true" optional="hide"/>
+                </tree>
+            </field>
+        </record>
         <record id="view_verify_os_checklist_search" model="ir.ui.view">
             <field name="name">Verify OS Checklist Search View</field>
             <field name="model">engc.os.verify.checklist</field>

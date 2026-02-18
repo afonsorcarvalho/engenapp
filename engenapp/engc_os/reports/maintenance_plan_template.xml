@@ -749,6 +749,27 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Total de Horas de Mão de Obra por Ano -->
+                <div class="row" t-if="o.instrucion_ids">
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-12 rounded bg-info border border-dark p-2 mt-3 mb-2" style="background-color: #d1ecf1 !important;">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong style="font-size: 1.1em;">Total de Horas de Mão de Obra por Ano:</strong>
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        <strong style="font-size: 1.2em; color: #0c5460;">
+                                            <t t-set="total_man_hours_per_year" t-value="o.get_total_man_hours_per_year()"/>
+                                            <span t-esc="o.format_time_duration(total_man_hours_per_year)"/>
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </t>
     </template>

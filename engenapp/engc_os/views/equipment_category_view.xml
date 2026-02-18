@@ -37,6 +37,7 @@
 				<field name="arch" type="xml">
 					<tree editable="top">
                         <field name="name" string="Categoria" />   
+						<field name="maintenance_team_id" string="Equipe de manutenção" options="{'create':false}" />   
                         <field name="maintenance_plan" string="Plano de manutenção" options="{'create':false}" />   
                     </tree>
 				</field>

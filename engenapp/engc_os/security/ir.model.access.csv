@@ -6,6 +6,7 @@ access_engc_os_request_parts_user,engc_os.engc.os.request.parts,model_engc_os_re
 access_engc_os_verify_checklist_user,engc_os.engc.os.verify.checklist,model_engc_os_verify_checklist,base.group_user,1,1,1,1
 
 access_engc_request_service_user,engc_os.engc.request.service,model_engc_request_service,base.group_user,1,1,1,1
+access_hr_employee_equipment_selection_user,engc_os.hr.employee.equipment.selection,engc_os.model_hr_employee_equipment_selection,base.group_user,1,1,1,1
 
 access_engc_equipment,access_engc_equipment,model_engc_equipment,base.group_user,1,1,1,1
 access_engc_equipment_maintenance_team,access_engc_equipment_maintenance_team,model_engc_equipment_maintenance_team,base.group_user,1,1,1,1
@@ -41,6 +42,7 @@ access_application_parts_wizard_user,engc_os.application.parts.wizard,model_appl
 access_application_parts_wizard_lines_user,engc_os.application.parts.wizard.lines,model_application_parts_wizard_lines,base.group_user,1,1,1,1
 access_relatorio_atendimento_resumo_wizard_user,engc_os.wizard.relatorio.atendimento.resumo,model_wizard_relatorio_atendimento_resumo,base.group_user,1,1,1,1
 access_cronograma_preventiva_print_wizard_user,engc_os.cronograma.preventiva.print.wizard,model_cronograma_preventiva_print_wizard,base.group_user,1,1,1,1
+access_copy_maintenance_plan_wizard_user,engc_os.copy.maintenance.plan.wizard,model_copy_maintenance_plan_wizard,base.group_user,1,1,1,1
 
 access_engc_preventive_user,engc_os.engc.preventive,model_engc_preventive,base.group_user,1,1,1,1
 access_engc_preventive_message_wizard_user,engc_os.engc.preventive.message.wizard,model_engc_preventive_message_wizard,base.group_user,1,1,1,1
