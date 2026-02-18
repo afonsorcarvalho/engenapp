@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Estende o formulário de Funcionário: campo Solicitar Serviço e One2many de equipamentos (quando Seleção) -->
+        <record id="view_employee_form_request_service" model="ir.ui.view">
+            <field name="name">hr.employee.form.request.service</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[.//field[@name='department_id']]" position="after">
+                    <group string="Solicitar Serviço (Portal)" name="request_service_scope_group">
+                        <field name="request_service_scope" widget="radio" options="{'horizontal': true}"/>
+                        <field name="request_service_equipment_ids" nolabel="1" colspan="2"
+                            attrs="{'invisible': [('request_service_scope', '!=', 'selection')]}"
+                            options="{'no_create': False}">
+                            <tree editable="bottom" create="1" delete="1">
+                                <field name="company_id" invisible="1"/>
+                                <field name="equipment_id" options="{'no_create': True}" domain="[('company_id', '=', company_id)]"/>
+                            </tree>
+                        </field>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

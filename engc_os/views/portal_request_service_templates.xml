@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Entrada na home do portal (/my) e breadcrumb -->
+    <template id="portal_layout_request_service" name="Portal layout: Solicitações de Serviço" inherit_id="portal.portal_breadcrumbs" priority="40">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'request_service' or page_name == 'request_service_new' or page_name == 'request_service_detail' or page_name == 'request_service_success'" t-attf-class="breadcrumb-item #{'active' if page_name == 'request_service' and not request_service else ''}">
+                <a t-if="request_service or page_name == 'request_service_new'" t-attf-href="/my/request-services">Solicitações de Serviço</a>
+                <t t-else="">Solicitações de Serviço</t>
+            </li>
+            <li t-if="request_service" class="breadcrumb-item active text-truncate">
+                <span t-field="request_service.name"/>
+            </li>
+        </xpath>
+    </template>
+
+    <template id="portal_my_home_request_service" name="Portal My Home: Solicitações de Serviço" inherit_id="portal.portal_my_home" priority="40">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Solicitações de Serviço</t>
+                <t t-set="url" t-value="'/my/request-services'"/>
+                <t t-set="placeholder_count" t-value="'request_service_count'"/>
+            </t>
+            <form method="get" action="/my/request-service/new" style="margin-bottom: 0.5rem;">
+                <button type="submit" class="btn btn-primary btn-sm">Nova Solicitação</button>
+            </form>
+        </xpath>
+    </template>
+
+    <!-- Lista de solicitações -->
+    <template id="portal_my_request_services" name="Minhas Solicitações de Serviço">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Solicitações de Serviço</t>
+            </t>
+
+            <form method="get" action="/my/request-service/new" class="mb-3">
+                <button type="submit" class="btn btn-primary">Nova Solicitação de Serviço</button>
+            </form>
+
+            <t t-if="not request_services">
+                <div class="alert alert-info mt-3" role="alert">
+                    Nenhuma solicitação encontrada.
+                </div>
+            </t>
+            <t t-else="">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Descrição</th>
+                                <th>Tipo</th>
+                                <th>Prioridade</th>
+                                <th>Status</th>
+                                <th>Data da Solicitação</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="request_services" t-as="rs">
+                                <tr>
+                                    <td><span t-field="rs.name"/></td>
+                                    <td><span t-field="rs.description" t-options="{'widget': 'text'}"/></td>
+                                    <td>
+                                        <t t-set="mt_labels" t-value="{'corrective': 'Corretiva', 'preventive': 'Preventiva', 'instalacao': 'Instalação', 'treinamento': 'Treinamento'}"/>
+                                        <span t-esc="mt_labels.get(rs.maintenance_type, rs.maintenance_type)"/>
+                                    </td>
+                                    <td>
+                                        <t t-set="pri_labels" t-value="{'0': 'Muito baixa', '1': 'Baixa', '2': 'Normal', '3': 'Alta'}"/>
+                                        <span t-esc="pri_labels.get(rs.priority, rs.priority or '-')"/>
+                                    </td>
+                                    <td>
+                                        <t t-set="state_labels" t-value="{'new': 'Nova', 'in_progress': 'Em andamento', 'done': 'Concluído', 'cancel': 'Cancelada'}"/>
+                                        <t t-set="state_badges" t-value="{
+                                            'new': 'text-bg-primary',
+                                            'in_progress': 'text-bg-warning',
+                                            'done': 'text-bg-success',
+                                            'cancel': 'text-bg-danger'
+                                        }"/>
+                                        <span t-att-class="'badge ' + (state_badges.get(rs.state, 'text-bg-secondary'))"
+                                              t-esc="state_labels.get(rs.state, rs.state)"/>
+                                    </td>
+                                    <td><span t-field="rs.request_date" t-options="{'widget': 'datetime'}"/></td>
+                                    <td>
+                                        <a t-attf-href="/my/request-service/#{rs.id}" class="btn btn-sm btn-outline-primary">Ver</a>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+                <t t-if="pager" t-call="portal.pager"/>
+            </t>
+        </t>
+    </template>
+
+    <!-- Formulário de nova solicitação -->
+    <template id="portal_create_request_service" name="Nova Solicitação de Serviço">
+        <t t-call="portal.portal_layout">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="mb-4">Nova Solicitação de Serviço</h1>
+                    </div>
+                </div>
+                <t t-if="request.httprequest.args.get('error') == 'description'">
+                    <div class="alert alert-warning">Preencha a descrição do problema.</div>
+                </t>
+                <t t-if="request.httprequest.args.get('error') == 'equipment'">
+                    <div class="alert alert-warning">Selecione ao menos um equipamento.</div>
+                </t>
+                <t t-if="request.httprequest.args.get('error') == 'create'">
+                    <div class="alert alert-danger">Não foi possível criar a solicitação. Tente novamente.</div>
+                </t>
+                <form action="/my/request-service/submit" method="POST" class="form-horizontal mt-3">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <div class="mb-3">
+                        <label class="form-label" for="requester">Requisitante</label>
+                        <input type="text" class="form-control" id="requester" name="requester" t-att-value="requester" readonly="readonly"/>
+                    </div>
+                    <div class="mb-3 oe_equipment_selector_wrapper position-relative" t-att-data-equipments="equipments_data_json" t-att-data-preselected="preselected_equipment_ids_json">
+                        <label class="form-label">Equipamentos <span class="text-danger">*</span></label>
+                        <small class="form-text text-muted">Digite para buscar e clique no equipamento para adicionar. Remova com o × no badge.</small>
+                        <input type="text" class="form-control oe_equipment_search_input" placeholder="Buscar equipamento..." autocomplete="off"/>
+                        <div class="oe_equipment_results list-group mt-1 border rounded bg-white shadow-sm" style="max-height: 220px; overflow-y: auto; display: none; position: absolute; left: 0; right: 0; z-index: 1050;"/>
+                        <div class="oe_equipment_selected mt-2 d-flex flex-wrap gap-2" style="min-height: 2.5rem;"/>
+                        <div class="oe_equipment_hidden_inputs"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição do problema / reparo <span class="text-danger">*</span></label>
+                        <p class="text-muted small mb-1">Equipamento em funcionamento?</p>
+                        <div class="mb-2">
+                            <label class="me-3"><input type="radio" name="equipment_working" value="sim" class="me-1" required="required"/> sim</label>
+                            <label class="me-3"><input type="radio" name="equipment_working" value="nao" class="me-1"/> não</label>
+                        </div>
+                        <p class="text-muted small mb-1">O defeito oferece perigo aos colaboradores?</p>
+                        <div class="mb-3">
+                            <label class="me-3"><input type="radio" name="defect_danger" value="sim" class="me-1" required="required"/> sim</label>
+                            <label class="me-3"><input type="radio" name="defect_danger" value="nao" class="me-1"/> não</label>
+                        </div>
+                        <label class="form-label" for="description">Descrição do problema</label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required="required" placeholder="Descreva o problema ou a necessidade de serviço."/>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Enviar Solicitação</button>
+                        <a href="/my/request-services" class="btn btn-outline-secondary ms-2">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+            <!-- Widget Equipamentos: lista de procura + badges -->
+            <script type="text/javascript">
+                (function() {
+                    function initEquipmentSelector() {
+                        var wrapper = document.querySelector('.oe_equipment_selector_wrapper');
+                        if (!wrapper) return;
+                        var dataStr = wrapper.getAttribute('data-equipments');
+                        if (!dataStr) return;
+                        var equipments = [];
+                        try {
+                            equipments = JSON.parse(dataStr.trim());
+                        } catch (e) {
+                            return;
+                        }
+                        if (!Array.isArray(equipments)) equipments = [];
+                        var searchInput = wrapper.querySelector('.oe_equipment_search_input');
+                        var resultsDiv = wrapper.querySelector('.oe_equipment_results');
+                        var selectedDiv = wrapper.querySelector('.oe_equipment_selected');
+                        var hiddenContainer = wrapper.querySelector('.oe_equipment_hidden_inputs');
+                        var form = wrapper.closest('form');
+                        var selected = [];
+
+                        function addEquipment(id, name) {
+                            if (selected.indexOf(id) !== -1) return;
+                            selected.push(id);
+                            var badge = document.createElement('span');
+                            badge.className = 'badge text-bg-primary d-inline-flex align-items-center gap-1';
+                            badge.setAttribute('data-id', id);
+                            badge.appendChild(document.createTextNode(name));
+                            var removeSpan = document.createElement('span');
+                            removeSpan.className = 'oe_equipment_remove';
+                            removeSpan.setAttribute('style', 'cursor:pointer; margin-left:6px;');
+                            removeSpan.setAttribute('aria-label', 'Remover');
+                            removeSpan.textContent = '×';
+                            removeSpan.addEventListener('click', function(ev) {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                removeEquipment(id);
+                            });
+                            badge.appendChild(removeSpan);
+                            selectedDiv.appendChild(badge);
+                            var input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'equipment_ids';
+                            input.value = id;
+                            hiddenContainer.appendChild(input);
+                        }
+
+                        function removeEquipment(id) {
+                            selected = selected.filter(function(x) { return x !== id; });
+                            var badge = selectedDiv.querySelector('.badge[data-id="' + id + '"]');
+                            if (badge) badge.remove();
+                            var input = hiddenContainer.querySelector('input[name="equipment_ids"][value="' + id + '"]');
+                            if (input) input.remove();
+                        }
+
+                        var preselectedStr = wrapper.getAttribute('data-preselected');
+                        if (preselectedStr) {
+                            try {
+                                var preselected = JSON.parse(preselectedStr.trim());
+                                if (Array.isArray(preselected)) {
+                                    preselected.forEach(function(eq) {
+                                        if (eq &amp;&amp; eq.id != null) addEquipment(eq.id, eq.name || ('ID ' + eq.id));
+                                    });
+                                }
+                            } catch (e) {}
+                        }
+
+                        function renderResults(filter) {
+                            var term = (filter || '').toLowerCase().trim();
+                            var list = equipments.filter(function(e) {
+                                if (selected.indexOf(e.id) !== -1) return false;
+                                if (!term) return true;
+                                return (e.name || '').toLowerCase().indexOf(term) >= 0;
+                            });
+                            resultsDiv.innerHTML = '';
+                            list.slice(0, 80).forEach(function(eq) {
+                                var a = document.createElement('a');
+                                a.href = '#';
+                                a.className = 'list-group-item list-group-item-action';
+                                a.setAttribute('data-id', eq.id);
+                                a.setAttribute('data-name', eq.name || '');
+                                a.textContent = eq.name || ('ID ' + eq.id);
+                                a.addEventListener('click', function(ev) {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    addEquipment(eq.id, eq.name || ('ID ' + eq.id));
+                                    searchInput.value = '';
+                                    renderResults('');
+                                    resultsDiv.style.display = 'none';
+                                });
+                                resultsDiv.appendChild(a);
+                            });
+                            resultsDiv.style.display = list.length ? 'block' : 'none';
+                        }
+
+                        searchInput.addEventListener('focus', function() {
+                            renderResults(searchInput.value);
+                        });
+                        searchInput.addEventListener('input', function() {
+                            renderResults(searchInput.value);
+                        });
+                        searchInput.addEventListener('keyup', function() {
+                            renderResults(searchInput.value);
+                        });
+                        searchInput.addEventListener('blur', function() {
+                            setTimeout(function() { resultsDiv.style.display = 'none'; }, 250);
+                        });
+
+                        if (form) {
+                            form.addEventListener('submit', function(ev) {
+                                if (selected.length === 0) {
+                                    ev.preventDefault();
+                                    alert('Selecione ao menos um equipamento.');
+                                    wrapper.querySelector('.oe_equipment_search_input').focus();
+                                    return false;
+                                }
+                            });
+                        }
+                    }
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', initEquipmentSelector);
+                    } else {
+                        initEquipmentSelector();
+                    }
+                })();
+            </script>
+        </t>
+    </template>
+
+    <!-- Detalhe de uma solicitação -->
+    <template id="portal_request_service_detail" name="Detalhe da Solicitação de Serviço">
+        <t t-call="portal.portal_layout">
+            <t t-call="portal.portal_record_layout">
+                <t t-set="card_header">
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="mb-1">
+                                <span t-field="request_service.name"/>
+                                <span class="badge ms-2" t-attf-class="text-bg-{{ 'success' if request_service.state == 'done' else ('warning' if request_service.state == 'in_progress' else ('secondary' if request_service.state == 'new' else 'danger')) }}">
+                                    <t t-set="state_labels" t-value="{'new': 'Nova', 'in_progress': 'Em andamento', 'done': 'Concluído', 'cancel': 'Cancelada'}"/>
+                                    <t t-esc="state_labels.get(request_service.state, request_service.state)"/>
+                                </span>
+                            </h5>
+                        </div>
+                    </div>
+                </t>
+                <t t-set="card_body">
+                    <div class="row mb-3">
+                        <div class="col-12 col-md-6">
+                            <p><strong>Requisitante:</strong> <span t-field="request_service.requester"/></p>
+                            <p><strong>Data da solicitação:</strong> <span t-field="request_service.request_date" t-options="{'widget': 'datetime'}"/></p>
+                            <p><strong>Tipo de manutenção:</strong>
+                                <t t-set="mt_labels" t-value="{'corrective': 'Corretiva', 'preventive': 'Preventiva', 'instalacao': 'Instalação', 'treinamento': 'Treinamento'}"/>
+                                <span t-esc="mt_labels.get(request_service.maintenance_type, request_service.maintenance_type)"/>
+                            </p>
+                            <p><strong>Prioridade:</strong>
+                                <t t-set="pri_labels" t-value="{'0': 'Muito baixa', '1': 'Baixa', '2': 'Normal', '3': 'Alta'}"/>
+                                <span t-esc="pri_labels.get(request_service.priority, request_service.priority or '-')"/>
+                            </p>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <p t-if="request_service.schedule_date"><strong>Data programada:</strong> <span t-field="request_service.schedule_date" t-options="{'widget': 'datetime'}"/></p>
+                            <p t-if="request_service.close_date"><strong>Data de conclusão:</strong> <span t-field="request_service.close_date" t-options="{'widget': 'datetime'}"/></p>
+                        </div>
+                    </div>
+                    <p><strong>Descrição:</strong></p>
+                    <div class="border rounded p-3 bg-light mb-3"><span t-field="request_service.description" t-options="{'widget': 'text'}"/></div>
+                    <p><strong>Equipamentos:</strong></p>
+                    <ul class="list-unstyled">
+                        <t t-foreach="request_service.equipment_ids" t-as="eq">
+                            <li><span t-field="eq.display_name"/></li>
+                        </t>
+                    </ul>
+                    <a href="/my/request-services" class="btn btn-outline-primary">Voltar à lista</a>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Página de sucesso após abrir solicitação (código e equipamento(s)) -->
+    <template id="portal_request_service_success" name="Solicitação aberta com sucesso">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Solicitações de Serviço</t>
+            </t>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-8 col-lg-6">
+                        <div class="card border-success mt-4">
+                            <div class="card-header bg-success bg-opacity-25">
+                                <h2 class="h5 mb-0">Solicitação aberta com sucesso</h2>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-2"><strong>Código:</strong> <span t-field="request_service.name"/></p>
+                                <p class="mb-4"><strong>Equipamento(s):</strong></p>
+                                <ul class="list-unstyled mb-4">
+                                    <t t-foreach="request_service.equipment_ids" t-as="eq">
+                                        <li><span t-field="eq.display_name"/></li>
+                                    </t>
+                                </ul>
+                                <a href="/my/request-services" class="btn btn-primary">Ver minhas solicitações</a>
+                                <a t-attf-href="/my/request-service/#{ request_service.id }" class="btn btn-outline-primary ms-2">Ver esta solicitação</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Página exibida quando o requisitante não pode realizar solicitação -->
+    <template id="portal_request_service_not_allowed" name="Solicitação não permitida">
+        <t t-call="portal.portal_layout">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-8 col-lg-6">
+                        <div class="card border-warning mt-4">
+                            <div class="card-header bg-warning bg-opacity-25">
+                                <h2 class="h5 mb-0" t-esc="title"/>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text mb-4" t-esc="message"/>
+                                <a href="/my/request-services" class="btn btn-primary">Ver minhas solicitações</a>
+                                <a href="/my" class="btn btn-outline-secondary ms-2">Voltar ao portal</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

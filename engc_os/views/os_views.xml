@@ -266,6 +266,8 @@
 							<group>
 								<field name="date_request"  attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>
 								<field name="date_scheduled" attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>
+								<field name="estimated_execution_duration" widget="float_time" attrs="{'readonly': [('state','in',('under_repair','done'))]}"/>
+								<field name="calendar_event_id" attrs="{'invisible': [('calendar_event_id', '=', False)]}" readonly="1"/>
 								<field name="date_execution" readonly="1"/>
 								<field name="date_start"  readonly="1" attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>
 								<field name="date_finish" readonly="1"  attrs="{'readonly': [('state','in',('under_repair','done'))] }"/>

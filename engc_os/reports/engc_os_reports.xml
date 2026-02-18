@@ -123,6 +123,17 @@
             <field name="binding_type">report</field>
             <field name="paperformat_id" ref="paperformat_equipment_cronograma_landscape"/>
         </record>
+        <!-- Relatório de histórico de atendimentos do equipamento -->
+        <record id="report_equipment_history" model="ir.actions.report">
+            <field name="name">Histórico de Atendimentos do Equipamento</field>
+            <field name="model">engc.equipment</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">engc_os.report_equipment_history_template</field>
+            <field name="report_file">engc_os.report_equipment_history_template</field>
+            <field name="print_report_name">'Historico Atendimentos - %s' % (object.name)</field>
+            <field name="binding_model_id" eval="ref('model_engc_equipment', raise_if_not_found=False) or False"/>
+            <field name="binding_type">report</field>
+        </record>
         
         <!-- Report para o wizard de impressão do cronograma -->
         <record id="report_cronograma_preventiva_wizard" model="ir.actions.report">

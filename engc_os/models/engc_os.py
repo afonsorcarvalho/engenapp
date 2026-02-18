@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools.misc import html_escape
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -72,7 +73,116 @@ class EngcOs(models.Model):
                         'engc.os_sequence') or _('New')
                 else:
                     vals['name'] = self.env['ir.sequence'].next_by_code('engc.os_sequence') or _('New')
-        return super(EngcOs, self).create(vals_list)
+        records = super(EngcOs, self).create(vals_list)
+        # Sincroniza com a agenda do calendário (evento na agenda do técnico)
+        for record in records:
+            record._sync_calendar_event()
+        return records
+
+    # ----------------------------------------------------------
+    # Integração com o calendário (agenda do técnico)
+    # ----------------------------------------------------------
+
+    def _get_technician_partner(self):
+        """
+        Retorna o res.partner do técnico da OS para uso como participante do evento.
+        Usa work_contact_id do funcionário; se ausente, user_id.partner_id.
+        """
+        self.ensure_one()
+        if not self.tecnico_id:
+            return self.env['res.partner']
+        partner = self.tecnico_id.work_contact_id or self.tecnico_id.user_id.partner_id
+        return partner if partner else self.env['res.partner']
+
+    def _get_os_calendar_alarm_ids(self):
+        """
+        Retorna o comando Many2many para alarm_ids do evento: lembretes 1 dia,
+        1 hora e 15 min antes (notificações do módulo calendar).
+        """
+        alarm_ids = []
+        for xmlid in ('calendar.alarm_notif_5', 'calendar.alarm_notif_3', 'calendar.alarm_notif_1'):
+            alarm = self.env.ref(xmlid, raise_if_not_found=False)
+            if alarm:
+                alarm_ids.append(alarm.id)
+        return [(6, 0, alarm_ids)] if alarm_ids else []
+
+    def _calendar_event_vals(self):
+        """
+        Monta o dicionário de valores para criar/atualizar o calendar.event.
+        Inclui: name, description (Cliente, Equipamento apelido-nome, Descrição do chamado),
+        start, stop, partner_ids, alarm_ids (1 dia, 1 h, 15 min), res_model, res_id.
+        """
+        self.ensure_one()
+        duration_hours = self.estimated_execution_duration or 1.0
+        if duration_hours <= 0:
+            duration_hours = 1.0
+        start = self.date_scheduled
+        stop = start + timedelta(hours=duration_hours)
+        # Assunto: OS nº - Nome equipamento
+        name = _('OS %s - %s') % (self.name, self.equipment_id.name or '')
+        # Descrição: Cliente; Equipamento (apelido - nome); Descrição do chamado
+        client_name = (self.client_id.name or '').strip()
+        equip_label = (self.equipment_apelido or '').strip()
+        if equip_label and self.equipment_id.name:
+            equip_label = '%s - %s' % (equip_label, self.equipment_id.name)
+        elif self.equipment_id.name:
+            equip_label = self.equipment_id.name
+        desc_chamado = (self.problem_description or '').strip()
+        desc_chamado = html_escape(desc_chamado).replace('\n', '<br/>') if desc_chamado else ''
+        # Link para abrir a OS no backend (hash do Odoo web client)
+        open_os_url = '/web#model=engc.os&id=%s&view_type=form' % self.id
+        open_os_link = '<p><a href="%s" target="_blank"><strong>→ Abrir OS %s</strong></a></p>' % (
+            html_escape(open_os_url),
+            html_escape(self.name),
+        )
+        description = open_os_link + '<p><strong>Cliente:</strong> %s</p><p><strong>Equipamento:</strong> %s</p><p><strong>Descrição do chamado:</strong></p><p>%s</p>' % (
+            html_escape(client_name),
+            html_escape(equip_label),
+            desc_chamado,
+        )
+        partner = self._get_technician_partner()
+        partner_ids = [(6, 0, partner.ids)] if partner else []
+        res_model_id = self.env['ir.model']._get_id('engc.os')
+        # Lembretes: 1 dia, 1 hora e 15 min antes (alarmes padrão do módulo calendar)
+        alarm_ids = self._get_os_calendar_alarm_ids()
+        return {
+            'name': name,
+            'description': description,
+            'start': start,
+            'stop': stop,
+            'partner_ids': partner_ids,
+            'alarm_ids': alarm_ids,
+            'res_model_id': res_model_id,
+            'res_id': self.id,
+            'user_id': self.env.user.id,
+        }
+
+    def _sync_calendar_event(self):
+        """
+        Cria ou atualiza o evento na agenda do técnico conforme Data Programada e
+        Tempo estimado de Execução. Se não houver técnico (ou partner), ou se a OS
+        estiver cancelada, remove o evento da agenda.
+        """
+        self.ensure_one()
+        CalendarEvent = self.env['calendar.event'].with_context(dont_notify=True)
+        # OS cancelada ou sem técnico/partner: remover evento se existir
+        if self.state == 'cancel':
+            if self.calendar_event_id:
+                self.calendar_event_id.unlink()
+                self.with_context(engc_os_skip_calendar_sync=True).write({'calendar_event_id': False})
+            return
+        partner = self._get_technician_partner()
+        if not partner or not self.date_scheduled:
+            if self.calendar_event_id:
+                self.calendar_event_id.unlink()
+                self.with_context(engc_os_skip_calendar_sync=True).write({'calendar_event_id': False})
+            return
+        vals = self._calendar_event_vals()
+        if self.calendar_event_id:
+            self.calendar_event_id.write(vals)
+        else:
+            event = CalendarEvent.create(vals)
+            self.with_context(engc_os_skip_calendar_sync=True).write({'calendar_event_id': event.id})
 
     # @api.model
     # def _gera_qr(self):
@@ -125,6 +235,19 @@ class EngcOs(models.Model):
         string='Tipo de Garantia', selection=GARANTIA_SELECTION)
     date_request = fields.Datetime('Data Requisição', required=True, tracking=True)
     date_scheduled = fields.Datetime('Data Programada', required=True, tracking=True)
+    estimated_execution_duration = fields.Float(
+        'Tempo estimado de Execução',
+        default=1.0,
+        tracking=True,
+        help='Duração estimada da execução em horas (ex.: 1.5 = 1h30). Usado na agenda do técnico.'
+    )
+    calendar_event_id = fields.Many2one(
+        'calendar.event',
+        string='Evento na agenda',
+        copy=False,
+        ondelete='set null',
+        help='Evento do calendário vinculado a esta OS (criado/atualizado automaticamente).'
+    )
     date_execution = fields.Datetime('Data de Execução', compute="_compute_date_execution", tracking=True)
     date_start = fields.Datetime('Início da Execução',  compute="_compute_date_start",tracking=True)
        
@@ -616,27 +739,27 @@ class EngcOs(models.Model):
         """
         Abre um formulário para criar um novo relatório de atendimento.
         Este método é chamado pelo botão "Adicionar Novo Relatório" na view de OS.
-        
+
         Returns:
             dict: Ação para abrir o formulário de criação de relatório
         """
         self.ensure_one()
-        
+
         # Verifica se a OS está finalizada
         if self.state == 'done':
             raise UserError(
                 _("⚠️ Não é possível adicionar relatórios em uma Ordem de Serviço finalizada."))
-        
+
         # Prepara os valores padrão para o novo relatório
         current_datetime = fields.Datetime.now()
         employee = self.env['hr.employee'].search([('user_id', '=', self.env.user.id)], limit=1)
         tecnico = self.tecnico_id if self.tecnico_id else employee
-        
+
         # Prepara os técnicos
         technicians_vals = []
         if tecnico:
             technicians_vals = [(4, tecnico.id)]
-        
+
         return {
             'type': 'ir.actions.act_window',
             'name': _('Adicionar Novo Relatório'),
@@ -649,6 +772,7 @@ class EngcOs(models.Model):
                 'default_data_atendimento': current_datetime,
                 'default_data_fim_atendimento': current_datetime + timedelta(hours=1),
                 'default_technicians': technicians_vals,
+                'default_fault_description': self.problem_description or '',
             },
         }
     
@@ -1282,67 +1406,93 @@ class EngcOs(models.Model):
     def write(self, vals):
         """
         Sobrescreve o método write para:
-        - Registrar datas de assinatura quando assinaturas são adicionadas
-        - Gerar e anexar PDF quando a OS é concluída
+        - Registrar datas de assinatura quando assinaturas são adicionadas.
+        - Gerar e anexar PDF quando a OS é concluída.
+        - Atualizar preventiva relacionada ao concluir OS preventiva.
+        - Sincronizar evento de agenda.
         
         Args:
             vals: Dicionário com os valores a serem escritos.
-            
         Returns:
             bool: True se a operação foi bem-sucedida.
         """
-        # Verifica se a OS está sendo concluída
+
         os_being_concluded = vals.get('state') == 'done'
-        
+
         result = super(EngcOs, self).write(vals)
-        
-        # Atualiza a data de assinatura do técnico quando a assinatura é adicionada pela primeira vez
+
+        self._handle_all_signature_dates(vals)
+        if os_being_concluded:
+            self._handle_os_conclusion_postprocess()
+        self._handle_calendar_event_sync(vals)
+
+        return result
+
+    def _handle_all_signature_dates(self, vals):
+        """
+        Atualiza a data de assinatura do técnico e do supervisor quando a assinatura
+        é adicionada pela primeira vez.
+        """
+        updates = []
         if 'signature' in vals and vals.get('signature'):
             records_with_signature = self.filtered(
                 lambda r: r.signature and not r.technician_signature_date
             )
             if records_with_signature:
-                records_with_signature.write({
-                    'technician_signature_date': fields.Datetime.now()
-                })
-        
-        # Atualiza a data de assinatura do supervisor quando a assinatura é adicionada pela primeira vez
+                updates.append((records_with_signature, {'technician_signature_date': fields.Datetime.now()}))
         if 'signature2' in vals and vals.get('signature2'):
             records_with_signature2 = self.filtered(
                 lambda r: r.signature2 and not r.supervisor_signature_date
             )
             if records_with_signature2:
-                records_with_signature2.write({
-                    'supervisor_signature_date': fields.Datetime.now()
-                })
-        
-        # Se a OS foi concluída, gera e anexa o PDF
-        # Nota: O PDF também é gerado no action_repair_end, mas isso garante que seja gerado
-        # mesmo se a OS for concluída por outro método
-        if os_being_concluded:
-            self.generate_report_and_attach()
-            
-            # Atualiza a preventiva relacionada se a OS for de manutenção preventiva
-            for record in self:
-                if record.maintenance_type == 'preventive':
-                    # Busca a preventiva relacionada através do campo os_id
-                    preventiva = self.env['engc.preventive'].search([
-                        ('os_id', '=', record.id)
-                    ], limit=1)
-                    
-                    if preventiva:
-                        preventiva.write({
-                            'state': 'done',
-                            'preventiva_executada': True,
-                            'data_execucao': record.date_start if record.date_start else fields.Datetime.now(),
-                            'data_execucao_fim': record.date_finish if record.date_finish else fields.Datetime.now(),
-                        })
-                        _logger.info("Preventiva %s (ID: %s) atualizada para 'concluída' após finalização da OS %s", 
-                                   preventiva.name, preventiva.id, record.name)
-                    else:
-                        _logger.warning("OS %s (ID: %s) é de manutenção preventiva mas não foi encontrada preventiva relacionada", 
-                                      record.name, record.id)
-        
-        return result
+                updates.append((records_with_signature2, {'supervisor_signature_date': fields.Datetime.now()}))
+        if 'signature_client' in vals and vals.get('signature_client'):
+            # No write, o recordset ainda não tem signature_client atualizado; considera quem não tem data.
+            records_with_client_signature = self.filtered(lambda r: not r.client_signature_date)
+            if records_with_client_signature:
+                updates.append((records_with_client_signature, {'client_signature_date': fields.Datetime.now()}))
+
+        for recs, vals_to_write in updates:
+            recs.write(vals_to_write)
+
+    def _handle_os_conclusion_postprocess(self):
+        """Executa ações pós-conclusão da OS: gerar PDF e atualizar preventiva, se necessário."""
+        self.generate_report_and_attach()
+        for record in self:
+            if record.maintenance_type == 'preventive':
+                record._update_linked_preventive_on_done()
+
+    def _update_linked_preventive_on_done(self):
+        """Atualiza a preventiva relacionada (se houver) quando OS preventiva é concluída."""
+        preventiva = self.env['engc.preventive'].search([
+            ('os_id', '=', self.id)
+        ], limit=1)
+        if preventiva:
+            preventiva.write({
+                'state': 'done',
+                'preventiva_executada': True,
+                'data_execucao': self.date_start if self.date_start else fields.Datetime.now(),
+                'data_execucao_fim': self.date_finish if self.date_finish else fields.Datetime.now(),
+            })
+            _logger.info("Preventiva %s (ID: %s) atualizada para 'concluída' após finalização da OS %s", 
+                        preventiva.name, preventiva.id, self.name)
+        else:
+            _logger.warning("OS %s (ID: %s) é de manutenção preventiva mas não foi encontrada preventiva relacionada", 
+                            self.name, self.id)
+
+    def _handle_calendar_event_sync(self, vals):
+        """Sincroniza a agenda do técnico apenas se o estado da OS for 'draft' ou 'execution_ready'."""
+        if not self.env.context.get('engc_os_skip_calendar_sync'):
+            calendar_fields = {'tecnico_id', 'date_scheduled', 'estimated_execution_duration', 'state'}
+            if any(f in vals for f in calendar_fields):
+                for record in self:
+                    if record.state in ('draft', 'execution_ready'):
+                        record._sync_calendar_event()
+
+    def unlink(self):
+        """Remove o evento da agenda antes de excluir a OS."""
+        events_to_unlink = self.mapped('calendar_event_id').exists()
+        events_to_unlink.unlink()
+        return super(EngcOs, self).unlink()
 
     

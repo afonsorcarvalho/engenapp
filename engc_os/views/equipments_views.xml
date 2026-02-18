@@ -37,6 +37,7 @@
               type="object" />
             <button name="action_useless" string="Sucata" states="in_use,out_of_use" type="object" />
             <button name="%(engc_os.report_equipment_cronograma)d" string="Imprimir Cronograma" type="action" class="oe_highlight" icon="fa-print"/>
+            <button name="%(engc_os.report_equipment_history)d" string="Histórico de Atendimentos" type="action" class="oe_highlight" icon="fa-file-pdf-o"/>
             <field name="state" widget="statusbar" />
           </header>
           <sheet>

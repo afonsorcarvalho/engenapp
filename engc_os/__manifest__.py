@@ -20,7 +20,10 @@
 
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'base_setup', 'product', 'contacts', 'mail', 'hr', 'web', 'web_domain_field', 'stock', 'steril_stock'],
+    'depends': [
+        'base', 'base_setup', 'product', 'contacts', 'mail', 'hr', 'web', 'web_domain_field',
+        'stock', 'steril_stock', 'portal', 'website', 'calendar',
+    ],
 
     # always loaded
     'data': [
@@ -42,6 +45,7 @@
         'views/os_relatorio_request_parts_views.xml',
         'views/os_check_list_view.xml',
         'views/request_service_views.xml',
+        'views/hr_employee_views.xml',
         'views/preventiva_views.xml',
         'views/maintenance_plan.xml',
         'views/templates.xml',
@@ -54,6 +58,9 @@
         'reports/os_relatorio_pecas_template.xml',
         'reports/fotos_template.xml',
         'reports/cliente_equipment_template.xml',
+        'reports/equipment_label_template.xml',
+        'reports/equipment_label_report_template.xml',
+        'reports/equipment_label_reports.xml',
         'reports/engc_os_reports.xml',
         'reports/os_template.xml',
         'reports/maintenance_plan_template.xml',
@@ -61,8 +68,10 @@
         'reports/cronograma_preventiva_template.xml',
         'reports/cronograma_preventiva_wizard_template.xml',
         'reports/equipment_cronograma_template.xml',
+        'reports/report_equipment_history_template.xml',
         'views/equipments_views.xml',
         'views/menu_views.xml',
+        'views/portal_request_service_templates.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
@@ -70,6 +79,9 @@
     ],
     'odoo': '16.0',
     'assets': {
+        'web.assets_frontend': [
+            'engc_os/static/src/js/portal_request_service.js',
+        ],
         'web.assets_backend': [
             'engc_os/static/src/css/weekdays_checkboxes.css',
             'engc_os/static/src/css/stat_buttons_os.css',

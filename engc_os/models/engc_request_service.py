@@ -2,6 +2,8 @@ from odoo import _, api,  fields, models
 from odoo.exceptions import UserError
 
 import logging
+import random
+
 _logger = logging.getLogger(__name__)
 
 
@@ -156,39 +158,64 @@ class RequestService(models.Model):
         }
     
     def action_gera_os(self):
-        """Gera OS a partir da solicitação. Repassa request_date/schedule_date (Datetime) para engc.os."""
+        """Gera OS a partir da solicitação. Repassa request_date/schedule_date (Datetime) para engc.os.
+        Se Técnico ou Manutenção não estiverem preenchidos: define Manutenção = Própria e Técnico = usuário
+        (hr.employee do user_id); se o usuário não tiver funcionário, usa um membro aleatório da equipe de manutenção.
+        Caso não tenha data programada (schedule_date), utiliza a data atual da geração.
+        """
+        self.ensure_one()
+        if not self.tecnicos or not self.who_executor:
+            write_vals = {'who_executor': 'own'}
+            if not self.tecnicos:
+                employee = self.env['hr.employee'].sudo().search(
+                    [('user_id', '=', self.env.user.id)], limit=1
+                )
+                if employee:
+                    write_vals['tecnicos'] = employee.id
+                elif self.maintenance_team_id and hasattr(self.maintenance_team_id, 'members') and self.maintenance_team_id.members:
+                    # Usuário sem funcionário: escolhe aleatoriamente um técnico da equipe de manutenção
+                    members = self.maintenance_team_id.members
+                    chosen = random.choice(members)
+                    write_vals['tecnicos'] = chosen.id
+                    _logger.info(
+                        "Gerar OS: usuário sem funcionário vinculado; técnico definido da equipe %s: %s",
+                        self.maintenance_team_id.name if hasattr(self.maintenance_team_id, 'name') else "",
+                        chosen.name if hasattr(chosen, 'name') else "",
+                    )
+            self.write(write_vals)
         self._check_validation_field()
         equipments = self.equipment_ids
         vals = []
 
+        # Se não houver data programada, utiliza a data/hora atual
+        schedule_date = self.schedule_date or fields.Datetime.now()
+
         for line in equipments:
-            vals.append( {
-                    'origin': self.name,
-                    #'client_id': self.client_id or None,
-                    'date_scheduled': self.schedule_date,
-                    'date_execution': self.schedule_date,
-                    'date_request': self.request_date,
-                    'company_id': self.company_id.id,
-                    'maintenance_type': self.maintenance_type,
-                    'problem_description':self.description,
-                    'solicitante': self.requester,
-                    'equipment_id':line.id,
-                    'request_service_id':self.id,
-                    'priority':self.priority,
-                    'who_executor':self.who_executor,
-                    'tecnico_id': self.tecnicos.id
-                    })
+            vals.append({
+                'origin': self.name,
+                # 'client_id': self.client_id or None,
+                'date_scheduled': schedule_date,
+                'date_execution': schedule_date,
+                'date_request': self.request_date,
+                'company_id': self.company_id.id,
+                'maintenance_type': self.maintenance_type,
+                'problem_description': self.description,
+                'solicitante': self.requester,
+                'equipment_id': line.id,
+                'request_service_id': self.id,
+                'priority': self.priority,
+                'who_executor': self.who_executor,
+                'tecnico_id': self.tecnicos.id
+            })
         _logger.info(f"Vals: {vals}")
         result = self.env['engc.os'].create(vals)
         _logger.info(f"Resultado: {result}")
-        if not result:    
+        if not result:
             raise UserError("Erro ao gerar OS")
         self.write({
-             'state': 'in_progress',
-             'os_gerada': True,
-        
-             })
-        
+            'state': 'in_progress',
+            'os_gerada': True,
+        })
 
         return self.action_go_os()
 

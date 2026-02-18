@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="0">
+        <!-- Grupo Gestor PCM: apenas usuários deste grupo podem alterar data/hora ou excluir
+             eventos do calendário que estejam vinculados a Ordens de Serviço (OS). -->
+        <record id="group_gestor_pcm" model="res.groups">
+            <field name="name">Gestor PCM</field>
+            <field name="category_id" ref="base.module_category_services"/>
+            <field name="comment">Apenas usuários deste grupo podem alterar a data/hora ou excluir eventos na agenda (calendário) que estejam vinculados a Ordens de Serviço (OS). Eventos vinculados a outras origens continuam editáveis conforme as permissões do módulo Calendário.</field>
+        </record>
+
         <record id="engc_os_multi_company_rule" model="ir.rule">
             <field name="name">Engenharia clinica multi-company</field>
             <field ref="model_engc_os" name="model_id"/>

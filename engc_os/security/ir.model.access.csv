@@ -6,6 +6,7 @@ access_engc_os_request_parts_user,engc_os.engc.os.request.parts,model_engc_os_re
 access_engc_os_verify_checklist_user,engc_os.engc.os.verify.checklist,model_engc_os_verify_checklist,base.group_user,1,1,1,1
 
 access_engc_request_service_user,engc_os.engc.request.service,model_engc_request_service,base.group_user,1,1,1,1
+access_hr_employee_equipment_selection_user,engc_os.hr.employee.equipment.selection,engc_os.model_hr_employee_equipment_selection,base.group_user,1,1,1,1
 
 access_engc_equipment,access_engc_equipment,model_engc_equipment,base.group_user,1,1,1,1
 access_engc_equipment_maintenance_team,access_engc_equipment_maintenance_team,model_engc_equipment_maintenance_team,base.group_user,1,1,1,1

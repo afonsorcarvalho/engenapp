@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Paper Format: etiquetas em A4 (múltiplas por página) -->
+        <record id="paperformat_equipment_label" model="report.paperformat">
+            <field name="name">Etiqueta de Equipamento</field>
+            <field name="format">custom</field>
+            <field name="page_width">210</field>
+            <field name="page_height">297</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">5</field>
+            <field name="margin_bottom">5</field>
+            <field name="margin_left">5</field>
+            <field name="margin_right">5</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">0</field>
+            <field name="dpi">90</field>
+        </record>
+
+        <!-- Report: Etiqueta de identificação do equipamento com QR Code (portal solicitação) -->
+        <record id="report_equipment_label" model="ir.actions.report">
+            <field name="name">Etiqueta de Equipamento (QR Code)</field>
+            <field name="model">engc.equipment</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">engc_os.report_equipment_label_template</field>
+            <field name="report_file">engc_os.report_equipment_label_template</field>
+            <field name="print_report_name">'Etiqueta - %s' % (object.display_name or object.name)</field>
+            <field name="binding_model_id" eval="ref('model_engc_equipment', raise_if_not_found=False) or False"/>
+            <field name="binding_type">report</field>
+            <field name="paperformat_id" ref="paperformat_equipment_label"/>
+        </record>
+    </data>
+</odoo>
