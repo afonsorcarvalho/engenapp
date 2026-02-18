@@ -259,12 +259,23 @@ class PortalRequestService(CustomerPortal):
         # JSON para o widget de busca de equipamentos (lista + badges) no portal
         equipments_data = [{"id": e.id, "name": e.display_name} for e in equipments]
         preselected_equipment_ids = self._get_preselected_equipment_ids_from_request(equipments)
+        # Primeiro equipamento da URI para pré-selecionar no modal de histórico de OS
+        preselected_equipment_id_for_history = (
+            preselected_equipment_ids[0]["id"] if preselected_equipment_ids else None
+        )
+        # Opções de tipo de manutenção para filtro do histórico de OS (engc.os)
+        Os = request.env["engc.os"]
+        mt_selection = getattr(Os._fields.get("maintenance_type"), "selection", None) or []
+        maintenance_type_options = [{"value": "", "label": _("Todos")}]
+        maintenance_type_options += [{"value": v, "label": label} for v, label in (mt_selection or [])]
         values = {
             "page_name": "request_service_new",
             "requester": request.env.user.name,
             "equipments": equipments,
             "equipments_data_json": json.dumps(equipments_data, ensure_ascii=False),
             "preselected_equipment_ids_json": json.dumps(preselected_equipment_ids, ensure_ascii=False),
+            "preselected_equipment_id_for_history": preselected_equipment_id_for_history,
+            "maintenance_type_options": maintenance_type_options,
             "company": company,
         }
         return request.render("engc_os.portal_create_request_service", values)
@@ -381,3 +392,71 @@ class PortalRequestService(CustomerPortal):
             "request_service": record.sudo(),
         }
         return request.render("engc_os.portal_request_service_detail", values)
+
+    @http.route(
+        "/my/request-service/equipment-os-history",
+        type="json",
+        auth="user",
+        website=True,
+    )
+    def portal_equipment_os_history(self, equipment_id=None, maintenance_type=None, **kw):
+        """
+        Retorna lista de OS do equipamento para exibição no portal (histórico).
+        Ordem decrescente de data (date_request). Filtro opcional por tipo de manutenção.
+        Apenas equipamentos permitidos ao requisitante (mesmo escopo do formulário de solicitação).
+        """
+        if not equipment_id:
+            return {"os_list": [], "error": "equipment_required"}
+        can_request, _reason = self._check_requester_can_request()
+        if not can_request:
+            return {"os_list": [], "error": "not_allowed"}
+        company = request.env.company
+        employee = request.env["hr.employee"].sudo().search(
+            [("user_id", "=", request.env.user.id)], limit=1
+        )
+        department_id = employee.department_id.id if employee and employee.department_id else None
+        equipments = self._get_equipments_for_portal(
+            company.id, employee=employee, department_id=department_id
+        )
+        allowed_ids = {e.id for e in equipments}
+        try:
+            eid = int(equipment_id)
+        except (TypeError, ValueError):
+            return {"os_list": [], "error": "invalid_equipment"}
+        if eid not in allowed_ids:
+            return {"os_list": [], "error": "equipment_not_allowed"}
+        Os = request.env["engc.os"].sudo()
+        if not Os.check_access_rights("read", raise_exception=False):
+            return {"os_list": [], "error": "no_access"}
+        domain = [("equipment_id", "=", eid)]
+        if maintenance_type:
+            domain.append(("maintenance_type", "=", maintenance_type))
+        order_ids = Os.search(domain, order="date_request desc")
+        # Rótulos de tipo de manutenção (engc.os MAINTENANCE_TYPE_SELECTION)
+        mt_labels = dict(Os._fields["maintenance_type"].selection)
+        state_labels = dict(Os._fields["state"].selection)
+        max_summary_len = 200  # caracteres para resumo na lista
+        os_list = []
+        for os_rec in order_ids:
+            # Resumo do atendimento: preferir service_summary do último relatório; senão problem_description/service_description da OS
+            relatorios = os_rec.relatorios_id.filtered(lambda r: r.state != "cancel").sorted(
+                key=lambda r: r.data_atendimento or "", reverse=True
+            )
+            summary = ""
+            if relatorios:
+                summary = (relatorios[0].service_summary or "").strip()
+            if not summary and os_rec.problem_description:
+                summary = (os_rec.problem_description or "").strip()
+            if not summary and os_rec.service_description:
+                summary = (os_rec.service_description or "").strip()
+            if len(summary) > max_summary_len:
+                summary = summary[: max_summary_len - 3].rstrip() + "..."
+            os_list.append({
+                "id": os_rec.id,
+                "name": os_rec.name,
+                "date_request": os_rec.date_request.strftime("%d/%m/%Y %H:%M") if os_rec.date_request else "",
+                "maintenance_type_label": mt_labels.get(os_rec.maintenance_type, os_rec.maintenance_type or ""),
+                "state_label": state_labels.get(os_rec.state, os_rec.state or ""),
+                "attendance_summary": summary or "",
+            })
+        return {"os_list": os_list, "error": None}

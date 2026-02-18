@@ -162,8 +162,14 @@ class RequestService(models.Model):
         Se Técnico ou Manutenção não estiverem preenchidos: define Manutenção = Própria e Técnico = usuário
         (hr.employee do user_id); se o usuário não tiver funcionário, usa um membro aleatório da equipe de manutenção.
         Caso não tenha data programada (schedule_date), utiliza a data atual da geração.
+        Solicitação cancelada não pode gerar OS.
         """
         self.ensure_one()
+        if self.state == 'cancel':
+            raise UserError(
+                _("Uma solicitação de atendimento cancelada não pode gerar OS. "
+                  "Reabra ou crie uma nova solicitação para gerar ordem de serviço.")
+            )
         if not self.tecnicos or not self.who_executor:
             write_vals = {'who_executor': 'own'}
             if not self.tecnicos:

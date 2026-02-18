@@ -100,6 +100,9 @@
         <t t-call="portal.portal_layout">
             <div class="container">
                 <div class="row">
+                    <div class="col-12 mb-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#oe_equipment_os_history_modal" id="oe_btn_show_os_history" aria-label="Ver histórico de OS do equipamento">Ver histórico de OS do equipamento</button>
+                    </div>
                     <div class="col-12">
                         <h1 class="mb-4">Nova Solicitação de Serviço</h1>
                     </div>
@@ -148,6 +151,54 @@
                     </div>
                 </form>
             </div>
+
+            <!-- Modal: Histórico de OS do equipamento (equipamento da URI pré-selecionado) -->
+            <div class="modal fade" id="oe_equipment_os_history_modal" tabindex="-1" aria-labelledby="oe_equipment_os_history_modal_label" aria-hidden="true" t-att-data-equipments="equipments_data_json" t-att-data-preselected-equipment-id="preselected_equipment_id_for_history or ''">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="oe_equipment_os_history_modal_label">Histórico de OS do equipamento</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"/>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label" for="oe_history_equipment">Equipamento</label>
+                                <select class="form-select" id="oe_history_equipment">
+                                    <option value="">Selecione um equipamento</option>
+                                    <t t-foreach="equipments" t-as="eq">
+                                        <option t-att-value="eq.id" t-esc="eq.display_name" t-att-selected="'selected' if (preselected_equipment_id_for_history and eq.id == preselected_equipment_id_for_history) else None"/>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="oe_history_maintenance_type">Tipo de manutenção</label>
+                                <select class="form-select" id="oe_history_maintenance_type">
+                                    <t t-foreach="maintenance_type_options" t-as="opt">
+                                        <option t-att-value="opt.get('value', '')" t-esc="opt.get('label', '')"/>
+                                    </t>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-primary mb-3" id="oe_history_search_btn">Buscar</button>
+                            <div id="oe_history_message" class="alert d-none" role="alert"/>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>OS</th>
+                                            <th>Data</th>
+                                            <th>Tipo de manutenção</th>
+                                            <th>Status</th>
+                                            <th>Resumo do atendimento</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="oe_history_os_tbody"/>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Widget Equipamentos: lista de procura + badges -->
             <script type="text/javascript">
                 (function() {
@@ -272,6 +323,116 @@
                         document.addEventListener('DOMContentLoaded', initEquipmentSelector);
                     } else {
                         initEquipmentSelector();
+                    }
+                })();
+            </script>
+            <!-- Script: buscar e exibir histórico de OS do equipamento (modal) -->
+            <script type="text/javascript">
+                (function() {
+                    var searchBtn = document.getElementById('oe_history_search_btn');
+                    var tbody = document.getElementById('oe_history_os_tbody');
+                    var messageDiv = document.getElementById('oe_history_message');
+                    if (!searchBtn || !tbody) return;
+
+                    function showMessage(text, isError) {
+                        messageDiv.textContent = text || '';
+                        messageDiv.classList.remove('d-none', 'alert-info', 'alert-danger', 'alert-warning');
+                        if (text) {
+                            messageDiv.classList.add(isError ? 'alert-danger' : 'alert-info');
+                        } else {
+                            messageDiv.classList.add('d-none');
+                        }
+                    }
+
+                    function renderTable(osList) {
+                        tbody.innerHTML = '';
+                        if (!osList || osList.length === 0) {
+                            showMessage('Nenhuma OS encontrada para o equipamento e filtro selecionados.', false);
+                            return;
+                        }
+                        showMessage('');
+                        var reportName = 'engc_os.report_os_template';
+                        osList.forEach(function(row) {
+                            var tr = document.createElement('tr');
+                            var osPdfUrl = '/report/pdf/' + reportName + '/' + (row.id || '');
+                            var a = document.createElement('a');
+                            a.href = osPdfUrl;
+                            a.target = '_blank';
+                            a.rel = 'noopener';
+                            a.textContent = row.name || '-';
+                            var td0 = document.createElement('td');
+                            td0.appendChild(a);
+                            tr.appendChild(td0);
+                            tr.appendChild(document.createElement('td')).textContent = row.date_request || '-';
+                            tr.appendChild(document.createElement('td')).textContent = row.maintenance_type_label || '-';
+                            tr.appendChild(document.createElement('td')).textContent = row.state_label || '-';
+                            var tdSummary = document.createElement('td');
+                            tdSummary.textContent = row.attendance_summary || '-';
+                            tdSummary.setAttribute('title', row.attendance_summary || '');
+                            tdSummary.style.maxWidth = '280px';
+                            tdSummary.style.overflow = 'hidden';
+                            tdSummary.style.textOverflow = 'ellipsis';
+                            tdSummary.style.whiteSpace = 'nowrap';
+                            tr.appendChild(tdSummary);
+                            tbody.appendChild(tr);
+                        });
+                    }
+
+                    searchBtn.addEventListener('click', function() {
+                        var equipmentSelect = document.getElementById('oe_history_equipment');
+                        var maintenanceSelect = document.getElementById('oe_history_maintenance_type');
+                        var equipmentId = equipmentSelect ? equipmentSelect.value : '';
+                        var maintenanceType = maintenanceSelect ? (maintenanceSelect.value || null) : null;
+                        if (!equipmentId) {
+                            showMessage('Selecione um equipamento.', true);
+                            return;
+                        }
+                        showMessage('Carregando...', false);
+                        tbody.innerHTML = '';
+                        var payload = {
+                            jsonrpc: '2.0',
+                            method: 'call',
+                            params: { equipment_id: parseInt(equipmentId, 10), maintenance_type: maintenanceType || false },
+                            id: 1
+                        };
+                        fetch('/my/request-service/equipment-os-history', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        }).then(function(r) { return r.json(); }).then(function(data) {
+                            if (data.error) {
+                                var msg = (data.error.data &amp;&amp; data.error.data.message) ? data.error.data.message : 'Erro ao carregar o histórico.';
+                                showMessage(msg, true);
+                                return;
+                            }
+                            var result = data.result;
+                            if (!result) {
+                                showMessage('Resposta inválida do servidor.', true);
+                                return;
+                            }
+                            if (result.error) {
+                                if (result.error === 'equipment_required') showMessage('Selecione um equipamento.', true);
+                                else if (result.error === 'equipment_not_allowed' || result.error === 'not_allowed') showMessage('Equipamento não permitido.', true);
+                                else showMessage('Não foi possível carregar o histórico.', true);
+                                return;
+                            }
+                            renderTable(result.os_list || []);
+                        }).catch(function() {
+                            showMessage('Erro ao carregar o histórico. Tente novamente.', true);
+                        });
+                    });
+
+                    var modalEl = document.getElementById('oe_equipment_os_history_modal');
+                    if (modalEl) {
+                        modalEl.addEventListener('shown.bs.modal', function() {
+                            var preselectedId = modalEl.getAttribute('data-preselected-equipment-id');
+                            var equipmentSelect = document.getElementById('oe_history_equipment');
+                            if (preselectedId &amp;&amp; equipmentSelect &amp;&amp; equipmentSelect.querySelector('option[value="' + preselectedId + '"]')) {
+                                equipmentSelect.value = preselectedId;
+                                searchBtn.click();
+                            }
+                        });
                     }
                 })();
             </script>
