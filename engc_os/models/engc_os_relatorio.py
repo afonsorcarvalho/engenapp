@@ -812,13 +812,11 @@ class Relatorios(models.Model):
             'state': 'cancel'
         })
 
-    def action_done(self):
+    def _checklist_validate(self):
         """
-        Marca o relatório como concluído e cria requisições de estoque para as peças requisitadas.
-        Valida se todos os itens do checklist estão marcados antes de concluir.
-        Exibe toast de sucesso e retorna ação para fechar o formulário e voltar à tela de quem abriu o relatório.
+        Verifica se todos os itens do checklist estão marcados.
+        Se houver itens desmarcados, gera uma mensagem de erro agrupando-os por seção.
         """
-        # Validação: verifica se há itens do checklist e se todos estão marcados
         if self.checklist_item_ids:
             unchecked_items = self.checklist_item_ids.filtered(lambda item: not item.check)
             if unchecked_items:
@@ -842,7 +840,15 @@ class Relatorios(models.Model):
                 raise UserError(
                     _("⚠️ Não é possível finalizar o relatório de serviço sem marcar todos os itens do checklist.\n\n"
                       "Itens não marcados:\n%s") % items_list)
-        
+
+    def action_done(self):
+        """
+        Marca o relatório como concluído e cria requisições de estoque para as peças requisitadas.
+        Valida se todos os itens do checklist estão marcados antes de concluir.
+        Exibe toast de sucesso e retorna ação para fechar o formulário e voltar à tela de quem abriu o relatório.
+        """
+        self._checklist_validate()
+
         self.write({
             'state': 'done'
         })
@@ -862,7 +868,6 @@ class Relatorios(models.Model):
                 'next': {'type': 'ir.actions.act_window_close'},
             },
         }
-    
     def _create_stock_requests(self):
         """
         Cria requisições de estoque para as peças requisitadas no relatório.

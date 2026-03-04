@@ -1109,7 +1109,7 @@ class EngcOs(models.Model):
             recordset: Relatórios com estado 'draft' (não concluídos)
         """
         self.ensure_one()
-        return self.relatorios_id.filtered(lambda r: r.state == 'draft')
+        return self.relatorios_id.filtered(lambda r: r.state in ['draft','cancel'])
     
     def _get_pecas_nao_aplicadas(self):
         """
