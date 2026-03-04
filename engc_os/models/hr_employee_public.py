@@ -12,7 +12,7 @@ Usamos campos computados com sudo() em vez de related para evitar recursão
 na delegação hr.employee._read -> hr.employee.public.read.
 """
 
-from odoo import api, fields, models
+from odoo import fields, models
 
 
 class HrEmployeePublic(models.Model):
@@ -36,16 +36,17 @@ class HrEmployeePublic(models.Model):
         readonly=True,
     )
 
-    @api.depends("id")
     def _compute_request_service_scope(self):
-        """Lê do hr.employee com sudo para não delegar de volta ao public."""
+        """Lê do hr.employee com sudo para não delegar de volta ao public.
+        Sem @api.depends: Odoo não permite depender do campo 'id'.
+        O valor é calculado sob demanda ao acessar o campo."""
         for rec in self:
             emp = self.env["hr.employee"].sudo().browse(rec.id)
             rec.request_service_scope = emp.request_service_scope if emp.exists() else False
 
-    @api.depends("id")
     def _compute_request_service_equipment_ids(self):
-        """Lê do hr.employee com sudo para não delegar de volta ao public."""
+        """Lê do hr.employee com sudo para não delegar de volta ao public.
+        Sem @api.depends: Odoo não permite depender do campo 'id'."""
         for rec in self:
             emp = self.env["hr.employee"].sudo().browse(rec.id)
             rec.request_service_equipment_ids = emp.request_service_equipment_ids if emp.exists() else self.env["hr.employee.equipment.selection"]
