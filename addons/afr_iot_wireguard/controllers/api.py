@@ -111,11 +111,12 @@ class WireguardApiController(http.Controller):
 
         try:
             device.sudo().action_revoke()
+            device.invalidate_recordset()
             return _json_response({
                 'success': True,
                 'message': f'Dispositivo {hw_id} revogado com sucesso.',
                 'device_id': device.id,
-                'state': device.state,
+                'state': device.sudo().state,
             }, 200)
         except Exception as e:
             _log.error('Erro ao revogar dispositivo %s: %s', hw_id, e)

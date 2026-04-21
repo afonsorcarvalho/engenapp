@@ -11,6 +11,7 @@ _log = logging.getLogger(__name__)
 
 _CODE_CHARS = string.ascii_letters + string.digits
 _CODE_TTL_MINUTES = 10
+_CODE_RE = re.compile(r'^[a-zA-Z0-9]{6,8}$')
 
 
 def _generate_code(length=7):
@@ -45,9 +46,8 @@ class WireguardEnrollment(models.Model):
 
     @api.constrains('code')
     def _check_code_format(self):
-        code_pattern = re.compile(r'^[a-zA-Z0-9]{6,8}$')
         for record in self:
-            if not code_pattern.match(record.code):
+            if not _CODE_RE.match(record.code):
                 raise ValidationError('Código deve ter 6-8 caracteres alfanuméricos.')
 
     @api.model
@@ -74,8 +74,8 @@ class WireguardEnrollment(models.Model):
             'expires_at': expires_at,
             'created_by_ip': request_ip,
         })
-        _log.info('Enrollment created: device_hw_id=%s, code=%s, request_ip=%s',
-                  device.device_hw_id, code, request_ip)
+        _log.info('Enrollment created: device_hw_id=%s, request_ip=%s',
+                  device.device_hw_id, request_ip)
         return enrollment
 
     @api.model

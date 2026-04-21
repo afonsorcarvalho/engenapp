@@ -1,8 +1,11 @@
+import ipaddress
 import logging
 import re
 
+from psycopg2 import IntegrityError
+
 from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 _log = logging.getLogger(__name__)
 
@@ -37,30 +40,28 @@ class WireguardDevice(models.Model):
 
     _sql_constraints = [
         ('device_hw_id_unique', 'UNIQUE(device_hw_id)', 'O ID do hardware deve ser único.'),
-        ('assigned_ip_unique', 'UNIQUE(assigned_ip)', 'IP já atribuído a outro dispositivo.'),
     ]
 
     @api.constrains('device_hw_id')
     def _check_device_hw_id(self):
         for record in self:
             if not _HW_ID_RE.match(record.device_hw_id):
-                raise UserError('ID do hardware deve ser 12 caracteres hexadecimais.')
+                raise ValidationError('ID do hardware deve ser 12 caracteres hexadecimais.')
 
     @api.constrains('public_key')
     def _check_public_key(self):
         for record in self:
             if record.public_key and not _PUBKEY_RE.match(record.public_key):
-                raise UserError('Chave pública deve ser base64-encoded Curve25519 (43 chars + =).')
+                raise ValidationError('Chave pública deve ser base64-encoded Curve25519 (43 chars + =).')
 
     @api.constrains('assigned_ip')
     def _check_assigned_ip(self):
         for record in self:
             if record.assigned_ip:
                 try:
-                    import ipaddress
                     ipaddress.ip_address(record.assigned_ip)
                 except ValueError:
-                    raise UserError(f'IP inválido: {record.assigned_ip}')
+                    raise ValidationError(f'IP inválido: {record.assigned_ip}')
 
     @api.model
     def find_or_create_by_hw_id(self, hw_id, public_key):
@@ -68,15 +69,25 @@ class WireguardDevice(models.Model):
         device = self.search([('device_hw_id', '=', hw_id)], limit=1)
         if device:
             device.write({'public_key': public_key})
-            if device.state not in ('active',):
+            if device.state == 'revoked':
+                device.write({'state': 'pending', 'assigned_ip': False})
+            elif device.state != 'active':
                 device.state = 'pending'
         else:
-            device = self.create({
-                'name': hw_id,
-                'device_hw_id': hw_id,
-                'public_key': public_key,
-                'state': 'pending',
-            })
+            try:
+                device = self.create({
+                    'name': hw_id,
+                    'device_hw_id': hw_id,
+                    'public_key': public_key,
+                    'state': 'pending',
+                })
+            except IntegrityError:
+                # Concurrent request already created the device
+                self.env.cr.rollback()
+                device = self.search([('device_hw_id', '=', hw_id)], limit=1)
+                if not device:
+                    raise
+                device.write({'public_key': public_key})
         return device
 
     def activate(self, enrollment, assigned_ip):
@@ -106,11 +117,12 @@ class WireguardDevice(models.Model):
         from ..services.wg_runner import WgRunner
         runner = WgRunner(self.env)
         runner.remove_peer(self.public_key)
-        self.write({'state': 'revoked'})
-        _log.warning('Device revoked: hw_id=%s, assigned_ip=%s, user_id=%s',
-                     self.device_hw_id, self.assigned_ip, self.env.uid)
+        revoked_ip = self.assigned_ip
+        self.write({'state': 'revoked', 'assigned_ip': False})
+        _log.warning('Device revoked: hw_id=%s, freed_ip=%s, user_id=%s',
+                     self.device_hw_id, revoked_ip, self.env.uid)
         self.message_post(
-            body='Dispositivo revogado manualmente.',
+            body=f'Dispositivo revogado manualmente. IP {revoked_ip} libertado.',
             subtype_id=self.env.ref('mail.mt_note').id,
         )
 
