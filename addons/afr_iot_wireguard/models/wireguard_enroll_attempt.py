@@ -6,6 +6,7 @@ from odoo import models, fields, api
 class WireguardEnrollAttempt(models.Model):
     _name = 'wireguard.enroll.attempt'
     _description = 'Tentativa de Enrollment WireGuard'
+    _log_access = False
 
     ip = fields.Char(string='IP', required=True, index=True)
     device_hw_id = fields.Char(string='ID do Hardware', required=True, index=True)

@@ -21,7 +21,7 @@ class WireguardIpPool(models.Model):
     active = fields.Boolean(default=True)
     device_count = fields.Integer(string='Dispositivos Ativos', compute='_compute_device_count')
 
-    @api.depends()
+    @api.depends('active')
     def _compute_device_count(self):
         for pool in self:
             pool.device_count = self.env['wireguard.device'].search_count([
@@ -44,12 +44,13 @@ class WireguardIpPool(models.Model):
                 continue
             try:
                 network = ipaddress.ip_network(pool.cidr, strict=False)
-                reserved_list = [ip.strip() for ip in pool.reserved_ips.split(',') if ip.strip()]
-                for ip_str in reserved_list:
+            except ValueError:
+                return  # _check_cidr already catches CIDR errors
+            reserved_list = [ip.strip() for ip in pool.reserved_ips.split(',') if ip.strip()]
+            for ip_str in reserved_list:
+                try:
                     ip = ipaddress.ip_address(ip_str)
-                    if ip not in network:
-                        raise ValidationError(f'IP reservado {ip_str} não está na rede {pool.cidr}')
-            except ValueError as e:
-                if 'IP' in str(e):
-                    raise ValidationError(f'IP reservado inválido: {e}')
-                raise ValidationError(f'Erro ao validar IPs reservados: {e}')
+                except ValueError:
+                    raise ValidationError(f'IP reservado inválido: {ip_str!r}')
+                if ip not in network:
+                    raise ValidationError(f'IP reservado {ip_str} não está na rede {pool.cidr}')
