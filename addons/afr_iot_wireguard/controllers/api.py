@@ -93,3 +93,30 @@ class WireguardApiController(http.Controller):
             'dns': get_param('afr_iot_wireguard.dns', ''),
         }
         return _json_response(payload, 200)
+
+    @http.route('/api/device/<string:hw_id>/revoke', type='http', auth='user', csrf=False, methods=['POST'])
+    def revoke_device(self, hw_id, **_kwargs):
+        env = http.request.env
+        group_approver = 'afr_iot_wireguard.group_approver'
+
+        if not env.user.has_group(group_approver):
+            return _json_response({'error': 'Permissão negada. Apenas aprovadores podem revogar dispositivos.'}, 403)
+
+        device = env['wireguard.device'].search([('device_hw_id', '=', hw_id)], limit=1)
+        if not device:
+            return _json_response({'error': 'Dispositivo não encontrado.'}, 404)
+
+        if device.state != 'active':
+            return _json_response({'error': 'Apenas dispositivos ativos podem ser revogados.'}, 400)
+
+        try:
+            device.sudo().action_revoke()
+            return _json_response({
+                'success': True,
+                'message': f'Dispositivo {hw_id} revogado com sucesso.',
+                'device_id': device.id,
+                'state': device.state,
+            }, 200)
+        except Exception as e:
+            _log.error('Erro ao revogar dispositivo %s: %s', hw_id, e)
+            return _json_response({'error': f'Erro ao revogar dispositivo: {str(e)}'}, 500)
