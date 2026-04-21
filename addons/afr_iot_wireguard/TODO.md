@@ -3,9 +3,9 @@
 ## Em curso
 
 ## Pendente
-- Verificar implementação completa do controller activate.py
 
 ## Feito
+- 2026-04-21 — Verificar implementação completa do controller activate.py
 - 2026-04-21 — Reforçar validações de entrada e tratamento de erros edge cases
 - 2026-04-21 — Implementar endpoint REST para revogação de dispositivos (device revoke API)
 - 2026-04-21 — Adicionar logging de eventos críticos (activation, revoke, enrollment creation)
