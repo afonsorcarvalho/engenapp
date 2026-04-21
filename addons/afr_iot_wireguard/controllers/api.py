@@ -41,6 +41,7 @@ class WireguardApiController(http.Controller):
 
         attempt_model = env['wireguard.enroll.attempt'].sudo()
         if not attempt_model.check_rate_limit(request_ip, hw_id):
+            _log.warning('Rate limit exceeded: ip=%s, device_id=%s', request_ip, hw_id)
             return _json_response({'error': 'Demasiadas tentativas. Tente novamente mais tarde.'}, 429)
         attempt_model.record_attempt(request_ip, hw_id)
 
