@@ -1,9 +1,11 @@
 import logging
+import re
 import secrets
 import string
 from datetime import timedelta
 
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 _log = logging.getLogger(__name__)
 
@@ -36,6 +38,17 @@ class WireguardEnrollment(models.Model):
     created_by_ip = fields.Char(string='IP de Origem')
     activated_by = fields.Many2one('res.users', string='Ativado por', readonly=True)
     activated_at = fields.Datetime(string='Ativado em', readonly=True)
+
+    _sql_constraints = [
+        ('code_unique', 'UNIQUE(code)', 'Código de ativação deve ser único.'),
+    ]
+
+    @api.constrains('code')
+    def _check_code_format(self):
+        code_pattern = re.compile(r'^[a-zA-Z0-9]{6,8}$')
+        for record in self:
+            if not code_pattern.match(record.code):
+                raise ValidationError('Código deve ter 6-8 caracteres alfanuméricos.')
 
     @api.model
     def create_for_device(self, device, base_url=None, request_ip=None):

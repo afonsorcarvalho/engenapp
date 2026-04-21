@@ -37,7 +37,30 @@ class WireguardDevice(models.Model):
 
     _sql_constraints = [
         ('device_hw_id_unique', 'UNIQUE(device_hw_id)', 'O ID do hardware deve ser único.'),
+        ('assigned_ip_unique', 'UNIQUE(assigned_ip)', 'IP já atribuído a outro dispositivo.'),
     ]
+
+    @api.constrains('device_hw_id')
+    def _check_device_hw_id(self):
+        for record in self:
+            if not _HW_ID_RE.match(record.device_hw_id):
+                raise UserError('ID do hardware deve ser 12 caracteres hexadecimais.')
+
+    @api.constrains('public_key')
+    def _check_public_key(self):
+        for record in self:
+            if record.public_key and not _PUBKEY_RE.match(record.public_key):
+                raise UserError('Chave pública deve ser base64-encoded Curve25519 (43 chars + =).')
+
+    @api.constrains('assigned_ip')
+    def _check_assigned_ip(self):
+        for record in self:
+            if record.assigned_ip:
+                try:
+                    import ipaddress
+                    ipaddress.ip_address(record.assigned_ip)
+                except ValueError:
+                    raise UserError(f'IP inválido: {record.assigned_ip}')
 
     @api.model
     def find_or_create_by_hw_id(self, hw_id, public_key):
