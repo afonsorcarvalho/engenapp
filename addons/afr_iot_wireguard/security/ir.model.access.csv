@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_wireguard_device_approver,wireguard.device.approver,model_wireguard_device,afr_iot_wireguard.group_approver,1,1,1,0
+access_wireguard_device_admin,wireguard.device.admin,model_wireguard_device,base.group_system,1,1,1,1
+access_wireguard_enrollment_approver,wireguard.enrollment.approver,model_wireguard_enrollment,afr_iot_wireguard.group_approver,1,1,1,0
+access_wireguard_enrollment_admin,wireguard.enrollment.admin,model_wireguard_enrollment,base.group_system,1,1,1,1
+access_wireguard_ip_pool_admin,wireguard.ip_pool.admin,model_wireguard_ip_pool,base.group_system,1,1,1,1
+access_wireguard_ip_pool_approver,wireguard.ip_pool.approver,model_wireguard_ip_pool,afr_iot_wireguard.group_approver,1,0,0,0
+access_wireguard_enroll_attempt_admin,wireguard.enroll.attempt.admin,model_wireguard_enroll_attempt,base.group_system,1,1,1,1
