@@ -14,6 +14,12 @@ class CycleType(models.Model):
     name = fields.Char(string='Nome', required=True, tracking=True)
     code = fields.Char(string='Código', required=True, tracking=True)
     description = fields.Text(string='Descrição', tracking=True)
+    informacoes_complementares = fields.Text(
+        string='Informações complementares',
+        tracking=True,
+        help='Texto padrão copiado para novos ciclos deste tipo: exibido no relatório PDF '
+             'após o gráfico e antes da assinatura (quando o módulo de relatório o utilizar).',
+    )
     path_ciclo = fields.Text(string='Caminho do ciclo', tracking=True)
     cycle_features_id = fields.One2many('afr.cycle.features', 'cycle_type_id', string='Ciclo Características', tracking=True, copy=False)
     end_datetime_tag = fields.Char(

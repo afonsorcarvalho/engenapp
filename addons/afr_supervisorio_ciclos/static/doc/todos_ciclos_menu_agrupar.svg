@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 260" width="320" height="260" role="img" aria-labelledby="t2">
+  <title id="t2">Menu Agrupar por (ilustracao vetorial)</title>
+  <defs>
+    <style type="text/css"><![CDATA[
+      .panel { fill: #FFFFFF; stroke: #DEE2E6; stroke-width: 1; }
+      .row { font: 12.5px 'Segoe UI', Arial, sans-serif; fill: #212529; }
+      .sep { stroke: #E9ECEF; stroke-width: 1; }
+      .hint { font: 11px 'Segoe UI', Arial, sans-serif; fill: #6C757D; }
+    ]]></style>
+  </defs>
+  <rect width="320" height="260" fill="#F8F9FA"/>
+  <rect class="panel" x="8" y="8" width="304" height="244" rx="4"/>
+  <text x="20" y="36" class="row">Equipamento</text>
+  <text x="20" y="58" class="row">Apelido</text>
+  <text x="20" y="80" class="row">Categoria de Equipamento</text>
+  <text x="20" y="102" class="row">Tipo de Ciclo</text>
+  <text x="20" y="124" class="row">Status</text>
+  <line class="sep" x1="16" y1="140" x2="304" y2="140"/>
+  <text x="20" y="166" class="row">Adicionar grupo personalizado</text>
+  <text x="288" y="166" class="row">&#8250;</text>
+  <text x="16" y="235" class="hint">Exemplo: op&#231;&#245;es t&#237;picas do menu Agrupar por.</text>
+</svg>

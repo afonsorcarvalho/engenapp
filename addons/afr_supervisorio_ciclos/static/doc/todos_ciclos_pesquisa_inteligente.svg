@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 238" width="1000" height="238" role="img" aria-labelledby="t3">
+  <title id="t3">Pesquisa com sugestoes de campo (ilustracao vetorial)</title>
+  <defs>
+    <style type="text/css"><![CDATA[
+      .bg { fill: #F8F9FA; }
+      .field { fill: #FFFFFF; stroke: #CED4DA; stroke-width: 1; }
+      .drop { fill: #FFFFFF; stroke: #DEE2E6; stroke-width: 1; }
+      .typed { font: 13px 'Segoe UI', Arial, sans-serif; fill: #212529; }
+      .head { font: 11px 'Segoe UI', Arial, sans-serif; fill: #6C757D; }
+      .row { font: 12.5px 'Segoe UI', Arial, sans-serif; fill: #212529; }
+      .chev { font: 11px 'Segoe UI', Arial, sans-serif; fill: #ADB5BD; }
+      .hint { font: 10px 'Segoe UI', Arial, sans-serif; fill: #868E96; }
+    ]]></style>
+  </defs>
+  <rect class="bg" width="1000" height="238"/>
+  <rect class="field" x="16" y="16" width="968" height="30" rx="3"/>
+  <text x="26" y="36" class="typed">a</text>
+  <rect class="drop" x="16" y="50" width="520" height="172" rx="4"/>
+  <text x="28" y="74" class="head">Pesquisar &#8230; em: a</text>
+  <text x="28" y="98" class="row">Ciclo</text>
+  <text x="28" y="118" class="row">Equipamento</text>
+  <text x="480" y="118" class="chev">&#8250;</text>
+  <text x="28" y="138" class="row">Apelido do Equipamento</text>
+  <text x="28" y="158" class="row">Tipo de Ciclo</text>
+  <text x="480" y="158" class="chev">&#8250;</text>
+  <text x="28" y="178" class="row">Ciclo Selecionado</text>
+  <text x="480" y="178" class="chev">&#8250;</text>
+  <text x="28" y="198" class="row">Operador</text>
+  <text x="480" y="198" class="chev">&#8250;</text>
+  <text x="28" y="218" class="row">Lote</text>
+  <text x="560" y="120" class="hint">Ao digitar, escolha em qual informa&#231;&#227;o procurar.</text>
+</svg>

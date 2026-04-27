@@ -31,15 +31,26 @@
                         <h1>
                             <field name="name" placeholder="Name..."/>
                         </h1>
-                        <group>
-                            <field name="cycle_type_id"/>
-                            <field name="description"/>
-                            <field name="active"/>
-                            <field name="tempo_estimado"/>
-                            <field name="temperatura"/>
-                            <field name="pressao"/>
-                        </group>
                     </div>
+                    <group>
+                        <field name="cycle_type_id"/>
+                        <field name="description"/>
+                        <field name="active"/>
+                        <field name="tempo_estimado"/>
+                        <field name="temperatura"/>
+                        <field name="pressao"/>
+                    </group>
+                    <notebook>
+                        <page string="Fases planejadas">
+                            <div class="alert alert-info" role="alert">
+                                <p>Mapa <strong>fase &#8594; duração em minutos</strong> usado pela barra segmentada do frontend.</p>
+                                <p>A ordem das chaves define a ordem dos segmentos. Quando os nomes coincidirem com as chaves de <code>fases_fita_digital</code> do tipo de ciclo, o frontend correlaciona com as estatísticas reais (<code>cycle_statistics_data</code>).</p>
+                            </div>
+                            <field name="phases_planned" widget="text" nolabel="1"
+                                   placeholder='{"pre-vacuo": 5, "aquecimento": 12, "esterilizacao": 45, "secagem": 20, "resfriamento": 10}'
+                                   class="oe_inline" style="width: 100%; min-height: 220px;"/>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>

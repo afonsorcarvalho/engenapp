@@ -1,0 +1,4 @@
+Data: 01-10-2025
+Hora: 15:24:20
+Equipamento: ETO01
+só três linhas — cabeçalho incompleto

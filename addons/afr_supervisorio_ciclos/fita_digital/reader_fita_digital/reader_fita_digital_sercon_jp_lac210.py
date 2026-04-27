@@ -69,30 +69,31 @@ class ReaderFitaDigitalSerconJpLac210(ReaderFitaDigitalInterface):
             dict: Dicionário atualizado com os dados da linha processada
         """
         try:
-            
-            
             # Regex para validar linha com hora e valores numéricos com vírgulas
             # padrao = r'^\s*(\d{2}:\d{2}:\d{2})\s+(\d{3},\d)\s+(\d,\d{2})\s+(\d{4},\d)\s*$'
             # match = re.match(padrao, line.strip())
-            
+
             valores = line.split()
-            
+
             if len(valores) < 4:
                 return body_dict
-            
-                         
-            
+
+            # Cabeçalho de colunas repetido entre blocos de fase (JP-LAC imprime
+            # "HORA Pext. Pint. T1" após cada separador; não é linha de medição).
+            if valores[0].upper() == "HORA":
+                return body_dict
+
             # Adiciona ":00" ao horário (primeiro valor)
-            hora_completa = valores[0]+ ":00"
+            hora_completa = valores[0] + ":00"
             medicao = [
                 hora_completa if i == 0 else float(valor)
                 for i, valor in enumerate(valores)
             ]
             body_dict['data'].append(medicao)
-            
+
         except Exception as e:
             print(f"Erro ao processar linha de medição: {str(e)}")
-            
+
         return body_dict
 
     def _process_phase_line(self, line, body_dict):

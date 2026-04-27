@@ -31,7 +31,7 @@
                         <h2 class="text-center">RELATÓRIO DE CICLO</h2>
                         <h3 class="text-center"><span t-field="o.name" /></h3>
                         <h3>Cod. Carga <span t-field="o.batch_number" /></h3>
-                        <div class="row">
+                        <div class="row" name='equipamento'>
                             <div class="col-2">
                                 <strong>Equipamento: </strong>
                             </div>
@@ -45,7 +45,7 @@
                                 <span t-field="o.equipment_nickname" />
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row" name='ciclo'>
                             <div class="col-2">
                                 <strong>Duração (HH:mm): </strong>
                             </div>
@@ -60,7 +60,7 @@
                                 <span t-field="o.cycle_features_id" />
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row" name='data_ciclo'>
                             <div class="col-2">
                                 <strong>Data início: </strong>
                             </div>
@@ -78,7 +78,7 @@
                         </div>
                         
                      
-                        <div class="row">
+                        <div class="row" name='status'>
                             <div class="col-2">
                                 <strong>Status: </strong>
                             </div>
@@ -223,10 +223,41 @@
                                  <span t-field="o.notes" /><br/> 
                             </t>  
                             </div>
-                            <div class="col-6  text-center">
-                                ________________________________________<br/>
-                                Garantia de qualidade<br/>
-                                Aprovação
+                            <div class="col-6 text-center">
+                                <t t-if="o.is_signed">
+                                    <div t-if="o.signature_image" class="mb-2">
+                                        <img t-attf-src="data:image/png;base64,{{o.signature_image}}"
+                                             style="max-height:100px;max-width:100%;" alt="Assinatura"/>
+                                    </div>
+                                    <div class="mt-2 mb-2">
+                                        Garantia de qualidade / Aprovação
+                                    </div>
+                                    <div  style="display:inline-block;max-width:100%;text-align:center;font-size:8px;">
+                                        <strong><span t-field="o.signature_employee_name"/></strong><br/>
+                                        <t t-if="o.signature_professional_documentation">
+                                            <span t-field="o.signature_professional_documentation"/><br/>
+                                        </t>
+                                        <t t-if="o.signature_professional_council or o.signature_professional_council_number">
+                                            <span t-field="o.signature_professional_council"/>
+                                            <t t-if="o.signature_professional_council_number">
+                                                <t t-if="o.signature_professional_council"> — </t>
+                                                <span t-field="o.signature_professional_council_number"/>
+                                            </t>
+                                            <br/>
+                                        </t>
+                                        <t t-if="o.signature_professional_cpf and not o.signature_professional_council_number">
+                                            CPF: <span t-field="o.signature_professional_cpf"/><br/>
+                                        </t>
+                                        <t t-if="o.signature_date">
+                                          Assinatura eletrônica em  <span t-field="o.signature_date"/>
+                                        </t>
+                                    </div>
+                                </t>
+                                <t t-if="not o.is_signed">
+                                    ________________________________________<br/>
+                                    Garantia de qualidade<br/>
+                                    Aprovação
+                                </t>
                             </div>
                         </div>
                     </div>

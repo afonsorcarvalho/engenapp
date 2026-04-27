@@ -23,6 +23,13 @@
                       groups="base.group_system" attrs="{'invisible': [('file_path', '=', False)]}"/>
                     <button name="compute_cycle_graph" string="Atualizar Grafico" type="object" 
                        groups="base.group_system"/>
+                    <button name="action_sign_cycle" string="Assinar ciclo" type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('is_signed', '=', True)]}"/>
+                    <button name="action_clear_cycle_signature" string="Remover assinatura" type="object"
+                        groups="base.group_system"
+                        attrs="{'invisible': [('is_signed', '=', False)]}"
+                        confirm="Remover a assinatura deste ciclo?"/>
                     <field name="state" widget="statusbar" 
                         statusbar_visible="em_andamento,concluido,cancelado,abortado" />
                 </header>
@@ -160,6 +167,36 @@
                                 <field name="cycle_graph" filename="cycle_graph_filename" options='{"zoom": false}' widget="image" />
                                 <field name="cycle_graph_filename" invisible="1"/>
                             
+                        </page>
+                        <page string="Assinatura" name="assinatura_ciclo">
+                            <group>
+                                <group string="Registro da assinatura">
+                                    <field name="is_signed" readonly="1"/>
+                                    <field name="signature_employee_id"
+                                           groups="base.group_system"
+                                           attrs="{'readonly': [('is_signed', '=', True)]}"
+                                           options="{'no_create': True}"/>
+                                    <field name="signature_date" readonly="1"/>
+                                </group>
+                            </group>
+                            <group string="Dados do assinante (cadastro do funcionário)" attrs="{'invisible': [('is_signed', '=', False)]}">
+                                <group>
+                                    <field name="signature_employee_name"/>
+                                    <field name="signature_professional_documentation"/>
+                                    <field name="signature_professional_council"/>
+                                    <field name="signature_professional_council_number"/>
+                                    <field name="signature_professional_cpf"/>
+                                </group>
+                                <group>
+                                    <field name="signature_image" widget="image" readonly="1"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert" attrs="{'invisible': [('is_signed', '=', True)]}">
+                                <p>Use o botão <strong>Assinar ciclo</strong> no topo do formulário. O sistema usa o
+                                funcionário vinculado ao seu usuário (Administradores podem escolher outro assinante no campo acima antes de assinar).</p>
+                                <p>Conselho, CPF e imagem da assinatura devem estar cadastrados em
+                                <em>Funcionários</em>, aba <em>Assinatura de ciclos</em>.</p>
+                            </div>
                         </page>
                         <page string="Indicador Biológico" name="indicador_biologico">
                             <group >
@@ -299,18 +336,13 @@
                     <!-- <filter string="Operador" name="operator" context="{'group_by':'operator_id'}" /> -->
                     <!-- <filter string="Data Início" name="start_date" context="{'group_by':'start_date:day'}"/> -->
                 </group>
+                <searchpanel>
+                    <field name="equipment_id" string="Equipamento" enable_counters="1" select="multi" context="{'show_apelido_first': True}"/>
+                    <!-- <field name="equipment_category_id" string="Categoria" enable_counters="1" select="multi"/> -->
+                    <field name="cycle_features_id" string="Ciclo Selecionado" enable_counters="1" select="multi"/>
+                    <field name="state" string="Status" enable_counters="1" select="multi"/>
+                </searchpanel>
             </search>
-             <searchpanel>
-               
-                <field name="equipment_id" string="Equipamento" enable_counters="1" select="multi" context="{'show_apelido_first': True}"/>
-                <!-- <field name="equipment_category_id" string="Categoria" enable_counters="1" select="multi"/> -->
-                <field name="cycle_features_id" string="Ciclo Selecionado" enable_counters="1" select="multi"/>
-                <field name="state" string="Status" enable_counters="1" select="multi"/>
-                
-                
-               
-            </searchpanel>
-            
         </field>
     </record>
 

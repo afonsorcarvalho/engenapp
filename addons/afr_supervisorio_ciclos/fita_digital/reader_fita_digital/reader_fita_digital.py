@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 from datetime import datetime
+from statistics import mode, StatisticsError
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -87,7 +88,6 @@ class ReaderFitaDigitalInterface(ABC):
             IOError: Se houver erro na leitura do arquivo
         """
         try:
-            print(f"Lendo o arquivo: {self.file_name}")
             with open(self.file_name, 'r') as file:
                 self.lines_file = file.readlines()
                 return self.lines_file
@@ -160,25 +160,22 @@ class ReaderFitaDigitalInterface(ABC):
 
         # Obtém o conteúdo do arquivo
         file_content = self.read_header_file_content()
-        
-        # Itera sobre cada linha do conteúdo do arquivo
-        for line in file_content:
-            # Remove caracteres nulos e espaços em branco do início e fim da linha
-            line = line.replace('\x00', '').strip()
-            
-            # Obtém todos os nomes dos campos do cabeçalho definidos na classe
-            header_fields_names = [getattr(self.header_fields, attr) for attr in dir(self.header_fields) if not attr.startswith('_')]
-            
-            # Itera sobre cada campo do cabeçalho
-            for field in header_fields_names:
-                
-                
-                # Se o campo for encontrado na linha, extrai seu valor
-                if field in line:
-                    # Divide a linha no campo e pega o valor após ele, removendo espaços
-                    header_values[field] = line.split(field)[1].strip()
 
-        print(f"header_values: {header_values}")
+        # Cacheia os campos uma vez por chamada — dir() + getattr são caros e estáveis.
+        header_fields_names = [
+            getattr(self.header_fields, attr)
+            for attr in dir(self.header_fields)
+            if not attr.startswith('_')
+        ]
+
+        for line in file_content:
+            line = line.replace('\x00', '').strip()
+            if not line:
+                continue
+            for field in header_fields_names:
+                if field in line:
+                    header_values[field] = line.split(field, 1)[1].strip()
+
         return header_values
     
     @abstractmethod
@@ -247,21 +244,6 @@ class ReaderFitaDigitalInterface(ABC):
             self.body = body_dict
         return self.body
 
-    # def read_body_lines_raw(self):
-    #     """
-    #     Lê as linhas brutas do corpo do arquivo.
-
-    #     Returns:
-    #         list: Lista contendo as linhas do corpo do arquivo
-    #     """
-    #     # Obtém o conteúdo do arquivo
-    #     file_content = self.read_file_content()
-        
-    #     self.lines_body_raw = file_content[self.size_header:]
-
-    #     return self.lines_body_raw
-
-
     def get_fases(self, fases):
         """
         Obtém as fases do ciclo da fita digital filtrando apenas as fases enviadas como argumento.
@@ -328,67 +310,36 @@ class ReaderFitaDigitalInterface(ABC):
         """
        
         error_msg = []
-        duration = None
-        print(f"header: {header}")
-        print(f"body: {body}")
-        print(f"phases: {phases}")
         if not body or 'data' not in body:
             raise ValueError("Dados da fita não foram carregados")
 
         if not phases:
             raise ValueError("Lista de fases não fornecida")
-        #filtrando as fases de interesse no body_fita
-        body_fases_filtradas = [x for x in body['fase'] if x[1] in phases]
-        
+
+        phase_names = {f[1] for f in body['fase']}
+
         estatisticas = {}
-        # Para cada fase na lista
-        for i in range(len(phases)-1):
+        for i in range(len(phases) - 1):
             fase_atual = phases[i]
-            fase_proxima = None
-    
-            # Calcula a duração entre as fases usando os índices
-            try:
-                idx_fase_atual = [f[1] for f in body['fase'] ].index(fase_atual)
-                print(f"idx_fase_atual: {idx_fase_atual}, fase_atual: {fase_atual}")
-                if idx_fase_atual is None:
-                    error_msg[i] = f"Não foi possível encontrar a fase {fase_atual}"
-                    continue
-                print(f"idx_fase_atual: {idx_fase_atual}")
-                idx_fase_proxima = None
-
-                for fproxima in phases[i+1:]:
-                    try:
-                        idx_fase_proxima =  [f[1] for f in body['fase']].index(fproxima)
-                        fase_proxima = fproxima
-                        break
-                    except ValueError as e:
-                        error_msg.append( f"Não foi possível encontrar a próxima fase {fproxima} para {fase_atual}: {str(e)}"  )  
-                        continue
-               
-                    
-                    
-                print(f"idx_fase_proxima: {idx_fase_proxima}")
-                duration = self.calcular_tempo_entre_fases(fase_atual, fproxima)
-                print(f"duration: {duration}")
-           
-            except ValueError as e:
-                error_msg.append( f"A fase {fase_atual} não foi encontrada: {str(e)}")
+            if fase_atual not in phase_names:
+                error_msg.append(f"A fase {fase_atual} não foi encontrada")
                 continue
-            except Exception as e:
-                error_msg.append( f"Erro ao calcular estatísticas do ciclo {fase_atual}: {str(e)}")
-                
-            # Calcula as estatísticas entre as fases
-            if fase_proxima is None:
-                error_msg.append( f"Não foi possível encontrar a próxima fase para {fase_atual}. Calculando até o final do ciclo")
 
-                
+            fase_proxima = None
+            for fproxima in phases[i + 1:]:
+                if fproxima in phase_names:
+                    fase_proxima = fproxima
+                    break
+                error_msg.append(f"Não foi possível encontrar a próxima fase {fproxima} para {fase_atual}")
+
+            if fase_proxima is None:
+                error_msg.append(f"Não foi possível encontrar a próxima fase para {fase_atual}. Calculando até o final do ciclo")
+
             duration = self.calcular_tempo_entre_fases(fase_atual, fase_proxima)
-            stats = self.compute_statistics_between_phases(fase_atual, fase_proxima,header,body)
-            # Adiciona as estatísticas ao dicionário
+            stats = self.compute_statistics_between_phases(fase_atual, fase_proxima, header, body)
             estatisticas[fase_atual] = {
                 'Duration': duration,
-                **stats
-               
+                **stats,
             }
         if formated:
             return self.formatar_estatisticas_colunas(estatisticas),error_msg
@@ -399,7 +350,6 @@ class ReaderFitaDigitalInterface(ABC):
         """
         Formata o dicionário de estatísticas do ciclo em colunas alinhadas.
         """
-        print(f"statistics: {statistics}")
         linhas = [f'### Estatísticas do Ciclo {self.file_name.split("/")[-1].replace(".txt", "")}']
         for fase, dados in statistics.items():
             minutos, segundos = dados['Duration'].split(':')
@@ -432,12 +382,10 @@ class ReaderFitaDigitalInterface(ABC):
             str: Tempo decorrido no formato mm:ss
         """
         try:
-            # Garante que as fases existem no body
             if 'fase' not in self.body or not isinstance(self.body['fase'], list):
                 raise ValueError("Fases não encontradas no body.")
 
             fases = self.body['fase']
-            # Busca os datetimes das fases
             inicio = next((f[0] for f in fases if f[1] == fase_inicio), None)
             fim = next((f[0] for f in fases if f[1] == fase_fim), None)
 
@@ -451,7 +399,7 @@ class ReaderFitaDigitalInterface(ABC):
             return f"{minutos:02d}:{segundos:02d}"
         except Exception as e:
             return f"Erro: {str(e)}"
-    
+
     def compute_statistics_between_phases(self, fase_inicial=None, fase_final=None,header=None,body=None):
         """
         Calcula as estatísticas do ciclo (máximo, mínimo, média e moda) para cada variável entre fases específicas.
@@ -529,11 +477,9 @@ class ReaderFitaDigitalInterface(ABC):
                 minimo = min(valores)
                 media = sum(valores) / len(valores)
                 
-                # Calcula a moda
-                from statistics import mode
                 try:
                     moda = mode(valores)
-                except:
+                except StatisticsError:
                     moda = None
                     
                 estatisticas[coluna] = {
@@ -552,38 +498,4 @@ class ReaderFitaDigitalInterface(ABC):
             _logger.error(f"Erro ao calcular estatísticas entre as fases do ciclo: {str(e)}")
             return estatisticas
 
-    def calcular_tempo_entre_fases(self, fase_inicio, fase_fim):
-        """
-        Calcula o tempo decorrido entre duas fases do ciclo.
-
-        Args:
-            fase_inicio (str): Nome da fase inicial
-            fase_fim (str): Nome da fase final
-
-        Returns:
-            str: Tempo decorrido no formato mm:ss
-        """
-        try:
-            # Garante que as fases existem no body
-            if 'fase' not in self.body or not isinstance(self.body['fase'], list):
-                raise ValueError("Fases não encontradas no body.")
-
-            fases = self.body['fase']
-            # Busca os datetimes das fases
-            inicio = next((f[0] for f in fases if f[1] == fase_inicio), None)
-            fim = next((f[0] for f in fases if f[1] == fase_fim), None)
-
-            if not inicio or not fim:
-                raise ValueError(f"Fase(s) '{fase_inicio}' ou '{fase_fim}' não encontrada(s).")
-
-            tempo_decorrido = fim - inicio
-            total_segundos = int(tempo_decorrido.total_seconds())
-            minutos = total_segundos // 60
-            segundos = total_segundos % 60
-            return f"{minutos:02d}:{segundos:02d}"
-        except Exception as e:
-            return f"Erro: {str(e)}"
-    
-    
-       
 

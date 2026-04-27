@@ -1,0 +1,102 @@
+-------------------------------
+           AUTOCLAVE           
+-------------------------------
+
+SOFTWARE.: JP-LAC 21.0         
+
+CICLO....:  BOWIE DICK         
+
+LOTE.....:  03           
+CICLO No.:  4739             
+
+NUMERO DA AUTOCLAVE:  2 
+NOME DO CLIENTE..:  142018
+
+PRESSAO DE VACUO......:   -0.65
+PRESSAO DE CORTE......:   +0.50
+NUMERO DE PULSOS......:   3   
+SETPOINT (oC).........:   134.0
+TEMPO DE ESTERILIZACAO:   05:00
+PRESSAO NA SECAGEM....:   -0.65
+TEMPO DE SECAGEM......:   01:00
+
+-------------------------------
+00:0902/04/2026     INICIANDO 
+-------------------------------
+-------------------------------
+00:09  INICIO DE PRE-VACUO    
+-------------------------------
+ HORA   Pext.  Pint.  T1       
+00:09  +2.58  +0.07  062   
+00:10  +2.51  -0.41  080       
+00:11  +2.46  -0.59  082       
+00:12  +2.47  +0.11  078       
+00:13  +2.46  -0.29  088       
+00:14  +2.42  -0.27  087       
+00:15  +2.50  +0.39  101       
+00:16  +2.42  -0.31  080       
+-------------------------------
+00:17  AQUECIMENTO C. INTERNA 
+-------------------------------
+ HORA   Pext.  Pint.  T1       
+00:17  +2.50  +0.48  106       
+00:18  +2.50  +0.53  107       
+00:18  +2.47  +1.11  119       
+00:19  +2.10  +1.62  127       
+00:20  +2.24  +1.76  129       
+00:22  +2.45  +1.99  132       
+00:22  +2.45  +2.09  134       
+00:23  +2.41  +2.14  134       
+00:24  +2.42  +2.15  134       
+-------------------------------
+00:25  INICIO ESTERILIZACAO   
+-------------------------------
+ HORA   Pext.  Pint.  T1   F0  
+00:25  +2.50  +2.16  134 000.00
+00:25  +2.44  +2.17  135 000.00
+00:26  +2.48  +2.18  135 019.50
+00:27  +2.49  +2.15  134 039.00
+00:28  +2.42  +2.17  134 058.50
+00:29  +2.45  +2.18  135 078.00
+-------------------------------
+00:30  INICIO DESCOMPRESSAO   
+-------------------------------
+-------------------------------
+00:37  INICIO SECAGEM         
+-------------------------------
+ HORA   Pext.  Pint.  T1       
+00:37  +2.51  +0.15  104       
+-------------------------------
+00:38  FIM DE CICLO           
+-------------------------------
+
+
+VISTO EXECUTOR...: ____________
+
+
+
+VISTO APROVADOR..: ____________
+
+
+
+
+
+
+
+
+
+
+
+00:38  +2.43  -0.75  053       
+
+-----BEGIN SIGN-----
+CUvi34hR46+cCNRisbszFpdH5/U84+XQeYs6dyLs
+pch7xEiEgTTUlvZe3upmTRqo2CweNdREuXl40Z4r
+Zn2jZ8gFhohPLnksgCfTiShBrJkhWO6apNnk43j+
+JvqLGOH2PTu401bfChgKOTIb1Lp0wGIWY5+jHAlv
+nYz40ooIiV5qz5ICRvHkHXnsC4t8XblnBH3WIkOa
+xsX1NY1tLn2zUgVPU0ZWmM+tUhhyYowATsajdkOz
+V5O+mdTLUPiYLkkTw2H0+InwOUVG0Veg2deBgFeH
+kO8XGPzB1QFoeLUZaKrPCQMEndHg+JHEX8wZB0IP
+OIc5y+53UhT78hffD69faA==
+-----END SIGN-----

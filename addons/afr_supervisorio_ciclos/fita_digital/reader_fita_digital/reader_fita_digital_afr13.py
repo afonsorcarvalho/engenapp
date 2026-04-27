@@ -5,6 +5,10 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
+# Pré-compilados em escopo de módulo: evita lookup no re._cache a cada linha.
+_BODY_LINE_RE = re.compile(r'^(\d{2}:\d{2}:\d{2})(?:\s+(-?\d+\.?\d*))+$')
+_PHASE_LINE_RE = re.compile(r'^(\d{2}:\d{2}:\d{2})\s+([A-Za-z0-9\s-]+)$')
+
 
 class ReaderFitaDigitalAfr13(ReaderFitaDigitalInterface):
     """
@@ -67,24 +71,17 @@ class ReaderFitaDigitalAfr13(ReaderFitaDigitalInterface):
             dict: Dicionário atualizado com os dados da linha processada
         """
         try:
-            # Regex para validar linha com hora e valores numéricos
-            # Aceita hora seguida de um ou mais valores numéricos separados por espaços
-            padrao = r'^(\d{2}:\d{2}:\d{2})(?:\s+(-?\d+\.?\d*))+$'
-            match = re.match(padrao, line.strip())
-            
-            if not match:
+            if not _BODY_LINE_RE.match(line):
                 return body_dict
-                
+
             valores = line.split()
-            medicao = [
-                float(valor) if i > 0 else valor
-                for i, valor in enumerate(valores)
-            ]
+            medicao = [valores[0]]
+            medicao.extend(float(v) for v in valores[1:])
             body_dict['data'].append(medicao)
-            
+
         except Exception as e:
-            print(f"Erro ao processar linha de medição: {str(e)}")
-            
+            _logger.debug("Erro ao processar linha de medição: %s", e)
+
         return body_dict
 
     def _process_phase_line(self, line, body_dict):
@@ -98,28 +95,19 @@ class ReaderFitaDigitalAfr13(ReaderFitaDigitalInterface):
         Returns:
             tuple: (bool, dict) - Indica se é uma linha de fase e o dicionário atualizado
         """
-        
         try:
-            # Regex para encontrar hora (HH:MM:SS) seguida de texto
-            padrao = r'^(\d{2}:\d{2}:\d{2})\s+([A-Za-z0-9\s-]+)$'
-            match = re.match(padrao, line.strip())
-            
+            if not line or not line[0].isdigit():
+                return False, body_dict
+
+            match = _PHASE_LINE_RE.match(line)
             if match:
-                hora = match.group(1)  # Captura a hora
-                fase = match.group(2).strip()  # Captura o texto após a hora e remove espaços extras
-                
-                # Adiciona como array ao invés de dicionário
-                body_dict['fase'].append([
-                    hora,
-                    fase
-                ])
+                body_dict['fase'].append([match.group(1), match.group(2).strip()])
                 return True, body_dict
-            
+
             return False, body_dict
-            
+
         except Exception as e:
-            # Log do erro para debug
-            print(f"Erro ao processar linha de fase: {str(e)}")
+            _logger.debug("Erro ao processar linha de fase: %s", e)
             return False, body_dict
             
     def read_header(self):
@@ -148,26 +136,22 @@ class ReaderFitaDigitalAfr13(ReaderFitaDigitalInterface):
                 - fase: Dicionário com horários e nomes das fases do ciclo
         """
         lines_body = self.read_body_lines_raw()
-       
-        body_dict = {}
-        body_dict['data'] = []
-        body_dict['fase'] = []
-       
-        # Processa o cabeçalho
+
+        body_dict = {'data': [], 'fase': []}
         body_dict = self._process_header_line(lines_body, body_dict)
-        
+
+        # Mantém contrato histórico: self.body só é atribuído após processar
+        # uma linha de medição (não-fase). Tests de fixture validam isso.
         for line in lines_body[1:]:
             line = line.strip()
-            
-            # Verifica se é uma linha de fase
+
             is_phase, body_dict = self._process_phase_line(line, body_dict)
-            
             if is_phase:
                 continue
-                    
-            # Processa linha de dados
+
             body_dict = self._process_body_line(line, body_dict)
             self.body = body_dict
+
         return self.body
 
     def read_body_lines_raw(self):
@@ -234,7 +218,23 @@ class ReaderFitaDigitalAfr13(ReaderFitaDigitalInterface):
             _logger.error(f"Erro inesperado ao obter estado: {str(e)}")
             return 'erro'
         
-    def make_graph(self, header, body):
+    def _get_fases_permitidas(self):
+        """
+        Obtém as fases permitidas para o ciclo.
+        """
+        return  [
+                'LEAK-TEST',
+                'ACONDICIONAMENTO',
+                'PRE-VACUO',
+                'INJETANDO ETO',
+                'ESTERILIZANDO',
+                'LAVAGEM',
+                'AERACAO',
+                'CICLO ABORTADO',
+                'CICLO FINALIZADO'
+            ]
+        
+    def make_graph(self, header, body,fases_permitidas=None):
         """
         Gera um gráfico do ciclo de termodesinfecção.
 
@@ -252,12 +252,31 @@ class ReaderFitaDigitalAfr13(ReaderFitaDigitalInterface):
         Raises:
             Exception: Se houver erro na geração do gráfico
         """
+        fig = None
         try:
             import matplotlib.pyplot as plt
             import matplotlib.dates as mdates
             import io
             import base64
-            
+
+            # Validação barata antes de criar figura (custosa ~100ms): fases/data
+            # devem ter datetime no índice 0 — DataObjectFitaDigital normaliza isso.
+            fases_raw = body.get('fase') or []
+            data_raw = body.get('data') or []
+            if not data_raw:
+                _logger.warning("make_graph: body['data'] vazio")
+                return False
+            if fases_raw and not hasattr(fases_raw[0][0], 'strftime'):
+                _logger.warning(
+                    "make_graph: fase[0] não é datetime — chame via DataObjectFitaDigital"
+                )
+                return False
+            if not hasattr(data_raw[0][0], 'strftime'):
+                _logger.warning(
+                    "make_graph: data[0][0] não é datetime — chame via DataObjectFitaDigital"
+                )
+                return False
+
             # Cria uma figura e dois eixos com escalas diferentes
             fig, ax1 = plt.subplots(figsize=(16, 9))
             ax2 = ax1.twinx()  # Cria um segundo eixo Y compartilhando o mesmo eixo X
@@ -314,20 +333,8 @@ class ReaderFitaDigitalAfr13(ReaderFitaDigitalInterface):
             #ax2.set_ylim(0, 2.5)  # Escala de pressão
             
             # Adiciona as fases como linhas verticais
-            fases_permitidas = [
-                'LEAK-TEST',
-                'ACONDICIONAMENTO',
-                'PRE-VACUO',
-                'INJETANDO ETO',
-                'ESTERILIZANDO',
-                'LAVAGEM',
-                'AERACAO',
-                'HIPERVENTILACAO',
-                'CICLO ABORTADO',
-                'CICLO FINALIZADO'
-               
-               
-            ]
+            if not fases_permitidas:
+                fases_permitidas = self._get_fases_permitidas()
             
             fases_validas = []
             for fase in body.get('fase', []):
@@ -393,15 +400,19 @@ class ReaderFitaDigitalAfr13(ReaderFitaDigitalInterface):
             
             # Converte para base64
             cycle_graph = base64.b64encode(buf.getvalue())
-            
-            # Fecha a figura para liberar memória
-            plt.close()
             return cycle_graph
-                
+
         except Exception as e:
             _logger.error(f"Erro ao gerar gráfico: {str(e)}")
-            cycle_graph = False
-            return cycle_graph
+            return False
+        finally:
+            # Sempre libera a figura — mesmo em exceção — pra evitar leak no matplotlib.
+            if fig is not None:
+                try:
+                    import matplotlib.pyplot as plt
+                    plt.close(fig)
+                except Exception:
+                    pass
     
        
 

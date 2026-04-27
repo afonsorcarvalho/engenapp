@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Manual do usuário do Supervisório: conteúdo em static/doc/manual_usuario_supervisorio.html.
+      ir.actions.act_url abre o HTML estático do módulo em nova aba (comportamento padrão Odoo 16).
+    -->
+    <record id="action_manual_usuario_supervisorio" model="ir.actions.act_url">
+        <field name="name">Manual do usuário</field>
+        <field name="url">/afr_supervisorio_ciclos/static/doc/manual_usuario_supervisorio.html</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem
+        id="menu_manual_usuario_supervisorio"
+        name="Manual do usuário"
+        parent="menu_afr_supervisorio_ciclos"
+        action="action_manual_usuario_supervisorio"
+        sequence="190"
+    />
+</odoo>

@@ -1,0 +1,27 @@
+Data: 01-10-2025
+Hora: 15:24:20
+Equipamento: ETO01
+Operador: FIXTURE
+Cod. ciclo: 002509
+Ciclo Selecionado: CICLO 01
+Linha cabecalho 07
+Linha cabecalho 08
+Linha cabecalho 09
+Linha cabecalho 10
+Linha cabecalho 11
+Linha cabecalho 12
+Linha cabecalho 13
+Linha cabecalho 14
+Linha cabecalho 15
+Linha cabecalho 16
+Linha cabecalho 17
+Linha cabecalho 18
+Linha cabecalho 19
+Linha cabecalho 20
+Linha cabecalho 21
+Linha cabecalho 22
+Linha cabecalho 23
+Linha cabecalho 24
+Hora PCI(Bar) TCI(Celsius) UR(%)
+15:25:00 LEAK-TEST
+15:30:00 CICLO FINALIZADO

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Dados para assinatura de ciclos no cadastro do funcionário -->
+    <record id="view_employee_form_afr_supervisorio_signature" model="ir.ui.view">
+        <field name="name">hr.employee.form.afr.supervisorio.signature</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Assinatura de ciclos" name="afr_cycle_signature">
+                    <group string="Identificação profissional">
+                        <field name="afr_professional_documentation"/>
+                        <field name="afr_professional_council"/>
+                        <field name="afr_professional_council_number"/>
+                        <field name="afr_professional_cpf"/>
+                    </group>
+                    <!-- Widget nativo Odoo (web.SignatureField + NameAndSignature): Auto / Draw / Load -->
+                    <group string="Assinatura digital">
+                        <field name="afr_signature_image" widget="signature" nolabel="1" colspan="2"
+                               options="{'full_name': 'name'}"
+                               placeholder="Clique para abrir o diálogo de assinatura"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

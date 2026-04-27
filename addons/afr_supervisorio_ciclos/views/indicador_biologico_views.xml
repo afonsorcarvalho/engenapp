@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View para Indicadores Biológicos -->
+    <record id="view_afr_indicador_biologico_tree" model="ir.ui.view">
+        <field name="name">afr.indicador.biologico.tree</field>
+        <field name="model">afr.indicador.biologico</field>
+        <field name="arch" type="xml">
+            <tree string="Indicadores Biológicos">
+                <field name="name" string="Lote"/>
+                <field name="marca"/>
+                <field name="modelo"/>
+                <field name="data_fabricacao"/>
+                <field name="data_validade"/>
+                <field name="vencido" widget="boolean_toggle"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View para Indicadores Biológicos -->
+    <record id="view_afr_indicador_biologico_form" model="ir.ui.view">
+        <field name="name">afr.indicador.biologico.form</field>
+        <field name="model">afr.indicador.biologico</field>
+        <field name="arch" type="xml">
+            <form string="Indicador Biológico">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Lote do Indicador Biológico"/>
+                        <h1>
+                            <field name="name" placeholder="Ex: IB-2025-001"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Informações do Produto">
+                            <field name="marca" placeholder="Ex: 3M, Steris, etc"/>
+                            <field name="modelo" placeholder="Ex: Attest 1262"/>
+                        </group>
+                        <group string="Validade">
+                            <field name="data_fabricacao"/>
+                            <field name="data_validade"/>
+                            <field name="vencido" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <group string="Informações Adicionais">
+                        <field name="company_id" groups="base.group_multi_company"/>
+                    </group>
+                    <notebook>
+                        <page string="Observações">
+                            <field name="notes" placeholder="Digite observações sobre este indicador biológico..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View para Indicadores Biológicos -->
+    <record id="view_afr_indicador_biologico_search" model="ir.ui.view">
+        <field name="name">afr.indicador.biologico.search</field>
+        <field name="model">afr.indicador.biologico</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Indicadores Biológicos">
+                <field name="name" string="Lote"/>
+                <field name="marca"/>
+                <field name="modelo"/>
+                <filter string="Vencidos" name="vencidos" domain="[('vencido', '=', True)]"/>
+                <filter string="Válidos" name="validos" domain="[('vencido', '=', False)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Marca" name="group_marca" context="{'group_by': 'marca'}"/>
+                    <filter string="Modelo" name="group_modelo" context="{'group_by': 'modelo'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action para Indicadores Biológicos -->
+    <record id="action_afr_indicador_biologico" model="ir.actions.act_window">
+        <field name="name">Indicadores Biológicos</field>
+        <field name="res_model">afr.indicador.biologico</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_validos': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Cadastrar um novo Indicador Biológico
+            </p>
+            <p>
+                Clique no botão "Criar" para adicionar um novo lote de indicador biológico.<br/>
+                Registre o lote, marca, modelo e validade para controle nos ciclos de esterilização ETO.
+            </p>
+        </field>
+    </record>
+
+
+</odoo>

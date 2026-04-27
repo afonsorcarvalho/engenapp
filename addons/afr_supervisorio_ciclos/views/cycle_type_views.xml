@@ -54,6 +54,12 @@
                         </ul>
                     </div>
                     <notebook>
+                        <page string="Relatório PDF">
+                            <group>
+                                <field name="informacoes_complementares" widget="text" nolabel="1"
+                                       placeholder="Texto padrão para novos ciclos deste tipo (antes da assinatura no relatório)..."/>
+                            </group>
+                        </page>
                         <page string="Codigo Python">
                             <field name="python_code" placeholder="Escreva o código Python para processamento deste tipo de ciclo..."/>
                         </page>

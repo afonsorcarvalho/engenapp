@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Manual do usuário — Supervisório</title>
+  <!-- Estilos da interface web para mostrar os mesmos desenhos de botões (só ao abrir o manual pelo URL do servidor). -->
+  <link rel="stylesheet" href="/web/static/src/libs/fontawesome/css/font-awesome.css"/>
+  <link rel="stylesheet" href="/web/static/lib/odoo_ui_icons/style.css"/>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.6; max-width: 52rem; margin: 0 auto; padding: 1.25rem 1.5rem 3rem; }
+    h1 { font-size: 1.65rem; margin-top: 0; }
+    h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 0.25rem; }
+    h3 { font-size: 1.05rem; margin-top: 1.25rem; }
+    ul { padding-left: 1.25rem; }
+    .meta { color: #666; font-size: 0.95rem; margin-bottom: 1.5rem; }
+    .note { border-left: 4px solid #0d6efd; padding: 0.5rem 0.75rem; margin: 1rem 0; background: rgba(13,110,253,0.08); }
+    .warn { border-left: 4px solid #fd7e14; padding: 0.5rem 0.75rem; margin: 1rem 0; background: rgba(253,126,20,0.1); }
+    table { border-collapse: collapse; width: 100%; font-size: 0.95rem; margin: 0.75rem 0; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem 0.65rem; text-align: left; vertical-align: top; }
+    th { background: rgba(127,127,127,0.12); }
+    footer { margin-top: 3rem; font-size: 0.88rem; color: #666; }
+    /* Moldura das figuras do manual */
+    .manual-figure { margin: 1rem 0; padding: 0.75rem 1rem; border: 1px solid #ccc; border-radius: 6px; background: #f8f9fa; }
+    .manual-figure figcaption { margin-top: 0.5rem; font-size: 0.9rem; color: #444; }
+    .manual-icon-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; }
+    .manual-icon-sample {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 2.25rem; min-height: 2.25rem; padding: 0.35rem 0.5rem;
+      border: 1px solid #dee2e6; border-radius: 4px; background: #fff;
+      font-size: 1.25rem; color: #495057; line-height: 1;
+    }
+    .manual-icon-sample.manual-active { background: #e9ecef; border-color: #ced4da; }
+    .manual-inline-icons { display: inline-flex; align-items: center; gap: 0.35rem; vertical-align: middle; margin-left: 0.15rem; }
+    .manual-app-icon { vertical-align: middle; margin-right: 0.35rem; border-radius: 4px; }
+    .manual-menu-img { display: block; max-width: 100%; height: auto; margin: 0.5rem 0; border: 1px solid #dee2e6; border-radius: 6px; background: #fff; }
+    /* Índice — acesso rápido */
+    .manual-toc { margin: 1rem 0 1.75rem; padding: 1rem 1.15rem 1.1rem; border: 1px solid #ccc; border-radius: 8px; background: #f0f4f8; }
+    .manual-toc-title { font-size: 1.05rem; margin: 0 0 0.65rem; padding: 0; border: none; font-weight: 600; color: #1a1a1a; }
+    .manual-toc ol { margin: 0.2rem 0 0; padding-left: 1.2rem; line-height: 1.45; }
+    .manual-toc > ol { margin-top: 0; }
+    .manual-toc li { margin: 0.2rem 0; }
+    .manual-toc a { color: #0d47a1; text-decoration: none; }
+    .manual-toc a:hover { text-decoration: underline; }
+    .manual-toc .manual-toc-nested { margin-top: 0.25rem; margin-bottom: 0.35rem; font-size: 0.94rem; }
+    /* Link “voltar ao topo” no fim de cada secção/subsecção do texto */
+    .manual-back-top { margin: 1rem 0 0.25rem; font-size: 0.88rem; text-align: right; }
+    .manual-back-top a { color: #555; text-decoration: none; }
+    .manual-back-top a:hover { color: #0d47a1; text-decoration: underline; }
+    @media (min-width: 40rem) {
+      .manual-toc > ol { columns: 2; column-gap: 1.75rem; }
+      .manual-toc > ol > li { break-inside: avoid; }
+    }
+    h1#topo { scroll-margin-top: 0.5rem; }
+    h2[id], h3[id] { scroll-margin-top: 0.75rem; }
+  </style>
+</head>
+<body>
+
+  <h1 id="topo">Manual do usuário — Supervisório</h1>
+
+  <nav class="manual-toc" id="indice" aria-label="Índice — acesso rápido">
+    <p class="manual-toc-title">Índice — acesso rápido</p>
+    <ol>
+      <li><a href="#sec-1">1. Finalidade do Supervisório</a></li>
+      <li><a href="#sec-2">2. Localização das opções no menu</a></li>
+      <li>
+        <a href="#sec-3">3. Tela “Todos os Ciclos”</a>
+        <ol class="manual-toc-nested">
+          <li><a href="#sec-3-1">3.1 Formas de ver os dados</a></li>
+          <li><a href="#sec-3-2">3.2 Buscar, filtrar e organizar a lista</a></li>
+          <li><a href="#sec-3-3">3.3 Situações do ciclo</a></li>
+          <li><a href="#sec-3-4">3.4 “Atrasado” na lista</a></li>
+        </ol>
+      </li>
+      <li>
+        <a href="#sec-4">4. Ficha detalhada do ciclo</a>
+        <ol class="manual-toc-nested">
+          <li><a href="#sec-4-1">4.1 Cabeçalho</a></li>
+          <li><a href="#sec-4-2">4.2 Aba “Arquivos”</a></li>
+          <li><a href="#sec-4-3">4.3 Aba “Gráfico do Ciclo”</a></li>
+          <li><a href="#sec-4-4">4.4 Aba “Assinatura”</a></li>
+          <li><a href="#sec-4-5">4.5 Aba “Indicador Biológico”</a></li>
+          <li><a href="#sec-4-6">4.6 Aba “Observações”</a></li>
+          <li><a href="#sec-4-7">4.7 Aba “Fotos do Ciclo”</a></li>
+          <li><a href="#sec-4-8">4.8 Aba “Materiais esterilizados”</a></li>
+          <li><a href="#sec-4-9">4.9 Rodapé: conversas e lembretes</a></li>
+        </ol>
+      </li>
+      <li><a href="#sec-5">5. Botões no topo da ficha (resumo)</a></li>
+      <li>
+        <a href="#sec-6">6. Como os ciclos entram no sistema</a>
+        <ol class="manual-toc-nested">
+          <li><a href="#sec-6-1">Assistente “Ler Diretório”</a></li>
+        </ol>
+      </li>
+      <li><a href="#sec-7">7. Tipos de ciclo e “Ciclo selecionado”</a></li>
+      <li><a href="#sec-8">8. Cadastro de Indicadores Biológicos</a></li>
+      <li>
+        <a href="#sec-9">9. Verificar autenticidade da fita digital</a>
+        <ol class="manual-toc-nested">
+          <li><a href="#sec-9-1">9.1 Pelo menu no sistema</a></li>
+          <li><a href="#sec-9-2">9.2 Pela página do site</a></li>
+        </ol>
+      </li>
+      <li><a href="#sec-10">10. Imprimir o ciclo em PDF</a></li>
+      <li><a href="#sec-11">11. Preparar funcionários para assinar ciclos</a></li>
+      <li>
+        <a href="#sec-12">12. Gerar laudo de liberação (PDF)</a>
+        <ol class="manual-toc-nested">
+          <li><a href="#sec-12-1">12.1 Incluir materiais na ficha</a></li>
+          <li><a href="#sec-12-2">12.2 Abrir o assistente do laudo</a></li>
+          <li><a href="#sec-12-3">12.3 Escolher materiais e gerar o PDF</a></li>
+          <li><a href="#sec-12-4">12.4 Conteúdo do PDF do laudo</a></li>
+        </ol>
+      </li>
+      <li>
+        <a href="#sec-13">13. Passos práticos (roteiros)</a>
+        <ol class="manual-toc-nested">
+          <li><a href="#sec-13-1">13.1 Indicador biológico no ciclo</a></li>
+          <li><a href="#sec-13-2">13.2 Materiais esterilizados no ciclo</a></li>
+          <li><a href="#sec-13-3">13.3 Assinar o documento do ciclo</a></li>
+          <li><a href="#sec-13-4">13.4 Gerar o laudo de liberação</a></li>
+        </ol>
+      </li>
+    </ol>
+  </nav>
+
+  <!-- <p class="meta">
+    Este manual destina-se a profissionais de saúde e áreas afins (por exemplo biomedicina e enfermagem) que utilizam o <strong>sistema AFR Supervisório</strong>, módulo <strong>Supervisório</strong>, para registro e consulta de ciclos de equipamento (esterilização, lavagem ou outras etapas conforme a configuração da instituição).
+    Pressupõe-se familiaridade com rotinas assistenciais ou de central de material, <em>sem</em> necessidade de conhecimentos de programação ou de gestão de infraestruturas de tecnologia da informação.
+    Os <strong>ícones e botões</strong> reproduzidos nas figuras correspondem à interface real: para visualização correta dos símbolos, abra este documento a partir do <strong>endereço do servidor</strong> da organização (por exemplo <strong>Supervisório → Manual do usuário</strong>).
+  </p> -->
+
+  <h2 id="sec-1">1. Finalidade do Supervisório</h2>
+  <p>
+    O Supervisório centraliza o <strong>registro e a consulta dos ciclos</strong> dos equipamentos de processo
+    (esterilização, lavagem, desinfecção ou outras etapas, conforme o parque instalado na instituição).
+    Na maioria dos casos, os dados provêm das <strong>fitas digitais</strong> (registros eletrônicos gerados pelo equipamento), que o sistema interpreta e apresenta em telas,
+    gráficos e relatórios em PDF, apoiando rastreabilidade e auditoria.
+  </p>
+  <p>Entre as funções habituais incluem-se:</p>
+  <ul>
+    <li>registrar observações e anexar imagens ao ciclo, quando aplicável;</li>
+    <li>documentar o <strong>indicador biológico</strong>, sempre que a política de controle da instituição o exija;</li>
+    <li><strong>assinar eletronicamente</strong> o ciclo, com identificação profissional refletida no relatório;</li>
+    <li><strong>verificar a autenticidade</strong> de um arquivo de fita (integridade do documento), quando a verificação criptográfica estiver configurada.</li>
+  </ul>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h2 id="sec-2">2. Localização das opções no menu</h2>
+  <p>
+    No <strong>menu de aplicativos</strong> do <strong>sistema AFR Supervisório</strong> (ícone de grelha no canto superior), selecione o aplicativo <strong>Supervisório</strong>
+    <img class="manual-app-icon" src="/afr_supervisorio_ciclos/static/description/icon.png" width="22" height="22" alt="Ícone do aplicativo Supervisório no menu Apps"/>
+    e confirme para abrir. As opções do Supervisório surgem na <strong>faixa colorida no topo da tela</strong>, em linha: identificação do aplicativo e, em seguida, os itens de menu disponíveis para o perfil de acesso.
+  </p>
+  <figure class="manual-figure">
+    <img
+      class="manual-menu-img"
+      src="/afr_supervisorio_ciclos/static/doc/menu_supervisorio_barra_real.jpg"
+      width="1024"
+      height="96"
+      alt="Captura da interface: barra roxa do aplicativo Supervisório com Ciclos, Equipamentos, Categorias, Verificar Autenticidade, Indicadores Biológicos, Materiais, Materiais dos Ciclos, Configurações e Manual do usuário; abaixo, título Todos os Ciclos e ícones de vista em lista"/>
+    <figcaption><strong>Figura 1 —</strong> Barra superior do Supervisório e início da tela <strong>Todos os Ciclos</strong> (exemplo).</figcaption>
+  </figure>
+  <p>
+    Na imagem ilustrativa, a faixa superior concentra o acesso direto a ciclos, equipamentos, verificação de autenticidade e demais itens configurados.
+    A cor pode variar conforme o tema institucional do <strong>sistema AFR Supervisório</strong>; o critério de orientação é a legenda <strong>Supervisório</strong> e os rótulos dos menus.
+  </p>
+  <p>
+    Ao selecionar <strong>Ciclos</strong>, apresenta-se a lista <strong>Todos os Ciclos</strong>. Abaixo da faixa do aplicativo surgem o título da tela e os ícones que permitem alternar a visualização dos ciclos em <em>lista</em>, <em>calendário</em> ou <em>resumo em tabela</em> (detalhe na seção 3).
+  </p>
+  <p>
+    Os menus <strong>Materiais</strong> e <strong>Materiais dos Ciclos</strong> só entram nessa barra se a sua empresa tiver ativado a parte opcional de “materiais de ciclos” junto do supervisório. Se não aparecerem para você, é normal: nem toda instalação usa esse recurso.
+  </p>
+  <p>
+    Em <strong>Configurações</strong> ficam opções mais técnicas. Ao clicar nesse nome, o <strong>sistema AFR Supervisório</strong> mostra o que estiver disponível para o seu perfil — por exemplo <strong>Tipos de ciclo</strong> (como cada equipamento lê a fita) e, para quem administra o sistema, a leitura de pasta <strong>Ler diretório</strong>.
+    Quem usa o sistema só no dia a dia, sem permissão de administrador, em geral <strong>não vê</strong> o “Ler diretório”.
+  </p>
+  <ul>
+    <li><strong>Ciclos → Todos os Ciclos</strong> — tela principal (na barra costuma figurar <strong>Ciclos</strong>; o título da tela é <strong>Todos os Ciclos</strong>): lista os ciclos registrados. A alternância entre <em>lista</em>, <em>calendário</em> e <em>análise em tabela dinâmica</em> faz-se pelos ícones no topo da área da lista (a <em>ficha detalhada</em> de um ciclo abre ao selecionar uma linha; ver seção 3, especialmente as <strong>Figuras 2 e 3</strong>).</li>
+    <li><strong>Equipamentos</strong> e <strong>Categorias</strong> — cadastro dos aparelhos e como eles são classificados (costuma ser o mesmo cadastro usado pela manutenção da empresa no <strong>sistema AFR Supervisório</strong>).</li>
+    <li><strong>Indicadores Biológicos</strong> — cadastro dos <em>lotes</em> de indicador que você usa nos ciclos.</li>
+    <li><strong>Materiais</strong> e <strong>Materiais dos Ciclos</strong> — só aparecem na barra se a empresa tiver ligado essa função extra de materiais junto do supervisório (veja o parágrafo acima da lista).</li>
+    <li><strong>Verificar Autenticidade</strong> — envia um arquivo de fita para o sistema conferir a assinatura digital (só funciona se a empresa tiver configurado a chave pública; veja a seção 9).</li>
+    <li><strong>Configurações → Tipos de Ciclo</strong> — parâmetros técnicos de interpretação da fita por tipo de equipamento (em geral reservados à equipa de implantação ou de suporte do sistema).</li>
+    <li><strong>Configurações → Ler Diretório</strong> — busca arquivos de fita em uma pasta do servidor por período. Normalmente aparece só para <strong>administradores</strong> do sistema.</li>
+    <li><strong>Manual do usuário</strong> — abre esta página de ajuda.</li>
+  </ul>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h2 id="sec-3">3. Tela “Todos os Ciclos”</h2>
+  <p>
+    Esta é a tela principal onde você <strong>acompanha os ciclos</strong> que já estão no sistema (na maior parte dos casos entram sozinhos pela leitura da fita ou pela rotina da empresa).
+    O título <strong>Todos os Ciclos</strong> aparece no topo da área branca; ao lado ficam os botões que mudam a forma de ver os dados (lista, calendário ou tabela de análise — ver seção 3.1).
+    Abaixo disso fica uma <strong>faixa de pesquisa</strong> (caixa “Pesquisar…”, Filtros, Agrupar por, etc., explicados na seção 3.2) e, no corpo da página, duas grandes zonas: o <strong>painel à esquerda</strong> e a <strong>tabela à direita</strong>, como na figura seguinte.
+  </p>
+  <figure class="manual-figure">
+    <img class="manual-menu-img" src="/afr_supervisorio_ciclos/static/doc/todos_ciclos_lista_painel.png" width="1024" height="460" alt="Todos os Ciclos: painel à esquerda com equipamento, ciclo selecionado e status; tabela à direita com situação em cores, lote, programa e equipamento"/>
+    <figcaption><strong>Figura 2 —</strong> Lista <strong>Todos os Ciclos</strong> com painel lateral e tabela (exemplo real).</figcaption>
+  </figure>
+  <p>
+    <strong>Painel da esquerda (atalhos para “cortar” a lista):</strong>
+    nesse sistema esse painel costuma chamar-se algo como “painel de pesquisa”; no Supervisório ele vem em blocos que você pode <strong>abrir ou fechar</strong> (setinha ao lado do nome).
+    Na <strong>Figura 2</strong> aparecem, entre outros, três blocos muito usados:
+    <strong>Equipamento</strong> — lista cada aparelho (autoclave ETO, vapor, etc.) com um <strong>número</strong> ao lado dizendo quantos ciclos existem para aquele equipamento;
+    <strong>Ciclo selecionado</strong> — agrupa por <em>programa</em> ou receita escolhida no equipamento (por exemplo “CICLO 01”, “Bowie-Dick”);
+    <strong>Status</strong> — filtra pela <em>situação</em> do ciclo (aguardando, em andamento, concluído, abortado, erro…), muitas vezes com uma <strong>bolinha colorida</strong> ao lado do nome para orientar o olho.
+    Em cada linha há uma <strong>caixa para marcar</strong>: marque só o que quiser ver naquele momento.
+    A tabela à direita <strong>atualiza de imediato</strong> e restringe a visualização às linhas compatíveis com as marcas — <strong>nenhum registro é eliminado</strong>; trata-se apenas de filtro para análise.
+    Você pode marcar mais de um equipamento ou mais de um status ao mesmo tempo.
+  </p>
+  <p>
+    <strong>Tabela à direita (cada linha é um ciclo):</strong>
+    a primeira coluna costuma ser uma <strong>caixa de seleção</strong> para marcar uma ou várias linhas (útil quando o sistema oferece ação em lote).
+    A coluna de <strong>situação</strong> apresenta o estado do ciclo em <strong>etiqueta colorida compacta</strong>, facilitando a leitura rápida do conjunto de registros.
+    Em geral: <strong>verde</strong> costuma corresponder a <strong>Concluído</strong> com sucesso; <strong>azul</strong> ou azul claro, <strong>Aguardando</strong>; <strong>laranja</strong>, <strong>Em andamento</strong>; <strong>vermelho</strong>, <strong>Abortado</strong> ou situação que exige atenção; <strong>cinza</strong> ou neutro, situações como <strong>Erro</strong> — a tonalidade pode variar com o tema da instituição; por isso prevalece o <strong>texto literal</strong> da etiqueta para interpretar corretamente o estado do ciclo.
+    Às vezes, quando o ciclo está <strong>em andamento</strong>, o sistema também destaca o texto da linha em cor de alerta, para chamar atenção para o que ainda está aberto.
+    Depois vêm colunas como <strong>lote</strong>, <strong>ciclo selecionado</strong> (nome do programa), <strong>equipamento</strong> e <strong>apelido</strong> (nome curto que a planta usa no dia a dia).
+    Para abrir o <strong>detalhe completo</strong> de um ciclo, <strong>clique na linha</strong> (não só na caixinha de seleção).
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-3-1">3.1 Formas de ver os dados</h3>
+  <figure class="manual-figure">
+    <div class="manual-icon-row" aria-hidden="true">
+      <span class="manual-icon-sample manual-active" title="Lista"><i class="oi oi-view-list" aria-hidden="true"></i></span>
+      <span class="manual-icon-sample" title="Calendário"><i class="fa fa-calendar" aria-hidden="true"></i></span>
+      <span class="manual-icon-sample" title="Análise (pivô)"><i class="oi oi-view-pivot" aria-hidden="true"></i></span>
+    </div>
+    <figcaption><strong>Figura 3 —</strong> Símbolos para alternar lista, calendário e tabela de análise na tela <strong>Todos os Ciclos</strong>.</figcaption>
+  </figure>
+  <p>
+    Eles aparecem no <strong>canto superior direito</strong> da área da lista de ciclos: o desenho de linhas empilhadas é a <em>lista</em>, o calendário é a visão por datas e o quadriculado é a <em>tabela de análise</em> (para cruzar totais por equipamento e mês).
+    O símbolo que estiver “marcado” ou mais destacado indica a visão que você está usando no momento (também visíveis na parte superior da <strong>Figura 2</strong>).
+  </p>
+  <ul>
+    <li><strong>Lista</strong> — linhas com situação do ciclo, lote, nome do “ciclo selecionado” (programa receita), equipamento, datas, tempo de duração, operador, etc. Colunas extras podem ser mostradas ou ocultadas pelo menu de colunas
+      <span class="manual-inline-icons" aria-hidden="true" title="Ícone do menu de colunas opcionais"><i class="oi oi-settings-adjust"></i></span>
+      (ícone de engrenagem ou ajustes na própria barra da lista).
+    </li>
+    <li><strong>Ficha (formulário)</strong> — ao clicar num ciclo, abre o detalhe. Muitas informações vêm da fita e aparecem só leitura para evitar erro.</li>
+    <li><strong>Calendário</strong> — mostra os ciclos nas datas de início e fim. Não cria ciclo novo clicando no calendário; o registro entra pela leitura da fita ou por quem opera o sistema.</li>
+    <li><strong>Análise (pivô)</strong> — cruza equipamento com mês para você ver quantidade ou padrão ao longo do tempo.</li>
+  </ul>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-3-2">3.2 Buscar, filtrar e organizar a lista</h3>
+  <p>
+    Na tela <strong>Todos os Ciclos</strong>, logo acima da tabela, há uma <strong>faixa de ferramentas</strong>.
+    As <strong>Figuras 4 a 7</strong> são <strong>ilustrações técnicas em formato escalável</strong>: mantêm nitidez ao ampliar a página no navegador ou ao imprimir, e reproduzem o mesmo tipo de informação observado na tela real.
+    A <strong>Figura 4</strong> resume essa faixa: em cima fica a caixa <strong>Pesquisar…</strong>; logo abaixo vêm os botões <strong>Filtros</strong>, <strong>Agrupar por</strong> e <strong>Favoritos</strong>; mais à direita aparecem o histórico de pesquisa, o botão de <strong>atualizar</strong> a lista, a indicação de <strong>quantos registros</strong> você está vendo (por exemplo “1–80 / 95”) e as setas para <strong>mudar de página</strong>; no canto direito ficam os três botões que trocam entre <em>lista</em>, <em>calendário</em> e <em>tabela de análise</em> (já vistos na <strong>Figura 3</strong> e no topo da <strong>Figura 2</strong>).
+  </p>
+  <figure class="manual-figure">
+    <img class="manual-menu-img" src="/afr_supervisorio_ciclos/static/doc/todos_ciclos_barra_pesquisa.svg" width="1024" height="88" alt="Barra com campo Pesquisar, botões Filtros, Agrupar por, Favoritos, paginação e ícones de vista em lista"/>
+    <figcaption><strong>Figura 4 —</strong> Faixa de pesquisa e ferramentas acima da lista de ciclos (exemplo).</figcaption>
+  </figure>
+  <p>
+    <strong>O que é cada coisa, em poucas palavras:</strong>
+    a caixa <strong>Pesquisar…</strong> serve para achar textos (código do ciclo, equipamento, lote, etc.) — mais abaixo explicamos <em>como</em> ela funciona quando você começa a digitar;
+    <strong>Filtros</strong> serve para <em>esconder</em> o que não interessa naquele momento, usando regras prontas (situação do ciclo, datas, etc.);
+    <strong>Agrupar por</strong> serve para <em>dividir</em> a lista em blocos (por equipamento, por situação, etc.), em vez de um único bloco contínuo;
+    <strong>Favoritos</strong> guarda combinações de pesquisa ou filtro que você usa sempre, para não ter de montar tudo de novo;
+    os números do meio dizem <strong>quantos ciclos</strong> estão na lista no total e qual <strong>fatia</strong> você está vendo agora.
+  </p>
+
+  <h4>Filtros (ícone de funil)</h4>
+  <p>
+    Ao clicar em <strong>Filtros</strong>, abre-se um menu com opções prontas para mostrar só ciclos <strong>em andamento</strong>, <strong>aguardando</strong>, <strong>concluídos</strong>, <strong>cancelados</strong>, com <strong>erro</strong>, <strong>abortados</strong>, <strong>pausados</strong> ou <strong>atrasados</strong>.
+    Há também entradas para filtrar pela <strong>data de início</strong> e para <strong>montar um filtro à sua medida</strong>, se precisar de algo mais específico.
+    Pense no funil como uma “peneira”: a lista mostra só o que passa pela condição que você escolheu.
+  </p>
+  <figure class="manual-figure">
+    <img class="manual-menu-img" src="/afr_supervisorio_ciclos/static/doc/todos_ciclos_menu_filtros.svg" width="240" height="340" alt="Menu suspenso Filtros com opções de situação do ciclo e data"/>
+    <figcaption><strong>Figura 5 —</strong> Exemplo do menu <strong>Filtros</strong> com situações e opções de data.</figcaption>
+  </figure>
+
+  <h4>Agrupar por (ícone de camadas)</h4>
+  <p>
+    <strong>Agrupar por</strong> não apaga dados: apenas <strong>organiza</strong> a mesma lista em grupos.
+    Por exemplo, se agrupar por <strong>Equipamento</strong>, os ciclos ficam reunidos sob o nome de cada aparelho; se agrupar por <strong>Status</strong>, ficam separados por situação (concluído, em andamento, etc.).
+    O menu oferece opções como <strong>Equipamento</strong>, <strong>Apelido</strong>, <strong>Categoria de equipamento</strong>, <strong>Tipo de ciclo</strong> e <strong>Status</strong>; no fim costuma haver uma opção para <strong>agrupamento personalizado</strong>, para quem precisa de um critério diferente.
+  </p>
+  <figure class="manual-figure">
+    <img class="manual-menu-img" src="/afr_supervisorio_ciclos/static/doc/todos_ciclos_menu_agrupar.svg" width="320" height="260" alt="Menu suspenso Agrupar por com equipamento, apelido, categoria, tipo de ciclo e status"/>
+    <figcaption><strong>Figura 6 —</strong> Exemplo do menu <strong>Agrupar por</strong>.</figcaption>
+  </figure>
+
+  <h4>Como funciona o Pesquisar…</h4>
+  <p>
+    Quando você <strong>começa a digitar</strong> na caixa <strong>Pesquisar…</strong>, o <strong>sistema AFR Supervisório</strong> mostra uma lista de <strong>onde</strong> procurar o texto: por exemplo no <strong>código do ciclo</strong>, no <strong>equipamento</strong>, no <strong>apelido</strong>, no <strong>tipo de ciclo</strong>, no <strong>ciclo selecionado</strong> (receita), no <strong>operador</strong> ou no <strong>lote</strong>.
+    Você escolhe uma dessas linhas para dizer “procure só aqui”; assim a busca fica mais certeira do que misturar tudo ao mesmo tempo.
+    Itens com uma <strong>setinha</strong> ao lado costumam abrir mais opções quando você passa o rato ou clica.
+  </p>
+  <figure class="manual-figure">
+    <img class="manual-menu-img" src="/afr_supervisorio_ciclos/static/doc/todos_ciclos_pesquisa_inteligente.svg" width="1000" height="238" alt="Campo de pesquisa com letra digitada e lista de campos onde pesquisar"/>
+    <figcaption><strong>Figura 7 —</strong> Exemplo: ao digitar, o sistema sugere <em>em qual informação</em> pesquisar.</figcaption>
+  </figure>
+  <p>
+    À direita da caixa de pesquisa costuma haver um <strong>ícone de tracinhos com pontos</strong> ligado às colunas da lista (mostrar ou esconder colunas), separado dos botões <strong>Filtros</strong> e <strong>Agrupar por</strong> — não confunda: filtros mudam <em>quais linhas</em> aparecem; colunas mudam <em>quais colunas</em> da tabela você enxerga.
+  </p>
+
+  <p>O <strong>painel à esquerda</strong> da tabela (blocos <strong>Equipamento</strong>, <strong>Ciclo selecionado</strong>, <strong>Status</strong>, etc.) é o mesmo tipo de ajuda mostrado na <strong>Figura 2</strong>; aqui na seção 3.2 falamos também da <strong>faixa de pesquisa</strong> no topo — os dois recursos podem ser usados <em>juntos</em> para afinar a lista.</p>
+  <p class="note">
+    Ao abrir “Todos os Ciclos”, o sistema pode já vir com um filtro ligado (por exemplo, só ciclos de um tipo). Se a lista vier vazia, confira se há <strong>filtro ativo</strong> (menu <strong>Filtros</strong> ou painel à esquerda) e limpe o que não precisar.
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-3-3">3.3 Situações do ciclo (o que cada uma significa)</h3>
+  <table>
+    <thead><tr><th>Indicador na interface</th><th>Interpretação operacional</th></tr></thead>
+    <tbody>
+      <tr><td>Aguardando</td><td>O ciclo ainda não começou de fato no fluxo manual (quando alguém usa os botões Iniciar/Concluir nesse modo).</td></tr>
+      <tr><td>Em andamento</td><td>O ciclo está em execução.</td></tr>
+      <tr><td>Pausado</td><td>Ficou interrompido temporariamente (em telas específicas, como lavadora ultrassônica).</td></tr>
+      <tr><td>Concluído</td><td>Finalizado com sucesso no fluxo operacional.</td></tr>
+      <tr><td>Cancelado / Reprovado</td><td>Não vale como ciclo válido; na leitura automática da pasta, o sistema <strong>não atualiza</strong> de novo um ciclo que já esteja cancelado.</td></tr>
+      <tr><td>Erro</td><td>Algo falhou no processamento ou nos dados.</td></tr>
+      <tr><td>Abortado</td><td>O processo foi interrompido antes do fim normal.</td></tr>
+    </tbody>
+  </table>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-3-4">3.4 “Atrasado” na lista</h3>
+  <p>
+    O sistema compara o <strong>tempo que o ciclo levou</strong> (ou está levando, se ainda não terminou) com o
+    <strong>tempo previsto</strong> que está cadastrado no “ciclo selecionado” (tempo estimado em minutos).
+    Assim ele avisa se o processo passou do tempo esperado, se está adiantado ou no prazo.
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h2 id="sec-4">4. Ficha detalhada do ciclo</h2>
+  <p>
+    Ao abrir um ciclo, a interface apresenta uma <strong>ficha</strong> organizada em <strong>abas</strong> superiores, análogas a separadores de dossiê: cada aba reúne um conjunto documental específico.
+    A seleção do nome da aba altera o conteúdo exibido, mantendo-se sempre o mesmo registro de ciclo.
+    A ordem habitual no Supervisório é: <strong>Arquivos</strong>, <strong>Gráfico do Ciclo</strong>, <strong>Assinatura</strong>, <strong>Indicador Biológico</strong>, <strong>Observações</strong>, <strong>Fotos do Ciclo</strong> e, quando contratado ou configurado, <strong>Materiais esterilizados</strong> (esta última depende do módulo complementar de materiais associados ao ciclo).
+  </p>
+  <p>
+    Nas subsecções seguintes descrevem-se a <strong>finalidade de cada aba</strong>, o <strong>significado dos campos</strong> e as <strong>orientações de preenchimento</strong> quando couber ao fluxo de trabalho do profissional.
+    As figuras correspondem a exemplos reais; rótulos podem diferir ligeiramente conforme tradução ou personalização da base, sem alterar a lógica operacional.
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-4-1">4.1 Cabeçalho</h3>
+  <p>No topo da ficha (acima das abas) você vê o <strong>código do ciclo</strong> em destaque (muitas vezes é o mesmo nome do arquivo da fita, sem a extensão .txt), o equipamento, apelido, lote, datas, duração e duração prevista.</p>
+  <p class="note">
+    Alguns campos técnicos (tipo de ciclo, qual receita foi selecionada, operador, empresa) podem aparecer só para <strong>administradores</strong>, conforme a configuração da sua tela.
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-4-2">4.2 Aba “Arquivos”</h3>
+  <p>
+    Aqui fica tudo ligado ao <strong>arquivo da fita digital</strong> e ao <strong>texto bruto</strong> que o equipamento gerou.
+    O campo <strong>Caminho do arquivo</strong> mostra onde o arquivo está guardado no servidor — em geral <strong>só administradores</strong> precisam olhar para isso.
+    Em <strong>Baixe aqui</strong> (ou link semelhante) você pode <strong>baixar</strong> o relatório em <strong>PDF</strong> e/ou o arquivo em <strong>TXT</strong>, quando existirem.
+    Mais abaixo aparecem duas áreas de leitura: de um lado o <strong>texto completo</strong> da fita (cabeçalho, fases, parâmetros); do outro um <strong>resumo em números</strong> (mínimos, máximos, médias por fase), útil para conferência técnica ou auditoria.
+  </p>
+  <figure class="manual-figure">
+    <img class="manual-menu-img" src="/afr_supervisorio_ciclos/static/doc/ciclo_aba_arquivos.png" width="992" height="365" alt="Aba Arquivos: caminho do arquivo, links para PDF e TXT, texto da fita e resumo numérico"/>
+    <figcaption><strong>Figura 15 —</strong> Aba <strong>Arquivos</strong>: caminho no servidor, transferências e leitura da fita.</figcaption>
+  </figure>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-4-3">4.3 Aba “Gráfico do Ciclo”</h3>
+  <p>
+    Quando o sistema já <strong>gerou o gráfico</strong>, esta aba mostra a <strong>imagem das curvas</strong> (temperatura, pressão, humidade, etc.) ao longo do tempo, com as <strong>fases do ciclo</strong> (por exemplo vácuo, esterilização, lavagem) marcadas no eixo do tempo.
+    É a prova visual de que o processo seguiu o perfil esperado; use para conferir rapidamente se houve oscilações estranhas.
+    Se a sua empresa permitir, um administrador pode usar o botão <strong>Atualizar gráfico</strong> no topo da ficha para <strong>regenerar</strong> a imagem a partir dos dados atuais.
+    Se a aba não aparecer ou estiver vazia, pode ser que o gráfico ainda não tenha sido gerado para aquele ciclo.
+  </p>
+  <figure class="manual-figure">
+    <img class="manual-menu-img" src="/afr_supervisorio_ciclos/static/doc/ciclo_aba_grafico.png" width="990" height="613" alt="Aba Gráfico do Ciclo: curvas de temperatura, humidade e pressão ao longo do tempo com fases assinaladas"/>
+    <figcaption><strong>Figura 16 —</strong> Aba <strong>Gráfico do Ciclo</strong>: curvas paramétricas ao longo do processo.</figcaption>
+  </figure>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-4-4">4.4 Aba “Assinatura”</h3>
+  <p>
+    Serve para registrar <strong>quem validou o ciclo</strong> e em que <strong>data e hora</strong>, usando os dados profissionais e a <strong>imagem da assinatura</strong> que estão no cadastro do <strong>funcionário</strong>.
+    Depois de assinar, a aba mostra o <strong>registro da assinatura</strong> (ciclo assinado, nome do assinante, data) e os <strong>dados do assinante</strong> que sairão no relatório (documentação, conselho, número do conselho, CPF e desenho da assinatura).
+    Os pequenos <strong>ícones de ajuda</strong> ao lado dos rótulos, quando existirem, explicam o campo em uma dica curta.
+  </p>
+  <p>
+    Para assinar pela primeira vez, use o botão <strong>Assinar ciclo</strong> no <strong>topo da ficha</strong> (não dentro desta aba). O sistema associa o seu <strong>usuário</strong> ao <strong>funcionário ligado a esse usuário</strong>. Um administrador pode, em alguns casos, escolher outra pessoa no campo <strong>Assinante</strong> antes de confirmar.
+    <strong>Remover assinatura</strong> é ação de administrador e pede confirmação.
+  </p>
+  <p class="warn">
+    Se o seu login não estiver ligado a nenhum funcionário, ou se faltar a imagem da assinatura no cadastro do funcionário, o sistema avisa e não deixa assinar até corrigir isso em <strong>Funcionários</strong> (veja a seção 11).
+  </p>
+  <figure class="manual-figure">
+    <img class="manual-menu-img" src="/afr_supervisorio_ciclos/static/doc/ciclo_aba_assinatura.png" width="968" height="508" alt="Aba Assinatura: registro da assinatura e dados do assinante com imagem da assinatura"/>
+    <figcaption><strong>Figura 17 —</strong> Aba <strong>Assinatura</strong> após o ciclo estar assinado (exemplo).</figcaption>
+  </figure>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-4-5">4.5 Aba “Indicador Biológico”</h3>
+  <p>
+    Use quando a sua rotina exige registro do <strong>indicador biológico (IB)</strong> usado naquela carga.
+    Em <strong>Identificação do IB</strong>: escolha o <strong>lote</strong> do indicador a partir do cadastro da empresa (marca e modelo enchem sozinhos quando o lote está certo).
+    Em <strong>Incubação e resultado</strong>: preencha a <strong>data de início</strong> e a <strong>data de fim</strong> da incubação tal como o laboratório informou e indique o <strong>resultado</strong> (por exemplo <strong>Negativo</strong> ou <strong>Positivo</strong>) conforme a leitura oficial.
+    Os ícones de ajuda ao lado dos nomes dos campos ajudam a lembrar o que cada um significa.
+  </p>
+  <figure class="manual-figure">
+    <img class="manual-menu-img" src="/afr_supervisorio_ciclos/static/doc/ciclo_aba_indicador_biologico.png" width="1002" height="291" alt="Aba Indicador Biológico: lote, marca, modelo, datas de incubação e resultado"/>
+    <figcaption><strong>Figura 18 —</strong> Aba <strong>Indicador Biológico</strong> (exemplo).</figcaption>
+  </figure>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-4-6">4.6 Aba “Observações”</h3>
+  <p>
+    É um <strong>campo de texto livre</strong> para anotar o que for importante sobre aquele ciclo: ocorrências na carga, troca de programa, nota da qualidade, telefone do responsável, etc.
+    Não há lista nem botões especiais — escreva diretamente na caixa e guarde a ficha quando o sistema pedir.
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-4-7">4.7 Aba “Fotos do Ciclo”</h3>
+  <p>
+    Permite anexar <strong>várias fotografias</strong> como prova visual (carga dentro do equipamento, indicador químico, tela do aparelho, etiquetas, etc.).
+    Cada linha da tabela é uma foto: preencha um <strong>título</strong> curto, uma <strong>legenda</strong> mais descritiva se quiser, e carregue a <strong>imagem</strong>.
+    A <strong>data de criação</strong> e o <strong>usuário</strong> costumam ser preenchidos automaticamente.
+    Use o ícone de <strong>reordenar</strong> (setas verticais) à esquerda para mudar a ordem em que as fotos aparecem nos relatórios; use <strong>Adicionar uma linha</strong> para incluir outra foto e o ícone da <strong>lixeira</strong> para remover uma linha que tenha sido posta por engano.
+  </p>
+  <figure class="manual-figure">
+    <img class="manual-menu-img" src="/afr_supervisorio_ciclos/static/doc/ciclo_aba_fotos.png" width="1000" height="255" alt="Aba Fotos do Ciclo: tabela com título, legenda, miniatura, data e usuário"/>
+    <figcaption><strong>Figura 19 —</strong> Aba <strong>Fotos do Ciclo</strong> (exemplo).</figcaption>
+  </figure>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-4-8">4.8 Aba “Materiais esterilizados”</h3>
+  <p>
+    Esta aba <strong>só existe</strong> quando a sua empresa instalou a parte opcional que <strong>associa materiais ao ciclo</strong> (lista do que entrou na carga).
+    Funciona como uma <strong>tabela editável</strong>: em cada linha indique o <strong>material</strong>, a <strong>quantidade</strong>, a <strong>unidade</strong> (caixa, kit, etc.), o <strong>lote</strong> do artigo, o <strong>fabricante</strong> e, se fizer sentido, a <strong>validade</strong>.
+    Use <strong>Adicionar uma linha</strong> para incluir mais artigos e o ícone de <strong>eliminar</strong> à direita para retirar uma linha errada.
+    Preencha com o mesmo critério que a qualidade ou o hospital pedir para rastreabilidade.
+  </p>
+  <figure class="manual-figure">
+    <img class="manual-menu-img" src="/afr_supervisorio_ciclos/static/doc/ciclo_aba_materiais_esterilizados.png" width="1004" height="230" alt="Aba Materiais esterilizados: tabela com material, quantidade, unidade, lote, fabricante e validade"/>
+    <figcaption><strong>Figura 20 —</strong> Aba <strong>Materiais esterilizados</strong> (exemplo; só em instalações com essa função).</figcaption>
+  </figure>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-4-9">4.9 Rodapé: conversas e lembretes</h3>
+  <p>Igual a outros documentos do <strong>sistema AFR Supervisório</strong>: seguidores, mensagens e atividades. Use para comunicação da equipe sobre aquele ciclo.</p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h2 id="sec-5">5. Botões no topo da ficha (resumo)</h2>
+  <p>Dependendo da sua permissão e da situação do ciclo, podem aparecer botões como:</p>
+  <table>
+    <thead><tr><th>Botão</th><th>O que faz</th><th>Quem costuma ver</th></tr></thead>
+    <tbody>
+      <tr><td>Iniciar</td><td>Marca o ciclo como iniciado e grava a data de início.</td><td>Administrador; só quando está “Aguardando”.</td></tr>
+      <tr><td>Concluir</td><td>Marca como concluído.</td><td>Administrador; só quando está “Em andamento”.</td></tr>
+      <tr><td>Reprovar</td><td>Marca como cancelado/reprovado (não pode em alguns casos já finalizados).</td><td>Conforme permissão e situação.</td></tr>
+      <tr><td>Ler Diretório</td><td>Abre uma janela para escolher datas (e equipamento) e trazer arquivos da pasta configurada.</td><td>Administrador.</td></tr>
+      <tr><td>Atualizar Dados</td><td>Lê de novo o arquivo da fita no servidor e atualiza a ficha.</td><td>Administrador; só se já existir arquivo ligado ao ciclo.</td></tr>
+      <tr><td>Atualizar gráfico</td><td>Gera de novo o gráfico a partir dos dados.</td><td>Administrador.</td></tr>
+      <tr><td>Assinar ciclo</td><td>Grava a assinatura.</td><td>Some quando o ciclo já está assinado.</td></tr>
+      <tr><td>Remover assinatura</td><td>Apaga o registro de assinatura.</td><td>Administrador.</td></tr>
+    </tbody>
+  </table>
+  <p class="note">
+    Em equipamentos tratados pela ficha “Ciclo Ultrassônica”, podem aparecer também <strong>Pausar</strong> e <strong>Cancelar</strong> no fluxo manual, além de Iniciar e Concluir.
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h2 id="sec-6">6. Como os ciclos entram no sistema (leitura da pasta)</h2>
+  <p>Normalmente um <strong>administrador</strong> configura cada equipamento com:</p>
+  <ul>
+    <li><strong>Tipo de ciclo</strong> — define como o sistema interpreta a fita daquele aparelho.</li>
+    <li>No tipo de ciclo, um <strong>caminho base</strong> usado internamente na leitura.</li>
+    <li>No equipamento, a <strong>pasta</strong> onde os arquivos de fita chegam no servidor (caminho de rede ou pasta montada no <strong>sistema AFR Supervisório</strong>).</li>
+  </ul>
+  <p>Sem tipo de ciclo e sem pasta configurados, a leitura não funciona: o sistema avisa o que falta.</p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-6-1">Assistente “Ler Diretório”</h3>
+  <p>Você informa a <strong>data inicial</strong> e a <strong>data final</strong> do período desejado e, se precisar, o equipamento. Ao confirmar, o sistema varre a pasta, cria ciclos novos e <strong>atualiza</strong> os que já existiam, exceto os que estão <strong>cancelados</strong>.</p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h2 id="sec-7">7. Tipos de ciclo e “Ciclo selecionado”</h2>
+  <p>Em <strong>Configurações → Tipos de Ciclo</strong> ficam os dados técnicos de cada linha de equipamento: nome, código, textos explicativos, como ler o arquivo, etc.</p>
+  <p>Dentro de cada tipo há a lista de <strong>características de ciclo</strong> — por exemplo receitas com <strong>tempo estimado</strong>, temperatura e pressão. Esse tempo estimado é o que o Supervisório usa para saber se o processo está atrasado ou no prazo.</p>
+  <p>Há também um campo de <strong>informações complementares</strong> que pode ser impresso no relatório em PDF depois do gráfico, quando a sua empresa usar esse texto.</p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h2 id="sec-8">8. Cadastro de Indicadores Biológicos</h2>
+  <p>Antes de usar na ficha do ciclo, cadastre cada lote com marca, modelo e datas de fabricação e validade. O próprio sistema indica se o lote está <strong>vencido</strong> pela data de validade.</p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h2 id="sec-9">9. Verificar se a fita digital é autêntica</h2>
+  <h3 id="sec-9-1">Pelo menu no sistema AFR Supervisório</h3>
+  <ol>
+    <li>Abra <strong>Supervisório → Verificar Autenticidade</strong>.</li>
+    <li>Anexe o arquivo da fita.</li>
+    <li>Clique em <strong>Verificar</strong>.</li>
+  </ol>
+  <p>O resultado aparece na mesma janela. Se surgir aviso de chave não configurada, um administrador deve acessar <strong>Ajustes</strong>, conforme o procedimento de configuração avançada definido na implantação, localizar a seção <strong>Supervisório</strong> e carregar a <strong>chave pública</strong> fornecida na implantação — requisito para validar a assinatura digital dos arquivos.</p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-9-2">Pela página do site (se a sua empresa habilitou)</h3>
+  <p>
+    Pode existir uma página pública no endereço de verificação de autenticidade do site, onde qualquer pessoa envia o arquivo e vê o resultado. Isso depende do site e da configuração feita na implantação.
+    Nessa página, o botão de confirmar a verificação costuma trazer um <strong>ícone de visto</strong>
+    <span class="manual-inline-icons" aria-hidden="true" title="Ícone de confirmação"><i class="fa fa-check"></i></span>
+    ao lado do texto.
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h2 id="sec-10">10. Imprimir o ciclo em PDF</h2>
+  <p>
+    Na ficha do ciclo, use o menu de impressão do <strong>sistema AFR Supervisório</strong> no painel superior (botão com o ícone
+    <span class="manual-inline-icons" aria-hidden="true" title="Ícone de impressão"><i class="fa fa-print"></i></span>
+    e o rótulo traduzido, por exemplo “Imprimir” / “Print”). Escolha o relatório desejado, como “Impressão de CICLOS” ou o nome que a sua base usar.
+    O arquivo sugerido costuma vir com o nome do ciclo.
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h2 id="sec-11">11. Preparar funcionários para assinar ciclos</h2>
+  <!-- Ícone do app Funcionários: URL estática /hr/static/... -->
+  <p>
+    Para chegar ao cadastro, abra primeiro o <strong>menu Apps</strong> do <strong>sistema AFR Supervisório</strong> (ícone de quadradinhos no canto superior).
+    Na lista de aplicativos, procure <strong>Funcionários</strong>
+    <img class="manual-app-icon" src="/hr/static/description/icon.png" width="22" height="22" alt="Ícone do aplicativo Funcionários no menu Apps"/>
+    e clique para entrar no aplicativo.
+    Em seguida use o item de menu que lista as pessoas — em muitas bases aparece como <strong>Funcionários</strong> de novo na faixa do app; o rótulo pode variar (por exemplo <strong>Colaboradores</strong> ou <strong>Employees</strong>, conforme a tradução da sua instalação).
+    Abra a <strong>ficha</strong> da pessoa que vai assinar ciclos (na visão em cartões, <strong>clique no cartão</strong> da pessoa).
+  </p>
+  <figure class="manual-figure">
+    <img
+      class="manual-menu-img"
+      src="/afr_supervisorio_ciclos/static/doc/manual_funcionarios_tela_exemplo.png"
+      width="975"
+      height="247"
+      alt="Exemplo da tela Funcionários: faixa roxa do aplicativo com menus Funcionários, Departamentos e Configuração; título Funcionários, campo de pesquisa e cartões de colaboradores"/>
+    <figcaption><strong>Figura 8 —</strong> Exemplo da tela <strong>Funcionários</strong> após abrir o aplicativo (faixa do aplicativo, pesquisa e lista em cartões). Clique no cartão do profissional para abrir a ficha e a aba <strong>Assinatura de ciclos</strong>.</figcaption>
+  </figure>
+  <p>Nessa ficha, clique na aba <strong>Assinatura de ciclos</strong>. Nela ficam a identificação profissional que sai no relatório do ciclo (por exemplo CPF para assinatura), os dados de conselho e a área de <strong>assinatura digital</strong> — o exemplo na <strong>Figura 21</strong> ilustra a disposição habitual dos campos na tela.</p>
+  <figure class="manual-figure">
+    <img
+      class="manual-menu-img"
+      src="/afr_supervisorio_ciclos/static/doc/manual_funcionarios_ficha_assinatura_ciclos.png"
+      width="1024"
+      height="847"
+      alt="Ficha do funcionário no aplicativo Funcionários: aba Assinatura de ciclos com identificação profissional (documentação, conselho, CPF para assinatura de ciclo) e secção de assinatura digital"/>
+    <figcaption><strong>Figura 21 —</strong> Exemplo da ficha do funcionário com a aba <strong>Assinatura de ciclos</strong> selecionada (identificação profissional e assinatura digital).</figcaption>
+  </figure>
+  <p>Preencha em especial:</p>
+  <ul>
+    <li>documentação profissional, conselho de classe, número no conselho e CPF que devem sair no relatório;</li>
+    <li>a <strong>imagem da assinatura</strong> (desenhar na tela, carregar imagem ou usar a opção automática, conforme a tela mostrar).</li>
+  </ul>
+  <p>É obrigatório que o <strong>usuário de login</strong> da pessoa que assina esteja <strong>ligado ao cadastro do funcionário</strong> (campo de usuário relacionado no funcionário). Sem isso, na hora de assinar o ciclo o sistema diz que não encontrou funcionário para o usuário.</p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <!-- Seção 12: fluxo alinhado a afr_supervisorio_ciclos_extras (wizard.print.laudo). Manual sem aba Assinatura do wizard — assinatura no PDF quando ciclo assinado: template laudo_liberacao_template.xml (is_signed). -->
+  <h2 id="sec-12">12. Gerar laudo de liberação (PDF)</h2>
+  <p>
+    O <strong>laudo de liberação de produtos</strong> é um relatório em PDF que reúne dados do ciclo e os <strong>materiais que você escolher</strong> entre os já ligados àquele ciclo.
+    Essa função existe quando a sua empresa tiver instalada a <strong>extensão do supervisório</strong> que acrescenta materiais ao ciclo e o assistente de laudo (definição feita na implantação).
+    Se o botão descrito abaixo não existir na sua base, é porque essa parte opcional não está ativa.
+  </p>
+  <p class="note">
+    Na ficha do ciclo, o botão <strong>Gerar Laudo de Liberação</strong> <em>só é mostrado</em> quando já há <strong>pelo menos uma linha</strong> cadastrada na aba <strong>Materiais Esterilizados</strong> desse ciclo (o sistema usa a contagem dessas linhas).
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-12-1">12.1 Incluir materiais na ficha do ciclo</h3>
+  <p>
+    Abra o ciclo em questão e vá à aba <strong>Materiais Esterilizados</strong>.
+    A <strong>Figura 22</strong> mostra um exemplo dessa aba na ficha: tabela com colunas <strong>Material</strong>, <strong>Quantidade</strong>, <strong>Unidade</strong>, <strong>Lote</strong>, <strong>Fabricante</strong> e <strong>Validade</strong>; em cada linha costuma haver um ícone para <strong>apagar</strong> o registro; abaixo da lista use o link <strong>Adicionar uma linha</strong> para incluir mais materiais.
+  </p>
+  <figure class="manual-figure">
+    <img
+      class="manual-menu-img"
+      src="/afr_supervisorio_ciclos/static/doc/manual_ciclo_aba_materiais_esterilizados.png"
+      width="1024"
+      height="389"
+      alt="Ficha do ciclo com aba Materiais Esterilizados ativa: tabela de materiais com quantidade, unidade, lote, fabricante e validade, link Adicionar uma linha"/>
+    <figcaption><strong>Figura 22 —</strong> Exemplo da aba <strong>Materiais Esterilizados</strong> na ficha do ciclo (lista de linhas e <strong>Adicionar uma linha</strong>).</figcaption>
+  </figure>
+  <p>
+    Ao clicar em <strong>Adicionar uma linha</strong>, abre-se a janela de seleção de <strong>Materiais do Ciclo</strong>, onde é possível pesquisar, marcar a caixa da linha desejada e confirmar com <strong>Selecionar</strong> (ou utilizar a ação de inclusão de novo registro prevista na mesma janela, conforme a rotina institucional).
+    Cada linha na ficha traz descrição do material, quantidade, unidade, lote, fabricante e validade, quando preenchidos — ver a <strong>Figura 23</strong>.
+  </p>
+  <figure class="manual-figure">
+    <img
+      class="manual-menu-img"
+      src="/afr_supervisorio_ciclos/static/doc/manual_laudo_adicionar_materiais_ciclo.png"
+      width="965"
+      height="370"
+      alt="Janela Adicionar Materiais do Ciclo: pesquisa, tabela com colunas Ciclo, Material, Quantidade, Unidade, Lote e Fabricante, botões de confirmação e fecho"/>
+    <figcaption><strong>Figura 23 —</strong> Exemplo da janela <strong>Adicionar: Materiais do Ciclo</strong> para vincular materiais à ficha (passo necessário para o botão do laudo aparecer).</figcaption>
+  </figure>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-12-2">12.2 Abrir o assistente “Gerar Laudo de Liberação”</h3>
+  <p>
+    Com materiais já associados ao ciclo, no <strong>topo do formulário</strong> do ciclo aparece o botão destacado <strong>Gerar Laudo de Liberação</strong> (ícone de documento).
+    Ao clicar, abre-se o assistente com o <strong>código do ciclo</strong>, o subtítulo <strong>Laudo de Liberação de Produtos</strong> e o contador <strong>Materiais Selecionados</strong> (no assistente esse número reflete quantas linhas você marcou para sair no PDF, não o total da aba do ciclo).
+  </p>
+  <figure class="manual-figure">
+    <img
+      class="manual-menu-img"
+      src="/afr_supervisorio_ciclos/static/doc/manual_laudo_ficha_ciclo_botao.png"
+      width="927"
+      height="264"
+      alt="Ficha do ciclo no Supervisório: botão Gerar Laudo de Liberação entre outras ações, situação Concluído, código e equipamento"/>
+    <figcaption><strong>Figura 24 —</strong> Exemplo da ficha do ciclo com o botão <strong>Gerar Laudo de Liberação</strong> visível (ciclo com materiais já cadastrados).</figcaption>
+  </figure>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-12-3">12.3 Escolher os materiais e gerar o PDF</h3>
+  <p>
+    Depois de abrir <strong>Gerar Laudo de Liberação</strong>, o assistente mostra os <strong>materiais do ciclo</strong> que podem entrar no documento — ou seja, as linhas já associadas àquele ciclo na aba <strong>Materiais Esterilizados</strong>.
+    <strong>Marque a caixa</strong> à esquerda de cada linha que deve <strong>aparecer no laudo</strong>; as não marcadas não saem no PDF.
+    Pode usar <strong>Pesquisar…</strong>, <strong>Filtros</strong>, <strong>Agrupar por</strong> e <strong>Favoritos</strong> para achar itens numa lista grande; a paginação indica quantos registros estão visíveis (por exemplo <strong>1–3 / 3</strong>).
+    Ao lado da tabela costumam aparecer os botões <strong>Selecionar</strong> (confirma a escolha), uma ação para <strong>incluir novo material do ciclo</strong> (quando prevista na instalação) e <strong>Fechar</strong>; um texto do tipo <strong>«N selecionado(s)»</strong> indica quantas linhas estão marcadas.
+    No rodapé do assistente, enquanto faltar escolha válida para o laudo, pode aparecer o aviso <strong>«Selecione pelo menos um material para gerar o laudo»</strong>; quando houver pelo menos uma linha selecionada para o documento, fica disponível o botão <strong>Gerar Laudo</strong> (impressão do PDF). O botão <strong>Cancelar</strong> no rodapé serve para fechar o assistente sem gerar o PDF.
+  </p>
+  <figure class="manual-figure">
+    <img
+      class="manual-menu-img"
+      src="/afr_supervisorio_ciclos/static/doc/manual_laudo_escolha_materiais_para_laudo.png"
+      width="968"
+      height="590"
+      alt="Lista para o laudo: janela com título Adicionar Materiais do Ciclo, tabela com Ciclo, Material, Quantidade, Unidade, Lote e Fabricante, caixas de seleção, botões de confirmação e fecho, indicador de selecionados e aviso para escolher material para o laudo"/>
+    <figcaption><strong>Figura 25 —</strong> Exemplo da etapa em que se escolhe <strong>quais materiais do ciclo</strong> entram no laudo (marcação nas caixas, confirmação com <strong>Selecionar</strong> e aviso até existir seleção para gerar o PDF).</figcaption>
+  </figure>
+  <p>
+    Depois de confirmar a seleção dos materiais desejados, use <strong>Gerar Laudo</strong> no assistente para transferir ou abrir o PDF (o navegador ou o <strong>sistema AFR Supervisório</strong> apresentam as opções habituais de documento, conforme a configuração do posto de trabalho).
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-12-4">12.4 O que vem no PDF do laudo (exemplo)</h3>
+  <p>
+    O relatório impresso segue o modelo definido no sistema. A <strong>Figura 26</strong> é um exemplo realista de laudo gerado; abaixo resume o que cada bloco costuma trazer (a sua empresa pode ter dados vazios em campos não usados).
+  </p>
+  <figure class="manual-figure">
+    <img
+      class="manual-menu-img"
+      src="/afr_supervisorio_ciclos/static/doc/manual_laudo_pdf_exemplo.png"
+      width="553"
+      height="721"
+      alt="Exemplo de PDF: Laudo de Liberação de Produtos Esterilizados com QR code, dados do ciclo, indicador biológico, tabela de materiais, estatísticas, gráfico e conclusão com assinatura"/>
+    <figcaption><strong>Figura 26 —</strong> Exemplo de <strong>laudo de liberação</strong> em PDF após <strong>Gerar Laudo</strong>.</figcaption>
+  </figure>
+  <ul>
+    <li><strong>Título e autenticidade</strong> — No topo figura o título <strong>LAUDO DE LIBERAÇÃO DE PRODUTOS ESTERILIZADOS</strong>. No canto superior direito pode aparecer um <strong>código QR</strong> e um <strong>endereço curto</strong> para verificar a autenticidade do documento.</li>
+    <li><strong>Dados do ciclo</strong> — Identificação do processo: <strong>Ciclo</strong> (código), <strong>Cod. Carga</strong>, <strong>Equipamento</strong>, <strong>Duração</strong> em horas e minutos, <strong>Data início</strong> e <strong>Data fim</strong>, <strong>Status</strong> (situação do ciclo) e <strong>Ciclo selecionado</strong> (receita ou programa associado).</li>
+    <li><strong>Indicador biológico</strong> — Se na ficha do ciclo existir indicador preenchido, o PDF inclui a secção com <strong>lote</strong>, <strong>marca</strong>, <strong>modelo</strong>, <strong>resultado</strong>, datas de <strong>início</strong> e <strong>fim</strong> de incubação. Se não houver indicador, essa secção não aparece.</li>
+    <li><strong>Observações</strong> — Texto do campo de <strong>observações</strong> do ciclo, quando existir.</li>
+    <li><strong>Materiais esterilizados</strong> — Tabela só com as linhas que você <strong>selecionou no assistente</strong> para este laudo: número do item, <strong>produto</strong>, <strong>fabricante</strong>, <strong>lote</strong>, <strong>quantidade</strong> e <strong>unidade</strong>. Se nada tiver sido selecionado, o modelo pode mostrar um aviso de que nenhum material foi escolhido.</li>
+    <li><strong>Estatísticas do ciclo</strong> — Quando o sistema tiver estatísticas calculadas para o ciclo, aparece uma tabela por <strong>fase</strong> do processo, com <strong>duração</strong> e, para cada grandeza registada (por exemplo pressão, temperatura, humidade, ETO), os valores <strong>mínimo</strong>, <strong>máximo</strong> e <strong>média</strong>. Se não houver dados, é exibida uma mensagem informativa.</li>
+    <li><strong>Gráfico do ciclo</strong> — Imagem do <strong>gráfico paramétrico</strong> guardada no ciclo, quando existir; caso contrário, mensagem de que não há gráfico.</li>
+    <li><strong>Conclusão</strong> — Parágrafo fixo do modelo sobre liberação para comercialização com base no indicador biológico, parâmetros físicos e referência às normas citadas no próprio PDF (RDC 291/2019, ISO 11135:2018 e ISO 11138-2:2016, conforme o texto impresso).</li>
+    <li><strong>Assinatura e aprovação</strong> — Quando o ciclo já foi <strong>assinado na ficha</strong> (<strong>Assinar ciclo</strong>), o laudo mostra a <strong>mesma assinatura e identificação profissional</strong> que o relatório <strong>Impressão de ciclos</strong> (imagem, documentação, conselho, data de assinatura eletrônica, etc.). Se o ciclo não estiver assinado, o bloco de assinatura segue a regra configurada na implantação (pode ficar em branco ou com dados alternativos).</li>
+    <li><strong>Fotos do ciclo</strong> — Se houver fotos anexadas ao ciclo, o PDF pode incluir <strong>páginas adicionais</strong>, uma por foto, com título, legenda e data.</li>
+  </ul>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <!-- Secção 13: roteiros alinhados a supervisorio_ciclos_views.xml (IB, assinatura), supervisorio_ciclos_extend_views.xml (materiais, botão laudo) e wizard_print_laudo_views.xml (assistente do laudo). -->
+  <h2 id="sec-13">13. Passos práticos (roteiros)</h2>
+  <p>
+    Os quatro roteiros abaixo correspondem às ações mais frequentes na ficha do ciclo e nos menus do Supervisório.
+    A ordem <strong>1 → 2 → 3</strong> pode ser adaptada à rotina da instituição; já o <strong>laudo (passo 4)</strong> exige, no mínimo, <strong>uma linha na aba Materiais Esterilizados</strong> do ciclo, quando a extensão de materiais estiver instalada (ver seção 12).
+  </p>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-13-1">13.1 Adicionar indicador biológico ao ciclo</h3>
+  <p class="note">
+    O lote do indicador deve existir no cadastro <strong>Supervisório → Indicadores Biológicos</strong> (campos principais no formulário: <strong>Lote</strong>, <strong>Marca</strong>, <strong>Modelo</strong>, datas de fabricação e validade). Na ficha do ciclo, o campo de lote permite também <strong>criar ou abrir</strong> o cadastro do indicador, conforme as permissões do seu usuário.
+  </p>
+  <ol>
+    <li>Acesse <strong>Supervisório → Ciclos → Todos os Ciclos</strong> e abra a <strong>ficha</strong> do ciclo desejado.</li>
+    <li>Selecione a aba <strong>Indicador Biológico</strong>.</li>
+    <li>No grupo <strong>Identificação do IB</strong>, no campo <strong>Lote do Indicador Biológico</strong>, escolha o lote correto; os campos <strong>Marca do IB</strong> e <strong>Modelo do IB</strong> preenchem-se automaticamente a partir desse cadastro (somente leitura na ficha do ciclo).</li>
+    <li>No grupo <strong>Incubação e Resultado</strong>, registre a <strong>Data de Início de Incubação</strong> e a <strong>Data de Fim de Incubação</strong> (data e hora, conforme o registro laboratorial).</li>
+    <li>Indique o <strong>Resultado do IB</strong>: <strong>Negativo</strong> ou <strong>Positivo</strong>, conforme a leitura oficial do indicador.</li>
+    <li>Guarde a ficha do ciclo (ação habitual de gravação do formulário no <strong>sistema AFR Supervisório</strong>).</li>
+  </ol>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-13-2">13.2 Adicionar materiais esterilizados ao ciclo</h3>
+  <p class="note">
+    A aba <strong>Materiais Esterilizados</strong> e o botão <strong>Gerar Laudo de Liberação</strong> surgem na ficha do ciclo apenas quando está instalada a <strong>extensão</strong> que acrescenta materiais ao modelo de ciclo (na base de dados da organização). Sem essa extensão, ignore este roteiro e o passo 4.
+  </p>
+  <ol>
+    <li>Abra a ficha do ciclo em <strong>Todos os Ciclos</strong>.</li>
+    <li>Selecione a aba <strong>Materiais Esterilizados</strong>.</li>
+    <li>Na <strong>lista editável</strong> (tabela no próprio formulário), inclua uma ou mais linhas — em geral através da opção para adicionar linha ao final da lista — e preencha, em cada linha, os campos exibidos: <strong>Material</strong> (referência ao catálogo de materiais), <strong>Quantidade</strong>, <strong>Unidade</strong>, <strong>Lote</strong>, <strong>Fabricante</strong> e <strong>Validade</strong>, conforme aplicável à carga.</li>
+    <li>Confirme que todas as linhas necessárias estão corretas e guarde a ficha. O contador de materiais no topo do formulário (área de botões de estatística) reflete o número de linhas associadas ao ciclo.</li>
+  </ol>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-13-3">13.3 Assinar o documento do ciclo</h3>
+  <p class="note">
+    O botão <strong>Assinar ciclo</strong> registra a assinatura com base no <strong>funcionário ligado ao seu usuário de acesso</strong> e na <strong>imagem da assinatura</strong> guardada na ficha do funcionário (aba <strong>Assinatura de ciclos</strong>). Se faltar vínculo ou imagem, o sistema exibe mensagem de erro e não grava a assinatura (ver seção 11).
+  </p>
+  <ol>
+    <li>Abra a ficha do ciclo que deve ser assinada.</li>
+    <li>No <strong>cabeçalho</strong> do formulário (faixa de botões acima do conteúdo), clique em <strong>Assinar ciclo</strong>. Este botão deixa de ser exibido quando o ciclo já estiver assinado.</li>
+    <li>Após a confirmação pela aplicação, verifique na aba <strong>Assinatura</strong> os dados do assinante e a data registada. A remoção da assinatura é reservada a perfis administrativos (<strong>Remover assinatura</strong>).</li>
+  </ol>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <h3 id="sec-13-4">13.4 Gerar o laudo de liberação (PDF)</h3>
+  <p class="note">
+    O botão <strong>Gerar Laudo de Liberação</strong> no cabeçalho da ficha só é apresentado quando existe <strong>pelo menos uma linha</strong> em <strong>Materiais Esterilizados</strong> para aquele ciclo. O assistente abre com o título <strong>Selecionar Materiais para o Laudo</strong> e o subtítulo <strong>Laudo de Liberação de Produtos</strong>.
+  </p>
+  <ol>
+    <li>Na ficha do ciclo com materiais já registados, no cabeçalho, clique em <strong>Gerar Laudo de Liberação</strong>.</li>
+    <li>No assistente, na página <strong>Materiais Disponíveis</strong>, marque as <strong>caixas de seleção</strong> das linhas que devem constar no PDF; o campo <strong>Materiais Selecionados</strong> indica quantas linhas ficaram escolhidas. Enquanto esse total for zero, o aviso <strong>«Selecione pelo menos um material para gerar o laudo»</strong> permanece e o botão <strong>Gerar Laudo</strong> fica oculto.</li>
+    <li>Opcional: na página <strong>Assinatura</strong> do assistente, defina o <strong>Tipo de assinatura</strong> (<strong>Automática (padrão da empresa)</strong>, <strong>Enviar imagem (PNG)</strong> ou <strong>Assinar digitalmente (desenho)</strong>), nome, cargo/função e data, quando o ciclo <em>não</em> estiver assinado eletronicamente na ficha — caso contrário, o texto de ajuda do assistente indica que o PDF reutiliza os mesmos dados do relatório <strong>Impressão de ciclos</strong>.</li>
+    <li>Clique em <strong>Gerar Laudo</strong> no rodapé do assistente para gerar o PDF (o comportamento de abertura ou download do arquivo depende do navegador e da configuração do posto de trabalho).</li>
+    <li>Utilize <strong>Cancelar</strong> no assistente para fechar sem gerar o documento.</li>
+  </ol>
+  <p class="manual-back-top"><a href="#topo">↑ Voltar ao topo</a></p>
+
+  <footer>
+    <p><a href="#topo">↑ Voltar ao topo</a> · <a href="#indice">Voltar ao índice</a></p>
+    <p>Este manual descreve o funcionamento da interface do Supervisório. Questões de política institucional (por exemplo competência para assinatura, critérios de uso de indicador biológico ou de materiais) devem ser dirimidas junto da qualidade, da CCIH ou da coordenação técnica da unidade.</p>
+  </footer>
+</body>
+</html>

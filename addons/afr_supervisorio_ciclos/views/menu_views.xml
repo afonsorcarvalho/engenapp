@@ -17,6 +17,13 @@
             <p class="o_view_nocontent_smiling_face">
                 Nenhum ciclo encontrado eles serão registrados automaticamente pelo sistema.
             </p>
+            <p>
+                Consulte o
+                <a href="/afr_supervisorio_ciclos/static/doc/manual_usuario_supervisorio.html" target="_blank" rel="noopener noreferrer">
+                    Manual do usuário (Supervisório)
+                </a>
+                ou use o menu <strong>Supervisório → Manual do usuário</strong>.
+            </p>
         </field>
     </record>
      <!-- Menu principal -->

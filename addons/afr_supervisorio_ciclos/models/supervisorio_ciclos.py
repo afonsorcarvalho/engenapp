@@ -62,6 +62,100 @@ class SupervisorioCiclos(models.Model):
     notes = fields.Text(string='Observações', tracking=True)
     operator_id = fields.Many2one('res.users', string='Operador', 
         default=lambda self: self.env.user, tracking=True)
+
+    # -------------------------------------------------------------------------
+    # Assinatura do ciclo (cadastro de conselho, CPF e imagem em hr.employee)
+    # -------------------------------------------------------------------------
+    signature_employee_id = fields.Many2one(
+        'hr.employee',
+        string='Assinante',
+        tracking=True,
+        help='Funcionário responsável pela assinatura. Dados de conselho, CPF e imagem vêm do cadastro do funcionário.',
+    )
+    signature_date = fields.Datetime(
+        string='Data da assinatura',
+        tracking=True,
+    )
+    is_signed = fields.Boolean(
+        string='Ciclo assinado',
+        compute='_compute_is_signed',
+        store=True,
+    )
+    signature_employee_name = fields.Char(
+        related='signature_employee_id.name',
+        string='Nome do assinante',
+        readonly=True,
+    )
+    signature_professional_documentation = fields.Char(
+        related='signature_employee_id.afr_professional_documentation',
+        string='Documentação (assinatura)',
+        readonly=True,
+    )
+    signature_professional_council = fields.Char(
+        related='signature_employee_id.afr_professional_council',
+        string='Conselho (assinatura)',
+        readonly=True,
+    )
+    signature_professional_council_number = fields.Char(
+        related='signature_employee_id.afr_professional_council_number',
+        string='Nº no conselho (assinatura)',
+        readonly=True,
+    )
+    signature_professional_cpf = fields.Char(
+        related='signature_employee_id.afr_professional_cpf',
+        string='CPF (assinatura)',
+        readonly=True,
+    )
+    signature_image = fields.Binary(
+        related='signature_employee_id.afr_signature_image',
+        string='Imagem da assinatura',
+        readonly=True,
+    )
+
+    @api.depends('signature_employee_id', 'signature_date')
+    def _compute_is_signed(self):
+        for rec in self:
+            rec.is_signed = bool(rec.signature_employee_id and rec.signature_date)
+
+    @api.constrains('signature_employee_id', 'signature_date')
+    def _check_signature_consistency(self):
+        for rec in self:
+            if bool(rec.signature_employee_id) != bool(rec.signature_date):
+                raise ValidationError(
+                    'Assinante e data da assinatura devem ser informados juntos, ou ambos vazios.'
+                )
+
+    def action_sign_cycle(self):
+        """Registra assinatura usando o funcionário do usuário atual ou o selecionado (Administradores)."""
+        self.ensure_one()
+        Employee = self.env['hr.employee']
+        if self.env.user.has_group('base.group_system') and self.signature_employee_id:
+            employee = self.signature_employee_id
+        else:
+            employee = Employee.search([('user_id', '=', self.env.uid)], limit=1)
+        if not employee:
+            raise UserError(
+                'Não há funcionário vinculado ao seu usuário. '
+                'Configure "Usuário relacionado" no cadastro do funcionário (Funcionários).'
+            )
+        if not employee.afr_signature_image:
+            raise UserError(
+                'Cadastre a imagem da assinatura no cadastro do funcionário antes de assinar o ciclo.'
+            )
+        self.write({
+            'signature_employee_id': employee.id,
+            'signature_date': fields.Datetime.now(),
+        })
+        return True
+
+    def action_clear_cycle_signature(self):
+        """Remove a assinatura do ciclo (uso administrativo)."""
+        self.ensure_one()
+        self.write({
+            'signature_employee_id': False,
+            'signature_date': False,
+        })
+        return True
     
     # Campos de Indicador Biológico (IB)
     # Relacionamento Many2one com o cadastro de Indicadores Biológicos
@@ -148,22 +242,47 @@ class SupervisorioCiclos(models.Model):
     #         else:
     #             record.download_url = False
 
+    # -------------------------------------------------------------------------
+    # Cache de leitura do TXT / estatísticas / gráfico
+    # -------------------------------------------------------------------------
+    # Motivação:
+    # - Esses campos eram store=False e, por isso, o Odoo recalculava (lendo/parsing
+    #   do arquivo + estatísticas + gráfico) a cada abertura do formulário.
+    # - Para acelerar, persistimos os resultados (store=True) e usamos o mtime do
+    #   arquivo como "chave" de invalidação do cache.
+    #
+    # Estratégia:
+    # - Guardamos em `cycle_file_mtime` a data/hora (UTC) da última modificação do
+    #   TXT usada para gerar os caches.
+    # - Ao abrir o registro (read), comparamos `os.path.getmtime(file_path)` com
+    #   `cycle_file_mtime`. Se mudou (ou se não existe), atualizamos `cycle_file_mtime`,
+    #   disparando o recompute dos campos armazenados.
+    #
+    # Observação de segurança:
+    # - A atualização do mtime/cache é feita com sudo() para não quebrar a abertura
+    #   do formulário em perfis com permissão de leitura mas sem permissão de escrita.
+    cycle_file_mtime = fields.Datetime(
+        string='Data de Modificação do TXT (cache)',
+        readonly=True,
+        help='Data/hora (UTC) da última modificação do arquivo TXT usada para montar a fita, estatísticas e gráfico.'
+    )
+
     cycle_statistics_txt = fields.Text(
         string='Estatísticas do Ciclo',
         compute='_compute_cycle_statistics_txt',
-        store=False,
+        store=True,
         help='Estatísticas do ciclo'
     )
     cycle_statistics_data = fields.Json(
         string='Dados das Estatísticas',
         compute='_compute_cycle_statistics_data',
-        store=False,
+        store=True,
         help='Dados estruturados das estatísticas do ciclo'
     )
     cycle_txt = fields.Text(
         string='Conteúdo do Arquivo',
         compute='_compute_cycle_txt',
-        store=False,
+        store=True,
         help='Conteúdo do arquivo de ciclo'
     )
     cycle_txt_filename = fields.Char(
@@ -179,18 +298,13 @@ class SupervisorioCiclos(models.Model):
     )
     cycle_graph = fields.Image(
         string='Gráfico do Ciclo',
-        compute='compute_cycle_graph', 
-        store=False,
-        help='Gráfico gerado a partir dos dados do ciclo',
-        # Opções disponíveis para o campo Image:
-        max_width=1920,  # Largura máxima da imagem
-        max_height=1080, # Altura máxima da imagem 
-        verify_resolution=True, # Verifica resolução da imagem
-        # Widget options:
-        # image - Widget padrão para imagens
-        # image_url - Para imagens via URL
-        # image_preview - Miniatura da 
-        # binary - Mostra como arquivo binário
+        compute='compute_cycle_graph',
+        store=True,
+        attachment=True,
+        max_width=1280,
+        max_height=720,
+        verify_resolution=True,
+        help='Gráfico gerado a partir dos dados do ciclo. Servido via /web/image, fora do payload de read().',
     )
     cycle_graph_filename = fields.Char(
         string='Nome do Arquivo do Gráfico',
@@ -389,14 +503,14 @@ class SupervisorioCiclos(models.Model):
             
             # Chama o método update_cycle para atualizar os dados
             self.update_cycle(arquivo_info, self.equipment_id)
-            
-            # Força o recálculo dos campos computados
-            self._compute_cycle_txt()
-            self._compute_cycle_statistics_txt()
-            self._compute_cycle_statistics_data()
-            self.compute_cycle_graph()
-            
-            # Força o recálculo de todos os campos computados no registro
+
+            # Atualiza o mtime de cache (se o arquivo mudou) para disparar recompute
+            # dos campos armazenados (fita / estatísticas / gráfico).
+            self._refresh_cache_mtime_if_needed(requested_fields=[
+                'cycle_txt', 'cycle_statistics_txt', 'cycle_statistics_data', 'cycle_graph'
+            ])
+
+            # Garante que o cliente recarregue a view com os valores já persistidos.
             self.invalidate_cache()
             
             # Força a atualização da view atual sem abrir nova janela
@@ -408,6 +522,33 @@ class SupervisorioCiclos(models.Model):
         except Exception as e:
             _logger.error(f"Erro ao atualizar dados do ciclo {self.name}: {str(e)}")
             raise UserError(f'Erro ao atualizar dados do ciclo: {str(e)}')
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """
+        Ao criar ciclos com `file_path` já definido, salva também o mtime do arquivo.
+
+        Isso evita que a primeira abertura do formulário precise recalcular (cache miss).
+        """
+        for vals in vals_list:
+            file_path = vals.get('file_path')
+            if file_path and os.path.exists(file_path):
+                vals['cycle_file_mtime'] = self._get_file_mtime_utc(file_path)
+        return super(SupervisorioCiclos, self).create(vals_list)
+
+    def write(self, vals):
+        """
+        Ao alterar `file_path`, atualiza também o mtime do cache.
+        """
+        if 'file_path' in vals:
+            file_path = vals.get('file_path')
+            if file_path and os.path.exists(file_path):
+                vals = dict(vals)
+                vals['cycle_file_mtime'] = self._get_file_mtime_utc(file_path)
+            else:
+                vals = dict(vals)
+                vals['cycle_file_mtime'] = False
+        return super(SupervisorioCiclos, self).write(vals)
 
     def action_ler_diretorio_ciclos(self,equipment_alias=None,equipment_ns=None,equipment_id=None,data_inicial=None,data_final=None):
         #self.ensure_one()
@@ -616,7 +757,7 @@ class SupervisorioCiclos(models.Model):
         _logger.debug(f"lista_arquivos: {lista_arquivos}")
         return lista_arquivos
   
-    @api.depends('file_path')
+    @api.depends('file_path', 'cycle_file_mtime')
     def _compute_cycle_txt(self):
         for record in self:
             if record.file_path and os.path.exists(record.file_path):
@@ -697,27 +838,34 @@ class SupervisorioCiclos(models.Model):
     @api.depends('cycle_txt')
     def _compute_cycle_statistics_txt(self):
         for record in self:
-            do = self._get_dataobject(record.equipment_id,record.file_path)
-            if not record.cycle_txt:
+            if not record.file_path or not os.path.exists(record.file_path) or not record.cycle_txt:
                 record.cycle_statistics_txt = False
                 continue
-            if record.cycle_type_id.fases_fita_digital:
-                fases = record.cycle_type_id.fases_fita_digital.split(',')
-                statistics = do.compute_statistics(fases)
-                record.cycle_statistics_txt = statistics
-            else:
-                record.cycle_statistics_txt = do.compute_statistics()
+            try:
+                do = record._get_dataobject(record.equipment_id, record.file_path)
+                if record.cycle_type_id.fases_fita_digital:
+                    fases = record.cycle_type_id.fases_fita_digital.split(',')
+                    record.cycle_statistics_txt = do.compute_statistics(fases)
+                else:
+                    record.cycle_statistics_txt = do.compute_statistics()
+            except Exception as e:
+                # Evita quebrar upgrade/recompute quando fita está corrompida ou incompleta.
+                _logger.error(
+                    "Erro ao calcular cycle_statistics_txt para ciclo %s (%s): %s",
+                    record.name, record.file_path, e,
+                )
+                record.cycle_statistics_txt = False
 
     @api.depends('cycle_txt')
     def _compute_cycle_statistics_data(self):
         for record in self:
             _logger.info(f"Computando estatísticas para ciclo {record.name}")
-            if not record.cycle_txt:
-                _logger.info(f"Ciclo {record.name} não possui cycle_txt")
+            if not record.file_path or not os.path.exists(record.file_path) or not record.cycle_txt:
+                _logger.info(f"Ciclo {record.name} não possui arquivo TXT acessível em file_path ou cycle_txt")
                 record.cycle_statistics_data = {}
                 continue
             try:
-                do = self._get_dataobject(record.equipment_id, record.file_path)
+                do = record._get_dataobject(record.equipment_id, record.file_path)
                 if record.cycle_type_id and record.cycle_type_id.fases_fita_digital:
                     fases = record.cycle_type_id.fases_fita_digital.split(',')
                     statistics = do.compute_statistics(fases)
@@ -849,6 +997,7 @@ class SupervisorioCiclos(models.Model):
             return []
    
 
+    @api.depends('file_path', 'cycle_file_mtime', 'cycle_type_id', 'equipment_id')
     def compute_cycle_graph(self):
         
         """
@@ -858,10 +1007,10 @@ class SupervisorioCiclos(models.Model):
         """
 
         for record in self:
-            do = self._get_dataobject(record.equipment_id,record.file_path)
-            if not record.cycle_txt:
+            if not record.file_path or not os.path.exists(record.file_path):
                 record.cycle_graph = False
                 continue
+            do = record._get_dataobject(record.equipment_id, record.file_path)
                 
             try:
                 process_graph = self.process_graph(record,do)
@@ -878,6 +1027,23 @@ class SupervisorioCiclos(models.Model):
         """
         cycle_graph = do.make_graph()
         record.cycle_graph = cycle_graph
+
+    @api.model
+    def action_recompute_cycle_graph_attachments(self, batch_size=200):
+        """Recomputa cycle_graph para popular ir.attachment após mudança para attachment=True.
+        Roda em batches para não esgotar memória. Use no shell ou via cron pontual.
+        """
+        records = self.search([('file_path', '!=', False)])
+        total = len(records)
+        _logger.info("Recomputando cycle_graph: %s registros", total)
+        for i in range(0, total, batch_size):
+            batch = records[i:i + batch_size]
+            batch.invalidate_recordset(['cycle_graph'])
+            batch._recompute_field('cycle_graph') if hasattr(batch, '_recompute_field') else batch.modified(['file_path'])
+            batch.flush_recordset(['cycle_graph']) if hasattr(batch, 'flush_recordset') else batch.flush()
+            self.env.cr.commit()
+            _logger.info("Recompute progresso: %s/%s", min(i + batch_size, total), total)
+        return total
         
 
     def get_view(self, view_id=None, view_type='form', **options):
@@ -908,6 +1074,75 @@ class SupervisorioCiclos(models.Model):
         _logger.debug(f"res: {res}")
             
         return res
+
+    # -------------------------------------------------------------------------
+    # Invalidação inteligente do cache por mtime (acelera abertura do formulário)
+    # -------------------------------------------------------------------------
+    def _get_file_mtime_utc(self, file_path):
+        """
+        Retorna o mtime (última modificação) do arquivo em UTC (datetime sem tz),
+        truncado para segundos para comparação estável.
+        """
+        try:
+            mtime_dt = datetime.utcfromtimestamp(os.path.getmtime(file_path))
+            return mtime_dt.replace(microsecond=0)
+        except Exception:
+            return False
+
+    def _refresh_cache_mtime_if_needed(self, requested_fields=None):
+        """
+        Atualiza `cycle_file_mtime` quando o arquivo TXT muda.
+
+        Isso é propositalmente "barato": só faz stat() no arquivo (getmtime), e
+        apenas quando os campos cacheados são solicitados na leitura.
+        """
+        cache_fields = {'cycle_txt', 'cycle_statistics_txt', 'cycle_statistics_data', 'cycle_graph'}
+        if requested_fields and not (cache_fields & set(requested_fields)):
+            return
+
+        # Evita loop caso algum fluxo interno chame read() durante a atualização.
+        if self.env.context.get('skip_cycle_cache_refresh'):
+            return
+
+        for record in self:
+            if not record.file_path:
+                continue
+
+            # Se o arquivo sumiu, limpamos o mtime para forçar recompute/limpeza dos caches.
+            if not os.path.exists(record.file_path):
+                if record.cycle_file_mtime:
+                    record.sudo().with_context(skip_cycle_cache_refresh=True).write({'cycle_file_mtime': False})
+                continue
+
+            current_mtime = self._get_file_mtime_utc(record.file_path)
+            stored_mtime = record.cycle_file_mtime
+            if stored_mtime:
+                stored_mtime = stored_mtime.replace(microsecond=0)
+
+            # Regras:
+            # - Se não há mtime armazenado, calculamos e armazenamos.
+            # - Se o mtime mudou, armazenamos o novo mtime (dispara recompute dos caches).
+            if not stored_mtime or stored_mtime != current_mtime:
+                record.sudo().with_context(skip_cycle_cache_refresh=True).write({'cycle_file_mtime': current_mtime})
+
+    def read(self, fields=None, load='_classic_read'):
+        """
+        Sobrescreve read() para invalidar caches baseados em arquivo apenas quando necessário.
+
+        Na abertura do formulário, o cliente chama read() para vários campos.
+        Aqui nós:
+        - verificamos se algum campo pesado (fita/estatísticas/gráfico) foi pedido;
+        - comparamos o mtime do arquivo com o mtime cacheado;
+        - se mudou, atualizamos `cycle_file_mtime`, o que dispara o recompute (store=True)
+          dos campos cacheados.
+        """
+        try:
+            self._refresh_cache_mtime_if_needed(requested_fields=fields)
+        except Exception as e:
+            # Nunca queremos quebrar a abertura do formulário por falha de cache.
+            _logger.warning(f"Falha ao validar cache por mtime em afr.supervisorio.ciclos.read(): {e}")
+
+        return super(SupervisorioCiclos, self).read(fields=fields, load=load)
 
     def _get_file_content(self):
         """Lê o conteúdo do arquivo TXT para o relatório PDF"""

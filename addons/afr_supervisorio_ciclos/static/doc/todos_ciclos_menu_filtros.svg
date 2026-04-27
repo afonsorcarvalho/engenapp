@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 340" width="240" height="340" role="img" aria-labelledby="t1">
+  <title id="t1">Menu Filtros (ilustracao vetorial)</title>
+  <defs>
+    <style type="text/css"><![CDATA[
+      .panel { fill: #FFFFFF; stroke: #DEE2E6; stroke-width: 1; }
+      .row { font: 12.5px 'Segoe UI', Arial, sans-serif; fill: #212529; }
+      .sub { font: 11.5px 'Segoe UI', Arial, sans-serif; fill: #495057; }
+      .sep { stroke: #E9ECEF; stroke-width: 1; }
+      .hint { font: 11px 'Segoe UI', Arial, sans-serif; fill: #6C757D; }
+    ]]></style>
+  </defs>
+  <rect width="240" height="340" fill="#F8F9FA"/>
+  <rect class="panel" x="8" y="8" width="224" height="324" rx="4"/>
+  <text x="20" y="32" class="row">Em Andamento</text>
+  <text x="20" y="54" class="row">Aguardando</text>
+  <text x="20" y="76" class="row">Conclu&#237;dos</text>
+  <text x="20" y="98" class="row">Cancelados</text>
+  <text x="20" y="120" class="row">Erro</text>
+  <text x="20" y="142" class="row">Abortados</text>
+  <text x="20" y="164" class="row">Pausados</text>
+  <text x="20" y="186" class="row">Atrasados</text>
+  <line class="sep" x1="16" y1="198" x2="224" y2="198"/>
+  <text x="20" y="220" class="sub">Data In&#237;cio</text>
+  <text x="200" y="220" class="sub">&#8250;</text>
+  <text x="20" y="248" class="sub">Adicionar filtro personalizado</text>
+  <text x="200" y="248" class="sub">&#8250;</text>
+  <text x="16" y="310" class="hint">Exemplo: op&#231;&#245;es t&#237;picas do menu Filtros.</text>
+</svg>
