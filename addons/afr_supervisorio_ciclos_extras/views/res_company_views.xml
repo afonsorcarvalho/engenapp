@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Assinatura padrão do laudo na empresa (nova aba no formulário da empresa) -->
+    <record id="view_company_form_laudo_signature" model="ir.ui.view">
+        <field name="name">res.company.form.laudo.signature</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <!-- Inserção no final do sheet (compatível com ou sem notebook no form da empresa) -->
+            <xpath expr="//sheet" position="inside">
+                <group string="Laudo de Liberação - Assinatura padrão" name="group_laudo_signature">
+                    <p class="text-muted" colspan="2">
+                        Usada quando o wizard de impressão do laudo escolhe &quot;Assinatura automática&quot;.
+                    </p>
+                    <field name="laudo_signature_default" widget="image" options="{'size': [200, 80]}"/>
+                    <field name="laudo_signer_name_default" placeholder="Nome do responsável"/>
+                    <field name="laudo_signer_title_default" placeholder="Ex.: Garantia de qualidade"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

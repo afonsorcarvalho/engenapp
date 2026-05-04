@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_afr_supervisorio_materials_user,afr.supervisorio.materials.user,model_afr_supervisorio_materials,base.group_user,1,1,1,1
+access_afr_supervisorio_cycle_materials_lines_user,afr.supervisorio.cycle.materials.lines.user,model_afr_supervisorio_cycle_materials_lines,base.group_user,1,1,1,1
+access_afr_laudo_short_link_user,afr.laudo.short.link.user,model_afr_laudo_short_link,base.group_user,1,1,1,1
+access_wizard_print_laudo_user,wizard.print.laudo.user,model_wizard_print_laudo,base.group_user,1,1,1,1
+

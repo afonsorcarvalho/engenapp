@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menu principal herdando do módulo afr_supervisorio_ciclos -->
+    
+    <!-- Submenu para Materiais (posicionado após Indicadores Biológicos) -->
+    <menuitem id="menu_materials"
+              name="Materiais"
+              parent="afr_supervisorio_ciclos.menu_afr_supervisorio_ciclos"
+              action="action_materials"
+              sequence="60"/>
+
+    <!-- Submenu para Materiais dos Ciclos -->
+    <menuitem id="menu_cycle_materials_lines"
+              name="Materiais dos Ciclos"
+              parent="afr_supervisorio_ciclos.menu_afr_supervisorio_ciclos"
+              action="action_cycle_materials_lines"
+              sequence="61"/>
+</odoo>

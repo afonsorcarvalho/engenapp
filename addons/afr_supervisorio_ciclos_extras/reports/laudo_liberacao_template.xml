@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Template completo do Laudo de Liberação (standalone, sem inherit para evitar problemas de main) -->
+    <template id="report_laudo_liberacao_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <style>
+                        .laudo-title {
+                            font-size: 14px;
+                            font-weight: bold;
+                            margin: 5px 0;
+                            text-align: center;
+                        }
+                        .laudo-subtitle {
+                            font-size: 12px;
+                            font-weight: bold;
+                            margin: 2px 0 10px 0;
+                            text-align: center;
+                        }
+                        .laudo-label {
+                            font-weight: bold;
+                        }
+                        .table-sm th, .table-sm td {
+                            padding: 0.3rem;
+                            font-size: 12px;
+                        }
+                        .table-statistics {
+                            font-size: 11px;
+                        }
+                        .section-title {
+                            border: 1px solid rgb(0, 0, 0);
+                            border-radius: 8px;
+                            padding: 5px;
+                            margin-bottom: 5px;
+                            margin-top: 15px;
+                        }
+                        .qr-code-container {
+                            position: absolute;
+                            top: 20px;
+                            right: 20px;
+                            text-align: center;
+                        }
+                        .qr-code-container img {
+                            width: 80px;
+                            height: 80px;
+                        }
+                        .qr-code-label {
+                            font-size: 8px;
+                            margin-top: 5px;
+                            color: #666;
+                        }
+                        .page {
+                            position: relative;
+                            min-height: 100vh;
+                        }
+                    </style>
+                    
+                    <div class="page">
+                        <!-- Cabeçalho -->
+                        <h2 class="text-center">LAUDO DE LIBERAÇÃO DE PRODUTOS ESTERILIZADOS</h2>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <!-- <h3 class="text-center">VIA INDICADOR BIOLÓGICO PARA COMERCIALIZAÇÃO</h3> -->
+
+                        <!-- QR Code e link curto para autenticidade (canto superior direito) -->
+                        <t t-set="qr_code_data" t-value="qr_codes.get(o.id)"/>
+                        <t t-set="short_url" t-value="short_urls.get(o.id)"/>
+                        <div class="qr-code-container" t-if="qr_code_data">
+                            <img t-attf-src="data:image/png;base64,{{qr_code_data}}" alt="QR Code Autenticidade"/>
+                            <div class="qr-code-label">Verificar autenticidade</div>
+                            <div class="qr-code-link" t-if="short_url" style="font-size: 7px; word-break: break-all; margin-top: 3px; color: #333;">
+                                <t t-esc="short_url"/>
+                            </div>
+                        </div>
+                        
+                        <!-- Dados básicos -->
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>Ciclo:</strong> <span t-field="o.name"/>
+                            </div>
+                            <div class="col-6">
+                                <strong>Lote Ciclo:</strong> <span t-field="o.batch_number"/>
+                            </div>
+                        </div>
+                            <div class="row">
+                                <div class="col-6">
+                                <strong>Equipamento:</strong> <span t-field="o.equipment_id"/>
+                            </div>
+                            <div class="col-6">
+                                <strong>Duração (HH:mm):</strong> <span t-field="o.duration" t-options='{"widget": "float_time"}'/>
+                            </div>
+                                    </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>Data início:</strong> <span t-field="o.start_date"/>
+                                    </div>
+                            <div class="col-6">
+                                <strong>Data fim:</strong> <span t-field="o.end_date"/>
+                                    </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>Status:</strong> <span t-field="o.state"/>
+                                </div>
+                                <div class="col-6">
+                                <strong>Ciclo selecionado:</strong> <span t-field="o.cycle_features_id"/>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>Gás utilizado no processo:</strong> Óxido de Etileno
+                            </div>
+                        </div>
+
+                        
+
+                        <!-- Tipo de Análise e Método -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <p class="mb-2">
+                                    <strong>Tipo de Análise:</strong> Análise microbiológica relacionada à eficácia do processo de esterilização por óxido de etileno, utilizando indicador biológico.
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Método:</strong> Esterilização efetiva mediante utilização de indicadores biológicos, incubados em incubadora apropriada, apresentando resultados satisfatórios (ausência de crescimento microbiano). Conforme preconizado em normas vigentes: RDC 291 de 2019, ISO 11135:2018 e ISO 11138-2:2016.
+                                </p>
+                            </div>
+                        </div>
+                        <!-- Materiais filtrados (somente selecionados no wizard) -->
+                        <t t-set="show_materials" t-value="material_lines_filtered if material_lines_filtered else []"/>
+                        <div class="row mt-5" t-if="show_materials and len(show_materials) > 0">
+                            <div class="col-12">
+                                <h5 class="mb-3 text-center section-title">
+                                    MATERIAIS ESTERILIZADOS
+                                </h5>
+                                <table class="table table-bordered table-sm">
+                                    <thead style="background-color: #f8f9fa;">
+                                    <tr>
+                                            <th class="text-center">Item</th>
+                                            <th>Produto</th>
+                                            <th>Fabricante</th>
+                                            <th>Lote</th>
+                                            <th class="text-center">Qtd</th>
+                                            <th>Unidade</th>
+                                            <th>Validade</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                        <t t-set="item_num" t-value="0"/>
+                                        <t t-foreach="show_materials" t-as="mat">
+                                            <t t-set="item_num" t-value="item_num + 1"/>
+                                        <tr>
+                                                <td class="text-center"><t t-esc="item_num"/></td>
+                                                <td><span t-field="mat.material_descricao"/></td>
+                                                <td><span t-field="mat.fabricante_nome"/></td>
+                                                <td><span t-field="mat.lote"/></td>
+                                                <td class="text-center"><span t-field="mat.quantidade"/></td>
+                                                <td>
+                                                    <t t-if="mat.unidade == 'caixa'">Caixa</t>
+                                                    <t t-elif="mat.unidade == 'unidade'">Unidade</t>
+                                                    <t t-elif="mat.unidade == 'pacote'">Pacote</t>
+                                                    <t t-elif="mat.unidade == 'envelope'">Envelope</t>
+                                                    <t t-elif="mat.unidade == 'kit'">Kit</t>
+                                                <t t-else="">Outro</t>
+                                            </td>
+                                                <td>
+                                                    <t t-if="mat.validade"><span t-field="mat.validade"/></t>
+                                                    <t t-else="">Vide Fabricante</t>
+                                                </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+                        <!-- Caso não haja materiais, mostra aviso -->
+                        <div class="row mt-5" t-if="not show_materials or len(show_materials) == 0">
+                                <div class="col-12">
+                                <div class="alert alert-warning text-center">
+                                    <strong>Atenção:</strong> Nenhum material foi selecionado para este laudo.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Indicador biológico -->
+                        <div class="row mt-5" t-if="o.ib_lote">
+                            <div class="col-12">
+                                <h5 class="mb-3 text-center section-title">INDICADOR BIOLÓGICO</h5>
+                            </div>
+                        </div>
+                        <div class="row" t-if="o.ib_lote">
+                            <div class="col-2">
+                                <strong>Lote IB:</strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.ib_lote"/>
+                            </div>
+                            <div class="col-2">
+                                <strong>Marca:</strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.ib_marca"/>
+                            </div>
+                        </div>
+                        <div class="row" t-if="o.ib_lote">
+                            <div class="col-2">
+                                <strong>Modelo:</strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.ib_modelo"/>
+                            </div>
+                            <div class="col-2">
+                                <strong>Resultado:</strong>
+                            </div>
+                            <div class="col-4">
+                                <t t-if="o.ib_resultado == 'negativo'">
+                                    <span style="color: #008000; font-weight: bold;">Negativo</span>
+                                </t>
+                                <t t-elif="o.ib_resultado == 'positivo'">
+                                    <span style="color: #FF0000; font-weight: bold;">Positivo</span>
+                                </t>
+                                <t t-else="">
+                                    <t t-esc="o.ib_resultado"/>
+                                </t>
+                            </div>
+                        </div>
+                        <div class="row" t-if="o.ib_lote">
+                            <div class="col-2">
+                                <strong>Início Incubação:</strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.ib_data_inicio"/>
+                            </div>
+                            <div class="col-2">
+                                <strong>Fim Incubação:</strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.ib_data_fim"/>
+                                    </div>
+                                    </div>
+                        <div class="row" t-if="o.ib_lote">
+                            <div class="col-12">
+                                <strong>Composição do indicador:</strong> Bacillus atrophaeus ATCC 9372, concentração de 10<sup>6</sup> UFC/unidade.
+                            </div>
+                        </div>
+
+                        <!-- Conclusão normativa -->
+                        <div class="row mt-5">
+                            <div class="col-12">
+                                <h5 class="mb-3 text-center section-title">CONCLUSÃO</h5>
+                                <p>
+                                    Com base no resultado satisfatório do indicador biológico e na validação do processo, incluindo o controle de resíduos de óxido de etileno, o material encontra-se esterilizado e liberado para comercialização.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Datas de liberação e emissão -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <p class="mb-1">
+                                    <strong>Data de liberação:</strong>
+                                    <t t-if="data_liberacao"><t t-esc="data_liberacao" t-options='{"widget": "date"}'/></t>
+                                    <t t-elif="o.signature_date"><span t-field="o.signature_date" t-options='{"widget": "date"}'/></t>
+                                </p>
+                                <p class="mb-1">
+                                    <strong>Data de emissão:</strong>
+                                    <t t-if="data_emissao"><t t-esc="data_emissao" t-options='{"widget": "date"}'/></t>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Assinatura: igual ao relatório Impressão de ciclos (afr.supervisorio.ciclos) quando assinado; senão wizard legado -->
+                        <div class="row mt-5">
+                            <div class="col-6 text-left">
+                                <t t-if="o.notes">
+                                    * Observações:
+                                    <span t-field="o.notes"/><br/>
+                                </t>
+                            </div>
+                            <div class="col-6 text-center signature-block">
+                                <t t-if="o.is_signed">
+                                    <div t-if="o.signature_image" class="mb-2">
+                                        <img t-attf-src="data:image/png;base64,{{o.signature_image}}"
+                                             style="max-height:100px;max-width:100%;" alt="Assinatura"/>
+                                    </div>
+                                    <!-- <div class="mt-2 mb-2">
+                                        Garantia de qualidade / Aprovação
+                                    </div> -->
+                                    <div style="display:inline-block;max-width:100%;text-align:center;font-size:8px;">
+                                        <strong><span t-field="o.signature_employee_name"/></strong><br/>
+                                        <t t-if="o.signature_professional_documentation">
+                                            <span t-field="o.signature_professional_documentation"/><br/>
+                                        </t>
+                                        <t t-if="o.signature_professional_council or o.signature_professional_council_number">
+                                            <span t-field="o.signature_professional_council"/>
+                                            <t t-if="o.signature_professional_council_number">
+                                                <t t-if="o.signature_professional_council"> — </t>
+                                                <span t-field="o.signature_professional_council_number"/>
+                                            </t>
+                                            <br/>
+                                        </t>
+                                        <t t-if="o.signature_professional_cpf and not o.signature_professional_council_number">
+                                            CPF: <span t-field="o.signature_professional_cpf"/><br/>
+                                        </t>
+                                        <t t-if="o.signature_date">
+                                            Assinatura eletrônica em <span t-field="o.signature_date"/>
+                                        </t>
+                                    </div>
+                                </t>
+                                <t t-if="not o.is_signed">
+                                    <t t-if="signature_image_b64">
+                                        <img t-attf-src="data:image/png;base64,{{signature_image_b64}}" alt="Assinatura" class="signature-image" style="max-height: 60px; max-width: 220px; margin-bottom: 8px;"/>
+                                        <br/>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="signature-line">________________________________________</span><br/>
+                                    </t>
+                                    <span class="signer-title" t-esc="signer_title or 'Garantia de qualidade'"/>
+                                    <t t-if="signer_name">
+                                        <br/><span class="signer-name" t-esc="signer_name"/>
+                                    </t>
+                                    <t t-if="signature_date">
+                                        <br/><span class="signature-date">Data: <t t-esc="signature_date"/></span>
+                                    </t>
+                                    <t t-if="not signature_date and not signer_name and not signature_image_b64">
+                                        <br/>Aprovação
+                                    </t>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Fotos em anexo -->
+                        <t t-if="o.fotos_ids">
+                            <t t-foreach="o.fotos_ids" t-as="foto">
+                                <div style="page-break-before: always;">
+                                    <div class="row mt-4">
+                                        <div class="col-12 text-center">
+                                              <h5 class="mb-3 text-center section-title"><span t-field="foto.titulo"/></h5>
+                                        </div>
+                                    </div>
+                                    
+                            <div class="row">
+                                        <div class="col-12">
+                                            <table class="table table-sm table-bordered">
+                                                <tr t-if="foto.legenda">
+                                                    <td class="font-weight-bold bg-light">Legenda:</td>
+                                                    <td><span t-field="foto.legenda"/></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="font-weight-bold bg-light">Data:</td>
+                                                    <td><span t-field="foto.data_criacao"/></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mt-4">
+                                        <div class="col-12 text-center">
+                                            <img t-if="foto.imagem" t-attf-src="data:image/png;base64,{{foto.imagem}}" 
+                                                 style="max-width: 100%; max-height: 800px; border: 1px solid #ddd; padding: 10px; background: white;"
+                                                 t-att-alt="foto.titulo"/>
+                                </div>
+                                    </div>
+                                    
+                                    <div class="row mt-3">
+                                        <div class="col-12 text-center text-muted">
+                                            <small>
+                                                Foto <span t-esc="foto_index + 1"/> de <span t-esc="len(o.fotos_ids)"/>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                        </t>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Ação do Report do Laudo -->
+    <record id="report_laudo_liberacao_action" model="ir.actions.report">
+        <field name="name">Laudo de Liberação de Produtos</field>
+        <field name="model">afr.supervisorio.ciclos</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">afr_supervisorio_ciclos_extras.report_laudo_liberacao_template</field>
+        <field name="report_file">afr_supervisorio_ciclos_extras.report_laudo_liberacao_template</field>
+        <field name="print_report_name">'Laudo_Liberacao_%s' % (object.name)</field>
+        <field name="paperformat_id" ref="base.paperformat_euro"/>
+    </record>
+    
+    <!-- Ação server para abrir wizard do laudo -->
+    <record id="action_open_wizard_laudo" model="ir.actions.server">
+        <field name="name">Laudo de Liberação de Produtos</field>
+        <field name="model_id" ref="afr_supervisorio_ciclos.model_afr_supervisorio_ciclos"/>
+        <field name="binding_model_id" ref="afr_supervisorio_ciclos.model_afr_supervisorio_ciclos"/>
+        <field name="binding_view_types">form</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_print_laudo_wizard()</field>
+    </record>
+
+</odoo>
+

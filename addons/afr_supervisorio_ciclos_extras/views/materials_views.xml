@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de Formulário de Materiais -->
+    <record id="view_materials_form" model="ir.ui.view">
+        <field name="name">afr.supervisorio.materials.form</field>
+        <field name="model">afr.supervisorio.materials</field>
+        <field name="arch" type="xml">
+            <form string="Material">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object"
+                                class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button"
+                                   options='{"terminology": "archive"}'/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="descricao" placeholder="Ex: Pinça Anatômica 15cm"/>
+                        </group>
+                        <group>
+                            <field name="fabricante_id" 
+                                   options="{'no_create': True, 'no_create_edit': True}"
+                                   placeholder="Selecione o fabricante"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista de Árvore de Materiais -->
+    <record id="view_materials_tree" model="ir.ui.view">
+        <field name="name">afr.supervisorio.materials.tree</field>
+        <field name="model">afr.supervisorio.materials</field>
+        <field name="arch" type="xml">
+            <tree string="Materiais">
+                <field name="descricao"/>
+                <field name="fabricante_nome"/>
+                <field name="active" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de Busca de Materiais -->
+    <record id="view_materials_search" model="ir.ui.view">
+        <field name="name">afr.supervisorio.materials.search</field>
+        <field name="model">afr.supervisorio.materials</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Materiais">
+                <field name="descricao"/>
+                <field name="fabricante_id"/>
+                <filter string="Ativos" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Arquivados" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Fabricante" name="fabricante" context="{'group_by': 'fabricante_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Ação de Janela para Materiais -->
+    <record id="action_materials" model="ir.actions.act_window">
+        <field name="name">Materiais</field>
+        <field name="res_model">afr.supervisorio.materials</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Criar o primeiro material
+            </p>
+            <p>
+                Cadastre os materiais que podem ser esterilizados nos ciclos.
+            </p>
+        </field>
+    </record>
+</odoo>
+

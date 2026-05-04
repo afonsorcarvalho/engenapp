@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de Formulário do Wizard -->
+    <record id="view_wizard_print_laudo_form" model="ir.ui.view">
+        <field name="name">wizard.print.laudo.form</field>
+        <field name="model">wizard.print.laudo</field>
+        <field name="arch" type="xml">
+            <form string="Selecionar Materiais para o Laudo">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="ciclo_id" readonly="1"/>
+                        </h1>
+                        <h3 class="text-muted">
+                            Laudo de Liberação de Produtos
+                        </h3>
+                    </div>
+
+                    <!-- Campos computados de suporte (invisíveis) -->
+                    <field name="ciclo_is_signed" invisible="1"/>
+                    <field name="has_multiple_fabricantes" invisible="1"/>
+                    <field name="fabricante_id" invisible="1"/>
+
+                    <group>
+                        <field name="material_count" readonly="1"/>
+                        <field name="data_liberacao"/>
+                        <field name="data_emissao"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Materiais Disponíveis" name="materials">
+                            <div class="alert alert-info" role="alert" style="margin-bottom: 10px;">
+                                <strong>Instruções:</strong>
+                                Marque os materiais que deseja incluir no laudo de liberação clicando nas checkboxes.
+                                Somente os materiais marcados aparecerão no documento final.
+                            </div>
+
+                            <field name="material_line_ids" nolabel="1">
+                                <tree decoration-success="True">
+                                    <field name="material_descricao"/>
+                                    <field name="fabricante_nome"/>
+                                    <field name="lote"/>
+                                    <field name="quantidade"/>
+                                    <field name="unidade"/>
+                                    <field name="validade"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+
+                    <!-- Aviso: múltiplos fabricantes -->
+                    <div class="alert alert-warning" role="alert"
+                         attrs="{'invisible': [('has_multiple_fabricantes', '=', False)]}">
+                        <i class="fa fa-exclamation-triangle" aria-hidden="true" title="Atenção"/> <strong>Atenção: materiais de fabricantes diferentes!</strong><br/>
+                        Os materiais selecionados pertencem a mais de um fabricante.
+                        O laudo de liberação normalmente é emitido para um único fabricante.
+                        <strong>Tem certeza que deseja gerar o laudo com materiais de fabricantes diferentes?</strong><br/>
+                        Neste caso, <strong>o email não será enviado ao fabricante</strong>, independente do checkbox abaixo.
+                    </div>
+
+                    <!-- Seção de envio por email -->
+                    <group string="Envio por Email" name="email_section">
+                        <field name="send_email_fabricante"
+                               widget="boolean_toggle"/>
+                        <field name="email_avulsos"
+                               placeholder="email1@empresa.com, email2@lab.com"
+                               attrs="{'invisible': [('send_email_fabricante', '=', False), ('email_avulsos', '=', False)]}"/>
+                    </group>
+
+                    <!-- Aviso: ciclo não assinado (fabricante não receberá) -->
+                    <div class="alert alert-warning" role="alert"
+                         attrs="{'invisible': ['|',
+                             ('send_email_fabricante', '=', False),
+                             ('ciclo_is_signed', '=', True)
+                         ]}">
+                        <i class="fa fa-lock" aria-hidden="true" title="Bloqueado"/> <strong>Ciclo não assinado</strong> — o laudo <strong>não será enviado ao Fabricante</strong>.<br/>
+                        Para assinar o ciclo, feche este wizard, abra o ciclo de esterilização
+                        e clique no botão <strong>"Assinar Ciclo"</strong>. Após a assinatura,
+                        o email ao fabricante será habilitado.
+                    </div>
+
+                    <!-- Info: fabricante que receberá o email -->
+                    <div class="alert alert-success" role="alert"
+                         attrs="{'invisible': ['|', '|', '|',
+                             ('send_email_fabricante', '=', False),
+                             ('ciclo_is_signed', '=', False),
+                             ('has_multiple_fabricantes', '=', True),
+                             ('fabricante_id', '=', False)
+                         ]}">
+                        <i class="fa fa-envelope" aria-hidden="true" title="Email"/> Email será enviado ao fabricante:
+                        <strong><field name="fabricante_id" readonly="1" nolabel="1"/></strong>
+                    </div>
+
+                </sheet>
+
+                <footer>
+                    <button name="action_print_laudo"
+                            string="Gerar Laudo"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-print"
+                            attrs="{'invisible': [('material_count', '=', 0)]}"/>
+                    <button string="Cancelar"
+                            class="btn-secondary"
+                            special="cancel"/>
+
+                    <div class="text-muted" style="display: inline-block; margin-left: 20px;"
+                         attrs="{'invisible': [('material_count', '>', 0)]}">
+                        <i class="fa fa-exclamation-triangle" aria-hidden="true" title="Atenção"/>
+                        Selecione pelo menos um material para gerar o laudo
+                    </div>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Ação para abrir o Wizard (usada internamente) -->
+    <record id="action_wizard_print_laudo" model="ir.actions.act_window">
+        <field name="name">Gerar Laudo de Liberação</field>
+        <field name="res_model">wizard.print.laudo</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extensão da vista de formulário do ciclo para adicionar aba de materiais -->
+    <record id="view_supervisorio_ciclos_form_inherit_materials" model="ir.ui.view">
+        <field name="name">afr.supervisorio.ciclos.form.inherit.materials</field>
+        <field name="model">afr.supervisorio.ciclos</field>
+        <field name="inherit_id" ref="afr_supervisorio_ciclos.view_afr_supervisorio_ciclos_form"/>
+        <field name="arch" type="xml">
+            <!-- Adiciona botão de impressão no header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_print_laudo_wizard" 
+                        string="Gerar Laudo de Liberação" 
+                        type="object"
+                        class="oe_highlight"
+                        icon="fa-file-text-o"
+                        attrs="{'invisible': [('material_count', '=', 0)]}"/>
+            </xpath>
+            
+            <!-- Adiciona button_box com botões de materiais no topo do sheet -->
+            <xpath expr="//form/sheet/group[@col='1']" position="before">
+                <div class="oe_button_box" name="button_box">
+                    <button class="oe_stat_button" type="object" 
+                            name="action_view_materials" icon="fa-cubes">
+                        <field string="Materiais" name="material_count" widget="statinfo"/>
+                    </button>
+                </div>
+            </xpath>
+            
+            <!-- Adiciona aba de materiais no notebook -->
+            <xpath expr="//notebook[@accesskey='t']" position="inside">
+                <page string="Materiais Esterilizados" name="materials">
+                    <field name="material_lines_ids">
+                        <tree editable="bottom">
+                            <field name="material_id"/>
+                            <field name="quantidade"/>
+                            <field name="unidade"/>
+                            <field name="lote"/>
+                            <field name="fabricante_id"/>
+                            <field name="validade"/>
+                        </tree>
+                        <form>
+                            <group>
+                                <group>
+                                    <field name="material_id"/>
+                                    <field name="quantidade"/>
+                                    <field name="unidade"/>
+                                </group>
+                                <group>
+                                    <field name="lote"/>
+                                    <field name="fabricante_id"/>
+                                    <field name="validade"/>
+                                </group>
+                            </group>
+                        </form>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

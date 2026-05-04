@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de Formulário de Linhas de Materiais -->
+    <record id="view_cycle_materials_lines_form" model="ir.ui.view">
+        <field name="name">afr.supervisorio.cycle.materials.lines.form</field>
+        <field name="model">afr.supervisorio.cycle.materials.lines</field>
+        <field name="arch" type="xml">
+            <form string="Material do Ciclo">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object"
+                                class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button"
+                                   options='{"terminology": "archive"}'/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="ciclo_id" 
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                            <field name="material_id" 
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                            <field name="quantidade"/>
+                            <field name="unidade"/>
+                        </group>
+                        <group>
+                            <field name="lote"/>
+                            <field name="fabricante_id" 
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                            <field name="validade"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista de Árvore de Linhas de Materiais -->
+    <record id="view_cycle_materials_lines_tree" model="ir.ui.view">
+        <field name="name">afr.supervisorio.cycle.materials.lines.tree</field>
+        <field name="model">afr.supervisorio.cycle.materials.lines</field>
+        <field name="arch" type="xml">
+            <tree string="Materiais do Ciclo" editable="bottom">
+                <field name="ciclo_id" readonly="1"/>
+                <field name="material_id"/>
+                <field name="quantidade"/>
+                <field name="unidade"/>
+                <field name="lote"/>
+                <field name="fabricante_id"/>
+                <field name="validade"/>
+                <field name="active" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de Busca de Linhas de Materiais -->
+    <record id="view_cycle_materials_lines_search" model="ir.ui.view">
+        <field name="name">afr.supervisorio.cycle.materials.lines.search</field>
+        <field name="model">afr.supervisorio.cycle.materials.lines</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Materiais do Ciclo">
+                <field name="ciclo_id"/>
+                <field name="material_id"/>
+                <field name="lote"/>
+                <field name="fabricante_id"/>
+                <filter string="Ativos" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Arquivados" name="inactive" domain="[('active', '=', False)]"/>
+                <filter string="Vencidos" name="vencidos" 
+                        domain="[('validade', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Válidos" name="validos" 
+                        domain="[('validade', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Ciclo" name="ciclo" context="{'group_by': 'ciclo_id'}"/>
+                    <filter string="Material" name="material" context="{'group_by': 'material_id'}"/>
+                    <filter string="Unidade" name="unidade" context="{'group_by': 'unidade'}"/>
+                    <filter string="Fabricante" name="fabricante" context="{'group_by': 'fabricante_id'}"/>
+                    <filter string="Data de Validade" name="validade" context="{'group_by': 'validade'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Ação de Janela para Linhas de Materiais -->
+    <record id="action_cycle_materials_lines" model="ir.actions.act_window">
+        <field name="name">Materiais dos Ciclos</field>
+        <field name="res_model">afr.supervisorio.cycle.materials.lines</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Adicionar material ao ciclo
+            </p>
+            <p>
+                Registre os materiais que foram colocados em cada ciclo de esterilização.
+            </p>
+        </field>
+    </record>
+</odoo>
+

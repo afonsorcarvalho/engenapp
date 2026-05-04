@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mail_template_laudo_liberacao" model="mail.template">
+        <field name="name">Laudo de Liberação de Produtos Esterilizados</field>
+        <field name="model_id" ref="afr_supervisorio_ciclos.model_afr_supervisorio_ciclos"/>
+        <field name="subject">Laudo de Liberação – {{ object.name }}</field>
+        <field name="email_from">{{ (object.company_id.email or user.email) }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html"><![CDATA[
+<html>
+<body style="margin:0;padding:0;background:#f0f4f7;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f7;">
+<tr><td align="center" style="padding:30px 15px;">
+<table width="620" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.10);">
+
+  <!-- HEADER -->
+  <tr>
+    <td style="background:linear-gradient(135deg,#1B8C96 0%,#3EC7CF 100%);padding:24px 32px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="vertical-align:middle;width:50%;"><t t-out="logo_html"/></td>
+          <td style="vertical-align:middle;text-align:right;">
+            <span style="color:#cceef5;font-size:11px;letter-spacing:1px;text-transform:uppercase;">Documento Oficial</span><br/>
+            <span style="color:#ffffff;font-size:18px;font-weight:bold;" t-out="object.company_id.name"/>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- TÍTULO -->
+  <tr>
+    <td style="background:#E8F7F0;padding:20px 32px;border-bottom:3px solid #43B944;">
+      <p style="margin:0;font-size:11px;color:#43B944;letter-spacing:2px;text-transform:uppercase;font-weight:bold;">Certificado de Qualidade</p>
+      <h1 style="margin:4px 0 0;font-size:20px;color:#1B3A6B;font-weight:bold;">Laudo de Liberação de Produtos Esterilizados</h1>
+    </td>
+  </tr>
+
+  <!-- CORPO -->
+  <tr>
+    <td style="padding:28px 32px;">
+
+      <p style="margin:0 0 16px;font-size:15px;color:#222;">Prezado(a),</p>
+      <p style="margin:0 0 20px;font-size:14px;color:#444;line-height:1.7;">
+        Comunicamos que o ciclo de esterilização identificado abaixo foi
+        <strong style="color:#1B8C96;">concluído e liberado</strong> após avaliação técnica
+        conforme os protocolos de controle de qualidade vigentes. O presente
+        <em>Laudo de Liberação</em> atesta que os produtos listados foram submetidos ao
+        processo de esterilização dentro dos parâmetros estabelecidos e encontram-se
+        <strong>aptos para uso</strong>.
+      </p>
+      <p style="margin:0 0 24px;font-size:14px;color:#444;line-height:1.7;">
+        Segue em anexo o <strong>Laudo de Liberação em formato PDF</strong>, contendo os
+        dados completos do ciclo, indicador biológico, assinatura do responsável técnico
+        e demais informações para registro e rastreabilidade.
+      </p>
+
+      <!-- Box informações do ciclo -->
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#F2FBF4;border:1px solid #B8E8C8;border-radius:6px;margin-bottom:24px;">
+        <tr>
+          <td style="padding:14px 20px;border-bottom:1px solid #B8E8C8;">
+            <p style="margin:0;font-size:11px;color:#43B944;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">Informações do Ciclo</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td width="42%" style="padding:5px 0;font-size:13px;color:#888;">Identificação do Ciclo</td>
+                <td style="padding:5px 0;font-size:13px;color:#222;font-weight:bold;" t-out="object.name"/>
+              </tr>
+              <tr>
+                <td style="padding:5px 0;font-size:13px;color:#888;">Equipamento</td>
+                <td style="padding:5px 0;font-size:13px;color:#222;" t-out="equip"/>
+              </tr>
+              <tr>
+                <td style="padding:5px 0;font-size:13px;color:#888;">Número do Lote</td>
+                <td style="padding:5px 0;font-size:13px;color:#222;" t-out="batch"/>
+              </tr>
+              <tr>
+                <td style="padding:5px 0;font-size:13px;color:#888;">Data de Liberação</td>
+                <td style="padding:5px 0;font-size:13px;color:#222;" t-out="data_lib"/>
+              </tr>
+              <tr>
+                <td style="padding:5px 0;font-size:13px;color:#888;">Data de Emissão do Laudo</td>
+                <td style="padding:5px 0;font-size:13px;color:#222;" t-out="data_emi"/>
+              </tr>
+              <tr t-if="object.signature_date">
+                <td style="padding:5px 0;font-size:13px;color:#888;">Data da Assinatura</td>
+                <td style="padding:5px 0;font-size:13px;color:#222;" t-out="object.signature_date.strftime('%d/%m/%Y')"/>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr t-if="object.is_signed and object.signature_employee_name">
+          <td style="padding:10px 20px 14px;border-top:1px solid #B8E8C8;">
+            <p style="margin:0;color:#555;font-size:13px;">
+              <strong>Responsável técnico:</strong>
+              <t t-out="object.signature_employee_name"/>
+              <t t-if="object.signature_professional_documentation">
+                &#8212; <t t-out="object.signature_professional_documentation"/>
+              </t>
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Tabela de materiais -->
+      <p style="margin:0 0 10px;font-size:13px;font-weight:bold;color:#1B8C96;letter-spacing:0.5px;text-transform:uppercase;">Materiais Esterilizados</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #dde7eb;border-radius:5px;font-size:13px;margin-bottom:24px;">
+        <tr style="background:#1B8C96;">
+          <th style="padding:9px 12px;color:#fff;text-align:left;font-weight:600;">Descrição</th>
+          <th style="padding:9px 12px;color:#fff;text-align:center;font-weight:600;">Qtd / Unid.</th>
+        </tr>
+        <tr t-foreach="material_lines" t-as="line">
+          <td style="padding:7px 12px;border-bottom:1px solid #e8eef2;" t-out="line.material_descricao or '—'"/>
+          <td style="padding:7px 12px;border-bottom:1px solid #e8eef2;color:#555;text-align:center;">
+            <t t-out="'%g' % line.quantidade"/> <t t-out="line.unidade or ''"/>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Nota de anexo -->
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8e1;border-left:4px solid #f5a623;border-radius:4px;margin-bottom:8px;">
+        <tr>
+          <td style="padding:14px 18px;font-size:13px;color:#5a3e00;line-height:1.6;">
+            <strong>&#128206; Documento em anexo:</strong> o Laudo de Liberação completo e
+            assinado está disponível em PDF neste email. Por favor, arquive-o conforme
+            seus procedimentos internos de controle de qualidade e rastreabilidade.
+          </td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+
+  <!-- FOOTER -->
+  <tr>
+    <td style="background:#1B3A6B;padding:18px 32px;">
+      <t t-if="recipients">
+        <p style="margin:0 0 4px;font-size:11px;color:#A8D8B0;letter-spacing:1px;text-transform:uppercase;">Enviado para</p>
+        <p style="margin:0 0 12px;font-size:12px;color:#cceef5;" t-out="', '.join(recipients)"/>
+      </t>
+      <p style="margin:0;font-size:11px;color:#A8D8B0;line-height:1.8;"><t t-out="company_footer"/></p>
+      <p style="margin:8px 0 0;font-size:10px;color:#7AAABB;">
+        Este email e seus anexos são de uso exclusivo do destinatário e contêm informações
+        confidenciais. Em caso de recebimento indevido, notifique o remetente e elimine este email.
+      </p>
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>
+        ]]></field>
+    </record>
+</odoo>
