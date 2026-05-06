@@ -48,8 +48,8 @@
                                             <t t-else="">Outro</t>
                                         </td>
                                         <td>
-                                            <t t-if="mat.vide_fabricante or not mat.validade">Vide Fabricante</t>
-                                            <t t-else=""><span t-field="mat.validade"/></t>
+                                            <t t-if="mat.validade"><span t-field="mat.validade"/></t>
+                                            <t t-else="">Vide Fabricante</t>
                                         </td>
                                     </tr>
                                 </t>

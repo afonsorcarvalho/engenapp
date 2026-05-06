@@ -232,7 +232,7 @@
                                     <div class="mt-2 mb-2">
                                         Garantia de qualidade / Aprovação
                                     </div>
-                                    <div style="display:inline-block;max-width:100%;text-align:center;font-size:11px;">
+                                    <div style="display:inline-block;max-width:100%;text-align:center;font-size:15px;">
                                         <strong><span t-field="o.signature_employee_name"/></strong><br/>
                                         <t t-if="o.signature_professional_documentation">
                                             <span t-field="o.signature_professional_documentation"/><br/>

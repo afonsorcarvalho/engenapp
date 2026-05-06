@@ -7,7 +7,7 @@
                 <t t-call="web.external_layout">
                     <style>
                         body, .page {
-                            font-size: 13px;
+                            font-size: 14px;
                         }
                         .laudo-title {
                             font-size: 14px;
@@ -26,7 +26,7 @@
                         }
                         .table-sm th, .table-sm td {
                             padding: 0.3rem;
-                            font-size: 13px;
+                            font-size: 11px;
                         }
                         .table-statistics {
                             font-size: 11px;
@@ -82,41 +82,32 @@
                         
                         <!-- Dados básicos -->
                         <div class="row">
-                            <div class="col-6">
-                                <strong>Ciclo:</strong> <span t-field="o.name"/>
-                            </div>
-                            <div class="col-6">
-                                <strong>Lote Ciclo:</strong> <span t-field="o.batch_number"/>
-                            </div>
-                        </div>
-                            <div class="row">
-                                <div class="col-6">
-                                <strong>Equipamento:</strong> <span t-field="o.equipment_id"/>
-                            </div>
-                            <div class="col-6">
-                                <strong>Duração (HH:mm):</strong> <span t-field="o.duration" t-options='{"widget": "float_time"}'/>
-                            </div>
-                                    </div>
-                        <div class="row">
-                            <div class="col-6">
-                                <strong>Data início:</strong> <span t-field="o.start_date"/>
-                                    </div>
-                            <div class="col-6">
-                                <strong>Data fim:</strong> <span t-field="o.end_date"/>
-                                    </div>
+                            <div class="col-2"><strong>Ciclo:</strong></div>
+                            <div class="col-4"><span t-field="o.name"/></div>
+                            <div class="col-2"><strong>Lote Ciclo:</strong></div>
+                            <div class="col-4"><span t-field="o.batch_number"/></div>
                         </div>
                         <div class="row">
-                            <div class="col-6">
-                                <strong>Status:</strong> <span t-field="o.state"/>
-                                </div>
-                                <div class="col-6">
-                                <strong>Ciclo selecionado:</strong> <span t-field="o.cycle_features_id"/>
-                            </div>
+                            <div class="col-2"><strong>Equipamento:</strong></div>
+                            <div class="col-4"><span t-field="o.equipment_id"/></div>
+                            <div class="col-2"><strong>Duração (HH:mm):</strong></div>
+                            <div class="col-4"><span t-field="o.duration" t-options='{"widget": "float_time"}'/></div>
                         </div>
                         <div class="row">
-                            <div class="col-6">
-                                <strong>Gás utilizado no processo:</strong> Óxido de Etileno
-                            </div>
+                            <div class="col-2"><strong>Data início:</strong></div>
+                            <div class="col-4"><span t-field="o.start_date"/></div>
+                            <div class="col-2"><strong>Data fim:</strong></div>
+                            <div class="col-4"><span t-field="o.end_date"/></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2"><strong>Status:</strong></div>
+                            <div class="col-4"><span t-field="o.state"/></div>
+                            <div class="col-2"><strong>Ciclo selecionado:</strong></div>
+                            <div class="col-4"><span t-field="o.cycle_features_id"/></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2"><strong>Gás utilizado:</strong></div>
+                            <div class="col-4">Óxido de Etileno</div>
                         </div>
 
                         
@@ -292,7 +283,7 @@
                                     <!-- <div class="mt-2 mb-2">
                                         Garantia de qualidade / Aprovação
                                     </div> -->
-                                    <div style="display:inline-block;max-width:100%;text-align:center;font-size:11px;">
+                                    <div style="display:inline-block;max-width:100%;text-align:center;font-size:14px;">
                                         <strong><span t-field="o.signature_employee_name"/></strong><br/>
                                         <t t-if="o.signature_professional_documentation">
                                             <span t-field="o.signature_professional_documentation"/><br/>
@@ -365,7 +356,7 @@
                                             <img t-if="foto.imagem" t-attf-src="data:image/png;base64,{{foto.imagem}}"
                                                  style="width: 100%; height: auto; border: 1px solid #ddd; background: white;"
                                                  t-att-alt="foto.titulo"/>
-                                </div>
+                                        </div>
                                     </div>
                                     
                                     <div class="row mt-3">
@@ -393,7 +384,7 @@
         <field name="report_name">afr_supervisorio_ciclos_extras.report_laudo_liberacao_template</field>
         <field name="report_file">afr_supervisorio_ciclos_extras.report_laudo_liberacao_template</field>
         <field name="print_report_name">'Laudo_Liberacao_%s' % (object.name)</field>
-        <field name="paperformat_id" ref="base.paperformat_euro"/>
+        <field name="paperformat_id" ref="afr_supervisorio_ciclos_extras.paperformat_laudo_liberacao"/>
     </record>
     
     <!-- Ação server para abrir wizard do laudo -->
