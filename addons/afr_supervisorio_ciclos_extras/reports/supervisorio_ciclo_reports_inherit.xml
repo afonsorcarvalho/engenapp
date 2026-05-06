@@ -47,7 +47,10 @@
                                             <t t-elif="mat.unidade == 'kit'">Kit</t>
                                             <t t-else="">Outro</t>
                                         </td>
-                                        <td><span t-field="mat.validade"/></td>
+                                        <td>
+                                            <t t-if="mat.vide_fabricante or not mat.validade">Vide Fabricante</t>
+                                            <t t-else=""><span t-field="mat.validade"/></t>
+                                        </td>
                                     </tr>
                                 </t>
                             </tbody>

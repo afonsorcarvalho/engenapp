@@ -6,6 +6,9 @@
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
                     <style>
+                        body, .page {
+                            font-size: 13px;
+                        }
                         .laudo-title {
                             font-size: 14px;
                             font-weight: bold;
@@ -23,7 +26,7 @@
                         }
                         .table-sm th, .table-sm td {
                             padding: 0.3rem;
-                            font-size: 12px;
+                            font-size: 13px;
                         }
                         .table-statistics {
                             font-size: 11px;
@@ -37,7 +40,7 @@
                         }
                         .qr-code-container {
                             position: absolute;
-                            top: 20px;
+                            top: 40px;
                             right: 20px;
                             text-align: center;
                         }
@@ -167,8 +170,8 @@
                                                 <t t-else="">Outro</t>
                                             </td>
                                                 <td>
-                                                    <t t-if="mat.validade"><span t-field="mat.validade"/></t>
-                                                    <t t-else="">Vide Fabricante</t>
+                                                    <t t-if="mat.vide_fabricante or not mat.validade">Vide Fabricante</t>
+                                                    <t t-else=""><span t-field="mat.validade"/></t>
                                                 </td>
                                         </tr>
                                     </t>
@@ -289,7 +292,7 @@
                                     <!-- <div class="mt-2 mb-2">
                                         Garantia de qualidade / Aprovação
                                     </div> -->
-                                    <div style="display:inline-block;max-width:100%;text-align:center;font-size:8px;">
+                                    <div style="display:inline-block;max-width:100%;text-align:center;font-size:11px;">
                                         <strong><span t-field="o.signature_employee_name"/></strong><br/>
                                         <t t-if="o.signature_professional_documentation">
                                             <span t-field="o.signature_professional_documentation"/><br/>
@@ -359,8 +362,8 @@
                                     
                                     <div class="row mt-4">
                                         <div class="col-12 text-center">
-                                            <img t-if="foto.imagem" t-attf-src="data:image/png;base64,{{foto.imagem}}" 
-                                                 style="max-width: 100%; max-height: 800px; border: 1px solid #ddd; padding: 10px; background: white;"
+                                            <img t-if="foto.imagem" t-attf-src="data:image/png;base64,{{foto.imagem}}"
+                                                 style="width: 100%; height: auto; border: 1px solid #ddd; background: white;"
                                                  t-att-alt="foto.titulo"/>
                                 </div>
                                     </div>
