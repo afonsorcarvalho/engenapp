@@ -207,7 +207,7 @@
                            <div class="col-12 text-center"  >
                             <h5 class="titulo_grafico">Gráfico do Ciclo</h5>
                             <t t-if="o.cycle_graph">
-                                <img class="mr-5" t-attf-src="data:image/png;charset=utf-8;base64,{{o.cycle_graph}}" width="90%"/>
+                                <img class="mr-5" t-attf-src="data:image/png;charset=utf-8;base64,{{o.cycle_graph}}" width="72%"/>
                             </t>
                             <t t-else="">
                                 <p>Nenhum gráfico disponível para este ciclo.</p>
