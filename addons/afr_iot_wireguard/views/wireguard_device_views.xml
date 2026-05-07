@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_wireguard_device_tree" model="ir.ui.view">
+        <field name="name">wireguard.device.tree</field>
+        <field name="model">wireguard.device</field>
+        <field name="arch" type="xml">
+            <tree string="Dispositivos WireGuard" decoration-success="state == 'active'"
+                  decoration-warning="state == 'pending'" decoration-muted="state == 'revoked'">
+                <field name="name"/>
+                <field name="device_hw_id"/>
+                <field name="partner_id"/>
+                <field name="assigned_ip"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-warning="state == 'pending'"
+                       decoration-danger="state == 'revoked'"
+                       decoration-muted="state == 'draft'"/>
+                <field name="last_handshake_at"/>
+                <field name="activated_at"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_wireguard_device_form" model="ir.ui.view">
+        <field name="name">wireguard.device.form</field>
+        <field name="model">wireguard.device</field>
+        <field name="arch" type="xml">
+            <form string="Dispositivo WireGuard">
+                <header>
+                    <button name="action_revoke" string="Revogar" type="object"
+                            class="btn-danger" attrs="{'invisible': [('state', '!=', 'active')]}"/>
+                    <button name="action_new_enrollment" string="Novo Enrollment" type="object"
+                            class="btn-secondary"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,pending,active,revoked"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Nome do dispositivo"/></h1>
+                    </div>
+                    <group>
+                        <group string="Identificação">
+                            <field name="device_hw_id"/>
+                            <field name="partner_id"/>
+                            <field name="public_key"/>
+                        </group>
+                        <group string="Rede">
+                            <field name="assigned_ip"/>
+                        </group>
+                    </group>
+                    <group string="Atividade">
+                        <group>
+                            <field name="activated_at"/>
+                            <field name="last_handshake_at"/>
+                        </group>
+                        <group>
+                            <field name="tx_bytes"/>
+                            <field name="rx_bytes"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Enrollments" name="enrollments">
+                            <field name="enrollment_ids" readonly="1">
+                                <tree>
+                                    <field name="code"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state == 'activated'"
+                                           decoration-warning="state == 'pending'"
+                                           decoration-danger="state == 'expired'"
+                                           decoration-muted="state == 'cancelled'"/>
+                                    <field name="expires_at"/>
+                                    <field name="activated_by"/>
+                                    <field name="activated_at"/>
+                                    <field name="created_by_ip"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Observações" name="notes">
+                            <field name="notes" placeholder="Observações internas..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_wireguard_device_kanban" model="ir.ui.view">
+        <field name="name">wireguard.device.kanban</field>
+        <field name="model">wireguard.device</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="device_hw_id"/>
+                <field name="partner_id"/>
+                <field name="assigned_ip"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <strong><field name="name"/></strong>
+                                <div class="text-muted small"><field name="device_hw_id"/></div>
+                                <div t-if="record.partner_id.value">
+                                    <field name="partner_id"/>
+                                </div>
+                                <div t-if="record.assigned_ip.value" class="mt-1">
+                                    <span class="badge bg-light text-dark"><field name="assigned_ip"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_wireguard_device_search" model="ir.ui.view">
+        <field name="name">wireguard.device.search</field>
+        <field name="model">wireguard.device</field>
+        <field name="arch" type="xml">
+            <search string="Dispositivos WireGuard">
+                <field name="name" string="Nome"/>
+                <field name="device_hw_id" string="ID do Hardware"/>
+                <field name="partner_id"/>
+                <separator/>
+                <filter name="active" string="Ativos" domain="[('state', '=', 'active')]"/>
+                <filter name="pending" string="Aguardando Ativação" domain="[('state', '=', 'pending')]"/>
+                <filter name="revoked" string="Revogados" domain="[('state', '=', 'revoked')]"/>
+                <separator/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_state" string="Estado" context="{'group_by': 'state'}"/>
+                    <filter name="group_partner" string="Cliente" context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_wireguard_device" model="ir.actions.act_window">
+        <field name="name">Dispositivos WireGuard</field>
+        <field name="res_model">wireguard.device</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="search_view_id" ref="view_wireguard_device_search"/>
+        <field name="context">{'search_default_active': 1}</field>
+    </record>
+
+</odoo>

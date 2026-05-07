@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="module_category_wireguard" model="ir.module.category">
+        <field name="name">WireGuard IoT</field>
+        <field name="sequence">90</field>
+    </record>
+
+    <record id="group_approver" model="res.groups">
+        <field name="name">Aprovador de Dispositivos</field>
+        <field name="category_id" ref="module_category_wireguard"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Pode aprovar e revogar dispositivos WireGuard.</field>
+    </record>
+
+</odoo>

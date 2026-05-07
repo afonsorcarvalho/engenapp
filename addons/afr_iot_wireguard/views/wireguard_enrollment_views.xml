@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_wireguard_enrollment_tree" model="ir.ui.view">
+        <field name="name">wireguard.enrollment.tree</field>
+        <field name="model">wireguard.enrollment</field>
+        <field name="arch" type="xml">
+            <tree string="Enrollments WireGuard" decoration-warning="state == 'pending'"
+                  decoration-success="state == 'activated'" decoration-muted="state in ('expired', 'cancelled')">
+                <field name="device_id"/>
+                <field name="code"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'activated'"
+                       decoration-warning="state == 'pending'"
+                       decoration-danger="state == 'expired'"
+                       decoration-muted="state == 'cancelled'"/>
+                <field name="expires_at"/>
+                <field name="created_by_ip"/>
+                <field name="activated_by"/>
+                <field name="activated_at"/>
+                <field name="create_date" string="Solicitado em"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_wireguard_enrollment_form" model="ir.ui.view">
+        <field name="name">wireguard.enrollment.form</field>
+        <field name="model">wireguard.enrollment</field>
+        <field name="arch" type="xml">
+            <form string="Enrollment WireGuard" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group string="Identificação">
+                            <field name="device_id"/>
+                            <field name="code"/>
+                            <field name="state" widget="badge"/>
+                        </group>
+                        <group string="Validade">
+                            <field name="expires_at"/>
+                            <field name="created_by_ip"/>
+                        </group>
+                    </group>
+                    <group string="URL de Ativação">
+                        <field name="activation_url" widget="url" nolabel="1" colspan="2"/>
+                    </group>
+                    <group string="Ativação" attrs="{'invisible': [('state', '!=', 'activated')]}">
+                        <field name="activated_by"/>
+                        <field name="activated_at"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_wireguard_enrollment_search" model="ir.ui.view">
+        <field name="name">wireguard.enrollment.search</field>
+        <field name="model">wireguard.enrollment</field>
+        <field name="arch" type="xml">
+            <search string="Enrollments">
+                <field name="device_id"/>
+                <field name="code"/>
+                <separator/>
+                <filter name="pending" string="Pendentes" domain="[('state', '=', 'pending')]"/>
+                <filter name="activated" string="Ativados" domain="[('state', '=', 'activated')]"/>
+                <filter name="expired" string="Expirados" domain="[('state', '=', 'expired')]"/>
+                <separator/>
+                <group string="Agrupar por">
+                    <filter name="group_state" string="Estado" context="{'group_by': 'state'}"/>
+                    <filter name="group_device" string="Dispositivo" context="{'group_by': 'device_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_wireguard_enrollment" model="ir.actions.act_window">
+        <field name="name">Enrollments WireGuard</field>
+        <field name="res_model">wireguard.enrollment</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_wireguard_enrollment_search"/>
+        <field name="context">{'search_default_pending': 1}</field>
+    </record>
+
+</odoo>

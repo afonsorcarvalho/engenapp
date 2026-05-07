@@ -18,12 +18,12 @@ The server never handles device private keys, ensuring end-to-end security.
 ### 1. Install the Odoo Module
 
 ```bash
-odoo-bin -i afr_iot_wireguard -d <database>
+odoo -i afr_iot_wireguard -d <database>
 ```
 
 Update an existing installation:
 ```bash
-odoo-bin -u afr_iot_wireguard -d <database>
+odoo -u afr_iot_wireguard -d <database>
 ```
 
 ### 2. Deploy WireGuard Daemon (Host System)
@@ -61,6 +61,103 @@ Check logs:
 ```bash
 sudo journalctl -u wg_manager -f
 ```
+
+## Docker Installation
+
+This project runs Odoo 16 in Docker. The `docker-compose.yml` in the repo root defines the setup.
+
+### Module files (already mounted)
+
+The `addons/` directory is mounted into the container at `/mnt/extra-addons`, so no copy step is needed — the module is available as soon as the container starts.
+
+### Install via Odoo UI (recommended for dev)
+
+With `--dev=all` the web service reloads automatically:
+
+1. Open `http://localhost:8083/web`
+2. Go to **Apps** → click **Update Apps List**
+3. Search for **IoT WireGuard Enrollment**
+4. Click **Install**
+
+### Install via CLI
+
+Stop the running container first to avoid DB conflicts:
+
+```bash
+docker compose stop web
+
+docker compose run --rm web \
+  -i afr_iot_wireguard \
+  -d <database> \
+  --stop-after-init
+
+docker compose start web
+```
+
+> **Note:** The entrypoint intercepts arguments starting with `-` and forwards them to `odoo`. Do not prefix with `odoo-bin`.
+
+### Update via CLI
+
+```bash
+docker compose stop web
+
+docker compose run --rm web \
+  -u afr_iot_wireguard \
+  -d <database> \
+  --stop-after-init
+
+docker compose start web
+```
+
+### Run tests in Docker
+
+```bash
+docker compose stop web
+
+docker compose run --rm web \
+  --test-enable \
+  --stop-after-init \
+  -i afr_iot_wireguard \
+  -d test_wg
+
+docker compose start web
+```
+
+Run only HTTP controller tests:
+
+```bash
+docker compose stop web
+
+docker compose run --rm web \
+  --test-enable \
+  --stop-after-init \
+  --test-tags afr_iot_wireguard.TestEnrollApi \
+  -i afr_iot_wireguard \
+  -d test_wg
+
+docker compose start web
+```
+
+### Daemon URL from inside Docker
+
+Odoo runs inside Docker; the `wg_manager` daemon runs on the **host**. The `docker-compose.yml` maps `host.docker.internal → host-gateway`, so use:
+
+```
+http://host.docker.internal:9999
+```
+
+The default `172.17.0.1` also works if the Docker bridge IP hasn't changed, but `host.docker.internal` is more portable.
+
+Set this in **Settings → WireGuard → Daemon URL** after installing.
+
+### Verify daemon reachability from inside container
+
+```bash
+docker compose exec web curl -s http://host.docker.internal:9999/health
+# Expected: {"status": "ok", "interface": "wg0"}
+```
+
+---
 
 ## Configuration
 

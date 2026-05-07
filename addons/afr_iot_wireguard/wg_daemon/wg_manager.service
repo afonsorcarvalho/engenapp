@@ -1,0 +1,24 @@
+[Unit]
+Description=WireGuard Manager Daemon (Odoo IoT Enrollment)
+Documentation=https://github.com/engenapp/afr_iot_wireguard
+After=network.target wg-quick@wg0.service
+Requires=wg-quick@wg0.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/wg_manager/wg_manager.py \
+    --interface wg0 \
+    --host 0.0.0.0 \
+    --port 9999 \
+    --secret TROQUE_ESTA_CHAVE_SECRETA
+Restart=always
+RestartSec=5
+User=root
+
+# Logs em journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=wg-manager
+
+[Install]
+WantedBy=multi-user.target

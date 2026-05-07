@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Views simples para Pool de IPs -->
+    <record id="view_wireguard_ip_pool_form" model="ir.ui.view">
+        <field name="name">wireguard.ip_pool.form</field>
+        <field name="model">wireguard.ip_pool</field>
+        <field name="arch" type="xml">
+            <form string="Pool de IPs WireGuard">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="cidr" placeholder="10.8.0.0/24"/>
+                        <field name="reserved_ips" placeholder="10.8.0.1, 10.8.0.2"/>
+                        <field name="active"/>
+                    </group>
+                    <group string="Estatísticas">
+                        <field name="device_count"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_wireguard_ip_pool_tree" model="ir.ui.view">
+        <field name="name">wireguard.ip_pool.tree</field>
+        <field name="model">wireguard.ip_pool</field>
+        <field name="arch" type="xml">
+            <tree string="Pools de IPs WireGuard">
+                <field name="name"/>
+                <field name="cidr"/>
+                <field name="reserved_ips"/>
+                <field name="device_count" string="Dispositivos Ativos"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Actions (devem vir antes dos menuitems que as referenciam) -->
+    <record id="action_wireguard_ip_pool" model="ir.actions.act_window">
+        <field name="name">Pool de IPs</field>
+        <field name="res_model">wireguard.ip_pool</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Menus -->
+    <menuitem id="menu_wireguard_root"
+              name="WireGuard IoT"
+              sequence="90"
+              web_icon="afr_iot_wireguard,static/description/icon.png"/>
+
+    <menuitem id="menu_wireguard_devices"
+              name="Dispositivos"
+              parent="menu_wireguard_root"
+              action="action_wireguard_device"
+              sequence="10"
+              groups="afr_iot_wireguard.group_approver"/>
+
+    <menuitem id="menu_wireguard_enrollments"
+              name="Enrollments"
+              parent="menu_wireguard_root"
+              action="action_wireguard_enrollment"
+              sequence="20"
+              groups="afr_iot_wireguard.group_approver"/>
+
+    <menuitem id="menu_wireguard_config"
+              name="Configuração"
+              parent="menu_wireguard_root"
+              sequence="90"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_wireguard_ip_pool"
+              name="Pool de IPs"
+              parent="menu_wireguard_config"
+              action="action_wireguard_ip_pool"
+              sequence="10"
+              groups="base.group_system"/>
+
+</odoo>

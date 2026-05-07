@@ -1,0 +1,141 @@
+// Mobile-first styles for WireGuard activation page
+
+body {
+    background: #f0f4f8;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.wg-container {
+    max-width: 480px;
+    margin: 1.5rem auto;
+    padding: 0 1rem;
+}
+
+.wg-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #6c757d;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.wg-card {
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    background: #fff;
+}
+
+.wg-card-header {
+    padding: 1rem 1.25rem;
+
+    h5 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    &.bg-primary { background: #0d6efd; color: #fff; }
+    &.bg-success { background: #198754; color: #fff; }
+    &.bg-danger  { background: #dc3545; color: #fff; }
+    &.bg-secondary { background: #6c757d; color: #fff; }
+}
+
+.wg-card-body {
+    padding: 1.25rem;
+}
+
+.wg-field {
+    margin-bottom: 1rem;
+
+    .wg-label {
+        display: block;
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-bottom: 0.2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .wg-value {
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .wg-value-mono {
+        font-family: monospace;
+        font-size: 0.9rem;
+        color: #495057;
+    }
+
+    .wg-code {
+        font-family: monospace;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0d6efd;
+        letter-spacing: 0.1em;
+    }
+}
+
+.wg-alert {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: #664d03;
+    margin-bottom: 1.25rem;
+}
+
+.wg-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.wg-btn {
+    display: block;
+    width: 100%;
+    padding: 0.85rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    text-align: center;
+    transition: opacity 0.15s;
+
+    &:active { opacity: 0.85; }
+
+    &.wg-btn-confirm {
+        background: #198754;
+        color: #fff;
+    }
+
+    &.wg-btn-cancel {
+        background: transparent;
+        color: #6c757d;
+        border: 1.5px solid #dee2e6;
+    }
+}
+
+.wg-result {
+    text-align: center;
+    padding: 2rem 1rem;
+
+    .wg-result-icon {
+        font-size: 3rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .wg-result-message {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .wg-result-device {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+}
