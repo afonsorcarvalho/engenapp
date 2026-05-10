@@ -4,7 +4,7 @@
         <!-- WireGuard Manager Configuration -->
         <record id="param_wg_manager_endpoint" model="ir.config_parameter">
             <field name="key">afr_iot_wireguard.wg_manager_endpoint</field>
-            <field name="value">http://localhost:9999</field>
+            <field name="value">http://host.docker.internal:9999</field>
         </record>
 
         <record id="param_wg_manager_secret" model="ir.config_parameter">
