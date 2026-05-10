@@ -2,24 +2,29 @@
 <odoo>
     <data noupdate="0">
         <!-- WireGuard Manager Configuration -->
-        <record id="param_wg_manager_endpoint" model="ir.config_parameter">
-            <field name="key">afr_iot_wireguard.wg_manager_endpoint</field>
+        <record id="param_wg_daemon_url" model="ir.config_parameter">
+            <field name="key">afr_iot_wireguard.daemon_url</field>
             <field name="value">http://host.docker.internal:9999</field>
         </record>
 
-        <record id="param_wg_manager_secret" model="ir.config_parameter">
-            <field name="key">afr_iot_wireguard.wg_manager_secret</field>
+        <record id="param_wg_daemon_secret" model="ir.config_parameter">
+            <field name="key">afr_iot_wireguard.daemon_secret</field>
             <field name="value">1osvtWj+sAxU9KKZrgMlPnlLn5RHyGJXian3GzPKYvg=</field>
         </record>
 
         <record id="param_wg_interface" model="ir.config_parameter">
-            <field name="key">afr_iot_wireguard.wg_interface</field>
+            <field name="key">afr_iot_wireguard.interface</field>
             <field name="value">wg0</field>
         </record>
 
-        <record id="param_wg_manager_port" model="ir.config_parameter">
-            <field name="key">afr_iot_wireguard.wg_manager_port</field>
-            <field name="value">9999</field>
+        <record id="param_wg_server_public_key" model="ir.config_parameter">
+            <field name="key">afr_iot_wireguard.server_public_key</field>
+            <field name="value">aes5lORoqWkRlH9IxlW7bFOk4DkEW4lfoxU0NK+orjc=</field>
+        </record>
+
+        <record id="param_wg_server_endpoint" model="ir.config_parameter">
+            <field name="key">afr_iot_wireguard.server_endpoint</field>
+            <field name="value">191.178.173.25:51820</field>
         </record>
     </data>
 </odoo>
