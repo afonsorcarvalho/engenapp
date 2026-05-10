@@ -9,6 +9,7 @@
     'data': [
         'security/wireguard_security.xml',
         'security/ir.model.access.csv',
+        'data/wg_manager_config.xml',
         'data/ir_cron.xml',
         'views/res_config_settings_views.xml',
         'views/wireguard_device_views.xml',
