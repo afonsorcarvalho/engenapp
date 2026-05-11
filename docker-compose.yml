@@ -1,0 +1,85 @@
+
+services:
+  web:
+    build: ./
+    image: afonsorcarvalho/odoo:16.0-docxtpl
+    tty: true
+    # host.docker.internal → IP do host (Docker 20.10+). Ajuste se o seu Docker não suportar host-gateway.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      ARGS: --unccent --dev reload
+      # LM Studio no HOST: o Odoo tenta cada URL até uma responder (ordem importa).
+      # Connection refused = em geral o LM Studio está só em 127.0.0.1 — ative bind 0.0.0.0
+      # (UI “rede local” ou: lms server start --bind 0.0.0.0 / LMS_SERVER_HOST=0.0.0.0).
+      # Windows + Docker: de dentro do container ``host.docker.internal`` pode dar refused; o código
+      # tenta antes ``ODOO_LMSTUDIO_HOST_LAN`` (IP LAN do Windows onde o LM Studio escuta).
+      # IPv4 do Windows onde o LM Studio escuta (evite ${...}: um export errado tipo 192.168.0.x no shell sobrescreve).
+      ODOO_LMSTUDIO_HOST_LAN: "192.168.0.188"
+      ODOO_LMSTUDIO_HOST_PORT: "1234"
+      ODOO_LMSTUDIO_API_BASE: "http://host.docker.internal:1234/v1,http://172.17.0.1:1234/v1"
+    command: --dev=all --log-level debug --log-handler odoo.tools.convert:DEBUG
+    #command:  --log-handler odoo.tools.convert:DEBUG 
+    depends_on:
+      - db
+    ports:
+      - "8083:8069"
+      - "8073:8072"
+    #deploy:
+    #   resources:
+    #     limits:
+    #        memory: 8G
+    #        cpus:  '12.0'
+    restart: always
+    # Limita tamanho dos logs: max-size por arquivo, max-file quantidade de arquivos rotacionados
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ./addons:/mnt/extra-addons
+      - ./engenapp:/mnt/engenapp
+      - ./data/odoo:/var/lib/odoo
+      - ./l10n-brazil:/mnt/l10n-brazil
+      - ./product-attribute:/mnt/product-attribute
+      - ./OCA-dms:/mnt/oca-dms
+      - ./OCA-storage:/mnt/oca-storage
+      - ./conf:/etc/odoo
+    # Último recurso no Linux: descomente para o container usar a rede do host (LM em 127.0.0.1).
+    # Exige ajustar acesso ao Odoo (porta 8069 no host) e remover/alterar o mapeamento "ports" acima.
+    # network_mode: host
+  db:
+    image: postgres:12
+    command: postgres -c logging_collector=on -c log_destination=stderr
+    ports:
+      - "5440:5432"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      -  ./data/postgresql:/var/lib/postgresql/data/pgdata
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "afonso@jgma.com.br"
+      PGADMIN_DEFAULT_PASSWORD: "gea182803"
+    ports:
+      - "9002:80"
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    depends_on:
+      - db
+        
