@@ -17,11 +17,21 @@ export function FilterChips({ filters, onChange }: Props) {
     queryFn: () => ecmApi.listDocumentTypes(),
     staleTime: 5 * 60_000,
   })
+  const tags = useQuery({
+    queryKey: ['tags'],
+    queryFn: () => ecmApi.listTags(),
+    staleTime: 5 * 60_000,
+  })
 
   function toggleType(id: number) {
     const current = filters.documentTypeIds || []
     const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
     onChange({ ...filters, documentTypeIds: next.length ? next : undefined })
+  }
+  function toggleTag(id: number) {
+    const current = filters.tagIds || []
+    const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
+    onChange({ ...filters, tagIds: next.length ? next : undefined })
   }
   function setOcr(state: SearchFilters['ocrState']) {
     onChange({ ...filters, ocrState: filters.ocrState === state ? null : state })
@@ -32,6 +42,7 @@ export function FilterChips({ filters, onChange }: Props) {
 
   const hasFilters =
     (filters.documentTypeIds?.length ?? 0) > 0 ||
+    (filters.tagIds?.length ?? 0) > 0 ||
     !!filters.ocrState ||
     !!filters.expirationStatus
 
@@ -44,6 +55,16 @@ export function FilterChips({ filters, onChange }: Props) {
           onClick={() => toggleType(t.id)}
         >
           {t.name}
+        </Chip>
+      ))}
+      {tags.data && tags.data.length > 0 && <Sep />}
+      {tags.data?.map((t) => (
+        <Chip
+          key={`tag-${t.id}`}
+          active={filters.tagIds?.includes(t.id)}
+          onClick={() => toggleTag(t.id)}
+        >
+          #{t.name}
         </Chip>
       ))}
       <Sep />

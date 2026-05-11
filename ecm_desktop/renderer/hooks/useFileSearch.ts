@@ -6,6 +6,7 @@ import { ecmApi, EcmFileSummary } from '@/lib/ecm-api'
 
 export interface SearchFilters {
   documentTypeIds?: number[]
+  tagIds?: number[]
   ocrState?: 'done' | 'pending' | 'failed' | null
   expirationStatus?: 'expired' | 'critical' | 'warning' | null
 }
@@ -48,6 +49,10 @@ function applyFilters(rows: (EcmFileSummary & { ocr_text?: string })[], f: Searc
     if (f.documentTypeIds && f.documentTypeIds.length) {
       const id = r.document_type_id ? r.document_type_id[0] : null
       if (id == null || !f.documentTypeIds.includes(id)) return false
+    }
+    if (f.tagIds && f.tagIds.length) {
+      const rowTags = r.tag_ids ?? []
+      if (!f.tagIds.some((t) => rowTags.includes(t))) return false
     }
     if (f.ocrState && r.ocr_state !== f.ocrState) return false
     if (f.expirationStatus && r.expiration_status !== f.expirationStatus) return false

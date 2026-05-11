@@ -36,6 +36,7 @@ export interface EcmFileSummary {
   ocr_state?: string
   approval_state?: string
   can_download?: boolean
+  tag_ids?: number[]
 }
 
 export interface EcmDocumentType {
@@ -47,10 +48,17 @@ export interface EcmDocumentType {
   ocr_enabled: boolean
 }
 
+export interface EcmTag {
+  id: number
+  name: string
+  color?: number
+  category_id?: [number, string] | false
+}
+
 const FILE_FIELDS: (keyof EcmFileSummary)[] = [
   'id', 'name', 'mimetype', 'create_date', 'write_date', 'directory_id',
   'document_type_id', 'confidentiality', 'expiration_date', 'expiration_status',
-  'ocr_state', 'approval_state', 'can_download',
+  'ocr_state', 'approval_state', 'can_download', 'tag_ids',
 ]
 
 export const ecmApi = {
@@ -107,6 +115,7 @@ export const ecmApi = {
     directoryId: number
     contentBase64: string
     documentTypeId?: number
+    tagIds?: number[]
   }): Promise<number> {
     const vals: Record<string, unknown> = {
       name: args.name,
@@ -114,7 +123,18 @@ export const ecmApi = {
       content: args.contentBase64,
     }
     if (args.documentTypeId) vals.document_type_id = args.documentTypeId
+    if (args.tagIds && args.tagIds.length) {
+      vals.tag_ids = [[6, 0, args.tagIds]]
+    }
     return odoo.callKw<number>('dms.file', 'create', [vals])
+  },
+
+  // ---- Tags ----
+  async listTags(): Promise<EcmTag[]> {
+    return odoo.callKw<EcmTag[]>('dms.tag', 'search_read', [
+      [['active', '=', true]],
+      ['id', 'name', 'color', 'category_id'],
+    ], { order: 'name' })
   },
 
   fileDownloadUrl(id: number, download = true): string {

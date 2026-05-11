@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ChevronRight, Folder, FolderOpen } from 'lucide-react'
+import { ChevronRight, Folder, FolderOpen, FolderPlus } from 'lucide-react'
 import clsx from 'clsx'
 import type { EcmDirectory } from '@/lib/ecm-api'
 
@@ -9,6 +9,7 @@ interface Props {
   directories: EcmDirectory[]
   currentId: number | null
   onSelect: (id: number | null) => void
+  onNewFolder?: (parentId: number | null) => void
 }
 
 interface TreeNode extends EcmDirectory {
@@ -32,31 +33,50 @@ function buildTree(dirs: EcmDirectory[]): TreeNode[] {
   return roots
 }
 
-export function FolderTree({ directories, currentId, onSelect }: Props) {
+export function FolderTree({ directories, currentId, onSelect, onNewFolder }: Props) {
   const tree = useMemo(() => buildTree(directories), [directories])
 
   return (
     <div className="text-sm">
-      <button
-        onClick={() => onSelect(null)}
-        className={clsx(
-          'w-full text-left px-2 py-1.5 rounded-md flex items-center gap-2 hover:bg-bg-muted',
-          currentId === null && 'bg-bg-muted text-accent',
+      <div className="group flex items-center pr-1 rounded-md hover:bg-bg-muted">
+        <button
+          onClick={() => onSelect(null)}
+          className={clsx(
+            'flex-1 text-left px-2 py-1.5 rounded-md flex items-center gap-2',
+            currentId === null && 'text-accent',
+          )}
+        >
+          <Folder size={16} />
+          <span>Todos</span>
+        </button>
+        {onNewFolder && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onNewFolder(null) }}
+            className="opacity-0 group-hover:opacity-100 transition p-1 rounded text-ink-dim hover:text-accent"
+            title="Nova pasta raiz"
+          >
+            <FolderPlus size={14} />
+          </button>
         )}
-      >
-        <Folder size={16} />
-        <span>Todos</span>
-      </button>
+      </div>
       {tree.map((n) => (
-        <TreeRow key={n.id} node={n} depth={0} currentId={currentId} onSelect={onSelect} />
+        <TreeRow
+          key={n.id} node={n} depth={0}
+          currentId={currentId} onSelect={onSelect} onNewFolder={onNewFolder}
+        />
       ))}
     </div>
   )
 }
 
 function TreeRow({
-  node, depth, currentId, onSelect,
-}: { node: TreeNode; depth: number; currentId: number | null; onSelect: (id: number) => void }) {
+  node, depth, currentId, onSelect, onNewFolder,
+}: {
+  node: TreeNode; depth: number;
+  currentId: number | null;
+  onSelect: (id: number) => void;
+  onNewFolder?: (parentId: number | null) => void;
+}) {
   const [open, setOpen] = useState(depth === 0)
   const hasChildren = node.children.length > 0
   const active = currentId === node.id
@@ -65,7 +85,7 @@ function TreeRow({
     <div>
       <div
         className={clsx(
-          'group flex items-center gap-1 py-1 pr-2 rounded-md hover:bg-bg-muted cursor-pointer',
+          'group flex items-center gap-1 py-1 pr-1 rounded-md hover:bg-bg-muted cursor-pointer',
           active && 'bg-bg-muted text-accent',
         )}
         style={{ paddingLeft: 8 + depth * 14 }}
@@ -89,11 +109,23 @@ function TreeRow({
             <span className="ml-auto text-[10px] text-ink-dim">{node.count_files}</span>
           )}
         </button>
+        {onNewFolder && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onNewFolder(node.id) }}
+            className="opacity-0 group-hover:opacity-100 transition p-1 rounded text-ink-dim hover:text-accent"
+            title="Nova subpasta"
+          >
+            <FolderPlus size={13} />
+          </button>
+        )}
       </div>
       {open && hasChildren && (
         <div>
           {node.children.map((c) => (
-            <TreeRow key={c.id} node={c} depth={depth + 1} currentId={currentId} onSelect={onSelect} />
+            <TreeRow
+              key={c.id} node={c} depth={depth + 1}
+              currentId={currentId} onSelect={onSelect} onNewFolder={onNewFolder}
+            />
           ))}
         </div>
       )}

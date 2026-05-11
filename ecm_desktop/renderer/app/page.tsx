@@ -9,9 +9,12 @@ import { ecmApi } from '@/lib/ecm-api'
 import { FileText, Upload, Camera, Settings, Building2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { FolderTree } from '@/components/FolderTree'
+import { NewFolderModal } from '@/components/NewFolderModal'
+import { Breadcrumb } from '@/components/Breadcrumb'
 import { UploadDropzone } from '@/components/UploadDropzone'
 import { ClassifyWizard } from '@/components/ClassifyWizard'
 import { UploadQueueBar } from '@/components/UploadQueueBar'
+import { FolderPlus } from 'lucide-react'
 import { useUploadQueue } from '@/hooks/useUploadQueue'
 import { FilePreviewModal } from '@/components/FilePreviewModal'
 import { ShareButton } from '@/components/ShareButton'
@@ -33,8 +36,30 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<SearchFilters>({})
   const [logoAspect, setLogoAspect] = useState<number | null>(null)
+  const [newFolderOpen, setNewFolderOpen] = useState(false)
+  const [newFolderParent, setNewFolderParent] = useState<number | null>(null)
   const upload = useUploadQueue()
   const search = useFileSearch(searchQuery, filters)
+
+  function openNewFolder(parentId: number | null = currentDirectoryId) {
+    setNewFolderParent(parentId)
+    setNewFolderOpen(true)
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null
+      const inField = target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)
+      if (inField) return
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault()
+        openNewFolder()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDirectoryId])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -55,6 +80,13 @@ export default function HomePage() {
     queryFn: () => ecmApi.getCurrentCompany(),
     enabled: isAuthenticated,
     staleTime: 30 * 60_000,
+  })
+
+  const tags = useQuery({
+    queryKey: ['tags'],
+    queryFn: () => ecmApi.listTags(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60_000,
   })
 
   const files = useQuery({
@@ -83,8 +115,12 @@ export default function HomePage() {
     setWizardOpen(true)
   }
 
-  function confirmUpload({ directoryId, items }: { directoryId: number; items: { file: File; documentTypeId?: number }[] }) {
-    upload.enqueue({ directoryId, items })
+  function confirmUpload({ directoryId, tagIds, items }: {
+    directoryId: number
+    tagIds: number[]
+    items: { file: File; documentTypeId?: number }[]
+  }) {
+    upload.enqueue({ directoryId, tagIds, items })
     setWizardOpen(false)
     setPendingFiles([])
     toast.success(`${items.length} arquivo(s) enviados à fila`)
@@ -155,6 +191,7 @@ export default function HomePage() {
             directories={dirs.data}
             currentId={currentDirectoryId}
             onSelect={setCurrentDirectory}
+            onNewFolder={(parentId) => openNewFolder(parentId)}
           />
         )}
       </aside>
@@ -166,6 +203,13 @@ export default function HomePage() {
             <div className="flex-1 max-w-xl">
               <SearchBar value={searchQuery} onChange={setSearchQuery} />
             </div>
+            <button
+              onClick={() => openNewFolder()}
+              className="px-3 py-2 rounded-lg bg-bg-soft border border-line hover:border-accent text-sm flex items-center gap-1.5"
+              title="Nova pasta (Ctrl+N)"
+            >
+              <FolderPlus size={16} /> Nova pasta
+            </button>
             <button
               onClick={() => {
                 const input = document.createElement('input')
@@ -208,13 +252,19 @@ export default function HomePage() {
             </>
           ) : (
             <>
-              <div className="flex items-baseline justify-between mb-4">
-                <h2 className="text-lg font-medium">
-                  {currentDirectoryId
-                    ? dirs.data?.find((d) => d.id === currentDirectoryId)?.name ?? 'Pasta'
-                    : 'Todos arquivos (recentes)'}
-                </h2>
-                <span className="text-xs text-ink-dim">{files.data?.length ?? 0} arquivo(s)</span>
+              <div className="flex items-center justify-between gap-3 mb-4 min-w-0">
+                {currentDirectoryId ? (
+                  <Breadcrumb
+                    directories={dirs.data ?? []}
+                    currentId={currentDirectoryId}
+                    onSelect={setCurrentDirectory}
+                  />
+                ) : (
+                  <h2 className="text-lg font-medium">Todos arquivos (recentes)</h2>
+                )}
+                <span className="text-xs text-ink-dim shrink-0">
+                  {files.data?.length ?? 0} arquivo(s)
+                </span>
               </div>
 
               {files.isLoading && <p className="text-sm text-ink-muted">Carregando…</p>}
@@ -240,9 +290,14 @@ export default function HomePage() {
                       <FileText size={18} className="text-accent shrink-0" />
                       <p className="text-sm truncate font-medium">{f.name}</p>
                     </div>
-                    <div className="text-xs text-ink-dim flex flex-wrap gap-2">
+                    <div className="text-xs text-ink-dim flex flex-wrap gap-2 items-center">
                       {f.document_type_id && <span>{f.document_type_id[1]}</span>}
                       {f.ocr_state && <OcrBadge state={f.ocr_state} />}
+                      {f.tag_ids && f.tag_ids.length > 0 && (
+                        <span className="px-1.5 py-0.5 rounded bg-bg-muted">
+                          {f.tag_ids.length} tag{f.tag_ids.length > 1 ? 's' : ''}
+                        </span>
+                      )}
                     </div>
                   </button>
                 ))}
@@ -265,6 +320,21 @@ export default function HomePage() {
               <Row label="OCR" value={selectedFile.ocr_state ?? '—'} />
               <Row label="Vencimento" value={selectedFile.expiration_date || '—'} />
             </div>
+            {selectedFile.tag_ids && selectedFile.tag_ids.length > 0 && tags.data && (
+              <div className="mt-3 flex flex-wrap gap-1">
+                {selectedFile.tag_ids
+                  .map((id) => tags.data!.find((t) => t.id === id))
+                  .filter(Boolean)
+                  .map((t) => (
+                    <span
+                      key={t!.id}
+                      className="text-[11px] px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30"
+                    >
+                      #{t!.name}
+                    </span>
+                  ))}
+              </div>
+            )}
             {selectedFile.can_download === false && (
               <div className="mt-3 text-xs px-2 py-1.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-300">
                 Download restrito para este tipo de documento.
@@ -304,6 +374,14 @@ export default function HomePage() {
         jobs={upload.jobs}
         onClearDone={upload.clearDone}
         onRemove={upload.remove}
+      />
+
+      <NewFolderModal
+        open={newFolderOpen}
+        onClose={() => setNewFolderOpen(false)}
+        directories={dirs.data ?? []}
+        defaultParentId={newFolderParent}
+        onCreated={(id) => setCurrentDirectory(id)}
       />
 
       <FilePreviewModal

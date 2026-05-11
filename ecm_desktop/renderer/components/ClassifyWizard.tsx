@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ecmApi, EcmDocumentType, EcmDirectory } from '@/lib/ecm-api'
-import { FileText, X } from 'lucide-react'
+import { ecmApi, EcmDirectory } from '@/lib/ecm-api'
+import { FileText, X, Tag as TagIcon } from 'lucide-react'
 
 interface PendingFile {
   id: string
@@ -16,13 +16,18 @@ interface Props {
   files: File[]
   directories: EcmDirectory[]
   defaultDirectoryId: number | null
-  onConfirm: (args: { directoryId: number; items: { file: File; documentTypeId?: number }[] }) => void
+  onConfirm: (args: {
+    directoryId: number
+    tagIds: number[]
+    items: { file: File; documentTypeId?: number }[]
+  }) => void
   onCancel: () => void
 }
 
 export function ClassifyWizard({ open, files, directories, defaultDirectoryId, onConfirm, onCancel }: Props) {
   const [directoryId, setDirectoryId] = useState<number | null>(defaultDirectoryId)
   const [items, setItems] = useState<PendingFile[]>([])
+  const [tagIds, setTagIds] = useState<number[]>([])
 
   useEffect(() => {
     setDirectoryId(defaultDirectoryId)
@@ -31,6 +36,7 @@ export function ClassifyWizard({ open, files, directories, defaultDirectoryId, o
   useEffect(() => {
     if (!open) return
     setItems(files.map((f, i) => ({ id: `${Date.now()}_${i}`, file: f })))
+    setTagIds([])
   }, [open, files])
 
   const types = useQuery({
@@ -38,6 +44,16 @@ export function ClassifyWizard({ open, files, directories, defaultDirectoryId, o
     queryFn: () => ecmApi.listDocumentTypes(),
     enabled: open,
   })
+
+  const tags = useQuery({
+    queryKey: ['tags'],
+    queryFn: () => ecmApi.listTags(),
+    enabled: open,
+  })
+
+  function toggleTag(id: number) {
+    setTagIds((prev) => prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id])
+  }
 
   if (!open) return null
 
@@ -53,6 +69,7 @@ export function ClassifyWizard({ open, files, directories, defaultDirectoryId, o
     if (!directoryId) return
     onConfirm({
       directoryId,
+      tagIds,
       items: items.map((it) => ({ file: it.file, documentTypeId: it.documentTypeId })),
     })
   }
@@ -89,6 +106,34 @@ export function ClassifyWizard({ open, files, directories, defaultDirectoryId, o
               <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </Select>
+        </div>
+
+        <div className="p-5 border-b border-line">
+          <div className="text-xs uppercase tracking-wide text-ink-muted mb-2 flex items-center gap-1.5">
+            <TagIcon size={12} /> Tags (aplicadas a todos)
+          </div>
+          {tags.isLoading && <p className="text-xs text-ink-dim">Carregando tags…</p>}
+          {tags.data && tags.data.length === 0 && (
+            <p className="text-xs text-ink-dim">Nenhuma tag cadastrada.</p>
+          )}
+          <div className="flex flex-wrap gap-1.5">
+            {tags.data?.map((t) => {
+              const active = tagIds.includes(t.id)
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => toggleTag(t.id)}
+                  className={`text-xs px-2 py-1 rounded-full border transition ${
+                    active
+                      ? 'bg-accent text-white border-accent'
+                      : 'bg-bg-soft border-line hover:border-accent text-ink-muted'
+                  }`}
+                >
+                  {t.name}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <div className="p-5 overflow-y-auto flex-1 space-y-2">

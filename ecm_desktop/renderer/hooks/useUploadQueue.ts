@@ -11,6 +11,7 @@ export interface UploadJob {
   name: string
   directoryId: number
   documentTypeId?: number
+  tagIds?: number[]
   status: UploadStatus
   progress: number
   serverId?: number
@@ -57,6 +58,7 @@ export function useUploadQueue() {
         directoryId: job.directoryId,
         contentBase64,
         documentTypeId: job.documentTypeId,
+        tagIds: job.tagIds,
       })
       updateJob(job.id, { status: 'done', progress: 100, serverId })
     } catch (e: any) {
@@ -82,14 +84,16 @@ export function useUploadQueue() {
 
   const enqueue = useCallback((args: {
     directoryId: number
-    items: { file: File; documentTypeId?: number }[]
+    tagIds?: number[]
+    items: { file: File; documentTypeId?: number; tagIds?: number[] }[]
   }) => {
-    const newJobs: UploadJob[] = args.items.map(({ file, documentTypeId }) => ({
+    const newJobs: UploadJob[] = args.items.map(({ file, documentTypeId, tagIds }) => ({
       id: uid(),
       file,
       name: file.name,
       directoryId: args.directoryId,
       documentTypeId,
+      tagIds: tagIds && tagIds.length ? tagIds : args.tagIds,
       status: 'queued',
       progress: 0,
     }))
