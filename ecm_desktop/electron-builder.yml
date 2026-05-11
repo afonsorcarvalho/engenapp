@@ -1,0 +1,31 @@
+appId: br.com.engenapp.ecmdesktop
+productName: AFR ECM Desktop
+copyright: Copyright (c) 2026 Engenapp
+
+directories:
+  output: release
+  buildResources: resources
+
+files:
+  - dist-electron/**/*
+  - renderer/out/**/*
+  - package.json
+
+asar: true
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  artifactName: ${productName}-${version}-setup.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  shortcutName: AFR ECM
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  uninstallDisplayName: AFR ECM Desktop ${version}
+
+publish: null

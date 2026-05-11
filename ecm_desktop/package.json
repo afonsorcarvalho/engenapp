@@ -1,0 +1,33 @@
+{
+  "name": "ecm-desktop",
+  "version": "0.1.0",
+  "description": "AFR ECM Desktop — Electron + Next.js client for afr_ecm",
+  "main": "dist-electron/main.js",
+  "author": "Engenapp",
+  "license": "LGPL-3.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n NEXT,ELECTRON -c blue,magenta \"npm:dev:renderer\" \"npm:dev:electron\"",
+    "dev:renderer": "cd renderer && npm run dev",
+    "dev:electron": "wait-on tcp:3000 && npm run build:electron && cross-env NODE_ENV=development electron dist-electron/main.js",
+    "build:electron": "tsc -p electron/tsconfig.json",
+    "build:renderer": "cd renderer && npm run build:export",
+    "build": "npm run build:renderer && npm run build:electron",
+    "dist": "npm run build && electron-builder --win",
+    "lint": "cd renderer && npm run lint"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "concurrently": "^9.0.0",
+    "cross-env": "^7.0.3",
+    "electron": "^31.0.0",
+    "electron-builder": "^25.0.0",
+    "typescript": "^5.4.0",
+    "wait-on": "^8.0.0"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "electron-store": "^8.2.0",
+    "electron-updater": "^6.3.0"
+  }
+}

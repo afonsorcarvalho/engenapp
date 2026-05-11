@@ -1,0 +1,8 @@
+node_modules
+dist-electron
+release
+renderer/.next
+renderer/out
+renderer/node_modules
+*.log
+.env.local

@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #__next { height: 100%; }
+
+body {
+  background: theme('colors.bg.DEFAULT');
+  color: theme('colors.ink.DEFAULT');
+  font-family: theme('fontFamily.sans');
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(124, 92, 255, 0.35);
+}
+
+.glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  border: 1px solid theme('colors.line.DEFAULT');
+  backdrop-filter: blur(8px);
+}
+
+/* Highlight de busca dentro do PDF (customTextRenderer do react-pdf) */
+mark.ecm-pdf-hl {
+  background: rgba(252, 211, 77, 0.55);
+  color: inherit;
+  padding: 0;
+  border-radius: 2px;
+}
+
