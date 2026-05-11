@@ -1,0 +1,36 @@
+watchdog
+plotly==5.13.1
+docxtpl
+google-auth
+# cryptography 43: signxml 4+ exige >=43; pyOpenSSL 24 suporta até 44.x. Se Odoo falhar (x509), ver patch.
+cryptography>=43,<45
+# PyOpenSSL 24.x compatível com cryptography 43; evita X509_V_FLAG_CB_ISSUER_CHECK no Odoo
+pyOpenSSL>=24.0,<25
+# signxml 4+ não usa OpenSSL.crypto.verify; erpbrasil.assinatura exige signxml>=2.8.2
+signxml>=4.0
+# Venv precisa de psycopg2 (wait-for-psql.py e Odoo usam o Python do venv)
+psycopg2-binary>=2.9
+#kaleido==0.2.0
+#orca
+matplotlib
+holidays
+erpbrasil.base
+erpbrasil.assinatura
+erpbrasil.edoc
+brazilcep
+nfelib
+brazilfiscalreport
+phonenumbers
+email-validator
+pynfe
+# lxml 5.2.1+ exigido por signxml 4.x
+lxml>=5.2.1,<6
+# lxml 5+ não inclui lxml.html.clean; Odoo (odoo.tools.mail) importa esse módulo
+lxml_html_clean
+# OCR pipeline (afr_ecm F3.1) — tesseract via pytesseract; PDF→imagem via pdf2image
+pytesseract>=0.3.10
+pdf2image>=1.16
+Pillow>=9.0
+# apenas desenvolvimento
+debugpy
+#pydevd-odoo

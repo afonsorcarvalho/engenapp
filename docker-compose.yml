@@ -45,10 +45,41 @@ services:
       - ./product-attribute:/mnt/product-attribute
       - ./OCA-dms:/mnt/oca-dms
       - ./OCA-storage:/mnt/oca-storage
+      - ./OCA-queue:/mnt/oca-queue
       - ./conf:/etc/odoo
     # Último recurso no Linux: descomente para o container usar a rede do host (LM em 127.0.0.1).
     # Exige ajustar acesso ao Odoo (porta 8069 no host) e remover/alterar o mapeamento "ports" acima.
     # network_mode: host
+  ocr_worker:
+    # Sidecar dedicado a processar jobs OCR enfileirados (queue_job + queue_job_cron).
+    # Compartilha image, addons e DB com web; sem porta HTTP.
+    image: afonsorcarvalho/odoo:16.0-docxtpl
+    tty: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      ARGS: --unccent
+    # Sem HTTP (workers=0); cron threads ativos processam jobs queue_job_cron.
+    command: --no-http --workers=0 --max-cron-threads=4 --log-level=info
+    depends_on:
+      - db
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ./addons:/mnt/extra-addons
+      - ./engenapp:/mnt/engenapp
+      - ./data/odoo:/var/lib/odoo
+      - ./l10n-brazil:/mnt/l10n-brazil
+      - ./product-attribute:/mnt/product-attribute
+      - ./OCA-dms:/mnt/oca-dms
+      - ./OCA-storage:/mnt/oca-storage
+      - ./OCA-queue:/mnt/oca-queue
+      - ./conf:/etc/odoo
+
   db:
     image: postgres:12
     command: postgres -c logging_collector=on -c log_destination=stderr
