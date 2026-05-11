@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { X, Download, Loader2, FileText } from 'lucide-react'
 import { ecmApi } from '@/lib/ecm-api'
+import { ShareButton } from './ShareButton'
 
 const PdfRenderer = dynamic(() => import('./PdfRenderer'), { ssr: false })
 
@@ -92,6 +93,12 @@ export function FilePreviewModal({ fileId, fileName, mimetype, onClose }: Props)
       <header className="flex items-center gap-3 px-5 py-3 border-b border-line">
         <FileText size={18} className="text-accent shrink-0" />
         <p className="text-sm truncate flex-1">{fileName || `Arquivo #${fileId}`}</p>
+        {fileId && (
+          <ShareButton
+            fileId={fileId}
+            className="text-sm px-3 py-1.5 rounded-lg bg-bg-soft border border-line hover:border-accent"
+          />
+        )}
         {blobUrl && (
           <a href={blobUrl} download={fileName || `arquivo_${fileId}`}
              className="text-sm px-3 py-1.5 rounded-lg bg-bg-soft border border-line hover:border-accent flex items-center gap-1.5">

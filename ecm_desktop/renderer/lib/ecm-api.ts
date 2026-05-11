@@ -1,5 +1,17 @@
 import { odoo } from './odoo-client'
 
+function uuidv4(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return (crypto as any).randomUUID()
+  }
+  // fallback
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
 export interface EcmDirectory {
   id: number
   name: string
@@ -66,14 +78,20 @@ export const ecmApi = {
     ], { limit, order: 'write_date desc' })
   },
 
-  async searchFiles(query: string, limit = 50): Promise<EcmFileSummary[]> {
+  async searchFiles(
+    query: string,
+    opts: { limit?: number; withOcrText?: boolean } = {},
+  ): Promise<(EcmFileSummary & { ocr_text?: string })[]> {
+    const limit = opts.limit ?? 50
     // backend já busca name OR ocr_text via _name_search (afr_ecm)
     const ids = await odoo.callKw<[number, string][]>('dms.file', 'name_search', [], {
       name: query, args: [], limit,
     })
     if (!ids.length) return []
-    return odoo.callKw<EcmFileSummary[]>('dms.file', 'read', [
-      ids.map((p) => p[0]), FILE_FIELDS as unknown as string[],
+    const fields = [...FILE_FIELDS] as string[]
+    if (opts.withOcrText) fields.push('ocr_text')
+    return odoo.callKw<(EcmFileSummary & { ocr_text?: string })[]>('dms.file', 'read', [
+      ids.map((p) => p[0]), fields,
     ])
   },
 
@@ -100,6 +118,37 @@ export const ecmApi = {
 
   fileDownloadUrl(id: number, download = true): string {
     return `${odoo.getBaseUrl()}/web/content?model=dms.file&id=${id}&field=content&download=${download}`
+  },
+
+  /** Garante access_token no dms.file e retorna URL pública. */
+  async getShareUrl(id: number): Promise<string> {
+    const rows = await odoo.callKw<{ access_token: string | false }[]>('dms.file', 'read', [
+      [id], ['access_token'],
+    ])
+    let token = rows[0]?.access_token || ''
+    if (!token) {
+      token = uuidv4()
+      await odoo.callKw('dms.file', 'write', [[id], { access_token: token }])
+    }
+    const cfg = await odoo.callKw<{ value: string }[]>('ir.config_parameter', 'search_read', [
+      [['key', '=', 'web.base.url']], ['value'],
+    ], { limit: 1 })
+    const base = cfg[0]?.value || odoo.getBaseUrl()
+    const info = await odoo.sessionInfo()
+    const db = (info as any)?.db || ''
+    const dbParam = db ? `?db=${encodeURIComponent(db)}` : ''
+    return `${base.replace(/\/+$/, '')}/ecm/share/${id}/${token}${dbParam}`
+  },
+
+  // ---- Company ----
+  async getCurrentCompany(): Promise<{ id: number; name: string; logo: string | null }> {
+    const info = await odoo.sessionInfo()
+    const cid = (info as any)?.user_companies?.current_company || (info as any)?.company_id || 1
+    const rows = await odoo.callKw<{ id: number; name: string; logo: string | false }[]>(
+      'res.company', 'read', [[cid], ['id', 'name', 'logo']],
+    )
+    const r = rows[0]
+    return { id: r.id, name: r.name, logo: r.logo ? (r.logo as string) : null }
   },
 
   // ---- Document Types ----

@@ -8,14 +8,17 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 async function proxy(req: NextRequest, ctx: { params: { path: string[] } }) {
-  const target = req.headers.get('x-odoo-target')
+  const url = new URL(req.url)
+  // header tem prioridade; fallback para query param `__t` (img tags não setam headers)
+  const target = req.headers.get('x-odoo-target') || url.searchParams.get('__t')
   if (!target) {
-    return NextResponse.json({ error: 'X-Odoo-Target header missing' }, { status: 400 })
+    return NextResponse.json({ error: 'X-Odoo-Target missing (header ou ?__t=)' }, { status: 400 })
   }
   const targetClean = target.replace(/\/+$/, '')
   const upstreamPath = '/' + ctx.params.path.join('/')
-  const url = new URL(req.url)
-  const upstream = targetClean + upstreamPath + url.search
+  // remove __t da query antes de repassar
+  url.searchParams.delete('__t')
+  const upstream = targetClean + upstreamPath + (url.search ? url.search : '')
 
   const incomingHeaders = new Headers(req.headers)
   // headers que não devem ir pro upstream

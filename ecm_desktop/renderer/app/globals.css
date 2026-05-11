@@ -2,11 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* tema CLARO */
+  --bg: 247 248 251;
+  --bg-soft: 255 255 255;
+  --bg-muted: 235 238 244;
+  --ink: 28 31 38;
+  --ink-muted: 92 100 115;
+  --ink-dim: 142 150 165;
+  --line-color: rgba(0, 0, 0, 0.09);
+  --accent: 124 92 255;
+  --accent-soft: 91 61 245;
+}
+.dark {
+  /* tema ESCURO */
+  --bg: 11 13 18;
+  --bg-soft: 17 20 27;
+  --bg-muted: 26 31 43;
+  --ink: 241 243 248;
+  --ink-muted: 154 163 178;
+  --ink-dim: 92 100 115;
+  --line-color: rgba(255, 255, 255, 0.08);
+  --accent: 124 92 255;
+  --accent-soft: 91 61 245;
+}
+
 html, body, #__next { height: 100%; }
 
 body {
-  background: theme('colors.bg.DEFAULT');
-  color: theme('colors.ink.DEFAULT');
+  background: rgb(var(--bg));
+  color: rgb(var(--ink));
   font-family: theme('fontFamily.sans');
   -webkit-font-smoothing: antialiased;
 }
@@ -16,9 +41,12 @@ body {
 }
 
 .glass {
-  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
-  border: 1px solid theme('colors.line.DEFAULT');
+  background: rgb(var(--bg-soft) / 0.6);
+  border: 1px solid var(--line-color);
   backdrop-filter: blur(8px);
+}
+.dark .glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
 }
 
 /* Highlight de busca dentro do PDF (customTextRenderer do react-pdf) */
@@ -28,4 +56,5 @@ mark.ecm-pdf-hl {
   padding: 0;
   border-radius: 2px;
 }
+
 
