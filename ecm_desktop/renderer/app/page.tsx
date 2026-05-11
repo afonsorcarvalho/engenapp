@@ -265,16 +265,23 @@ export default function HomePage() {
               <Row label="OCR" value={selectedFile.ocr_state ?? '—'} />
               <Row label="Vencimento" value={selectedFile.expiration_date || '—'} />
             </div>
+            {selectedFile.can_download === false && (
+              <div className="mt-3 text-xs px-2 py-1.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-300">
+                Download restrito para este tipo de documento.
+              </div>
+            )}
             <button
               onClick={() => setPreviewId(selectedFile.id)}
               className="mt-4 w-full text-sm px-3 py-2 rounded-lg bg-accent hover:bg-accent-soft"
             >
               Abrir / Visualizar
             </button>
-            <ShareButton
-              fileId={selectedFile.id}
-              className="mt-2 w-full text-sm px-3 py-2 rounded-lg bg-bg-muted hover:bg-bg border border-line"
-            />
+            {selectedFile.can_download !== false && (
+              <ShareButton
+                fileId={selectedFile.id}
+                className="mt-2 w-full text-sm px-3 py-2 rounded-lg bg-bg-muted hover:bg-bg border border-line"
+              />
+            )}
           </>
         ) : (
           <div className="text-center text-ink-dim text-sm mt-12">

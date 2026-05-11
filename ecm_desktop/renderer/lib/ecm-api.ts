@@ -35,6 +35,7 @@ export interface EcmFileSummary {
   expiration_status?: string
   ocr_state?: string
   approval_state?: string
+  can_download?: boolean
 }
 
 export interface EcmDocumentType {
@@ -49,7 +50,7 @@ export interface EcmDocumentType {
 const FILE_FIELDS: (keyof EcmFileSummary)[] = [
   'id', 'name', 'mimetype', 'create_date', 'write_date', 'directory_id',
   'document_type_id', 'confidentiality', 'expiration_date', 'expiration_status',
-  'ocr_state', 'approval_state',
+  'ocr_state', 'approval_state', 'can_download',
 ]
 
 export const ecmApi = {

@@ -22,6 +22,7 @@ export function FilePreviewModal({ fileId, fileName, mimetype, onClose }: Props)
   const [pages, setPages] = useState(0)
   const [pageNum, setPageNum] = useState(1)
   const [ocrText, setOcrText] = useState<string | null>(null)
+  const [canDownload, setCanDownload] = useState<boolean>(true)
 
   const isPdf = useMemo(
     () => (mimetype || '').toLowerCase().includes('pdf') || (fileName || '').toLowerCase().endsWith('.pdf'),
@@ -35,7 +36,7 @@ export function FilePreviewModal({ fileId, fileName, mimetype, onClose }: Props)
   useEffect(() => {
     let cancelled = false
     let createdBlob: string | null = null
-    setBlobUrl(null); setError(null); setLoading(true); setPages(0); setPageNum(1); setOcrText(null)
+    setBlobUrl(null); setError(null); setLoading(true); setPages(0); setPageNum(1); setOcrText(null); setCanDownload(true)
     if (!fileId) return
 
     async function load(id: number) {
@@ -60,8 +61,11 @@ export function FilePreviewModal({ fileId, fileName, mimetype, onClose }: Props)
         setBlobUrl(createdBlob)
 
         try {
-          const f = await ecmApi.readFile(id, ['ocr_text', 'ocr_state'])
-          if (!cancelled) setOcrText(f.ocr_text || null)
+          const f = await ecmApi.readFile(id, ['ocr_text', 'ocr_state', 'can_download'])
+          if (!cancelled) {
+            setOcrText(f.ocr_text || null)
+            setCanDownload(f.can_download !== false)
+          }
         } catch {}
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Erro ao baixar')
@@ -93,13 +97,18 @@ export function FilePreviewModal({ fileId, fileName, mimetype, onClose }: Props)
       <header className="flex items-center gap-3 px-5 py-3 border-b border-line">
         <FileText size={18} className="text-accent shrink-0" />
         <p className="text-sm truncate flex-1">{fileName || `Arquivo #${fileId}`}</p>
-        {fileId && (
+        {!canDownload && (
+          <span className="text-xs px-2 py-1 rounded border border-amber-500/40 bg-amber-500/10 text-amber-300">
+            Download restrito
+          </span>
+        )}
+        {fileId && canDownload && (
           <ShareButton
             fileId={fileId}
             className="text-sm px-3 py-1.5 rounded-lg bg-bg-soft border border-line hover:border-accent"
           />
         )}
-        {blobUrl && (
+        {blobUrl && canDownload && (
           <a href={blobUrl} download={fileName || `arquivo_${fileId}`}
              className="text-sm px-3 py-1.5 rounded-lg bg-bg-soft border border-line hover:border-accent flex items-center gap-1.5">
             <Download size={14} /> Baixar
