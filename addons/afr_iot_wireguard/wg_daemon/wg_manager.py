@@ -66,6 +66,21 @@ class WgHandler(BaseHTTPRequestHandler):
     def do_GET(self):  # noqa: N802
         if self.path == '/health':
             self._send(200, {'status': 'ok', 'interface': _INTERFACE})
+        elif self.path == '/pubkey':
+            if not self._authorized():
+                self._send(403, {'error': 'forbidden'})
+                return
+            try:
+                pubkey = _run(['wg', 'show', _INTERFACE, 'public-key'])
+                port = _run(['wg', 'show', _INTERFACE, 'listen-port'])
+                self._send(200, {
+                    'interface': _INTERFACE,
+                    'public_key': pubkey,
+                    'listen_port': int(port) if port.isdigit() else port,
+                })
+            except Exception as e:
+                _log.error('Falha ao ler pubkey/port: %s', e)
+                self._send(500, {'error': str(e)})
         else:
             self._send(404, {'error': 'not found'})
 
