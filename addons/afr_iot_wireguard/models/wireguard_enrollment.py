@@ -65,7 +65,8 @@ class WireguardEnrollment(models.Model):
         if not base_url:
             base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
 
-        activation_url = f'{base_url}/activate?code={code}' if base_url else ''
+        db_name = self.env.cr.dbname
+        activation_url = f'{base_url}/activate?db={db_name}&code={code}' if base_url else ''
 
         enrollment = self.create({
             'device_id': device.id,
@@ -76,6 +77,55 @@ class WireguardEnrollment(models.Model):
         })
         _log.info('Enrollment created: device_hw_id=%s, request_ip=%s',
                   device.device_hw_id, request_ip)
+        return enrollment
+
+    def create_activated_for_device(self, device, base_url='', request_ip=None,
+                                    prev_pubkey=None, assigned_ip=None):
+        """Re-issue WG config for an already-active device (re-keying flow).
+
+        Swaps the peer on the daemon (removes the old pubkey, adds the new one
+        with the existing IP) and returns an enrollment already in 'activated'
+        state, so the next poll returns the full config without admin approval.
+
+        Security note: trust is anchored solely in `device_hw_id`. A leaked
+        hw_id allows an attacker to hijack the peer slot. Acceptable here
+        because devices ship over a controlled provisioning channel.
+        """
+        from ..services.wg_runner import WgRunner
+
+        pending = self.search([('device_id', '=', device.id), ('state', '=', 'pending')])
+        if pending:
+            pending.write({'state': 'cancelled'})
+
+        runner = WgRunner(self.env)
+        if prev_pubkey and prev_pubkey != device.public_key:
+            try:
+                runner.remove_peer(prev_pubkey)
+            except Exception as exc:
+                _log.warning('Failed to remove old peer during re-enroll: %s', exc)
+        runner.add_peer(device.public_key, assigned_ip)
+
+        code = _generate_code()
+        expires_at = fields.Datetime.now() + timedelta(minutes=_CODE_TTL_MINUTES)
+        if not base_url:
+            base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
+        db_name = self.env.cr.dbname
+        activation_url = f'{base_url}/activate?db={db_name}&code={code}' if base_url else ''
+
+        enrollment = self.create({
+            'device_id': device.id,
+            'code': code,
+            'activation_url': activation_url,
+            'expires_at': expires_at,
+            'created_by_ip': request_ip,
+            'state': 'activated',
+            'activated_at': fields.Datetime.now(),
+        })
+        device.write({'activated_at': fields.Datetime.now()})
+        _log.warning(
+            'Re-keying: device hw_id=%s rotated pubkey, assigned_ip=%s, request_ip=%s',
+            device.device_hw_id, assigned_ip, request_ip,
+        )
         return enrollment
 
     @api.model

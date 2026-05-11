@@ -45,10 +45,24 @@ class WireguardApiController(http.Controller):
             return _json_response({'error': 'Demasiadas tentativas. Tente novamente mais tarde.'}, 429)
         attempt_model.record_attempt(request_ip, hw_id)
 
-        device = env['wireguard.device'].sudo().find_or_create_by_hw_id(hw_id, public_key)
-        enrollment = env['wireguard.enrollment'].sudo().create_for_device(
-            device, base_url=base_url, request_ip=request_ip,
-        )
+        device_model = env['wireguard.device'].sudo()
+        existing = device_model.search([('device_hw_id', '=', hw_id)], limit=1)
+        prev_state = existing.state if existing else None
+        prev_pubkey = existing.public_key if existing else None
+        prev_ip = existing.assigned_ip if existing else None
+
+        device = device_model.find_or_create_by_hw_id(hw_id, public_key)
+
+        enrollment_model = env['wireguard.enrollment'].sudo()
+        if prev_state == 'active' and prev_ip:
+            enrollment = enrollment_model.create_activated_for_device(
+                device, base_url=base_url, request_ip=request_ip,
+                prev_pubkey=prev_pubkey, assigned_ip=prev_ip,
+            )
+        else:
+            enrollment = enrollment_model.create_for_device(
+                device, base_url=base_url, request_ip=request_ip,
+            )
 
         poll_url = f'{base_url}/api/enroll/status/{enrollment.code}'
 
