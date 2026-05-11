@@ -94,9 +94,9 @@ export function FilePreviewModal({ fileId, fileName, mimetype, onClose }: Props)
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col">
-      <header className="flex items-center gap-3 px-5 py-3 border-b border-line">
+      <header className="flex items-center gap-3 px-5 py-3 border-b border-white/10 text-white">
         <FileText size={18} className="text-accent shrink-0" />
-        <p className="text-sm truncate flex-1">{fileName || `Arquivo #${fileId}`}</p>
+        <p className="text-sm truncate flex-1 text-white">{fileName || `Arquivo #${fileId}`}</p>
         {!canDownload && (
           <span className="text-xs px-2 py-1 rounded border border-amber-500/40 bg-amber-500/10 text-amber-300">
             Download restrito
@@ -105,16 +105,22 @@ export function FilePreviewModal({ fileId, fileName, mimetype, onClose }: Props)
         {fileId && canDownload && (
           <ShareButton
             fileId={fileId}
-            className="text-sm px-3 py-1.5 rounded-lg bg-bg-soft border border-line hover:border-accent"
+            className="text-sm px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 hover:border-accent text-white"
           />
         )}
         {blobUrl && canDownload && (
           <a href={blobUrl} download={fileName || `arquivo_${fileId}`}
-             className="text-sm px-3 py-1.5 rounded-lg bg-bg-soft border border-line hover:border-accent flex items-center gap-1.5">
+             className="text-sm px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 hover:border-accent text-white flex items-center gap-1.5">
             <Download size={14} /> Baixar
           </a>
         )}
-        <button onClick={onClose} className="p-2 rounded hover:bg-bg-muted"><X size={18} /></button>
+        <button
+          onClick={onClose}
+          className="p-2 rounded text-white hover:bg-white/10"
+          title="Fechar (Esc)"
+        >
+          <X size={18} />
+        </button>
       </header>
 
       <div className="flex-1 grid grid-cols-[1fr_360px] overflow-hidden">
