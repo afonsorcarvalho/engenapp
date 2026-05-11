@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { useEcmStore } from '@/store/ecmStore'
@@ -11,6 +11,8 @@ import toast from 'react-hot-toast'
 import { FolderTree } from '@/components/FolderTree'
 import { NewFolderModal } from '@/components/NewFolderModal'
 import { Breadcrumb } from '@/components/Breadcrumb'
+import { SortDropdown, SortState, sortFiles } from '@/components/SortDropdown'
+import { EmptyState } from '@/components/EmptyState'
 import { UploadDropzone } from '@/components/UploadDropzone'
 import { ClassifyWizard } from '@/components/ClassifyWizard'
 import { UploadQueueBar } from '@/components/UploadQueueBar'
@@ -38,8 +40,21 @@ export default function HomePage() {
   const [logoAspect, setLogoAspect] = useState<number | null>(null)
   const [newFolderOpen, setNewFolderOpen] = useState(false)
   const [newFolderParent, setNewFolderParent] = useState<number | null>(null)
+  const [sort, setSort] = useState<SortState>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('ecm-sort')
+        if (raw) return JSON.parse(raw)
+      } catch {}
+    }
+    return { key: 'write_date', dir: 'desc' }
+  })
   const upload = useUploadQueue()
   const search = useFileSearch(searchQuery, filters)
+
+  useEffect(() => {
+    try { localStorage.setItem('ecm-sort', JSON.stringify(sort)) } catch {}
+  }, [sort])
 
   function openNewFolder(parentId: number | null = currentDirectoryId) {
     setNewFolderParent(parentId)
@@ -51,15 +66,27 @@ export default function HomePage() {
       const target = e.target as HTMLElement | null
       const inField = target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)
       if (inField) return
+      if (previewId !== null) return // modal aberto tem seus próprios atalhos
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
         e.preventDefault()
         openNewFolder()
+        return
+      }
+      if (e.key === 'Enter' && selectedFileId !== null) {
+        e.preventDefault()
+        setPreviewId(selectedFileId)
+        return
+      }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedFileId !== null) {
+        e.preventDefault()
+        handleDeleteSelected()
+        return
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDirectoryId])
+  }, [currentDirectoryId, selectedFileId, previewId])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -130,7 +157,28 @@ export default function HomePage() {
     return <div className="grid place-items-center h-screen text-ink-muted">Restaurando sessão…</div>
   }
 
-  const selectedFile = files.data?.find((f) => f.id === selectedFileId) || null
+  const sortedFiles = useMemo(() => {
+    if (!files.data) return []
+    return sortFiles(files.data, sort)
+  }, [files.data, sort])
+
+  const selectedFile = sortedFiles.find((f) => f.id === selectedFileId) || null
+
+  async function handleDeleteSelected() {
+    if (!selectedFile) return
+    const ok = window.confirm(
+      `Mover "${selectedFile.name}" para a lixeira?\n\nDocumentos aprovados não podem ser excluídos.`,
+    )
+    if (!ok) return
+    try {
+      await ecmApi.deleteFile(selectedFile.id)
+      toast.success('Arquivo movido para a lixeira')
+      selectFile(null)
+      qc.invalidateQueries({ queryKey: ['files'] })
+    } catch (e: any) {
+      toast.error(e?.message || 'Falha ao excluir')
+    }
+  }
 
   return (
     <div className="grid grid-cols-[260px_1fr_320px] h-screen overflow-hidden">
@@ -262,22 +310,34 @@ export default function HomePage() {
                 ) : (
                   <h2 className="text-lg font-medium">Todos arquivos (recentes)</h2>
                 )}
-                <span className="text-xs text-ink-dim shrink-0">
-                  {files.data?.length ?? 0} arquivo(s)
-                </span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-xs text-ink-dim">
+                    {sortedFiles.length} arquivo(s)
+                  </span>
+                  <SortDropdown value={sort} onChange={setSort} />
+                </div>
               </div>
 
               {files.isLoading && <p className="text-sm text-ink-muted">Carregando…</p>}
 
               {files.data && files.data.length === 0 && (
-                <div className="glass rounded-xl p-10 text-center text-ink-muted">
-                  <p className="mb-2">Pasta vazia.</p>
-                  <p className="text-xs">Arraste arquivos para qualquer lugar da janela para enviar.</p>
-                </div>
+                <EmptyState
+                  title={currentDirectoryId ? 'Pasta vazia' : 'Nenhum arquivo'}
+                  onUpload={() => {
+                    const input = document.createElement('input')
+                    input.type = 'file'; input.multiple = true
+                    input.onchange = () => {
+                      const fs = Array.from(input.files ?? [])
+                      if (fs.length) handleFilesDropped(fs)
+                    }
+                    input.click()
+                  }}
+                  onNewFolder={() => openNewFolder()}
+                />
               )}
 
               <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {files.data?.map((f) => (
+                {sortedFiles.map((f) => (
                   <button
                     key={f.id}
                     onClick={() => selectFile(f.id)}

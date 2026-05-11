@@ -56,7 +56,7 @@ export interface EcmTag {
 }
 
 const FILE_FIELDS: (keyof EcmFileSummary)[] = [
-  'id', 'name', 'mimetype', 'create_date', 'write_date', 'directory_id',
+  'id', 'name', 'mimetype', 'size', 'create_date', 'write_date', 'directory_id',
   'document_type_id', 'confidentiality', 'expiration_date', 'expiration_status',
   'ocr_state', 'approval_state', 'can_download', 'tag_ids',
 ]
@@ -139,6 +139,10 @@ export const ecmApi = {
 
   fileDownloadUrl(id: number, download = true): string {
     return `${odoo.getBaseUrl()}/web/content?model=dms.file&id=${id}&field=content&download=${download}`
+  },
+
+  async deleteFile(id: number): Promise<boolean> {
+    return odoo.callKw<boolean>('dms.file', 'unlink', [[id]])
   },
 
   /** Garante access_token no dms.file e retorna URL pública. */
