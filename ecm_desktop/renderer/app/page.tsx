@@ -93,6 +93,12 @@ export default function HomePage() {
         if (dir) setRenameTarget(dir)
         return
       }
+      if (e.shiftKey && (e.key === 'Delete' || e.key === 'Backspace') && currentDirectoryId !== null) {
+        e.preventDefault()
+        const dir = dirs.data?.find((d) => d.id === currentDirectoryId)
+        if (dir) handleDeleteDirectory(dir)
+        return
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -175,6 +181,22 @@ export default function HomePage() {
 
   const selectedFile = sortedFiles.find((f) => f.id === selectedFileId) || null
 
+  async function handleDeleteDirectory(dir: EcmDirectory) {
+    const ok = window.confirm(
+      `Excluir a pasta "${dir.name}"?\n\nA pasta deve estar vazia. Arquivos e subpastas devem ser removidos antes.`,
+    )
+    if (!ok) return
+    try {
+      await ecmApi.deleteDirectory(dir.id)
+      toast.success(`Pasta "${dir.name}" excluída`)
+      if (currentDirectoryId === dir.id) setCurrentDirectory(null)
+      qc.invalidateQueries({ queryKey: ['directories'] })
+      qc.invalidateQueries({ queryKey: ['files'] })
+    } catch (e: any) {
+      toast.error(e?.message || 'Falha ao excluir pasta (verifique se está vazia)')
+    }
+  }
+
   async function handleDeleteSelected() {
     if (!selectedFile) return
     const ok = window.confirm(
@@ -252,6 +274,7 @@ export default function HomePage() {
             onSelect={setCurrentDirectory}
             onNewFolder={(parentId) => openNewFolder(parentId)}
             onRename={(dir) => setRenameTarget(dir)}
+            onDelete={(dir) => handleDeleteDirectory(dir)}
           />
         )}
       </aside>

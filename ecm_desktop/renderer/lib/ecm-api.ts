@@ -70,16 +70,45 @@ export const ecmApi = {
     ], { order: 'name' })
   },
 
-  async createDirectory(name: string, parent_id?: number): Promise<number> {
-    const vals: Record<string, unknown> = { name }
-    if (parent_id) vals.parent_id = parent_id
-    else vals.is_root_directory = true
-    const id = await odoo.callKw<number>('dms.directory', 'create', [vals])
-    return id
+  async createDirectory(args: {
+    name: string
+    parentId?: number
+    storageId?: number
+    groupIds?: number[]
+  }): Promise<number> {
+    const vals: Record<string, unknown> = { name: args.name }
+    if (args.parentId) {
+      vals.parent_id = args.parentId
+    } else {
+      vals.is_root_directory = true
+      if (args.storageId) vals.storage_id = args.storageId
+      if (args.groupIds && args.groupIds.length) {
+        vals.group_ids = [[6, 0, args.groupIds]]
+      }
+    }
+    return odoo.callKw<number>('dms.directory', 'create', [vals])
+  },
+
+  async listStorages(): Promise<{ id: number; name: string; save_type: string }[]> {
+    return odoo.callKw<{ id: number; name: string; save_type: string }[]>(
+      'dms.storage', 'search_read', [[], ['id', 'name', 'save_type']],
+      { order: 'id', limit: 20 },
+    )
+  },
+
+  async listAccessGroups(): Promise<{ id: number; name: string }[]> {
+    return odoo.callKw<{ id: number; name: string }[]>(
+      'dms.access.group', 'search_read', [[], ['id', 'name']],
+      { order: 'id', limit: 50 },
+    )
   },
 
   async renameDirectory(id: number, name: string): Promise<boolean> {
     return odoo.callKw<boolean>('dms.directory', 'write', [[id], { name }])
+  },
+
+  async deleteDirectory(id: number): Promise<boolean> {
+    return odoo.callKw<boolean>('dms.directory', 'unlink', [[id]])
   },
 
   // ---- Files ----

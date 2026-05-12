@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ChevronRight, Folder, FolderOpen, FolderPlus, Pencil } from 'lucide-react'
+import { ChevronRight, Folder, FolderOpen, FolderPlus, Pencil, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 import type { EcmDirectory } from '@/lib/ecm-api'
 
@@ -11,6 +11,7 @@ interface Props {
   onSelect: (id: number | null) => void
   onNewFolder?: (parentId: number | null) => void
   onRename?: (dir: EcmDirectory) => void
+  onDelete?: (dir: EcmDirectory) => void
 }
 
 interface TreeNode extends EcmDirectory {
@@ -34,7 +35,7 @@ function buildTree(dirs: EcmDirectory[]): TreeNode[] {
   return roots
 }
 
-export function FolderTree({ directories, currentId, onSelect, onNewFolder, onRename }: Props) {
+export function FolderTree({ directories, currentId, onSelect, onNewFolder, onRename, onDelete }: Props) {
   const tree = useMemo(() => buildTree(directories), [directories])
 
   return (
@@ -64,7 +65,7 @@ export function FolderTree({ directories, currentId, onSelect, onNewFolder, onRe
         <TreeRow
           key={n.id} node={n} depth={0}
           currentId={currentId} onSelect={onSelect}
-          onNewFolder={onNewFolder} onRename={onRename}
+          onNewFolder={onNewFolder} onRename={onRename} onDelete={onDelete}
         />
       ))}
     </div>
@@ -72,13 +73,14 @@ export function FolderTree({ directories, currentId, onSelect, onNewFolder, onRe
 }
 
 function TreeRow({
-  node, depth, currentId, onSelect, onNewFolder, onRename,
+  node, depth, currentId, onSelect, onNewFolder, onRename, onDelete,
 }: {
   node: TreeNode; depth: number;
   currentId: number | null;
   onSelect: (id: number) => void;
   onNewFolder?: (parentId: number | null) => void;
   onRename?: (dir: EcmDirectory) => void;
+  onDelete?: (dir: EcmDirectory) => void;
 }) {
   const [open, setOpen] = useState(depth === 0)
   const hasChildren = node.children.length > 0
@@ -131,6 +133,15 @@ function TreeRow({
             <FolderPlus size={13} />
           </button>
         )}
+        {onDelete && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(node) }}
+            className="opacity-0 group-hover:opacity-100 transition p-1 rounded text-ink-dim hover:text-red-400"
+            title="Excluir pasta (Shift+Del)"
+          >
+            <Trash2 size={12} />
+          </button>
+        )}
       </div>
       {open && hasChildren && (
         <div>
@@ -138,7 +149,7 @@ function TreeRow({
             <TreeRow
               key={c.id} node={c} depth={depth + 1}
               currentId={currentId} onSelect={onSelect}
-              onNewFolder={onNewFolder} onRename={onRename}
+              onNewFolder={onNewFolder} onRename={onRename} onDelete={onDelete}
             />
           ))}
         </div>
