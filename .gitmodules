@@ -1,0 +1,6 @@
+[submodule "addons/afr_ecm"]
+	path = addons/afr_ecm
+	url = https://github.com/afonsorcarvalho/afr_ecm.git
+[submodule "ecm_desktop"]
+	path = ecm_desktop
+	url = https://github.com/afonsorcarvalho/ecm_desktop.git
