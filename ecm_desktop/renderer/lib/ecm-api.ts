@@ -37,6 +37,9 @@ export interface EcmFileSummary {
   approval_state?: string
   can_download?: boolean
   tag_ids?: number[]
+  permission_write?: boolean
+  permission_unlink?: boolean
+  ocr_enabled?: boolean
 }
 
 export interface EcmDocumentType {
@@ -59,6 +62,7 @@ const FILE_FIELDS: (keyof EcmFileSummary)[] = [
   'id', 'name', 'mimetype', 'size', 'create_date', 'write_date', 'directory_id',
   'document_type_id', 'confidentiality', 'expiration_date', 'expiration_status',
   'ocr_state', 'approval_state', 'can_download', 'tag_ids',
+  'permission_write', 'permission_unlink', 'ocr_enabled',
 ]
 
 export const ecmApi = {
@@ -109,6 +113,17 @@ export const ecmApi = {
 
   async deleteDirectory(id: number): Promise<boolean> {
     return odoo.callKw<boolean>('dms.directory', 'unlink', [[id]])
+  },
+
+  async moveDirectory(id: number, parentId: number): Promise<boolean> {
+    return odoo.callKw<boolean>('dms.directory', 'write', [[id], {
+      parent_id: parentId,
+      is_root_directory: false,
+    }])
+  },
+
+  async moveFile(id: number, directoryId: number): Promise<boolean> {
+    return odoo.callKw<boolean>('dms.file', 'write', [[id], { directory_id: directoryId }])
   },
 
   // ---- Files ----
@@ -176,6 +191,14 @@ export const ecmApi = {
 
   async deleteFile(id: number): Promise<boolean> {
     return odoo.callKw<boolean>('dms.file', 'unlink', [[id]])
+  },
+
+  async updateFile(id: number, vals: Record<string, unknown>): Promise<boolean> {
+    return odoo.callKw<boolean>('dms.file', 'write', [[id], vals])
+  },
+
+  async reprocessOcr(id: number): Promise<unknown> {
+    return odoo.callKw('dms.file', 'action_reprocess_ocr', [[id]])
   },
 
   /** Garante access_token no dms.file e retorna URL pública. */

@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ecmApi } from '@/lib/ecm-api'
 import { Upload, Camera, Building2 } from 'lucide-react'
 import { FileIcon } from '@/components/FileIcon'
+import { FilePropertiesEditor } from '@/components/FilePropertiesEditor'
 import toast from 'react-hot-toast'
 import { FolderTree } from '@/components/FolderTree'
 import { NewFolderModal } from '@/components/NewFolderModal'
@@ -182,6 +183,28 @@ export default function HomePage() {
 
   const selectedFile = sortedFiles.find((f) => f.id === selectedFileId) || null
 
+  async function handleMoveFile(fileId: number, targetDirId: number) {
+    try {
+      await ecmApi.moveFile(fileId, targetDirId)
+      toast.success('Arquivo movido')
+      qc.invalidateQueries({ queryKey: ['files'] })
+      qc.invalidateQueries({ queryKey: ['directories'] })
+    } catch (e: any) {
+      toast.error(e?.message || 'Falha ao mover arquivo')
+    }
+  }
+
+  async function handleMoveDirectory(sourceId: number, targetDirId: number) {
+    try {
+      await ecmApi.moveDirectory(sourceId, targetDirId)
+      toast.success('Pasta movida')
+      qc.invalidateQueries({ queryKey: ['directories'] })
+      qc.invalidateQueries({ queryKey: ['files'] })
+    } catch (e: any) {
+      toast.error(e?.message || 'Falha ao mover pasta')
+    }
+  }
+
   async function handleDeleteDirectory(dir: EcmDirectory) {
     const ok = window.confirm(
       `Excluir a pasta "${dir.name}"?\n\nA pasta deve estar vazia. Arquivos e subpastas devem ser removidos antes.`,
@@ -276,6 +299,8 @@ export default function HomePage() {
             onNewFolder={(parentId) => openNewFolder(parentId)}
             onRename={(dir) => setRenameTarget(dir)}
             onDelete={(dir) => handleDeleteDirectory(dir)}
+            onDropFile={handleMoveFile}
+            onDropDirectory={handleMoveDirectory}
           />
         )}
       </aside>
@@ -378,6 +403,11 @@ export default function HomePage() {
                     key={f.id}
                     onClick={() => selectFile(f.id)}
                     onDoubleClick={() => setPreviewId(f.id)}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('application/x-ecm-file', String(f.id))
+                      e.dataTransfer.effectAllowed = 'move'
+                    }}
                     className={`glass p-3 rounded-xl hover:border-accent transition text-left ${
                       selectedFileId === f.id ? 'border-accent ring-1 ring-accent/40' : ''
                     }`}
@@ -414,13 +444,7 @@ export default function HomePage() {
           <>
             <div className="text-xs uppercase tracking-wide text-ink-muted mb-2">Arquivo</div>
             <h3 className="font-medium mb-3 break-words">{selectedFile.name}</h3>
-            <div className="text-sm space-y-1">
-              <Row label="Tipo" value={selectedFile.document_type_id ? selectedFile.document_type_id[1] : '—'} />
-              <Row label="Pasta" value={selectedFile.directory_id ? selectedFile.directory_id[1] : '—'} />
-              <Row label="Confid." value={selectedFile.confidentiality ?? '—'} />
-              <Row label="OCR" value={selectedFile.ocr_state ?? '—'} />
-              <Row label="Vencimento" value={selectedFile.expiration_date || '—'} />
-            </div>
+            <FilePropertiesEditor file={selectedFile} directories={dirs.data ?? []} />
             {selectedFile.tag_ids && selectedFile.tag_ids.length > 0 && tags.data && (
               <div className="mt-3 flex flex-wrap gap-1">
                 {selectedFile.tag_ids
@@ -504,15 +528,6 @@ export default function HomePage() {
         }
         onClose={() => setPreviewId(null)}
       />
-    </div>
-  )
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex gap-2">
-      <span className="text-ink-muted w-20 shrink-0">{label}</span>
-      <span className="break-all">{value}</span>
     </div>
   )
 }
