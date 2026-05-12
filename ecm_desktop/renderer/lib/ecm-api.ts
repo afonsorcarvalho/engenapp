@@ -78,6 +78,10 @@ export const ecmApi = {
     return id
   },
 
+  async renameDirectory(id: number, name: string): Promise<boolean> {
+    return odoo.callKw<boolean>('dms.directory', 'write', [[id], { name }])
+  },
+
   // ---- Files ----
   async listFiles(directoryId?: number, limit = 200): Promise<EcmFileSummary[]> {
     const domain: unknown[] = []

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ChevronRight, Folder, FolderOpen, FolderPlus } from 'lucide-react'
+import { ChevronRight, Folder, FolderOpen, FolderPlus, Pencil } from 'lucide-react'
 import clsx from 'clsx'
 import type { EcmDirectory } from '@/lib/ecm-api'
 
@@ -10,6 +10,7 @@ interface Props {
   currentId: number | null
   onSelect: (id: number | null) => void
   onNewFolder?: (parentId: number | null) => void
+  onRename?: (dir: EcmDirectory) => void
 }
 
 interface TreeNode extends EcmDirectory {
@@ -33,7 +34,7 @@ function buildTree(dirs: EcmDirectory[]): TreeNode[] {
   return roots
 }
 
-export function FolderTree({ directories, currentId, onSelect, onNewFolder }: Props) {
+export function FolderTree({ directories, currentId, onSelect, onNewFolder, onRename }: Props) {
   const tree = useMemo(() => buildTree(directories), [directories])
 
   return (
@@ -62,7 +63,8 @@ export function FolderTree({ directories, currentId, onSelect, onNewFolder }: Pr
       {tree.map((n) => (
         <TreeRow
           key={n.id} node={n} depth={0}
-          currentId={currentId} onSelect={onSelect} onNewFolder={onNewFolder}
+          currentId={currentId} onSelect={onSelect}
+          onNewFolder={onNewFolder} onRename={onRename}
         />
       ))}
     </div>
@@ -70,12 +72,13 @@ export function FolderTree({ directories, currentId, onSelect, onNewFolder }: Pr
 }
 
 function TreeRow({
-  node, depth, currentId, onSelect, onNewFolder,
+  node, depth, currentId, onSelect, onNewFolder, onRename,
 }: {
   node: TreeNode; depth: number;
   currentId: number | null;
   onSelect: (id: number) => void;
   onNewFolder?: (parentId: number | null) => void;
+  onRename?: (dir: EcmDirectory) => void;
 }) {
   const [open, setOpen] = useState(depth === 0)
   const hasChildren = node.children.length > 0
@@ -101,6 +104,7 @@ function TreeRow({
         </button>
         <button
           onClick={() => onSelect(node.id)}
+          onDoubleClick={() => onRename?.(node)}
           className="flex-1 text-left flex items-center gap-2 min-w-0"
         >
           {open && hasChildren ? <FolderOpen size={15} /> : <Folder size={15} />}
@@ -109,6 +113,15 @@ function TreeRow({
             <span className="ml-auto text-[10px] text-ink-dim">{node.count_files}</span>
           )}
         </button>
+        {onRename && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onRename(node) }}
+            className="opacity-0 group-hover:opacity-100 transition p-1 rounded text-ink-dim hover:text-accent"
+            title="Renomear (F2)"
+          >
+            <Pencil size={12} />
+          </button>
+        )}
         {onNewFolder && (
           <button
             onClick={(e) => { e.stopPropagation(); onNewFolder(node.id) }}
@@ -124,7 +137,8 @@ function TreeRow({
           {node.children.map((c) => (
             <TreeRow
               key={c.id} node={c} depth={depth + 1}
-              currentId={currentId} onSelect={onSelect} onNewFolder={onNewFolder}
+              currentId={currentId} onSelect={onSelect}
+              onNewFolder={onNewFolder} onRename={onRename}
             />
           ))}
         </div>

@@ -10,7 +10,9 @@ import { FileText, Upload, Camera, Settings, Building2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { FolderTree } from '@/components/FolderTree'
 import { NewFolderModal } from '@/components/NewFolderModal'
+import { RenameFolderModal } from '@/components/RenameFolderModal'
 import { Breadcrumb } from '@/components/Breadcrumb'
+import type { EcmDirectory } from '@/lib/ecm-api'
 import { SortDropdown, SortState, sortFiles } from '@/components/SortDropdown'
 import { EmptyState } from '@/components/EmptyState'
 import { UploadDropzone } from '@/components/UploadDropzone'
@@ -18,6 +20,7 @@ import { ClassifyWizard } from '@/components/ClassifyWizard'
 import { UploadQueueBar } from '@/components/UploadQueueBar'
 import { FolderPlus } from 'lucide-react'
 import { useUploadQueue } from '@/hooks/useUploadQueue'
+import { useWatchFolder } from '@/hooks/useWatchFolder'
 import { FilePreviewModal } from '@/components/FilePreviewModal'
 import { ShareButton } from '@/components/ShareButton'
 import { UserMenu } from '@/components/UserMenu'
@@ -40,6 +43,7 @@ export default function HomePage() {
   const [logoAspect, setLogoAspect] = useState<number | null>(null)
   const [newFolderOpen, setNewFolderOpen] = useState(false)
   const [newFolderParent, setNewFolderParent] = useState<number | null>(null)
+  const [renameTarget, setRenameTarget] = useState<EcmDirectory | null>(null)
   const [sort, setSort] = useState<SortState>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -50,6 +54,7 @@ export default function HomePage() {
     return { key: 'write_date', dir: 'desc' }
   })
   const upload = useUploadQueue()
+  useWatchFolder()
   const search = useFileSearch(searchQuery, filters)
 
   useEffect(() => {
@@ -80,6 +85,12 @@ export default function HomePage() {
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedFileId !== null) {
         e.preventDefault()
         handleDeleteSelected()
+        return
+      }
+      if (e.key === 'F2' && currentDirectoryId !== null) {
+        e.preventDefault()
+        const dir = dirs.data?.find((d) => d.id === currentDirectoryId)
+        if (dir) setRenameTarget(dir)
         return
       }
     }
@@ -240,6 +251,7 @@ export default function HomePage() {
             currentId={currentDirectoryId}
             onSelect={setCurrentDirectory}
             onNewFolder={(parentId) => openNewFolder(parentId)}
+            onRename={(dir) => setRenameTarget(dir)}
           />
         )}
       </aside>
@@ -442,6 +454,13 @@ export default function HomePage() {
         directories={dirs.data ?? []}
         defaultParentId={newFolderParent}
         onCreated={(id) => setCurrentDirectory(id)}
+      />
+
+      <RenameFolderModal
+        open={renameTarget !== null}
+        onClose={() => setRenameTarget(null)}
+        directoryId={renameTarget?.id ?? null}
+        currentName={renameTarget?.name ?? ''}
       />
 
       <FilePreviewModal
