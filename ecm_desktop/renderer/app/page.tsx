@@ -6,7 +6,8 @@ import { useAuthStore } from '@/store/authStore'
 import { useEcmStore } from '@/store/ecmStore'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ecmApi } from '@/lib/ecm-api'
-import { FileText, Upload, Camera, Settings, Building2 } from 'lucide-react'
+import { Upload, Camera, Building2 } from 'lucide-react'
+import { FileIcon } from '@/components/FileIcon'
 import toast from 'react-hot-toast'
 import { FolderTree } from '@/components/FolderTree'
 import { NewFolderModal } from '@/components/NewFolderModal'
@@ -382,7 +383,12 @@ export default function HomePage() {
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-2">
-                      <FileText size={18} className="text-accent shrink-0" />
+                      <FileIcon
+                        fileId={f.id}
+                        name={f.name}
+                        mimetype={f.mimetype}
+                        size={32}
+                      />
                       <p className="text-sm truncate font-medium">{f.name}</p>
                     </div>
                     <div className="text-xs text-ink-dim flex flex-wrap gap-2 items-center">

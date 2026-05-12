@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { X, Download, Loader2, FileText } from 'lucide-react'
+import { X, Download, Loader2 } from 'lucide-react'
+import { FileIcon } from './FileIcon'
 import { ecmApi } from '@/lib/ecm-api'
 import { ShareButton } from './ShareButton'
 
@@ -95,7 +96,13 @@ export function FilePreviewModal({ fileId, fileName, mimetype, onClose }: Props)
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col">
       <header className="flex items-center gap-3 px-5 py-3 border-b border-white/10 text-white">
-        <FileText size={18} className="text-accent shrink-0" />
+        <FileIcon
+          fileId={fileId ?? undefined}
+          name={fileName}
+          mimetype={mimetype}
+          size={20}
+          thumbnail={false}
+        />
         <p className="text-sm truncate flex-1 text-white">{fileName || `Arquivo #${fileId}`}</p>
         {!canDownload && (
           <span className="text-xs px-2 py-1 rounded border border-amber-500/40 bg-amber-500/10 text-amber-300">

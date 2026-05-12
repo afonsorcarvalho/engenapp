@@ -1,6 +1,7 @@
 'use client'
 
-import { FileText, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { FileIcon } from '@/components/FileIcon'
 import { buildSnippet } from '@/hooks/useFileSearch'
 import type { EcmFileSummary } from '@/lib/ecm-api'
 
@@ -39,7 +40,12 @@ export function SearchResults({ query, results, loading, selectedId, onSelect, o
               }`}
             >
               <div className="flex items-center gap-2 mb-1">
-                <FileText size={16} className="text-accent shrink-0" />
+                <FileIcon
+                  fileId={f.id}
+                  name={f.name}
+                  mimetype={f.mimetype}
+                  size={24}
+                />
                 <p className="text-sm font-medium truncate"><Highlighted text={f.name} query={query} /></p>
                 {f.ocr_state && <OcrPill state={f.ocr_state} />}
               </div>

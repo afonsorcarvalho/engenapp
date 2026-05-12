@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ecmApi, EcmDirectory } from '@/lib/ecm-api'
-import { FileText, X, Tag as TagIcon } from 'lucide-react'
+import { X, Tag as TagIcon } from 'lucide-react'
+import { FileIcon } from '@/components/FileIcon'
 
 interface PendingFile {
   id: string
@@ -139,7 +140,12 @@ export function ClassifyWizard({ open, files, directories, defaultDirectoryId, o
         <div className="p-5 overflow-y-auto flex-1 space-y-2">
           {items.map((it) => (
             <div key={it.id} className="flex items-center gap-3 p-3 rounded-lg bg-bg-soft border border-line">
-              <FileText size={18} className="text-accent shrink-0" />
+              <FileIcon
+                name={it.file.name}
+                mimetype={it.file.type}
+                size={20}
+                thumbnail={false}
+              />
               <div className="min-w-0 flex-1">
                 <p className="text-sm truncate">{it.file.name}</p>
                 <p className="text-xs text-ink-dim">{formatBytes(it.file.size)}</p>
