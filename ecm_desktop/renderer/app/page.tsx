@@ -55,6 +55,14 @@ export default function HomePage() {
     }
     return { key: 'write_date', dir: 'desc' }
   })
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('ecm-sidebar-width')
+      const n = raw ? Number(raw) : NaN
+      if (Number.isFinite(n) && n >= 180 && n <= 600) return n
+    }
+    return 260
+  })
   const upload = useUploadQueue()
   useWatchFolder()
   const search = useFileSearch(searchQuery, filters)
@@ -62,6 +70,30 @@ export default function HomePage() {
   useEffect(() => {
     try { localStorage.setItem('ecm-sort', JSON.stringify(sort)) } catch {}
   }, [sort])
+
+  useEffect(() => {
+    try { localStorage.setItem('ecm-sidebar-width', String(sidebarWidth)) } catch {}
+  }, [sidebarWidth])
+
+  function startResizeSidebar(e: React.MouseEvent) {
+    e.preventDefault()
+    const startX = e.clientX
+    const startW = sidebarWidth
+    function onMove(ev: MouseEvent) {
+      const next = Math.min(600, Math.max(180, startW + (ev.clientX - startX)))
+      setSidebarWidth(next)
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }
 
   function openNewFolder(parentId: number | null = currentDirectoryId) {
     setNewFolderParent(parentId)
@@ -238,11 +270,14 @@ export default function HomePage() {
   }
 
   return (
-    <div className="grid grid-cols-[260px_1fr_320px] h-screen overflow-hidden">
+    <div
+      className="grid h-screen overflow-hidden"
+      style={{ gridTemplateColumns: `${sidebarWidth}px 6px 1fr 320px` }}
+    >
       <UploadDropzone onFiles={handleFilesDropped} />
 
       {/* Sidebar esquerda */}
-      <aside className="border-r border-line bg-bg-soft p-3 overflow-y-auto">
+      <aside className="border-r border-line bg-bg-soft p-3 overflow-y-auto min-w-0">
         <div className="relative px-2 pt-3 pb-4 mb-4 text-center">
           {company.data ? (
             <>
@@ -304,6 +339,16 @@ export default function HomePage() {
           />
         )}
       </aside>
+
+      {/* Splitter sidebar */}
+      <div
+        onMouseDown={startResizeSidebar}
+        onDoubleClick={() => setSidebarWidth(260)}
+        title="Arraste para redimensionar (duplo-clique reseta)"
+        className="cursor-col-resize bg-transparent hover:bg-accent/30 transition-colors relative group"
+      >
+        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-line group-hover:bg-accent" />
+      </div>
 
       {/* Centro */}
       <main className="overflow-y-auto">
