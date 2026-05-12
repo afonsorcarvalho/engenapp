@@ -28,6 +28,16 @@ const api = {
       return () => ipcRenderer.removeListener('watcher:file-detected', listener as any)
     },
   },
+  fs: {
+    readBase64: (filePath: string) =>
+      ipcRenderer.invoke('fs:readBase64', { filePath }) as Promise<string>,
+    size: (filePath: string) =>
+      ipcRenderer.invoke('fs:size', { filePath }) as Promise<number>,
+    moveTo: (src: string, destDir: string) =>
+      ipcRenderer.invoke('fs:moveTo', { src, destDir }) as Promise<string>,
+    unlink: (filePath: string) =>
+      ipcRenderer.invoke('fs:unlink', { filePath }) as Promise<void>,
+  },
 }
 
 contextBridge.exposeInMainWorld('ecm', api)

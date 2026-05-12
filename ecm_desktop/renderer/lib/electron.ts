@@ -18,6 +18,12 @@ export interface EcmElectronApi {
     status: () => Promise<{ running: boolean; folder?: string }>
     onFileDetected: (cb: (f: { path: string; name: string; size: number }) => void) => () => void
   }
+  fs: {
+    readBase64: (filePath: string) => Promise<string>
+    size: (filePath: string) => Promise<number>
+    moveTo: (src: string, destDir: string) => Promise<string>
+    unlink: (filePath: string) => Promise<void>
+  }
 }
 
 export function getElectron(): EcmElectronApi | null {

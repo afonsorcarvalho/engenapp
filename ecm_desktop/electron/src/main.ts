@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell, dialog, Notification, Tray, Menu, nativeImage } from 'electron'
 import path from 'node:path'
+import fs from 'node:fs/promises'
 import { registerWatcherIpc } from './services/watcher'
 import { registerCredentialsIpc } from './services/credentials'
 
@@ -75,6 +76,33 @@ app.whenReady().then(() => {
   ipcMain.handle('app:pickFolder', async () => {
     const r = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] })
     return r.canceled ? null : r.filePaths[0]
+  })
+
+  // ---- File system bridge (acesso restrito a arquivos do watch folder) ----
+  ipcMain.handle('fs:readBase64', async (_e, { filePath }: { filePath: string }) => {
+    const buf = await fs.readFile(filePath)
+    return buf.toString('base64')
+  })
+  ipcMain.handle('fs:size', async (_e, { filePath }: { filePath: string }) => {
+    const stat = await fs.stat(filePath)
+    return stat.size
+  })
+  ipcMain.handle('fs:moveTo', async (_e, { src, destDir }: { src: string; destDir: string }) => {
+    await fs.mkdir(destDir, { recursive: true })
+    const base = path.basename(src)
+    const target = path.join(destDir, base)
+    try {
+      await fs.rename(src, target)
+    } catch {
+      // cross-device: copia+remove
+      const data = await fs.readFile(src)
+      await fs.writeFile(target, data)
+      await fs.unlink(src)
+    }
+    return target
+  })
+  ipcMain.handle('fs:unlink', async (_e, { filePath }: { filePath: string }) => {
+    await fs.unlink(filePath)
   })
 
   createMainWindow()
