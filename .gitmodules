@@ -4,3 +4,6 @@
 [submodule "ecm_desktop"]
 	path = ecm_desktop
 	url = https://github.com/afonsorcarvalho/ecm_desktop.git
+[submodule "addons/afr_stock_reports"]
+	path = addons/afr_stock_reports
+	url = https://github.com/afonsorcarvalho/afr_stock_reports.git
