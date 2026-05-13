@@ -2388,6 +2388,57 @@ Cada diretório com `description` HTML populada como mini-manual (escopo, normas
 
 Migração para nova taxonomia: pendente decisão user.
 
+### F4 doc types específicos + grupos ECM_* (2026-05-13)
+
+**F4.1 Doc types (121 novos, IDs 152–272)** — substituem/expandem os 8 genéricos (mantidos por backward compat). Criados via `odoo_execute_kw` batch + `default_directory_id` apontando para a pasta-âncora.
+
+| Área | Códigos | IDs | Qtd |
+|---|---|---|---:|
+| SGQ | SGQ_MANUAL, SGQ_POL, SGQ_POP, SGQ_LMD, SGQ_ACD, SGQ_AI, SGQ_AE, SGQ_NC, SGQ_CAPA, SGQ_RDM, SGQ_FMEA, SGQ_PSAT, SGQ_FORN_QUAL, SGQ_LIC_APR, SGQ_KPI | 152–166 | 15 |
+| Operação | OP_POP, OP_IT_EQ, OP_FORM, OP_VAL_IQ/OQ/PQ, OP_REQUAL, OP_MON_BD/AGUA/AMB, OP_BI_POS, OP_RECALL, OP_LIB_EXC, OP_CC, OP_FMEA, OP_TEC | 167–182 | 16 |
+| Regulatório | REG_AFE, REG_AE, REG_LS, REG_ALVARA, REG_RT, REG_ART, REG_PET, REG_INSP_VISA, REG_NOTIF, REG_TEC, REG_LGPD_REQ/INC, REG_DPIA, REG_DEN, REG_AUDIT_COMP | 183–197 | 15 |
+| Comercial | COM_CONTRATO, COM_QA, COM_SLA, COM_DPA, COM_ADITIVO, COM_AUDIT_REC, COM_RECLAMACAO, COM_PROPOSTA, COM_ATA_CLI, COM_LIC_EDITAL | 198–207 | 10 |
+| RH | RH_ADMISSAO, RH_CONTRATO_T, RH_ASO, RH_TREIN_IND/COL, RH_AVAL, RH_DISCIP, RH_RESC, RH_CURRICULO, RH_FOLHA, RH_ESOCIAL, RH_ACAO_TRAB | 208–219 | 12 |
+| Financeiro | FIN_POL, FIN_NFSE, FIN_NFE_REC, FIN_SPED, FIN_DARF, FIN_CND, FIN_BAL, FIN_EXT_BANC, FIN_CONTR_BAN, FIN_AUDIT, FIN_PROC_TRIB, FIN_BUDGET | 220–231 | 12 |
+| TI | TI_POL_SI, TI_CSV_VAL, TI_BACKUP_LOG, TI_INC_SI, TI_PENTEST, TI_CHG, TI_ACC_PROV/REV, TI_AUDIT_TI, TI_DRP_SIM, TI_LIC_SW | 232–242 | 11 |
+| Eng/Manut | EM_FICHA_EQ, EM_PM, EM_CM, EM_CAL, EM_NR13, EM_PMOC, EM_AVCB, EM_SPDA, EM_CONTR_PREST, EM_QUALIF_FORN | 243–252 | 10 |
+| SST | SST_PGR, SST_PCMSO, SST_CAT, SST_INV_ACID, SST_TREIN_NR, SST_EPI_FICHA, SST_INSP, SST_SIMUL, SST_PGRSS_MAN, SST_AUDIT, SST_BIO_ACID | 253–263 | 11 |
+| Diretoria | DIR_PLAN_EST, DIR_ATA_DIR, DIR_ATA_ASS, DIR_DEC_EST, DIR_BSC, DIR_COMITE, DIR_MA, DIR_CRISE, DIR_RACI | 264–272 | 9 |
+| **Total novos** | | | **121** |
+
+Atributos por doc type: `default_confidentiality` + `retention_days` (em dias) + `requires_approval` + `ocr_enabled` + `default_directory_id` (pasta sugerida ao classificar). Retenções alinhadas: 5a=1825, 10a=3650, 20a=7300, 30a=10950, Indef=0.
+
+**Default doc type setado em 9 pastas-âncora críticas** (workflows): NC (98→159), CAPA (99→160), Eventos Críticos (125→177), Recalls (126→178), Tecnovigilância OP (127→182), Acidentes Trabalho (241→255), Acidente Biológico NR-32 (243→263), Tecnovigilância Reg (143→192), LGPD Operação (144→194).
+
+**F4.2 Grupos ECM_* (`dms.access.group`)** — 12 novos grupos (IDs 29–40) cada um vinculado à pasta-âncora da sua área via `directory_ids` (m2m). Acesso herda em árvore via OCA dms.
+
+| Grupo | ID | Pasta-âncora | CRUD |
+|---|---:|---|---|
+| ECM Padrão (legado) | 1 | DOCUMENTAÇÃO (11) | ✓ |
+| ECM_SGQ | 29 | 00_SGQ (54) | ✓ |
+| ECM_Operacao | 30 | 10_Operacao (55) | ✓ |
+| ECM_Regulatorio | 31 | 20_Regulatorio (56) | ✓ |
+| ECM_Comercial | 32 | 30_Comercial (57) | ✓ |
+| ECM_RH | 33 | 40_RH (58) | ✓ |
+| ECM_RH_Funcionario | 34 | 40_RH (58) | ler (record rule restritiva pendente) |
+| ECM_Financeiro | 35 | 50_Financeiro_Fiscal (59) | ✓ |
+| ECM_TI | 36 | 60_TI (60) | ✓ |
+| ECM_Eng | 37 | 70_Engenharia_Manutencao (61) | ✓ |
+| ECM_SST | 38 | 80_SST (62) | ✓ |
+| ECM_Diretoria | 39 | 90_Diretoria (63) | ✓ |
+| Auditor_Externo | 40 | DOCUMENTAÇÃO (11) | leitura (escopo definido por auditoria) |
+
+**Pendente F4.3 (workflows críticos) — não aplicado nesta sessão:**
+- res.groups espelho dos ECM_* (atualmente só dms.access.group)
+- Record rule restritiva para ECM_RH_Funcionario (só pasta própria do funcionário)
+- Record rule temporal para Auditor_Externo
+- Workflow CAPA-NC com transições estado + verificação eficácia 30/60/90d
+- Workflow Recall com criação automática a partir de OP_BI_POS
+- Workflow NOTIVISA (REG_TEC) com integração portal ANVISA
+- Cron renovação licenças (alerta 90/60/30d via `validade_data` em REG_AFE/AE/LS/ALVARA/CND…)
+- Cron revogação acesso TI ≤4h após `hr.employee.active=False`
+- Cron sumário mensal ciclos (`afr_supervisorio_ciclos` → ECM)
+
 ### F3 subpastas granulares (2026-05-13)
 187 subdirectories criadas via `odoo_execute_kw` batch create por parent, todas com `description` HTML curta explicando escopo, normas, conteúdo típico:
 
@@ -2418,7 +2469,7 @@ Sub-pastas leaf (nível 3 e abaixo: por cliente, funcionário, equipamento, even
 - TSC clean + `next build` ok
 
 ### Pendente (fases seguintes)
-- F4 — Doc types específicos por área (substituir 6 genéricos) + grupos ECM_* + workflows críticos (CAPA-NC, recall, NOTIVISA, renovação licenças)
+- F4.3 — Workflows críticos código (CAPA-NC transitions, recall a partir de BI+, NOTIVISA, cron renovação licenças, cron revogação acesso TI) + res.groups espelho + record rules
 - F5 — Migração dados legacy (Administração, MANUAIS, POPS)
 
 ---
