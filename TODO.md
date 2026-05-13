@@ -9,6 +9,7 @@
 - ecm_desktop TOC PDF: aba "Sumário" abrir por default no FilePreviewModal (atualmente só auto-abre se outline existe + multi-pg; mudar pra sempre default quando há entries).
 - ecm_desktop TOC PDF: clique em item do sumário deve scrollar até a linha do título dentro da página, não só pular pra página. Usar coords do dest (Y offset) via `pdf.getDestination` + `react-pdf` scroll offset (scrollIntoView do span com coords) ou destacar bbox.
 - ecm_desktop Search PDF: resultado de busca scrollar pra linha exata do match (mesma técnica do TOC). Hoje pula só pra página, user tem que rolar manual.
+- ecm_desktop Grid pastas: quando pasta atual tiver subpastas, mostrar ícone de pasta clicável no grid (entra na subpasta) junto com os arquivos. Hoje subpastas só aparecem no FolderTree esquerdo.
 
 ## Feito
 - 2026-05-12 — Conversão de subtree para git submodules (afr_ecm + ecm_desktop). Backup em tag `pre-submodule-conversion` e branch `backup/pre-submodule-conversion`.
