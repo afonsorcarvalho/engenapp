@@ -2388,6 +2388,50 @@ Cada diretório com `description` HTML populada como mini-manual (escopo, normas
 
 Migração para nova taxonomia: pendente decisão user.
 
+### F4.3 workflows + crons + segurança res.groups (2026-05-13, afr_ecm v16.0.1.5.0)
+
+Quatro sub-tarefas paralelas implementadas via subagents especializados (Haiku/Sonnet/Opus por complexidade) + merge final dos shared files pelo orquestrador.
+
+**F4.3.1 — res.groups + record rules** (Haiku)
+- `security/security_ecm_areas.xml` — nova `ir.module.category` "AFR ECM — Áreas" + 12 `res.groups` (group_ecm_area_sgq / _operacao / _regulatorio / _comercial / _rh / _rh_funcionario / _financeiro / _ti / _eng / _sst / _diretoria / _auditor); cada um `implied_ids` herda `group_ecm_user`
+- `security/record_rules_ecm_areas.xml` — `rule_ecm_rh_funcionario_own` (placeholder ilike user.login) + `rule_ecm_auditor_externo_readonly`
+- `data/dms_access_group_links.xml` — `<function>` que faz write nos 12 `dms.access.group` (IDs 29–40) linkando-os aos res.groups via m2m `group_ids`
+
+**F4.3.2 — cron renovação licenças** (Haiku)
+- `models/dms_file_license_renewal.py` — `_cron_license_renewal_alerts()` varre 11 doc codes (REG_AFE/AE/LS/ALVARA/RT/ART, FIN_CND, EM_NR13/AVCB/SPDA/CAL) com `expiration_date` setado; calcula `days_left` e cria `mail.activity` em 3 tiers: reminder (90d) / warning (60d) / critical (30d). Dedupe via scan de summary; idempotente diário.
+- `data/cron_license_renewal.xml` — cron `cron_license_renewal_alerts` daily 06:00
+- `tests/test_license_renewal.py` — 8 cases (tier transitions, idempotency, skip non-license, inactive)
+
+**F4.3.3 — revogação acesso TI ≤4h** (Sonnet)
+- `models/hr_employee_revocation.py` — override `hr.employee.write()` detecta `active` True→False; chama `_afr_ecm_dispatch_ti_revocation()` que cria `dms.file` tipo `TI_ACC_REV` na anchor folder do doc type, com checklist markdown (Odoo/ECM/supervisório/e-mail/AD-LDAP/VPN), e `mail.activity` para `group_ecm_area_ti` (fallback manager) deadline same-day
+- `models/dms_file_revocation_cron.py` — `_cron_pending_revocations_escalate()` busca revogações em `draft`/`pending` há >4h e posta chatter tagueando manager + diretoria; flag interno previne reescalação
+- `data/cron_ti_revocation.xml` — cron a cada 30 min
+- `tests/test_ti_revocation.py` — 5 cases (write hook, anchor folder, escalação 5h, completed não reescala)
+
+**F4.3.4 — workflow CAPA-NC** (Opus)
+- `models/nc.py` — `afr.ecm.nc` com 6 states (`draft → disposition → investigation → decision_capa → closed | escalated_to_capa`); botões: action_start_disposition (cria activity 24h), action_complete_disposition (15d activity), action_complete_investigation, action_open_capa (cria CAPA filha auto), action_close_no_capa (exige justificativa), action_reopen (manager-only). Guards: disposition_text+date / root_cause_text / closure_reason.
+- `models/capa.py` — `afr.ecm.capa` com 10 states (`draft → analysis → plan → implementation → verify_30d → verify_60d → verify_90d → closed_effective | closed_ineffective | reopened`); `_do_verify(stage)` rota efetiva→próximo / ineficaz→reaberta; `closed_effective` só após verify_60d/90d; campos verify_NNd_date/result/effective stored; cron `_cron_capa_verification_reminders` daily.
+- `data/sequence_nc_capa.xml` — `ir.sequence` NC/YYYY/NNNN + CAPA/YYYY/NNNN
+- `data/cron_capa_verification.xml` — cron diário lembrete verificações
+- `security/record_rules_nc_capa.xml` — read user / write SGQ / full manager
+- `views/nc_views.xml` + `capa_views.xml` — tree (decorations) + kanban (group by state) + form (statusbar + botões gated by state) + search (filtros)
+- `views/menus_nc_capa.xml` — submenu ECM → SGQ → NC / CAPA
+- `tests/test_nc_capa.py` — 13 cases (sequence, transições, escalação, ineficaz→reopened, cron, constraints)
+
+**Merge realizado pelo orquestrador:**
+- `__manifest__.py` 16.0.1.4.0 → **16.0.1.5.0**; 11 novas entradas `data`. Ordem corrigida: `security_ecm_areas.xml` movido ANTES de `ir.model.access.csv` para resolver xmlid `group_ecm_area_sgq` no CSV.
+- `models/__init__.py` — +5 imports (dms_file_license_renewal, hr_employee_revocation, dms_file_revocation_cron, nc, capa)
+- `security/ir.model.access.csv` — +8 linhas para `afr.ecm.nc` e `afr.ecm.capa` (CSV separado descartado: Odoo deriva model name do basename, conflito inevitável)
+- `tests/__init__.py` — agents já adicionaram imports
+
+**Hotfixes pós-deploy** (bugs introduzidos pelo agente Opus):
+1. `mail.activity.date_done` não existe em Odoo 16 — substituído `_close_open_activities()` em nc.py e capa.py para chamar `action_feedback()` direto em `activity_ids` (todas pending por definição)
+2. Constraint disparava antes de setar `closure_decision` quando atribuições eram sequenciais — refatorado `action_close_effective`/`_ineffective`/`reopen` na capa.py para usar `rec.write({...})` atômico
+
+**Crons ativos após upgrade:** 3 novos (cron 21 — Licenças 1d, cron 22 — Revogação TI 30min, cron 23 — Verificação CAPA 1d)
+
+**Grupos novos:** 12 res.groups categoria "AFR ECM — Áreas" (res.groups IDs 65–76)
+
 ### F4 doc types específicos + grupos ECM_* (2026-05-13)
 
 **F4.1 Doc types (121 novos, IDs 152–272)** — substituem/expandem os 8 genéricos (mantidos por backward compat). Criados via `odoo_execute_kw` batch + `default_directory_id` apontando para a pasta-âncora.
@@ -2469,7 +2513,7 @@ Sub-pastas leaf (nível 3 e abaixo: por cliente, funcionário, equipamento, even
 - TSC clean + `next build` ok
 
 ### Pendente (fases seguintes)
-- F4.3 — Workflows críticos código (CAPA-NC transitions, recall a partir de BI+, NOTIVISA, cron renovação licenças, cron revogação acesso TI) + res.groups espelho + record rules
+- F4.3.5+ — Workflow Recall a partir de OP_BI_POS (criação auto), workflow NOTIVISA integração portal ANVISA, cron sumário mensal ciclos (afr_supervisorio_ciclos → ECM), SLA bloqueante horário (cron horário escalando NCs em disposition >24h), refinar `rule_ecm_rh_funcionario_own` para matching per-employee MATRICULA_<login>, refinar `rule_ecm_auditor_externo_readonly` para escopo definido por auditoria
 - F5 — Migração dados legacy (Administração, MANUAIS, POPS)
 
 ---
