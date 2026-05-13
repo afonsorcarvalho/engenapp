@@ -2388,6 +2388,27 @@ Cada diretório com `description` HTML populada como mini-manual (escopo, normas
 
 Migração para nova taxonomia: pendente decisão user.
 
+### F3 subpastas granulares (2026-05-13)
+187 subdirectories criadas via `odoo_execute_kw` batch create por parent, todas com `description` HTML curta explicando escopo, normas, conteúdo típico:
+
+| Área | /Documentos | /Registros | Total |
+|---|---:|---:|---:|
+| 00_SGQ | 10 (84–93) | 17 (94–110) | 27 |
+| 10_Operacao | 8 (111–118) | 13 (119–131) | 21 |
+| 20_Regulatorio | 7 (132–138) | 11 (139–149) | 18 |
+| 30_Comercial | 7 (150–156) | 6 (157–162) | 13 |
+| 40_RH | 7 (163–169) | 10 (170–179) | 17 |
+| 50_Financeiro_Fiscal | 6 (180–185) | 11 (186–196) | 17 |
+| 60_TI | 8 (197–204) | 13 (205–217) | 21 |
+| 70_Engenharia_Manutencao | 6 (218–223) | 8 (224–231) | 14 |
+| 80_SST | 7 (232–238) | 15 (239–253) | 22 |
+| 90_Diretoria | 5 (254–258) | 12 (259–270) | 17 |
+| **Total** | **71** | **116** | **187** |
+
+Total acumulado sob DOCUMENTAÇÃO (raiz 11 + 10 áreas + 20 Doc/Reg + 187 subdirs): **218 directories**.
+
+Sub-pastas leaf (nível 3 e abaixo: por cliente, funcionário, equipamento, evento) **NÃO** criadas seed — devem ser criadas dinamicamente conforme casos reais surgem (cada cliente novo, cada acidente, cada IQ/OQ/PQ).
+
 ### F2 ecm_desktop (2026-05-13)
 - `renderer/lib/ecm-api.ts` — `EcmDirectory.description` + fetch no `listDirectories()`
 - `renderer/components/DirectoryManualPanel.tsx` — novo componente (DOMPurify sanitize, allowlist tags)
@@ -2397,7 +2418,6 @@ Migração para nova taxonomia: pendente decisão user.
 - TSC clean + `next build` ok
 
 ### Pendente (fases seguintes)
-- F3 — Subpastas granulares dentro de cada Documentos/Registros (estrutura completa do spec)
 - F4 — Doc types específicos por área (substituir 6 genéricos) + grupos ECM_* + workflows críticos (CAPA-NC, recall, NOTIVISA, renovação licenças)
 - F5 — Migração dados legacy (Administração, MANUAIS, POPS)
 
