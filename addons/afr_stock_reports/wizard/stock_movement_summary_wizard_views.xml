@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_stock_movement_summary_wizard_form" model="ir.ui.view">
+        <field name="name">stock.movement.summary.wizard.form</field>
+        <field name="model">stock.movement.summary.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Sumário de Movimentações de Estoque">
+                <sheet>
+                    <group>
+                        <group string="Período">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="movement_type" widget="radio"/>
+                            <field name="include_draft"/>
+                        </group>
+                        <group string="Localização">
+                            <field name="warehouse_id" options="{'no_create': True}"/>
+                            <field name="location_usage" widget="radio"/>
+                            <field name="location_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"
+                                   placeholder="(opcional, substitui o armazém)"/>
+                        </group>
+                    </group>
+                    <group string="Produtos">
+                        <field name="category_ids" widget="many2many_tags"
+                               options="{'no_create': True}"
+                               placeholder="(vazio = todas as categorias)"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_print_pdf" string="Gerar PDF"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_stock_movement_summary_wizard" model="ir.actions.act_window">
+        <field name="name">Sumário de Movimentações</field>
+        <field name="res_model">stock.movement.summary.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
