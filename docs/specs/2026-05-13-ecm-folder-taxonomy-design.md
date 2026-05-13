@@ -2388,13 +2388,18 @@ Cada diretório com `description` HTML populada como mini-manual (escopo, normas
 
 Migração para nova taxonomia: pendente decisão user.
 
+### F2 ecm_desktop (2026-05-13)
+- `renderer/lib/ecm-api.ts` — `EcmDirectory.description` + fetch no `listDirectories()`
+- `renderer/components/DirectoryManualPanel.tsx` — novo componente (DOMPurify sanitize, allowlist tags)
+- `renderer/app/globals.css` — estilos `.ecm-manual-content` (h3/p/ul/code/table/quote)
+- `renderer/app/page.tsx` — sidebar direita renderiza painel quando pasta selecionada sem arquivo
+- Deps: `dompurify`, `isomorphic-dompurify`, `@types/dompurify`
+- TSC clean + `next build` ok
+
 ### Pendente (fases seguintes)
-- Subpastas dentro de cada Documentos/Registros (estrutura granular do spec)
-- ecm_desktop: componente DirectoryManualPanel + API fetch description
-- Doc types específicos por área (substituir 6 genéricos)
-- Grupos ECM_* + dms.access.group
-- Workflows críticos (CAPA-NC, recall, NOTIVISA, renovação licenças)
-- Migração dados legacy
+- F3 — Subpastas granulares dentro de cada Documentos/Registros (estrutura completa do spec)
+- F4 — Doc types específicos por área (substituir 6 genéricos) + grupos ECM_* + workflows críticos (CAPA-NC, recall, NOTIVISA, renovação licenças)
+- F5 — Migração dados legacy (Administração, MANUAIS, POPS)
 
 ---
 
