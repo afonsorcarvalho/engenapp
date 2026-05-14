@@ -2535,6 +2535,22 @@ Sub-pastas leaf (nível 3 e abaixo: por cliente, funcionário, equipamento, even
 - Deps: `dompurify`, `isomorphic-dompurify`, `@types/dompurify`
 - TSC clean + `next build` ok
 
+### F4.3.10 dms.directory tree rule + retire dynamic sync (2026-05-14, afr_ecm v16.0.1.7.0)
+
+Substitui o sync dinâmico frágil do `Auditor_Externo` dms.access.group por `ir.rule` stateless.
+
+**Mudanças:**
+- `security/record_rules_ecm_areas.xml` — nova rule `rule_ecm_auditor_directory_tree` em `dms.directory`: domain `['|', ('id','child_of', user.audit_scope_directory_ids.ids), ('id','parent_of', ...)]` (cone descendente + caminho ascendente até raiz, árvore navegável). Rule `rule_ecm_auditor_externo_readonly` em `dms.file` refinada de `in` → `child_of` (pega descendentes). `<data noupdate="1">` → `noupdate="0"` (record rules são config, devem re-sincronizar a cada upgrade).
+- `models/audit_scope.py` — removidos `_sync_auditor_dms_access_group()` + hooks `create/write/unlink`. Mantido cron expire (ainda arquiva escopos vencidos via `active=False`; computed `audit_scope_directory_ids` lê só `active=True`).
+- `migrations/16.0.1.7.0/post-migration.py` — para DBs existentes: reseta `Auditor_Externo` dms.access.group apontando para root DOCUMENTAÇÃO read-only (passe inicial), `group_ids=[group_ecm_area_auditor]`.
+- `views/menus.xml` — novo menuitem **ECM → Auditoria → Escopos de Auditoria** (groups=group_ecm_manager).
+- `tests/test_audit_scope_tree_rule.py` — 10 cases (path completo visível, siblings bloqueados, files descendentes, escopo expirado → vazio, write AccessError).
+
+**Hotfixes pós-deploy F4.3.10 (via teste UI):**
+1. `noupdate="1"` impediu update do `domain_force` das rules pré-existentes (137 RH Funcionário e 138 Auditor file ficaram com placeholder velho `user.login`/`[(1,'=',1)]`). Corrigido via MCP write imediato + `noupdate="0"` no XML para upgrades futuros.
+2. Faltava menu para `afr.ecm.audit.scope` (action existia, sem menuitem) — adicionado.
+3. `many2many_tags` solto em 5 views (audit_scope auditor_user_ids; recall affected_clients_ids + 4× attachment_ids em recall/notivisa/nc/capa) renderizava invisível quando vazio — adicionado `<separator>` + `placeholder` em todos.
+
 ### F5 limpeza legacy (2026-05-14)
 
 **DB nova já estava limpa**: pastas legacy (Administração, MANUAIS, POPS, etc) já haviam sido removidas em sessões anteriores. 0 dirs legacy + 0 files legacy associados.
@@ -2544,7 +2560,7 @@ Doc types legacy restantes (5 codes sem files): `contract`, `invoice`, `hr_admis
 Migração de DB com dados legacy reais (caso outras instâncias): documentar via script externo `scripts/migrate_legacy_to_taxonomy.py` (não criado nesta sessão por irrelevância na DB de teste; criar quando aplicar em produção).
 
 ### Pendente (fases seguintes)
-- F4.3.10 — Migration script para DBs com noupdate=1 velho (auto-cleanup `implied_ids` de `group_ecm_area_auditor` + remoção de `group_ecm_user` de usuários auditores existentes); record rule restritiva em `dms.directory` (atualmente tree-de-pastas controlada só por dms.access.group); integração real portal ANVISA NOTIVISA (SOAP/REST submission); converter placeholders (`recall_id_text`, `notivisa_ref`, `cycle_id_text`) para Many2one
+- F4.3.11 — Migration script para DBs com `implied_ids` stale em `group_ecm_area_auditor` (cleanup auto + remoção de `group_ecm_user` de usuários auditores existentes — a migration F4.3.10 só trata o dms.access.group, não os res.groups); integração real portal ANVISA NOTIVISA (SOAP/REST submission); converter placeholders (`recall_id_text`, `notivisa_ref`, `cycle_id_text`) para Many2one
 - F6 (futuro) — Validação manual UI completa via roteiro de teste documentado, performance tests com volume real (~5000 files), seed XML de production para deploy em DB nova
 
 ---
