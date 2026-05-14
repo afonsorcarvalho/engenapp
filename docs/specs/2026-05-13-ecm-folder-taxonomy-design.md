@@ -2388,6 +2388,29 @@ Cada diretório com `description` HTML populada como mini-manual (escopo, normas
 
 Migração para nova taxonomia: pendente decisão user.
 
+### F4.3.5–9 workflows complementares (2026-05-14, afr_ecm v16.0.1.6.0)
+
+Cinco sub-tarefas paralelas (Opus × 1, Sonnet × 3, Haiku × 1) + merge + 3 hotfixes pós-deploy.
+
+**F4.3.5 Recall** (Opus) — `afr.ecm.recall` (states draft→decision→notification→collection_in_progress→disposal→closed/cancelled), sequence REC/YYYY/NNNN, cron daily SLA, menu ECM→Operação→Recalls. **Auto-trigger**: hook em `dms.file.create/write` quando `document_type_id.code='OP_BI_POS'` cria `afr.ecm.recall` draft idempotente (key=`bi_positive_file_id`). 9 testes. Limitação: doc types OP_BI_POS/OP_RECALL precisam estar seedados (já existem do F4.1).
+
+**F4.3.6 NOTIVISA** (Sonnet) — `afr.ecm.notivisa` (states draft→analysis→notified→under_investigation→corrective_action→closed/cancelled), sequence NOTIVISA/YYYY/NNNN, severity inclui `death`, LGPD-aware (patient_initials max 10 chars, sem tracking em PII text). Constraint: severity=death exige `notivisa_protocol` antes de fechar. Helper `action_open_capa` cria CAPA filha. 10 testes.
+
+**F4.3.7 Sumário Mensal Ciclos** (Sonnet) — Cross-module cron (afr_supervisorio_ciclos → ECM). Modelo descoberto: `afr.supervisorio.ciclos` (PLURAL). Aggrega previous month por equipamento (success/failed/excluded/BI+/avg duration), gera HTML em `Resumos_Ciclos/` com nome `CYCLES_SUMMARY_<EQ>_<YYYY-MM>.html`. Idempotente. Graceful degradation se módulo supervisório ausente. 8 testes. Limitação: CI não estruturado em DB, só em fitas digital TXT.
+
+**F4.3.8 SLA Bloqueante NC 24h** (Haiku) — Cron horário escalando NCs em `disposition` >24h. Novo campo `disposition_entered_date` (datetime stored) tracking timing accurate; `sla_24h_escalated` boolean idempotência. Reset on state-change away from disposition. 6 testes.
+
+**F4.3.9 Refinar Record Rules** (Sonnet, + hotfix orquestrador) — Refinou `rule_ecm_rh_funcionario_own` (matching `user.employee_id.name` ilike + branch coletivos) e `rule_ecm_auditor_externo_readonly`. Novo modelo `afr.ecm.audit.scope` (auditor_user_ids m2m + directory_ids m2m + start_date + end_date + active) + `res.users.audit_scope_directory_ids` computed + cron daily expire.
+
+**Hotfixes pós-deploy F4.3.9 (descobertos via teste UI):**
+1. **Auditor via group_ecm_user pegava ECM Padrão dms.access.group amplo** — removido `implied_ids=group_ecm_user` de `group_ecm_area_auditor`. Auditor isolado.
+2. **Auditor_Externo dms.access.group estático** (id=40, dirs=[root]) — convertido para sync dinâmico via novos hooks `create/write/unlink/cron` em `audit_scope.py` que chamam `_sync_auditor_dms_access_group()`. Recalcula `directory_ids` do dms.access.group a partir de TODOS escopos ativos (start≤today≤end, active=True). DBs novos: vazio até primeiro escopo. DBs com `noupdate=1` velho: precisa MCP write manual em `implied_ids` + remover `group_ecm_user` dos auditores existentes (TODO migration F4.3.10).
+3. **Auditor sem `read` em `afr.ecm.audit.log`** — adicionado row em `ir.model.access.csv` para `group_ecm_area_auditor` (read only). Necessário pra UI carregar sem AccessError no notification poll.
+
+**Crons ativos novos (5):** Recall daily, NOTIVISA daily, Cycle Summary daily 04:00, NC SLA hourly, Audit Scope expire daily.
+
+**Implementação via 5 subagents paralelos** (Opus/Sonnet/Sonnet/Sonnet/Haiku) + merge orquestrador (manifest, init, csv) + 3 hotfixes interativos.
+
 ### F4.3 workflows + crons + segurança res.groups (2026-05-13, afr_ecm v16.0.1.5.0)
 
 Quatro sub-tarefas paralelas implementadas via subagents especializados (Haiku/Sonnet/Opus por complexidade) + merge final dos shared files pelo orquestrador.
@@ -2513,7 +2536,7 @@ Sub-pastas leaf (nível 3 e abaixo: por cliente, funcionário, equipamento, even
 - TSC clean + `next build` ok
 
 ### Pendente (fases seguintes)
-- F4.3.5+ — Workflow Recall a partir de OP_BI_POS (criação auto), workflow NOTIVISA integração portal ANVISA, cron sumário mensal ciclos (afr_supervisorio_ciclos → ECM), SLA bloqueante horário (cron horário escalando NCs em disposition >24h), refinar `rule_ecm_rh_funcionario_own` para matching per-employee MATRICULA_<login>, refinar `rule_ecm_auditor_externo_readonly` para escopo definido por auditoria
+- F4.3.10 — Migration script para DBs com noupdate=1 velho (auto-cleanup `implied_ids` de `group_ecm_area_auditor` + remoção de `group_ecm_user` de usuários auditores existentes); record rule restritiva em `dms.directory` (atualmente tree-de-pastas controlada só por dms.access.group); integração real portal ANVISA NOTIVISA (SOAP/REST submission); converter placeholders (`recall_id_text`, `notivisa_ref`, `cycle_id_text`) para Many2one
 - F5 — Migração dados legacy (Administração, MANUAIS, POPS)
 
 ---
