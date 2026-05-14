@@ -2535,9 +2535,17 @@ Sub-pastas leaf (nível 3 e abaixo: por cliente, funcionário, equipamento, even
 - Deps: `dompurify`, `isomorphic-dompurify`, `@types/dompurify`
 - TSC clean + `next build` ok
 
+### F5 limpeza legacy (2026-05-14)
+
+**DB nova já estava limpa**: pastas legacy (Administração, MANUAIS, POPS, etc) já haviam sido removidas em sessões anteriores. 0 dirs legacy + 0 files legacy associados.
+
+Doc types legacy restantes (5 codes sem files): `contract`, `invoice`, `hr_admission`, `hr_aso`, `certificate` — todos têm substitutos novos (COM_CONTRATO, FIN_NFSE/FIN_NFE_REC, RH_ADMISSAO, RH_ASO, EM_CAL/OP_REQUAL). **Deletados via MCP**. Total final: 122 doc types (121 novos + 1 sequência geral).
+
+Migração de DB com dados legacy reais (caso outras instâncias): documentar via script externo `scripts/migrate_legacy_to_taxonomy.py` (não criado nesta sessão por irrelevância na DB de teste; criar quando aplicar em produção).
+
 ### Pendente (fases seguintes)
 - F4.3.10 — Migration script para DBs com noupdate=1 velho (auto-cleanup `implied_ids` de `group_ecm_area_auditor` + remoção de `group_ecm_user` de usuários auditores existentes); record rule restritiva em `dms.directory` (atualmente tree-de-pastas controlada só por dms.access.group); integração real portal ANVISA NOTIVISA (SOAP/REST submission); converter placeholders (`recall_id_text`, `notivisa_ref`, `cycle_id_text`) para Many2one
-- F5 — Migração dados legacy (Administração, MANUAIS, POPS)
+- F6 (futuro) — Validação manual UI completa via roteiro de teste documentado, performance tests com volume real (~5000 files), seed XML de production para deploy em DB nova
 
 ---
 
