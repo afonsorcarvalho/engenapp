@@ -39,12 +39,17 @@ services:
       # Um pedido por vez — VPS pequena, evita thrashing.
       OLLAMA_NUM_PARALLEL: "1"
       OLLAMA_MAX_LOADED_MODELS: "1"
-    # Limites: deixa folga para Odoo + Postgres.
+    # GPU + limites de memória/CPU (modelo roda em VRAM da NVIDIA; sobra CPU/RAM para Odoo+PG).
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 6G
           cpus: "4.0"
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     logging:
       driver: "json-file"
       options:
