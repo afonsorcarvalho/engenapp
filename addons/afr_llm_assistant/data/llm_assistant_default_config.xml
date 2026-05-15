@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="icp_afr_llm_provider" model="ir.config_parameter">
+        <field name="key">afr_llm_assistant.provider</field>
+        <field name="value">lmstudio</field>
+    </record>
+    <record id="icp_afr_llm_api_base_url" model="ir.config_parameter">
+        <field name="key">afr_llm_assistant.api_base_url</field>
+        <field name="value">http://host.docker.internal:1234/v1,http://172.17.0.1:1234/v1</field>
+    </record>
+    <record id="icp_afr_llm_model" model="ir.config_parameter">
+        <field name="key">afr_llm_assistant.model</field>
+        <field name="value">google/gemma-4-e4b</field>
+    </record>
+    <record id="icp_afr_llm_anthropic_max_tokens" model="ir.config_parameter">
+        <field name="key">afr_llm_assistant.anthropic_max_tokens</field>
+        <field name="value">4096</field>
+    </record>
+    <record id="icp_afr_llm_anthropic_version" model="ir.config_parameter">
+        <field name="key">afr_llm_assistant.anthropic_version</field>
+        <field name="value">2023-06-01</field>
+    </record>
+    <record id="icp_afr_llm_whitelisted_models" model="ir.config_parameter">
+        <field name="key">afr_llm_assistant.whitelisted_models</field>
+        <field name="value">afr.supervisorio.ciclos</field>
+    </record>
+</odoo>

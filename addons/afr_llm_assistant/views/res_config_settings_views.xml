@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_llm" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.afr.llm.assistant</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="60"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" data-string="Assistente LLM" string="Assistente LLM" data-key="afr_llm_assistant">
+                    <h2>Provedor LLM</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="afr_llm_provider" string="Provedor"/>
+                                <div class="text-muted">
+                                    lmstudio = OpenAI-compatible local (LM Studio, vLLM, Ollama).
+                                    anthropic = Claude API (https://api.anthropic.com/v1/messages).
+                                </div>
+                                <field name="afr_llm_provider" class="mt16"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="afr_llm_model" string="Modelo"/>
+                                <div class="text-muted">
+                                    LM Studio: nome como exibido (ex.: google/gemma-3-4b-it).
+                                    Claude: claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-5-20251001.
+                                </div>
+                                <field name="afr_llm_model" class="mt16"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="afr_llm_api_key" string="Chave API"/>
+                                <div class="text-muted">
+                                    LM Studio: opcional. Anthropic: sk-ant-... obrigatório.
+                                </div>
+                                <field name="afr_llm_api_key" widget="password" class="mt16"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="afr_llm_whitelisted_models" string="Modelos Odoo permitidos"/>
+                                <div class="text-muted">
+                                    Lista separada por vírgulas (ex.: afr.supervisorio.ciclos).
+                                    Só estes nomes técnicos poderão aparecer no bloco ODOO_QUERY.
+                                </div>
+                                <field name="afr_llm_whitelisted_models" class="mt16"/>
+                            </div>
+                        </div>
+                    </div>
+                    <h2 attrs="{'invisible': [('afr_llm_provider', '!=', 'lmstudio')]}">LM Studio / OpenAI-compatible</h2>
+                    <div class="row mt16 o_settings_container" attrs="{'invisible': [('afr_llm_provider', '!=', 'lmstudio')]}">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="afr_llm_api_base_url" string="URL base da API"/>
+                                <div class="text-muted">
+                                    Uma ou várias URLs separadas por vírgula (tentadas em ordem), cada uma
+                                    terminando em /v1. Variável ODOO_LMSTUDIO_API_BASE no compose prevalece
+                                    sobre este campo se definida.
+                                </div>
+                                <field name="afr_llm_api_base_url" class="mt16"/>
+                            </div>
+                        </div>
+                    </div>
+                    <h2 attrs="{'invisible': [('afr_llm_provider', '!=', 'anthropic')]}">Anthropic Claude</h2>
+                    <div class="row mt16 o_settings_container" attrs="{'invisible': [('afr_llm_provider', '!=', 'anthropic')]}">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="afr_llm_anthropic_max_tokens" string="max_tokens"/>
+                                <div class="text-muted">
+                                    Limite de tokens de saída por chamada. Padrão 4096.
+                                </div>
+                                <field name="afr_llm_anthropic_max_tokens" class="mt16"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="afr_llm_anthropic_version" string="anthropic-version"/>
+                                <div class="text-muted">
+                                    Header anthropic-version. Manter 2023-06-01 salvo motivo específico.
+                                </div>
+                                <field name="afr_llm_anthropic_version" class="mt16"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

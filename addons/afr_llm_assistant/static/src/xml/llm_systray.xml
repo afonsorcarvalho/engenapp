@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="afr_llm_assistant.LlmSystray" owl="1">
+        <div class="o_llm_systray_root">
+            <button type="button"
+                    class="o_llm_systray_toggle btn btn-link p-2"
+                    t-att-title="'Assistente LLM'"
+                    t-on-click.stop="toggleOpen">
+                <i class="fa fa-comments fa-lg" role="img" aria-label="Assistente LLM"/>
+            </button>
+            <div t-if="state.open" class="o_llm_systray_panel" t-on-click.stop="">
+                <div class="o_llm_systray_header d-flex justify-content-between align-items-center">
+                    <span>Assistente LLM</span>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-link" t-on-click="onClear" title="Limpar histórico">Limpar</button>
+                        <button type="button" class="btn btn-sm btn-link" t-on-click="toggleOpen" title="Fechar">×</button>
+                    </div>
+                </div>
+                <div class="o_llm_systray_messages" t-ref="messagesScroll">
+                    <t t-if="!state.messages.length">
+                        <div class="text-muted small">Faça perguntas sobre os dados do Odoo. Ex.: ciclos mais rápidos do mês.</div>
+                    </t>
+                    <t t-foreach="state.messages" t-as="m" t-key="m.id">
+                        <div t-attf-class="o_llm_systray_msg {{ m.role === 'user' ? 'o_llm_systray_msg_user' : 'o_llm_systray_msg_assistant' }}">
+                            <strong t-if="m.role === 'user'">Você: </strong>
+                            <strong t-else="">Assistente: </strong>
+                            <span class="o_llm_systray_msg_body" t-out="messageToMarkup(m.body)"/>
+                        </div>
+                    </t>
+                </div>
+                <div class="o_llm_systray_footer">
+                    <textarea class="form-control form-control-sm mb-2"
+                              placeholder="Digite sua pergunta…"
+                              t-att-value="state.input"
+                              t-on-input="onInput"
+                              t-att-disabled="state.loading"/>
+                    <button type="button"
+                            class="btn btn-primary btn-sm w-100"
+                            t-att-disabled="state.loading || !state.input.trim()"
+                            t-on-click="onSend">
+                        <t t-if="state.loading">Aguarde…</t>
+                        <t t-else="">Enviar</t>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

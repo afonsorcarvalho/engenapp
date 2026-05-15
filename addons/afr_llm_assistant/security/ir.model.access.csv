@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_afr_llm_chat_session_user,afr.llm.chat.session.user,model_afr_llm_chat_session,base.group_user,1,1,1,1
+access_afr_llm_chat_message_user,afr.llm.chat.message.user,model_afr_llm_chat_message,base.group_user,1,1,1,1
+access_afr_llm_chat_session_system,afr.llm.chat.session.system,model_afr_llm_chat_session,base.group_system,1,1,1,1
+access_afr_llm_chat_message_system,afr.llm.chat.message.system,model_afr_llm_chat_message,base.group_system,1,1,1,1
+access_afr_llm_chat_job_user,afr.llm.chat.job.user,model_afr_llm_chat_job,base.group_user,1,1,1,1
+access_afr_llm_chat_job_system,afr.llm.chat.job.system,model_afr_llm_chat_job,base.group_system,1,1,1,1
