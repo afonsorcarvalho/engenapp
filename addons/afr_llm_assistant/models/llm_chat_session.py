@@ -9,6 +9,7 @@ A resposta do modelo pode incluir:
   relatório, menu, ação), resolvidas no servidor com as permissões do usuário.
 """
 
+import ast
 import json
 import logging
 import os
@@ -36,6 +37,9 @@ _FIELD_HELP_MAX_CHARS = int(os.environ.get('ODOO_LM_FIELD_HELP_MAX_CHARS', '360'
 # Marcadores na resposta do LLM para solicitar dados ao Odoo.
 _ODOO_QUERY_START = '[[ODOO_QUERY]]'
 _ODOO_QUERY_END = '[[/ODOO_QUERY]]'
+
+# Tool-calling: iteração máxima do loop assistant↔tool dentro de uma única resposta ao user.
+_TOOL_CALLING_MAX_ITER = int(os.environ.get('ODOO_LM_TOOL_CALL_MAX_ITER', '5'))
 
 # Marcadores para URLs relativas (/web#, /web/content/, /report/...).
 _ODOO_LINK_START = '[[ODOO_LINK]]'
@@ -170,6 +174,12 @@ class AfrLlmChatSession(models.Model):
             model_name = 'claude-sonnet-4-6' if provider == 'anthropic' else 'google/gemma-4-e4b'
         api_key = (icp.get_param('afr_llm_assistant.api_key') or '').strip()
         anth_cfg = self._anthropic_config(icp) if provider == 'anthropic' else None
+
+        # Dispatcher: tool-calling estruturado (Ollama/OpenAI-compat) vs fluxo legacy ODOO_QUERY/ODOO_LINK.
+        # Habilita por ICP `afr_llm_assistant.use_tool_calling` (qualquer truthy: 1/true/on/yes).
+        use_tools_raw = (icp.get_param('afr_llm_assistant.use_tool_calling') or '').strip().lower()
+        if provider == 'lmstudio' and use_tools_raw in ('1', 'true', 'on', 'yes'):
+            return self._compose_via_tool_calling(api_bases, model_name, api_key)
 
         messages = self._build_openai_messages()
         first, api_used = self._llm_chat(
@@ -333,6 +343,351 @@ class AfrLlmChatSession(models.Model):
     def _extract_odoo_link_block(self, text):
         """Retorna o trecho JSON entre os marcadores ODOO_LINK ou None."""
         return self._extract_marker_block(text, _ODOO_LINK_START, _ODOO_LINK_END)
+
+    # -------------------------------------------------------------------------
+    # Tool calling estruturado (Ollama / OpenAI tools API)
+    # -------------------------------------------------------------------------
+
+    def _tools_schema(self):
+        """
+        Esquema OpenAI ``tools=[...]`` exposto ao LLM.
+
+        Cada função reflete uma operação ORM de leitura permitida pelo whitelist do servidor.
+        O modelo invoca via ``tool_calls`` (em vez de ``[[ODOO_QUERY]]`` em texto), o que
+        elimina parsing por regex e reduz hallucination de formato.
+        """
+        return [
+            {
+                'type': 'function',
+                'function': {
+                    'name': 'odoo_search_read',
+                    'description': (
+                        'Lê registros do Odoo via ORM (Model.search_read). '
+                        'Use para listar registros, pegar último, primeiro, filtrados por domínio. '
+                        'Modelo deve estar na whitelist; campos devem existir no modelo.'
+                    ),
+                    'parameters': {
+                        'type': 'object',
+                        'properties': {
+                            'model': {
+                                'type': 'string',
+                                'description': 'Nome técnico (ex.: engc.os, res.partner)',
+                            },
+                            'domain': {
+                                'type': 'array',
+                                'description': (
+                                    'Lista de triplas [campo, operador, valor]. AND implícito. '
+                                    'Use [] para sem filtro. NÃO use expressões Python (datetime.now()).'
+                                ),
+                                'items': {},
+                            },
+                            'fields': {
+                                'type': 'array',
+                                'items': {'type': 'string'},
+                                'description': 'Campos a ler (sempre inclua "id").',
+                            },
+                            'order': {
+                                'type': 'string',
+                                'description': 'ORDER BY (ex.: "create_date desc"). Padrão: "id desc".',
+                            },
+                            'limit': {
+                                'type': 'integer',
+                                'description': 'Máximo de linhas (1-50, padrão 20).',
+                            },
+                        },
+                        'required': ['model', 'fields'],
+                    },
+                },
+            },
+            {
+                'type': 'function',
+                'function': {
+                    'name': 'odoo_search_count',
+                    'description': 'Conta registros do modelo que satisfazem o domínio.',
+                    'parameters': {
+                        'type': 'object',
+                        'properties': {
+                            'model': {'type': 'string'},
+                            'domain': {'type': 'array', 'items': {}},
+                        },
+                        'required': ['model'],
+                    },
+                },
+            },
+            {
+                'type': 'function',
+                'function': {
+                    'name': 'odoo_read_group',
+                    'description': (
+                        'Agrupa registros (Model.read_group). Use pra estatísticas por categoria.'
+                    ),
+                    'parameters': {
+                        'type': 'object',
+                        'properties': {
+                            'model': {'type': 'string'},
+                            'domain': {'type': 'array', 'items': {}},
+                            'fields': {
+                                'type': 'array',
+                                'items': {'type': 'string'},
+                                'description': 'Ex.: ["__count"] ou ["amount:sum"].',
+                            },
+                            'groupby': {
+                                'type': 'array',
+                                'items': {'type': 'string'},
+                                'description': 'Campos para agrupar (devem ser stored).',
+                            },
+                            'limit': {'type': 'integer'},
+                        },
+                        'required': ['model', 'fields', 'groupby'],
+                    },
+                },
+            },
+            {
+                'type': 'function',
+                'function': {
+                    'name': 'odoo_fields_get',
+                    'description': 'Lista metadados de campos do modelo (tipo, label, selection).',
+                    'parameters': {
+                        'type': 'object',
+                        'properties': {
+                            'model': {'type': 'string'},
+                            'fields': {
+                                'type': 'array',
+                                'items': {'type': 'string'},
+                                'description': 'Nomes de campos (máx 80).',
+                            },
+                        },
+                        'required': ['model', 'fields'],
+                    },
+                },
+            },
+        ]
+
+    def _coerce_tool_arg(self, value):
+        """
+        Tolera modelos pequenos que devolvem listas/dicts como string JSON ou repr-Python.
+
+        Exemplos vistos com llama3.1:8b:
+        - ``"['id', 'name']"`` → ``['id', 'name']``
+        - ``"[['create_date', '<=', 'datetime.now()']]"`` → lista (sem ``datetime.now()``).
+        - ``"1"`` para ``limit`` → ``1``.
+        """
+        if not isinstance(value, str):
+            return value
+        s = value.strip()
+        if not s:
+            return value
+        # 1) Tenta JSON puro
+        try:
+            return json.loads(s)
+        except json.JSONDecodeError:
+            pass
+        # 2) Fallback: Python literal (aceita aspas simples). Usa ast.literal_eval (seguro).
+        try:
+            return ast.literal_eval(s)
+        except (ValueError, SyntaxError):
+            pass
+        return value
+
+    def _normalize_tool_args(self, raw_args):
+        """
+        Converte ``arguments`` (string JSON gerado pelo LLM) num dict com tipos coercidos.
+
+        Modelos pequenos costumam embutir listas/ints como string — coerimos campo a campo
+        antes de delegar a ``_safe_execute_odoo_operation``.
+        """
+        if isinstance(raw_args, dict):
+            data = dict(raw_args)
+        elif isinstance(raw_args, str):
+            try:
+                data = json.loads(raw_args)
+            except json.JSONDecodeError:
+                # Última tentativa: literal Python.
+                try:
+                    data = ast.literal_eval(raw_args)
+                except (ValueError, SyntaxError) as err:
+                    raise UserError(_('Argumentos da ferramenta não são JSON válido: %s') % err)
+                if not isinstance(data, dict):
+                    raise UserError(_('Argumentos da ferramenta devem ser objeto JSON.'))
+        else:
+            raise UserError(_('Argumentos da ferramenta em formato inesperado: %s') % type(raw_args))
+
+        # Coerção por campo conhecido.
+        if 'model' in data and isinstance(data['model'], str):
+            # Normaliza model name: case insensitive lookup na whitelist.
+            mname = data['model'].strip()
+            allowed = self._llm_whitelisted_model_names_set()
+            if mname not in allowed:
+                for m in allowed:
+                    if m.lower() == mname.lower():
+                        mname = m
+                        break
+            data['model'] = mname
+        for k in ('domain', 'fields', 'groupby'):
+            if k in data:
+                data[k] = self._coerce_tool_arg(data[k])
+        for k in ('limit', 'offset'):
+            if k in data and isinstance(data[k], str):
+                try:
+                    data[k] = int(data[k])
+                except ValueError:
+                    pass
+        return data
+
+    def _execute_tool_call(self, name, raw_args):
+        """
+        Roteia ``tool_calls`` da resposta do modelo para as ops ORM permitidas.
+
+        Retorna um dict ``{'ok': bool, ...}``. Sucesso → ``data``; falha → ``error`` (mensagem
+        objetiva pra reentrar como contexto na próxima chamada ao modelo).
+        """
+        try:
+            args = self._normalize_tool_args(raw_args)
+        except UserError as err:
+            return {'ok': False, 'error': str(err.args[0] if err.args else err)}
+
+        op_map = {
+            'odoo_search_read': 'search_read',
+            'odoo_search_count': 'search_count',
+            'odoo_read_group': 'read_group',
+            'odoo_fields_get': 'fields_get',
+        }
+        op = op_map.get(name)
+        if op is None:
+            return {'ok': False, 'error': _('Ferramenta desconhecida: %s') % name}
+
+        payload = dict(args)
+        payload['operation'] = op
+        try:
+            data = self._safe_execute_odoo_operation(payload)
+        except UserError as err:
+            return {'ok': False, 'error': str(err.args[0] if err.args else err)}
+        except Exception as err:  # noqa: BLE001
+            _logger.exception('Tool call %s falhou', name)
+            return {'ok': False, 'error': str(err)}
+
+        # Pós-processamento: anexa _record_form_links para search_read (igual fluxo legacy).
+        if op == 'search_read' and isinstance(data, list) and data:
+            try:
+                links = self._llm_build_record_form_links(payload.get('model'), data)
+            except Exception:  # noqa: BLE001
+                links = None
+            if links:
+                return {'ok': True, 'data': data, '_record_form_links': links}
+        return {'ok': True, 'data': data}
+
+    def _lmstudio_chat_with_tools(self, api_bases, model_name, api_key, messages, tools):
+        """
+        Igual a ``_lmstudio_chat_multi`` mas envia ``tools=[...]`` e retorna mensagem completa
+        (com ``content`` e ``tool_calls``) — não só o texto.
+        """
+        if isinstance(api_bases, str):
+            api_bases = [api_bases]
+        if not api_bases:
+            api_bases = ['http://host.docker.internal:1234/v1']
+        payload = {
+            'model': model_name,
+            'messages': messages,
+            'temperature': 0.2,
+            'stream': False,
+            'tools': tools,
+        }
+        headers = {'Content-Type': 'application/json'}
+        if api_key:
+            headers['Authorization'] = 'Bearer %s' % api_key
+        url_errors = []
+        for api_base in api_bases:
+            url = '%s/chat/completions' % api_base
+            try:
+                body = self._lmstudio_post_json(url, payload, headers)
+            except urllib.error.HTTPError as err:
+                detail = err.read().decode('utf-8', errors='replace')
+                _logger.warning('LM Studio HTTP %s: %s', err.code, detail)
+                raise UserError(_('Erro HTTP ao falar com o LLM (%(code)s): %(msg)s') % {
+                    'code': err.code, 'msg': detail or err.reason,
+                }) from err
+            except urllib.error.URLError as err:
+                _logger.warning('LLM URL error em %s: %s', url, err)
+                url_errors.append('%s → %s' % (url, err.reason or err))
+                continue
+            try:
+                msg = body['choices'][0]['message']
+            except (KeyError, IndexError, TypeError) as err:
+                _logger.warning('Resposta inesperada do LLM: %s', body)
+                raise UserError(_('Resposta inválida do LLM (sem choices[0].message).')) from err
+            return msg, api_base
+        raise UserError(_('Não foi possível conectar ao LLM: %s') % ('\n'.join(url_errors) or '(nenhuma URL)'))
+
+    def _compose_via_tool_calling(self, api_bases, model_name, api_key):
+        """
+        Loop assistant↔tool até obter resposta final em texto puro (sem ``tool_calls``).
+
+        Limite ``_TOOL_CALLING_MAX_ITER`` evita loops infinitos. A cada iteração:
+        1. POST /chat/completions com ``tools=[...]``.
+        2. Se ``finish_reason='tool_calls'``, executa cada call e anexa mensagens ``role=tool``.
+        3. Senão, retorna ``content`` como resposta final.
+        """
+        tools = self._tools_schema()
+        messages = self._build_openai_messages()
+        api_used = api_bases[0] if api_bases else None
+
+        for iteration in range(_TOOL_CALLING_MAX_ITER):
+            msg, api_used = self._lmstudio_chat_with_tools(
+                [api_used] if api_used else api_bases, model_name, api_key, messages, tools,
+            )
+            tool_calls = msg.get('tool_calls') or []
+            if not tool_calls:
+                return (msg.get('content') or '').strip()
+
+            # Anexa a mensagem do assistente com tool_calls (formato OpenAI).
+            messages.append({
+                'role': 'assistant',
+                'content': msg.get('content') or '',
+                'tool_calls': tool_calls,
+            })
+            # Executa cada tool call e anexa resultado.
+            for tc in tool_calls:
+                fn = tc.get('function') or {}
+                fname = fn.get('name') or ''
+                fargs = fn.get('arguments') or '{}'
+                result = self._execute_tool_call(fname, fargs)
+                content = json.dumps(result, ensure_ascii=False, default=str)
+                if len(content) > 16000:
+                    content = content[:16000] + '\n… (truncado)'
+                messages.append({
+                    'role': 'tool',
+                    'tool_call_id': tc.get('id') or '',
+                    'content': content,
+                })
+
+        # Excedeu iterações: pede ao modelo uma resposta final sem chamar mais ferramentas.
+        messages.append({
+            'role': 'user',
+            'content': _(
+                'Limite de chamadas de ferramentas atingido. Responda agora com texto puro '
+                'baseado nos resultados já obtidos, sem novas tool calls.'
+            ),
+        })
+        msg, _api = self._lmstudio_chat_with_tools(
+            [api_used] if api_used else api_bases, model_name, api_key, messages, tools=[],
+        )
+        return (msg.get('content') or '').strip()
+
+    def _llm_build_record_form_links(self, model_name, rows):
+        """Helper: gera lista de paths /web#... para rows com 'id' (search_read pós-processamento)."""
+        if not model_name or not rows:
+            return []
+        out = []
+        for row in rows:
+            if not isinstance(row, dict) or 'id' not in row:
+                continue
+            label = self._llm_pick_record_label(row)
+            out.append({
+                'id': row['id'],
+                'label': label,
+                'path': '/web#id=%s&model=%s&view_type=form' % (row['id'], model_name),
+            })
+        return out
 
     def _llm_pick_record_label(self, row):
         """
