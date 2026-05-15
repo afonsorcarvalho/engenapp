@@ -588,7 +588,7 @@ class AfrLlmChatSession(models.Model):
         payload = {
             'model': model_name,
             'messages': messages,
-            'temperature': 0.2,
+            'temperature': 0.0,
             'stream': False,
             'tools': tools,
         }
@@ -650,8 +650,11 @@ class AfrLlmChatSession(models.Model):
                 fn = tc.get('function') or {}
                 fname = fn.get('name') or ''
                 fargs = fn.get('arguments') or '{}'
+                _logger.debug('Tool call iter=%s name=%s args=%s', iteration, fname, fargs)
                 result = self._execute_tool_call(fname, fargs)
                 content = json.dumps(result, ensure_ascii=False, default=str)
+                if not result.get('ok'):
+                    _logger.warning('Tool %s falhou: %s', fname, result.get('error'))
                 if len(content) > 16000:
                     content = content[:16000] + '\n… (truncado)'
                 messages.append({
@@ -847,9 +850,17 @@ class AfrLlmChatSession(models.Model):
         """
         Instruções fixas: papel, catálogos (modelos, relatórios QWeb), campos whitelist,
         ODOO_QUERY, ODOO_LINK e formato de URLs de relatório (documentação Odoo 16).
+
+        Bifurca em ``_system_prompt_tools()`` quando ICP ``afr_llm_assistant.use_tool_calling``
+        está ativo — versão mais enxuta (~60% menos tokens) porque o modelo recebe o esquema
+        das ferramentas via ``tools=[...]`` e não precisa de exemplos textuais nem regras
+        sobre marcadores ``[[ODOO_QUERY]]``/``[[ODOO_LINK]]``.
         """
         self.ensure_one()
         icp = self.env['ir.config_parameter'].sudo()
+        use_tools_raw = (icp.get_param('afr_llm_assistant.use_tool_calling') or '').strip().lower()
+        if use_tools_raw in ('1', 'true', 'on', 'yes'):
+            return self._system_prompt_tools(icp)
         raw = icp.get_param('afr_llm_assistant.whitelisted_models') or ''
         allowed = [x.strip() for x in raw.split(',') if x.strip()]
         if not allowed:
@@ -984,6 +995,82 @@ class AfrLlmChatSession(models.Model):
             'missing': missing_txt,
             'catalog_reports': catalog_reports,
             'allowed_csv': allowed_csv,
+            'whitelist_fields': whitelist_fields,
+        }
+
+    def _system_prompt_tools(self, icp):
+        """
+        Versão enxuta do system prompt usada com tool-calling (``tools=[...]``).
+
+        Modelo recebe esquema JSON das funções via API; não precisa de exemplos textuais
+        ``[[ODOO_QUERY]]`` nem regras sobre marcadores. Mantém apenas: identidade, regras
+        básicas, whitelist + catálogo de campos do modelo (RAG essencial pra evitar
+        invenção de campos).
+        """
+        self.ensure_one()
+        raw = icp.get_param('afr_llm_assistant.whitelisted_models') or ''
+        allowed = [x.strip() for x in raw.split(',') if x.strip()]
+        if not allowed:
+            allowed = ['afr.supervisorio.ciclos']
+
+        allowed_csv = ', '.join(allowed)
+        missing = [m for m in allowed if m not in self.env]
+        missing_txt = (
+            _('\nModelos na whitelist mas não carregados: %s') % ', '.join(missing)
+            if missing else ''
+        )
+        whitelist_fields = self._whitelist_models_field_catalog(
+            allowed, max_total_chars=_WHITELIST_FIELDS_MAX_CHARS
+        )
+        now_txt = fields.Datetime.context_timestamp(
+            self, fields.Datetime.now()
+        ).strftime('%Y-%m-%d %H:%M:%S %Z')
+
+        return _(
+            'Você é um assistente do Odoo 16 ligado a esta base. Responda em português do Brasil, '
+            'com clareza e precisão.\n'
+            'Data/hora de referência: %(now)s\n\n'
+            '### REGRA ANTI-ALUCINAÇÃO (CRÍTICA) ###\n'
+            'Você **NÃO TEM MEMÓRIA** dos dados. Você só sabe o que as ferramentas retornaram '
+            '**NESTA chamada**. Toda pergunta sobre dados (OS, técnico, descrição, datas, listas, '
+            'contagens) **OBRIGA** a chamar a ferramenta apropriada **AGORA**, mesmo que o assunto '
+            'já tenha aparecido antes na conversa.\n'
+            '- **NUNCA invente** nomes de OS, técnicos, clientes, datas, descrições. Se a ferramenta '
+            'não retornou o dado, diga "não tenho essa informação" ou chame uma nova ferramenta.\n'
+            '- Se o usuário pede N registros, sua tool call **DEVE** ter ``limit=N`` (não reaproveite '
+            'limit anterior).\n'
+            '- Se o usuário pede campo extra (ex.: "e a descrição?"), faça **NOVA tool call** com '
+            'esse campo no array ``fields`` — nunca invente o valor.\n'
+            '- Liste APENAS os IDs/nomes que vieram em ``data`` da tool. Se vieram 1 OS, mostre 1; '
+            'se vieram 3, mostre 3. NUNCA preencha linhas a mais.\n\n'
+            '### REGRA DE DOMAIN (CRÍTICA) ###\n'
+            'Só use filtros em ``domain`` que o **usuário pediu explicitamente**. NÃO invente filtros.\n'
+            '- "última OS" / "última criada" → ``domain=[]``, ``order="create_date desc"``, '
+            '``limit=1``. **NÃO** adicione ``["create_date", "<=", ...]`` nem nada parecido.\n'
+            '- "as 3 últimas" → ``domain=[]``, ``order="create_date desc"``, ``limit=3``.\n'
+            '- "OS de Maio" → aí sim ``domain=[["create_date", ">=", "2026-05-01"], ["create_date", "<=", "2026-05-31"]]``.\n'
+            '- Quando em dúvida, prefira ``domain=[]`` (sem filtro) — mais resultados é melhor que '
+            'resultado errado.\n\n'
+            '### COMO RESPONDER PERGUNTAS SOBRE DADOS ###\n'
+            'Para qualquer pergunta sobre registros reais, **chame uma das ferramentas** '
+            '``odoo_search_read``, ``odoo_search_count``, ``odoo_read_group`` ou ``odoo_fields_get`` '
+            '(definidas no parâmetro tools desta chamada).\n'
+            '- **NUNCA** escreva SQL, comandos de banco, nem exemplos de código para o usuário '
+            'executar manualmente. O sistema executa via tool call e devolve o resultado.\n'
+            '- Use **apenas** modelos da whitelist: %(allowed_csv)s%(missing)s.\n'
+            '- Use **apenas** campos listados na secção ### do modelo abaixo (copie literalmente). '
+            'Não invente campos. Em ``search_read`` use campos com tag ``search_read_ok`` ou ``id``.\n'
+            '- Em ``domain`` use lista plana de triplas [campo, op, valor]; sem expressões Python '
+            '(nada de ``datetime.now()``); sem ``&``/``|``/``!`` (AND implícito).\n'
+            '- Após receber o resultado da tool, formate a resposta em português usando **somente** '
+            'os dados retornados. Se o resultado tiver ``_record_form_links``, liste cada registro '
+            'como bullet ``* [label](path)`` em Markdown.\n\n'
+            '### Catálogo de campos dos modelos permitidos ###\n'
+            '%(whitelist_fields)s\n'
+        ) % {
+            'now': now_txt,
+            'allowed_csv': allowed_csv,
+            'missing': missing_txt,
             'whitelist_fields': whitelist_fields,
         }
 
@@ -1497,11 +1584,19 @@ class AfrLlmChatSession(models.Model):
         return out
 
     def _normalize_search_read_fields_list(self, Model, fields_list):
-        """Filtra ``fields`` para nomes existentes e armazenados (search_read)."""
+        """
+        Filtra ``fields`` para nomes existentes e armazenados (search_read).
+
+        Substitui silenciosamente campos compute+not-stored por equivalentes stored quando
+        possível (ex.: ``display_name`` → ``_rec_name`` do modelo, geralmente ``name``).
+        Isso evita devolver linhas só com ``id`` quando o modelo do LLM pediu ``display_name``
+        e o modelo Odoo não armazena o computed — caso clássico de alucinação posterior.
+        """
+        rec_name = getattr(Model, '_rec_name', 'name') or 'name'
         if not fields_list:
-            fields_list = ['display_name']
+            fields_list = [rec_name] if rec_name in Model._fields else ['display_name']
         if not isinstance(fields_list, (list, tuple)):
-            return ['id', 'display_name']
+            return ['id', rec_name] if rec_name in Model._fields else ['id', 'display_name']
         ok = []
         for fname in fields_list:
             if fname not in Model._fields:
@@ -1511,13 +1606,29 @@ class AfrLlmChatSession(models.Model):
                 continue
             field = Model._fields[fname]
             if field.compute and not field.store:
+                # Tenta substituir por _rec_name (stored) quando o LLM pediu display_name.
+                if fname == 'display_name' and rec_name in Model._fields and rec_name != 'display_name':
+                    rec_field = Model._fields[rec_name]
+                    if not (rec_field.compute and not rec_field.store):
+                        _logger.info(
+                            'ODOO_QUERY: substituído "display_name" por "%s" (stored) em %s',
+                            rec_name, Model._name,
+                        )
+                        if rec_name not in ok:
+                            ok.append(rec_name)
+                        continue
                 _logger.warning(
                     'ODOO_QUERY: ignorado em "fields" (não armazenado em %s): %s', Model._name, fname
                 )
                 continue
             ok.append(fname)
+        # Garante que pelo menos o _rec_name vá junto, pra o LLM ter rótulo humano.
+        if rec_name in Model._fields and rec_name not in ok:
+            rec_field = Model._fields[rec_name]
+            if not (rec_field.compute and not rec_field.store):
+                ok.append(rec_name)
         if not ok:
-            return ['id', 'display_name']
+            return ['id', rec_name] if rec_name in Model._fields else ['id']
         return ok
 
     def _normalize_search_read_order(self, Model, order):
@@ -1649,6 +1760,12 @@ class AfrLlmChatSession(models.Model):
                     raise UserError(_('ODOO_QUERY: "order" deve ser uma string.'))
                 if len(order) > 120 or not re.match(r'^[\w\s\.,]+$', order):
                     raise UserError(_('ODOO_QUERY: "order" contém caracteres não permitidos.'))
+                # Tiebreaker: se order não termina em ``id`` (asc/desc), anexa ``id desc`` pra
+                # garantir resultado determinístico quando o campo de ordenação tem duplicatas
+                # (caso comum em ``create_date`` quando vários registros foram importados juntos).
+                order_norm = re.sub(r'\s+', ' ', order.strip().lower())
+                if not re.search(r'(^|,\s*)id(\s+(asc|desc))?\s*$', order_norm):
+                    order = order + ', id desc'
                 return Model.search_read(domain, fields=fields_list, limit=limit, order=order)
 
             if operation == 'search_count':
