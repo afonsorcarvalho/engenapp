@@ -1,0 +1,61 @@
+# Override para subir stack F0 do RAG/LLM local.
+#
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.ollama.yml up -d
+#
+# Adiciona:
+#   - serviço `ollama` (LLM inference, OpenAI-compat em :11434/v1)
+#   - troca imagem do `db` para `pgvector/pgvector:pg12` (mesma versão do Postgres,
+#     com extensão `vector` pré-compilada). Volume e dados intactos.
+#
+# Após primeiro `up`:
+#   bash scripts/ollama_pull.sh
+#   docker compose exec db psql -U odoo -d <DB_ODOO> -c "CREATE EXTENSION IF NOT EXISTS vector;"
+#
+# Configuração do Odoo (Configurações > Técnico > Parâmetros do sistema):
+#   afr_llm_assistant.provider     = lmstudio
+#   afr_llm_assistant.api_base_url = http://ollama:11434/v1
+#   afr_llm_assistant.model        = qwen2.5:3b-instruct-q4_K_M
+#   afr_llm_assistant.api_key      = (vazio)
+
+services:
+  db:
+    # Mantém Postgres 12 (mesma versão atual) com extensão pgvector pré-instalada.
+    # Drop-in: data dir compatível, basta CREATE EXTENSION no DB do Odoo.
+    image: pgvector/pgvector:pg12
+
+  ollama:
+    image: ollama/ollama:0.5.4
+    container_name: ollama
+    restart: unless-stopped
+    # Bind só em loopback do host — acesso vem dos containers via rede interna do compose.
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      # Mantém modelos carregados em RAM por 30min após última requisição.
+      OLLAMA_KEEP_ALIVE: "30m"
+      # Um pedido por vez — VPS pequena, evita thrashing.
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+    # Limites: deixa folga para Odoo + Postgres.
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: "4.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # Garante que o Odoo enxergue o serviço `ollama` pela rede interna do compose.
+  web:
+    depends_on:
+      - db
+      - ollama
+
+volumes:
+  ollama_models:
