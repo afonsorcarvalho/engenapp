@@ -1,9 +1,14 @@
 # TODO — odoo_engenapp
 
 ## Em curso
-- (nada — sessão pausada após conversão submodule)
+- **afr_qualificacao F4.3** — Certificado PDF + verificação pública: implementado (templates QI/QO/QD/QS + inherit engc.calibration + controller `/qualificacao/verify/<token>` + hash SHA-256 + UUID4 + QR via `/report/barcode/`). Fallback Calib sem `engc.calibration` usa template próprio com malhas internas. 33 tests pass. Smoke pass via mcp. **NÃO commitado**, aguardando OK user. Plan: `/home/afonso/.claude/plans/preciso-que-o-fluxo-expressive-ocean.md`.
 
 ## Pendente
+
+### afr_qualificacao
+- **F4.2 — Timesheet/project + custos extras**: dep `hr_timesheet`. `project_id`/`task_id` auto via produto `service_tracking=task_in_project`. `cost_total` compute de `account.analytic.line`. Wizard "Adicionar custo" (deslocamento/instrumento).
+- **F4.4 — Multi-company hardening + testes**: record rules por `company_id`, multi-company support, suite `tests/test_billing.py` adicional.
+- **F4.5 (novo)** — Auto-geração `engc.calibration` ao approval de qualif Calib + propagação state bidirecional. Hoje link é manual (Opção A do plan).
 
 ### afr_llm_assistant
 - **Cache catálogos** (`_installed_models_catalog_text`, `_reports_catalog_for_user_text`, `_whitelist_models_field_catalog`): atualmente rebuild a cada call (~2-5s overhead). Usar `@tools.ormcache` ou cache em memória com invalidação por write em `ir.model` / `ir.actions.report`.
@@ -26,6 +31,7 @@
 - ecm_desktop Grid pastas: quando pasta atual tiver subpastas, mostrar ícone de pasta clicável no grid (entra na subpasta) junto com os arquivos. Hoje subpastas só aparecem no FolderTree esquerdo.
 
 ## Feito
+- 2026-05-16 — afr_qualificacao v16.0.2.0.0: fluxo comercial quote-first (sale.order → afr.qualificacao + engc.os). Wizard configurador (matriz equipamento × tipo) + sub-records cycle/malha + integração engc.calibration via FK manual + propagação qty_delivered no approval. 21 tests pass. Commit `655eb09`.
 - 2026-05-15 — afr_llm_assistant: GPU NVIDIA passthrough (nvidia-container-toolkit + compose) + modelo custom `llama3.1:8b-ctx8k` (num_ctx=8192) + system prompt refactor anti-SQL/few-shot. CPU 6.5 tok/s → GPU ~100 tok/s.
 - 2026-05-15 — afr_llm_assistant: tool calling estruturado (OpenAI tools API) opt-in via ICP `use_tool_calling`. 4 tools (search_read, search_count, read_group, fields_get) + coerção tolerante args + loop multi-turn max 5 iter. Resolve hallucination multi-turn. System prompt enxuto na variante tool-calling (~60% menor).
 - 2026-05-12 — Conversão de subtree para git submodules (afr_ecm + ecm_desktop). Backup em tag `pre-submodule-conversion` e branch `backup/pre-submodule-conversion`.
