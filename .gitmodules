@@ -10,3 +10,6 @@
 [submodule "addons/afr_sgq"]
 	path = addons/afr_sgq
 	url = https://github.com/afonsorcarvalho/afr_sgq.git
+[submodule "addons/afr_qualificacao"]
+	path = addons/afr_qualificacao
+	url = https://github.com/afonsorcarvalho/afr_qualificacao.git
