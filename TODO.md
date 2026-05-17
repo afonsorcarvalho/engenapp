@@ -1,7 +1,7 @@
 # TODO — odoo_engenapp
 
 ## Em curso
-- **afr_qualificacao F4.3** — Certificado PDF + verificação pública: implementado (templates QI/QO/QD/QS + inherit engc.calibration + controller `/qualificacao/verify/<token>` + hash SHA-256 + UUID4 + QR via `/report/barcode/`). Fallback Calib sem `engc.calibration` usa template próprio com malhas internas. 33 tests pass. Smoke pass via mcp. **NÃO commitado**, aguardando OK user. Plan: `/home/afonso/.claude/plans/preciso-que-o-fluxo-expressive-ocean.md`.
+- (nada)
 
 ## Pendente
 
@@ -31,6 +31,9 @@
 - ecm_desktop Grid pastas: quando pasta atual tiver subpastas, mostrar ícone de pasta clicável no grid (entra na subpasta) junto com os arquivos. Hoje subpastas só aparecem no FolderTree esquerdo.
 
 ## Feito
+- 2026-05-16 — afr_qualificacao v16.0.2.2.2: PDF cotação refinements — (a) agrupa Sumário Executivo + Descritivo Técnico mesma página; (b) agrupa Resumo Financeiro + Condições Comerciais + Aceite mesma página (classe CSS `qq-section-cont`); (c) esconde `.address` injetado por `external_layout_standard` na capa (eliminava duplicação partner antes do título); (d) duplicação SO preserva metadados qualif (`copy=True` em equipment_id, qualification_type, cycle_type_id, malha_type_id, is_qualificacao_managed; `afr_qualificacao_id` mantém `copy=False`). 43 tests pass.
+- 2026-05-16 — afr_qualificacao v16.0.2.2.0: relatório PDF dedicado de cotação (inherit `sale.report_saleorder_document` com fallback condicional via `has_qualif_lines`): capa + sumário executivo + descritivo técnico + escopo por equipamento + normas aplicáveis + resumo financeiro + condições comerciais + aceite. Novo modelo `afr.qualificacao.standard` + M2M em cycle_type/malha_type + 8 normas seed. Section lines por equipamento no form SO + painel HTML `qualif_subtotals_html`. Fonts +30%.
+- 2026-05-16 — afr_qualificacao F4.3 v16.0.2.1.0: certificado digital verificável (hash SHA-256 + token UUID4 + QR + controller `/qualificacao/verify/<token>`). Templates QI/QO/QD/QS + inherit engc.calibration + fallback Calib sem `engc.calibration`. Commit `936b444`.
 - 2026-05-16 — afr_qualificacao v16.0.2.0.0: fluxo comercial quote-first (sale.order → afr.qualificacao + engc.os). Wizard configurador (matriz equipamento × tipo) + sub-records cycle/malha + integração engc.calibration via FK manual + propagação qty_delivered no approval. 21 tests pass. Commit `655eb09`.
 - 2026-05-15 — afr_llm_assistant: GPU NVIDIA passthrough (nvidia-container-toolkit + compose) + modelo custom `llama3.1:8b-ctx8k` (num_ctx=8192) + system prompt refactor anti-SQL/few-shot. CPU 6.5 tok/s → GPU ~100 tok/s.
 - 2026-05-15 — afr_llm_assistant: tool calling estruturado (OpenAI tools API) opt-in via ICP `use_tool_calling`. 4 tools (search_read, search_count, read_group, fields_get) + coerção tolerante args + loop multi-turn max 5 iter. Resolve hallucination multi-turn. System prompt enxuto na variante tool-calling (~60% menor).
