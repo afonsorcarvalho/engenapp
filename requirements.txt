@@ -31,6 +31,16 @@ lxml_html_clean
 pytesseract>=0.3.10
 pdf2image>=1.16
 Pillow>=9.0
+# NLP keywords (afr_ecm K) — yake (estatístico, PT nativo) + spacy NER.
+# spacy<3.8 = última série compatível com Python 3.9; thinc dela exige numpy<2.
+# numpy fixado <2 explicitamente p/ build do spacy/thinc não conflitar.
+numpy<2
+yake
+spacy>=3.7,<3.8
+# Extração de texto Office (afr_ecm H) — .docx via python-docx, .xlsx via openpyxl.
+# python-docx já vem como dep transitiva de docxtpl; explicitado p/ clareza.
+python-docx
+openpyxl
 # apenas desenvolvimento
 debugpy
 #pydevd-odoo

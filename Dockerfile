@@ -20,7 +20,8 @@ RUN python3 -m venv "$VENV_PATH" && \
     . "${VENV_PATH}/bin/activate" && \
     pip install --upgrade pip && \
     pip install --no-cache-dir $( [ "$PIP_VERBOSE" = "1" ] && echo "-v" ) -r /opt/odoo/requirements_project.txt && \
-    echo "--- Verificação ---" && python -c "import cryptography; print('cryptography', cryptography.__version__)" && python -c "import google.auth; print('google-auth OK')" && python -c "import erpbrasil.assinatura; print('erpbrasil.assinatura OK')"
+    python -m spacy download pt_core_news_sm && \
+    echo "--- Verificação ---" && python -c "import cryptography; print('cryptography', cryptography.__version__)" && python -c "import google.auth; print('google-auth OK')" && python -c "import erpbrasil.assinatura; print('erpbrasil.assinatura OK')" && python -c "import yake, spacy; spacy.load('pt_core_news_sm'); print('yake + spacy pt_core_news_sm OK')"
 
 # Wrapper: usa Python do sistema (tem o módulo odoo) e PYTHONPATH do venv (tem google-auth, cryptography).
 # Script em arquivo para evitar escape de aspas no Dockerfile.
