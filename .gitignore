@@ -1,0 +1,6 @@
+# Busca semântica — microserviço ecm-search
+ecm_search/.env
+data/chroma/
+__pycache__/
+*.pyc
+.pytest_cache/

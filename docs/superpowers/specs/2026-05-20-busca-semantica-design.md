@@ -78,8 +78,11 @@ Novo container `ecm-search` no `docker-compose.yml`. Containers atuais:
 3. Microserviço:
    - Sempre: roda a query pelo mesmo extrator regex de data → filtro mês/ano.
    - Se `ai_mode`: chama Groq para parsear a query → `tipo_documento`,
-     `entidades`, `keywords_adicionais` (filtros adicionais).
-   - Monta where-clause ChromaDB (`$and` dos filtros presentes).
+     `entidades`, `keywords_adicionais`. `mes`/`ano` do Groq sobrescrevem o
+     regex; `tipo_documento`/`keywords_adicionais`/`entidades` são anexados ao
+     texto da query antes do embedding (sinal soft, não filtro rígido — o slug
+     do Groq não casa com os nomes livres de `document_type_id`).
+   - Monta where-clause ChromaDB só com `mes`/`ano` (`$and` se ambos presentes).
    - Gera embedding da query, `collection.query` com filtros + cosine.
    - Retorna `[{dms_file_id, score, tipo, mes, ano, arquivo}]`.
 4. Controller afr_ecm: `dms.file.browse(ids)` no env do usuário → descarta sem
@@ -164,7 +167,9 @@ Collection `documentos`, `metadata={"hnsw:space": "cosine"}`.
 | `content_hash` | str | `ocr_content_hash` |
 
 ChromaDB metadata só aceita escalares — entidades entram apenas no `document`
-(texto embeddado), não como metadata filtrável na v1.
+(texto embeddado), não como metadata filtrável na v1. Filtros rígidos (where-
+clause) usam apenas `mes`/`ano`; `tipo_documento` fica como metadata informativa
+e sinal soft no embedding, não filtro `$eq`.
 
 `id` do Chroma = `str(dms_file_id)`.
 

@@ -19,6 +19,13 @@ services:
       # ODOO_LMSTUDIO_API_BASE: "http://host.docker.internal:1234/v1,http://172.17.0.1:1234/v1"
       # queue_job: desabilita o runner HTTP (usamos queue_job_cron_jobrunner via cron threads).
       ODOO_QUEUE_JOB_CHANNELS: "root:0"
+      # afr_llm_assistant: limita system prompt para caber em ctx 4096 do modelo local.
+      # Total alvo dos 3 catálogos ≈ 10000 chars (~2500 tokens), sobra contexto para
+      # histórico de chat (40 últimas mensagens) e output. Subir esses valores só após
+      # aumentar num_ctx do modelo Ollama (custa RAM).
+      ODOO_LM_CATALOG_MODELS_CHARS: "3000"
+      ODOO_LM_CATALOG_FIELDS_CHARS: "4000"
+      ODOO_LM_CATALOG_REPORTS_CHARS: "3000"
     command: --dev=all --log-level debug --log-handler odoo.tools.convert:DEBUG
     #command:  --log-handler odoo.tools.convert:DEBUG 
     depends_on:
@@ -82,6 +89,24 @@ services:
       - ./OCA-storage:/mnt/oca-storage
       - ./OCA-queue:/mnt/oca-queue
       - ./conf:/etc/odoo
+
+  ecm-search:
+    # Microserviço de busca semântica. Sem porta pública — só rede interna.
+    build: ./ecm_search
+    tty: true
+    env_file:
+      - ./ecm_search/.env
+    depends_on:
+      - web
+      - db
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ./data/chroma:/data/chroma
 
   db:
     image: postgres:12
