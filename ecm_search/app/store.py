@@ -4,10 +4,23 @@ import chromadb
 class Store:
     """ChromaDB persistent wrapper for the `documentos` collection."""
 
+    _NAME = "documentos"
+
     def __init__(self, path):
-        client = chromadb.PersistentClient(path=path)
-        self._col = client.get_or_create_collection(
-            name="documentos", metadata={"hnsw:space": "cosine"}
+        self._client = chromadb.PersistentClient(path=path)
+        self._col = self._client.get_or_create_collection(
+            name=self._NAME, metadata={"hnsw:space": "cosine"}
+        )
+
+    def reset(self):
+        """Drop and recreate the collection — used when the embedding model
+        changes, since vectors from different models are not comparable."""
+        try:
+            self._client.delete_collection(self._NAME)
+        except Exception:
+            pass  # collection may not exist yet
+        self._col = self._client.get_or_create_collection(
+            name=self._NAME, metadata={"hnsw:space": "cosine"}
         )
 
     def upsert(self, doc_id, embedding, document, metadata):

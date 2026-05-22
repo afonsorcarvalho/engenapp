@@ -24,6 +24,7 @@ def _text_hash_of(raw):
 
 def test_build_embedding_text_joins_parts():
     doc = {
+        "ocr_snippet": "CARTEIRA NACIONAL DE HABILITACAO",
         "document_type": "Nota Fiscal",
         "directory": "Compras 2025",
         "keywords": ["icms", "fornecedor"],
@@ -32,11 +33,27 @@ def test_build_embedding_text_joins_parts():
         "ano": 2025,
     }
     text = build_embedding_text(doc)
+    assert "CARTEIRA NACIONAL DE HABILITACAO" in text
     assert "Nota Fiscal" in text
     assert "Compras 2025" in text
     assert "icms" in text
     assert "XYZ Ltda" in text
     assert "mês 3 ano 2025" in text
+    # OCR snippet vem primeiro (prioridade no limite de tokens do modelo)
+    assert text.startswith("CARTEIRA NACIONAL DE HABILITACAO")
+
+
+def test_normalize_doc_extracts_ocr_snippet():
+    raw = {
+        "id": 1, "name": "cnh.pdf",
+        "ocr_text": "REPUBLICA   FEDERATIVA\n\nCARTEIRA NACIONAL DE HABILITACAO",
+        "keywords": False, "entities": False,
+        "document_type_id": False, "directory_id": False,
+        "ocr_content_hash": False,
+    }
+    doc = normalize_doc(raw)
+    # espaços e quebras de linha colapsados
+    assert doc["ocr_snippet"] == "REPUBLICA FEDERATIVA CARTEIRA NACIONAL DE HABILITACAO"
 
 
 def test_build_embedding_text_skips_empty_period():
@@ -86,18 +103,18 @@ def test_index_doc_skips_when_text_hash_matches():
     store.get_hash.return_value = _text_hash_of(_RAW)
     result = index_doc(_RAW, embedder, store)
     assert result is False
-    embedder.encode.assert_not_called()
+    embedder.encode_passage.assert_not_called()
     store.upsert.assert_not_called()
 
 
 def test_index_doc_indexes_when_text_hash_differs():
     embedder = MagicMock()
-    embedder.encode.return_value = [0.1, 0.2]
+    embedder.encode_passage.return_value = [0.1, 0.2]
     store = MagicMock()
     store.get_hash.return_value = "stale-hash"
     result = index_doc(_RAW, embedder, store)
     assert result is True
-    embedder.encode.assert_called_once()
+    embedder.encode_passage.assert_called_once()
     store.upsert.assert_called_once()
     # content_hash stored in metadata is the embedding-text sha256
     metadata = store.upsert.call_args[0][3]
@@ -106,8 +123,8 @@ def test_index_doc_indexes_when_text_hash_differs():
 
 def test_index_doc_indexes_when_store_empty():
     embedder = MagicMock()
-    embedder.encode.return_value = [0.1]
+    embedder.encode_passage.return_value = [0.1]
     store = MagicMock()
     store.get_hash.return_value = None
     assert index_doc(_RAW, embedder, store) is True
-    embedder.encode.assert_called_once()
+    embedder.encode_passage.assert_called_once()

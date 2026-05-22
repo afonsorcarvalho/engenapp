@@ -47,3 +47,11 @@ class OdooClient:
 
     def search(self, model, domain, **kwargs):
         return self.execute_kw(model, "search", [domain], kwargs)
+
+    def get_config_param(self, key, default=None):
+        """Read an ir.config_parameter; returns `default` if unset/unreachable."""
+        try:
+            value = self.execute_kw("ir.config_parameter", "get_param", [key])
+        except Exception:
+            return default
+        return value if value not in (False, None, "") else default

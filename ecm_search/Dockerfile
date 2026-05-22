@@ -9,9 +9,10 @@ RUN pip install --no-cache-dir --timeout 300 --retries 10 \
     torch --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir --timeout 300 --retries 10 -r requirements.txt
 
-# Pré-baixa o modelo de embedding na imagem (camada cacheada)
-RUN python -c "from sentence_transformers import SentenceTransformer; \
-    SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')"
+# Pré-baixa os modelos na imagem (camada cacheada): embedding + reranker
+RUN python -c "from sentence_transformers import SentenceTransformer, CrossEncoder; \
+    SentenceTransformer('intfloat/multilingual-e5-base'); \
+    CrossEncoder('cross-encoder/mmarco-mMiniLMv2-L12-H384-v1')"
 
 COPY app ./app
 

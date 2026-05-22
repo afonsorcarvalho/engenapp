@@ -32,9 +32,16 @@ def _flatten_entities(value):
     return out
 
 
+# Trecho do texto OCR incluído no embedding. O modelo e5-base aceita ~512
+# tokens; 1500 chars (~380 tokens) deixam folga para keywords/entidades e o
+# prefixo "passage:", capturando bem mais do que o cabeçalho do documento.
+_OCR_SNIPPET_CHARS = 1500
+
+
 def normalize_doc(raw):
     """Turn a dms.file search_read record into the indexer's doc shape."""
-    mes, ano = extract_period(raw.get("ocr_text") or "")
+    ocr_text = raw.get("ocr_text") or ""
+    mes, ano = extract_period(ocr_text)
     return {
         "dms_file_id": raw["id"],
         "name": raw.get("name") or "",
@@ -42,6 +49,7 @@ def normalize_doc(raw):
         "directory": _name(raw.get("directory_id")),
         "keywords": _split_keywords(raw.get("keywords")),
         "entities": _flatten_entities(raw.get("entities")),
+        "ocr_snippet": " ".join(ocr_text.split())[:_OCR_SNIPPET_CHARS],
         "mes": mes,
         "ano": ano,
         "content_hash": raw.get("ocr_content_hash") or "",
@@ -49,7 +57,10 @@ def normalize_doc(raw):
 
 
 def build_embedding_text(doc):
+    # OCR snippet primeiro: garante prioridade dentro do limite de tokens do
+    # modelo — é onde está a identidade real do documento.
     parts = [
+        doc.get("ocr_snippet", ""),
         doc.get("document_type", ""),
         doc.get("directory", ""),
         " ".join(doc.get("keywords", [])),
@@ -72,7 +83,7 @@ def index_doc(raw, embedder, store):
     text_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
     if store.get_hash(doc["dms_file_id"]) == text_hash:
         return False
-    embedding = embedder.encode(text)
+    embedding = embedder.encode_passage(text)
     metadata = {
         "dms_file_id": doc["dms_file_id"],
         "tipo_documento": doc["document_type"],

@@ -15,7 +15,10 @@ class Settings:
     search_token = os.environ.get("SEARCH_TOKEN", "")
     sync_interval_min = int(os.environ.get("SYNC_INTERVAL_MIN", "5"))
     reconcile_every = int(os.environ.get("RECONCILE_EVERY", "12"))
-    embed_model = os.environ.get("EMBED_MODEL", "paraphrase-multilingual-MiniLM-L12-v2")
+    embed_model = os.environ.get("EMBED_MODEL", "intfloat/multilingual-e5-base")
+    rerank_model = os.environ.get(
+        "RERANK_MODEL", "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
+    )
     chroma_path = os.environ.get("CHROMA_PATH", "/data/chroma")
     top_k = int(os.environ.get("TOP_K", "10"))
 
