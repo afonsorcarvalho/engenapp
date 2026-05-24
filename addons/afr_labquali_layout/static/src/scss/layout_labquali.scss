@@ -1,0 +1,146 @@
+// LabQuali Brand Layout SCSS
+// wkhtmltopdf may not support var(--name) (ref: web/report.scss:5).
+// Strategy: Sass $lq-* in selectors (PDF-safe, compiles to hex) + :root for HTML preview.
+
+$lq-brand:        #0A3D62;
+$lq-brand-2:      #1E6091;
+$lq-accent:       #FF6B35;
+$lq-accent-2:     #D9482A;
+$lq-gray:         #5A7184;
+$lq-gray-light:   #EEF2F5;
+$lq-confidential: #E63946;
+
+:root {
+    --lq-brand:        #{$lq-brand};
+    --lq-brand-2:      #{$lq-brand-2};
+    --lq-accent:       #{$lq-accent};
+    --lq-accent-2:     #{$lq-accent-2};
+    --lq-gray:         #{$lq-gray};
+    --lq-gray-light:   #{$lq-gray-light};
+    --lq-confidential: #{$lq-confidential};
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    src: url('/afr_labquali_layout/static/fonts/inter/Inter-Regular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 500;
+    src: url('/afr_labquali_layout/static/fonts/inter/Inter-Medium.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 700;
+    src: url('/afr_labquali_layout/static/fonts/inter/Inter-Bold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 800;
+    src: url('/afr_labquali_layout/static/fonts/inter/Inter-ExtraBold.woff2') format('woff2');
+}
+
+// HEADER
+.o_lq_header {
+    .o_lq_header_inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding-bottom: 4px;
+    }
+    .o_lq_logo_img { max-height: 45px; max-width: 200px; }
+    .o_lq_header_contact {
+        text-align: right;
+        font-family: 'Inter', 'Lato', sans-serif;
+        font-size: 9pt;
+        color: $lq-gray;
+        max-width: 55%;
+    }
+    .o_lq_header_report_header {
+        font-size: 9pt;
+        line-height: 1.4;
+        p { margin: 0; }
+    }
+    .o_lq_header_divider {
+        margin-top: 4px;
+        .o_lq_divider_blue   { height: 2px; background-color: $lq-brand; }
+        .o_lq_divider_gap    { height: 3px; }
+        .o_lq_divider_orange { height: 1px; background-color: $lq-accent; }
+    }
+}
+
+// ARTICLE
+.o_report_layout_labquali {
+    font-family: 'Inter', 'Lato', sans-serif;
+    font-weight: 400;
+    font-size: 10.5pt;
+    color: #212529;
+    position: relative;
+
+    h1, .h1 { font-family: 'Inter', 'Lato', sans-serif; font-weight: 800; font-size: 32pt; letter-spacing: -1px; color: $lq-brand; }
+    h2, .h2 { font-family: 'Inter', 'Lato', sans-serif; font-weight: 700; font-size: 18pt; color: $lq-brand; }
+    h3, .h3 { font-family: 'Inter', 'Lato', sans-serif; font-weight: 500; font-size: 13pt; color: $lq-brand-2; }
+
+    table thead th { background-color: $lq-gray-light; color: $lq-brand; border-bottom: 2px solid $lq-brand; font-weight: 700; }
+    table tfoot td { border-top: 2px solid $lq-brand; font-weight: 700; background-color: $lq-gray-light; color: $lq-brand; }
+    #total strong       { color: $lq-brand; }
+    #informations strong { color: $lq-brand-2; }
+
+    .o_lq_mono, code, pre { font-family: 'Courier New', Courier, monospace; }
+}
+
+// SIDE STRIPE — first-page anchor via absolute positioning inside article
+.o_lq_stripe {
+    position: absolute;
+    top: 0;
+    left: -50px;
+    width: 10px;
+    height: 297mm;
+    background-color: $lq-accent;
+    z-index: 0;
+    pointer-events: none;
+}
+
+// CONFIDENTIAL STAMP
+.o_lq_confidential_stamp {
+    position: absolute;
+    top: 20mm;
+    right: 10mm;
+    font-family: 'Inter', 'Lato', sans-serif;
+    font-weight: 800;
+    font-size: 28pt;
+    color: $lq-confidential;
+    border: 3px solid $lq-confidential;
+    padding: 6px 18px;
+    opacity: 0.6;
+    transform: rotate(-15deg);
+    -webkit-transform: rotate(-15deg);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 100;
+}
+
+// FOOTER
+.o_lq_footer {
+    margin-top: 200px;
+    border-top: 2px solid $lq-accent;
+
+    .o_lq_footer_inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding-top: 4px;
+        font-family: 'Inter', 'Lato', sans-serif;
+        font-size: 8pt;
+        color: $lq-gray;
+    }
+
+    .o_lq_footer_text { flex: 1; p { margin: 0; } }
+    .o_lq_footer_page { text-align: right; white-space: nowrap; font-weight: 500; color: $lq-brand; padding-left: 12px; }
+}

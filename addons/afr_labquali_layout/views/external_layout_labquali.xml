@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="external_layout_labquali" name="LabQuali Layout">
+
+        <!--
+            wkhtmltopdf renders header and footer as SEPARATE HTML documents
+            (via header-html / footer-html flags). A style block in the
+            article does NOT reach them. We therefore:
+              - inline a style block at the top of EACH section (header, article, footer)
+                so each wkhtmltopdf sub-document carries its own brand CSS.
+              - additionally use a few inline style attributes as a belt-and-suspenders
+                guarantee for the critical visual elements (logo size, divider lines, footer border).
+        -->
+
+        <!-- HEADER — printed on every page, separate wkhtmltopdf doc.
+             Use table-based layout instead of flex (wkhtmltopdf webkit has
+             flexbox layout bugs in extracted header docs). -->
+        <div t-attf-class="header o_company_#{company.id}_layout o_lq_header"
+             t-att-style="report_header_style"
+             style="font-family:'Helvetica Neue','Inter','Lato',Arial,sans-serif;width:100%;">
+            <table style="width:100%;border-collapse:collapse;margin:0;padding:0;">
+                <tr>
+                    <td style="vertical-align:top;text-align:left;padding:0;">
+                        <img t-if="company.logo"
+                             t-att-src="image_data_uri(company.logo)"
+                             style="max-height:48px;max-width:230px;"
+                             alt="Logo"/>
+                    </td>
+                    <td style="vertical-align:top;text-align:right;padding:0;font-size:9pt;color:#5A7184;max-width:55%;">
+                        <div t-if="company.report_header"
+                             t-field="company.report_header"
+                             style="font-size:9pt;line-height:1.4;"/>
+                    </td>
+                </tr>
+            </table>
+            <div style="margin-top:6px;">
+                <div style="height:2px;background-color:#0A3D62;font-size:0;line-height:0;">&#160;</div>
+                <div style="height:3px;font-size:0;line-height:0;">&#160;</div>
+                <div style="height:1px;background-color:#FF6B35;font-size:0;line-height:0;">&#160;</div>
+            </div>
+        </div>
+
+        <!-- ARTICLE — content zone, body HTML -->
+        <t t-set="layout_background_url"
+           t-value="'data:image/png;base64,%s' % company.layout_background_image.decode('utf-8') if company.layout_background_image and company.layout_background == 'Custom' else '/base/static/img/bg_background_template.jpg' if company.layout_background == 'Geometric' else ''"/>
+
+        <div t-attf-class="article o_report_layout_labquali o_company_#{company.id}_layout {{ 'o_report_layout_background' if company.layout_background in ['Geometric', 'Custom'] else '' }}"
+             t-attf-style="{{ 'background-image: url(%s);' % layout_background_url if layout_background_url else '' }}"
+             t-att-data-oe-model="o and o._name"
+             t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+
+            <style>
+                :root {
+                    --lq-brand:        #0A3D62;
+                    --lq-brand-2:      #1E6091;
+                    --lq-accent:       #FF6B35;
+                    --lq-accent-2:     #D9482A;
+                    --lq-gray:         #5A7184;
+                    --lq-gray-light:   #EEF2F5;
+                    --lq-confidential: #E63946;
+                }
+                @font-face {
+                    font-family: 'Inter';
+                    font-style: normal;
+                    font-weight: 400;
+                    src: url('/afr_labquali_layout/static/fonts/inter/Inter-Regular.woff2') format('woff2');
+                }
+                @font-face {
+                    font-family: 'Inter';
+                    font-style: normal;
+                    font-weight: 500;
+                    src: url('/afr_labquali_layout/static/fonts/inter/Inter-Medium.woff2') format('woff2');
+                }
+                @font-face {
+                    font-family: 'Inter';
+                    font-style: normal;
+                    font-weight: 700;
+                    src: url('/afr_labquali_layout/static/fonts/inter/Inter-Bold.woff2') format('woff2');
+                }
+                @font-face {
+                    font-family: 'Inter';
+                    font-style: normal;
+                    font-weight: 800;
+                    src: url('/afr_labquali_layout/static/fonts/inter/Inter-ExtraBold.woff2') format('woff2');
+                }
+                .o_report_layout_labquali {
+                    font-family: 'Inter', 'Lato', sans-serif;
+                    font-weight: 400;
+                    font-size: 10.5pt;
+                    color: #212529;
+                    position: relative;
+                }
+                .o_report_layout_labquali h1, .o_report_layout_labquali .h1 {
+                    font-family: 'Inter', 'Lato', sans-serif;
+                    font-weight: 800;
+                    font-size: 32pt;
+                    letter-spacing: -1px;
+                    color: #0A3D62;
+                }
+                .o_report_layout_labquali h2, .o_report_layout_labquali .h2 {
+                    font-family: 'Inter', 'Lato', sans-serif;
+                    font-weight: 700;
+                    font-size: 18pt;
+                    color: #0A3D62;
+                }
+                .o_report_layout_labquali h3, .o_report_layout_labquali .h3 {
+                    font-family: 'Inter', 'Lato', sans-serif;
+                    font-weight: 500;
+                    font-size: 13pt;
+                    color: #1E6091;
+                }
+                .o_report_layout_labquali table thead th {
+                    background-color: #EEF2F5;
+                    color: #0A3D62;
+                    border-bottom: 2px solid #0A3D62;
+                    font-weight: 700;
+                }
+                .o_report_layout_labquali table tfoot td {
+                    border-top: 2px solid #0A3D62;
+                    font-weight: 700;
+                    background-color: #EEF2F5;
+                    color: #0A3D62;
+                }
+                .o_report_layout_labquali #total strong { color: #0A3D62; }
+                .o_report_layout_labquali #informations strong { color: #1E6091; }
+                .o_report_layout_labquali .o_lq_mono,
+                .o_report_layout_labquali code,
+                .o_report_layout_labquali pre {
+                    font-family: 'Courier New', Courier, monospace;
+                }
+                .o_lq_stripe {
+                    position: absolute;
+                    top: 0;
+                    left: -50px;
+                    width: 10px;
+                    height: 297mm;
+                    background-color: #FF6B35;
+                    z-index: 0;
+                    pointer-events: none;
+                }
+                .o_lq_confidential_stamp {
+                    position: absolute;
+                    top: 20mm;
+                    right: 10mm;
+                    font-family: 'Inter', 'Lato', sans-serif;
+                    font-weight: 800;
+                    font-size: 28pt;
+                    color: #E63946;
+                    border: 3px solid #E63946;
+                    padding: 6px 18px;
+                    opacity: 0.6;
+                    transform: rotate(-15deg);
+                    -webkit-transform: rotate(-15deg);
+                    letter-spacing: 3px;
+                    text-transform: uppercase;
+                    pointer-events: none;
+                    z-index: 100;
+                }
+            </style>
+
+            <div class="o_lq_stripe" aria-hidden="true"
+                 style="position:absolute;top:0;left:-50px;width:10px;height:297mm;background-color:#FF6B35;z-index:0;pointer-events:none;"/>
+
+            <t t-set="show_confidential"
+               t-value="company.lq_confidential_default or env.context.get('lq_confidential', False)"/>
+            <div t-if="show_confidential" class="o_lq_confidential_stamp"
+                 style="position:absolute;top:20mm;right:10mm;font-family:'Inter','Lato',sans-serif;font-weight:800;font-size:28pt;color:#E63946;border:3px solid #E63946;padding:6px 18px;opacity:0.6;transform:rotate(-15deg);-webkit-transform:rotate(-15deg);letter-spacing:3px;text-transform:uppercase;pointer-events:none;z-index:100;">CONFIDENCIAL</div>
+
+            <div class="pt-5">
+                <t t-call="web.address_layout"/>
+            </div>
+
+            <t t-out="0"/>
+        </div>
+
+        <!-- FOOTER — printed on every page, separate wkhtmltopdf doc.
+             Table-based layout for wkhtmltopdf compatibility. -->
+        <div t-attf-class="footer o_lq_footer o_company_#{company.id}_layout"
+             style="font-family:'Helvetica Neue','Inter','Lato',Arial,sans-serif;font-size:8pt;color:#5A7184;width:100%;">
+            <div style="border-top:2px solid #FF6B35;padding-top:4px;">
+                <table style="width:100%;border-collapse:collapse;margin:0;padding:0;">
+                    <tr>
+                        <td style="text-align:left;vertical-align:baseline;font-size:8pt;color:#5A7184;">
+                            <div t-field="company.report_footer"/>
+                        </td>
+                        <td t-if="report_type == 'pdf'"
+                            style="text-align:right;vertical-align:baseline;white-space:nowrap;font-weight:500;color:#0A3D62;padding-left:12px;font-size:9pt;">
+                            <span class="page"/>/<span class="topage"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </template>
+</odoo>
