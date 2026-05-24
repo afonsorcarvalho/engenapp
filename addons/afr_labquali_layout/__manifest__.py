@@ -13,6 +13,7 @@
     "data": [
         "views/external_layout_labquali.xml",
         "data/report_layout.xml",
+        "data/paperformat.xml",
         "views/res_company_views.xml",
     ],
     "assets": {

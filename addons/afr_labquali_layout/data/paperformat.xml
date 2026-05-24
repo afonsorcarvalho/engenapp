@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        noupdate=1 so user changes via UI are preserved across module upgrades.
+        Initial install sets A4 to LabQuali-friendly defaults.
+    -->
+    <data noupdate="1">
+        <record id="base.paperformat_euro" model="report.paperformat">
+            <field name="margin_top">20</field>
+            <field name="margin_bottom">10</field>
+            <field name="margin_left">5</field>
+            <field name="margin_right">8</field>
+            <field name="header_spacing">20</field>
+        </record>
+    </data>
+</odoo>
