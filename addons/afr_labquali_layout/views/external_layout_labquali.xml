@@ -23,7 +23,7 @@
                     <td style="vertical-align:top;text-align:left;padding:0;">
                         <img t-if="company.logo"
                              t-att-src="image_data_uri(company.logo)"
-                             style="max-height:96px;max-width:460px;"
+                             style="max-height:80px;max-width:380px;"
                              alt="Logo"/>
                     </td>
                     <td style="vertical-align:top;text-align:right;padding:0;font-size:9pt;color:#5A7184;max-width:55%;">
@@ -158,7 +158,7 @@
             </style>
 
             <div class="o_lq_stripe" aria-hidden="true"
-                 style="position:absolute;top:0;left:0;width:8px;height:1000px;background-color:#FF6B35;z-index:999;pointer-events:none;display:block;"/>
+                 style="position:absolute;top:0;left:0;width:8px;height:240mm;background-color:#FF6B35;z-index:999;pointer-events:none;display:block;"/>
 
             <!-- lq_confidential_default exists on both res.company AND
                  base.document.layout wizard (via related field) so this
@@ -168,7 +168,7 @@
             <div t-if="show_confidential" class="o_lq_confidential_stamp"
                  style="position:absolute;top:20mm;right:10mm;font-family:'Inter','Lato',sans-serif;font-weight:800;font-size:28pt;color:#E63946;border:3px solid #E63946;padding:6px 18px;opacity:0.6;transform:rotate(-15deg);-webkit-transform:rotate(-15deg);letter-spacing:3px;text-transform:uppercase;pointer-events:none;z-index:100;">CONFIDENCIAL</div>
 
-            <div class="pt-5">
+            <div class="pt-2">
                 <t t-call="web.address_layout"/>
             </div>
 
