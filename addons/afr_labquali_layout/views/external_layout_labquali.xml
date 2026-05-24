@@ -127,8 +127,8 @@
                 .o_report_layout_labquali table thead tr th {
                     text-transform: uppercase;
                     border: 1px solid #5A7184;
-                    color: #0A3D62;
-                    background-color: rgba(255, 107, 53, 0.10);
+                    color: #1E6091;
+                    background-color: #EEF2F5;
                     font-weight: 700;
                     padding: 6px 8px;
                 }
@@ -152,7 +152,7 @@
                 }
                 .o_report_layout_labquali table tbody tr.is-subtotal td,
                 .o_report_layout_labquali table tbody tr td.o_price_total {
-                    background-color: rgba(255, 107, 53, 0.10);
+                    background-color: rgba(30, 96, 145, 0.10);
                 }
                 /* Compat 12.0 — secondary table cell highlight */
                 .o_report_layout_labquali .page > table:not(.o_main_table) tr td:last-child {
@@ -178,7 +178,7 @@
                 .o_report_layout_labquali .row > div > table tr.o_total td,
                 .o_report_layout_labquali div#total table tr:last-child td,
                 .o_report_layout_labquali div#total table tr.o_total td {
-                    background-color: rgba(255, 107, 53, 0.9);
+                    background-color: rgba(10, 61, 98, 0.9);
                     color: #fff;
                 }
                 .o_report_layout_labquali .row > div > table tr:last-child td:first-child,
