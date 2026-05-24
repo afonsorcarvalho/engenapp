@@ -162,6 +162,9 @@
             <div class="o_lq_stripe" aria-hidden="true"
                  style="position:absolute;top:0;left:-50px;width:10px;height:297mm;background-color:#FF6B35;z-index:0;pointer-events:none;"/>
 
+            <!-- lq_confidential_default exists on both res.company AND
+                 base.document.layout wizard (via related field) so this
+                 works in both real renders and wizard preview. -->
             <t t-set="show_confidential"
                t-value="company.lq_confidential_default or env.context.get('lq_confidential', False)"/>
             <div t-if="show_confidential" class="o_lq_confidential_stamp"
