@@ -13,29 +13,26 @@
         -->
 
         <!-- HEADER — printed on every page, separate wkhtmltopdf doc.
-             Use table-based layout instead of flex (wkhtmltopdf webkit has
-             flexbox layout bugs in extracted header docs). -->
+             No <table> to avoid border CSS from invoice/inventory reports
+             bleeding into header. Float-based 2-column layout. -->
         <div t-attf-class="header o_company_#{company.id}_layout o_lq_header"
              t-att-style="report_header_style"
              style="font-family:'Helvetica Neue','Inter','Lato',Arial,sans-serif;width:100%;">
-            <table style="width:100%;border-collapse:collapse;margin:0;padding:0;">
-                <tr>
-                    <td style="vertical-align:top;text-align:left;padding:0;">
-                        <img t-if="company.logo"
-                             t-att-src="image_data_uri(company.logo)"
-                             style="max-height:80px;max-width:380px;"
-                             alt="Logo"/>
-                    </td>
-                    <td style="vertical-align:top;text-align:right;padding:0;font-size:9pt;color:#5A7184;max-width:55%;">
-                        <div t-if="company.report_header"
-                             t-field="company.report_header"
-                             style="font-size:9pt;line-height:1.4;"/>
-                    </td>
-                </tr>
-            </table>
-            <div style="margin-top:6px;">
-                <div style="height:2px;background-color:#0A3D62;font-size:0;line-height:0;">&#160;</div>
+            <div style="overflow:hidden;width:100%;">
+                <div style="float:left;width:45%;text-align:left;">
+                    <img t-if="company.logo"
+                         t-att-src="image_data_uri(company.logo)"
+                         style="max-height:80px;max-width:380px;display:block;"
+                         alt="Logo"/>
+                </div>
+                <div style="float:right;width:50%;text-align:right;font-size:9pt;color:#5A7184;">
+                    <div t-if="company.report_header"
+                         t-field="company.report_header"
+                         style="font-size:9pt;line-height:1.4;"/>
+                </div>
+                <div style="clear:both;font-size:0;line-height:0;">&#160;</div>
             </div>
+            <div style="margin-top:6px;height:2px;background-color:#0A3D62;font-size:0;line-height:0;">&#160;</div>
         </div>
 
         <!-- ARTICLE — content zone, body HTML -->
@@ -234,21 +231,19 @@
         </div>
 
         <!-- FOOTER — printed on every page, separate wkhtmltopdf doc.
-             Table-based layout for wkhtmltopdf compatibility. -->
+             No <table> to avoid border CSS from invoice/inventory reports
+             bleeding into footer. Float-based 2-column layout. -->
         <div t-attf-class="footer o_lq_footer o_company_#{company.id}_layout"
              style="font-family:'Helvetica Neue','Inter','Lato',Arial,sans-serif;font-size:8pt;color:#5A7184;width:100%;">
-            <div style="border-top:2px solid #0A3D62;padding-top:4px;">
-                <table style="width:100%;border-collapse:collapse;margin:0;padding:0;">
-                    <tr>
-                        <td style="text-align:left;vertical-align:baseline;font-size:8pt;color:#5A7184;">
-                            <div t-field="company.report_footer"/>
-                        </td>
-                        <td t-if="report_type == 'pdf'"
-                            style="text-align:right;vertical-align:baseline;white-space:nowrap;font-weight:500;color:#0A3D62;padding-left:12px;font-size:9pt;">
-                            <span class="page"/>/<span class="topage"/>
-                        </td>
-                    </tr>
-                </table>
+            <div style="border-top:2px solid #0A3D62;padding-top:4px;overflow:hidden;width:100%;">
+                <div style="float:left;width:75%;text-align:left;font-size:8pt;color:#5A7184;">
+                    <div t-field="company.report_footer"/>
+                </div>
+                <div t-if="report_type == 'pdf'"
+                     style="float:right;width:20%;text-align:right;white-space:nowrap;font-weight:500;color:#0A3D62;font-size:9pt;">
+                    <span class="page"/>/<span class="topage"/>
+                </div>
+                <div style="clear:both;font-size:0;line-height:0;">&#160;</div>
             </div>
         </div>
     </template>
