@@ -22,7 +22,7 @@
                 <div style="float:left;width:45%;text-align:left;">
                     <img t-if="company.logo"
                          t-att-src="image_data_uri(company.logo)"
-                         style="max-height:80px;max-width:380px;display:block;"
+                         style="max-height:100px;max-width:460px;display:block;"
                          alt="Logo"/>
                 </div>
                 <div style="float:right;width:50%;text-align:right;font-size:9pt;color:#5A7184;">
