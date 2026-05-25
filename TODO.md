@@ -3,6 +3,9 @@
 ## Em curso
 - (nada)
 
+## Feito
+- 2026-05-24 — F9.1 LabQuali brand layout (afr_labquali_layout 16.0.1.0.0). Novo addon registra tile "LabQuali" no wizard Configure Document Layout (sequence 10). Template QWeb com header (logo + divisor azul), footer (border-top azul + page number), Inter font bundled woff2, selo CONFIDENCIAL opcional via `res.company.lq_confidential_default` (related em `base.document.layout` para preview wizard). Estilo Boxed-base aplicado (tabelas com border 1px cinza, thead UPPERCASE fundo cinza claro + texto azul, total row fundo azul + texto branco). H2 + h2 span em laranja como acento. Paperformat A4 bundled noupdate=1 (margin_top=20 margin_bottom=10 margin_left=5 margin_right=8 header_spacing=20). Header/footer SEM `<table>` (float-based) para evitar bleed de borders de outros reports (invoice/inventory). Stripe lateral laranja REMOVIDO. Stale SCSS asset deletado (estava injetando border laranja no footer via web.report_assets_common). Commits no monorepo: 5a86948, 85adbf1, ccb7556, e842da1, d7b94f9, b2aed7a, 598699e, 7adc289, b83972d.
+
 ## Pendente
 
 ### afr_qualificacao
