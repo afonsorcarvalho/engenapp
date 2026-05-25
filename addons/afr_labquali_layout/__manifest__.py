@@ -16,11 +16,7 @@
         "data/paperformat.xml",
         "views/res_company_views.xml",
     ],
-    "assets": {
-        "web.report_assets_common": [
-            "afr_labquali_layout/static/src/scss/layout_labquali.scss",
-        ],
-    },
+    "assets": {},
     "installable": True,
     "application": False,
     "auto_install": False,
