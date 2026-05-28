@@ -1,7 +1,7 @@
 # TODO — odoo_engenapp
 
 ## Em curso
-- (nada)
+- **afr_cme_rastreabilidade — frontend high-quality redesign**: melhorar UX/visual do totem OWL (5 estações: expurgo/preparo/esterilização/entrega/paciente) — `addons/afr_cme/afr_cme_rastreabilidade/static/src/cme_totem/`. Brainstorm em curso (spec → plan → implementação). [[project-afr-cme-rastreabilidade]]
 
 ## Feito
 - 2026-05-28 — afr_cme_rastreabilidade* promovido a submodule. Repo standalone `github.com/afonsorcarvalho/afr_cme_rastreabilidade` (private) com os 3 módulos (core + supervisorio + demo). Submodule montado em `addons/afr_cme/`. `addons_path` em `conf/odoo.conf` recebeu `/mnt/extra-addons/afr_cme`. Container web restart OK; em `odoo-steriliza` DB (módulos installed) Odoo encontra manifests no novo path (`latest_version=16.0.1.0.1` preservado). README + LICENSE LGPL-3 + .gitignore criados no repo standalone. Commit inicial `8951a54`.
