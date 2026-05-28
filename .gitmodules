@@ -13,3 +13,6 @@
 [submodule "addons/afr_qualificacao"]
 	path = addons/afr_qualificacao
 	url = https://github.com/afonsorcarvalho/afr_qualificacao.git
+[submodule "addons/afr_cme"]
+	path = addons/afr_cme
+	url = https://github.com/afonsorcarvalho/afr_cme_rastreabilidade.git

@@ -4,6 +4,7 @@
 - (nada)
 
 ## Feito
+- 2026-05-28 — afr_cme_rastreabilidade* promovido a submodule. Repo standalone `github.com/afonsorcarvalho/afr_cme_rastreabilidade` (private) com os 3 módulos (core + supervisorio + demo). Submodule montado em `addons/afr_cme/`. `addons_path` em `conf/odoo.conf` recebeu `/mnt/extra-addons/afr_cme`. Container web restart OK; em `odoo-steriliza` DB (módulos installed) Odoo encontra manifests no novo path (`latest_version=16.0.1.0.1` preservado). README + LICENSE LGPL-3 + .gitignore criados no repo standalone. Commit inicial `8951a54`.
 - 2026-05-24 — F9.1 LabQuali brand layout (afr_labquali_layout 16.0.1.0.0). Novo addon registra tile "LabQuali" no wizard Configure Document Layout (sequence 10). Template QWeb com header (logo + divisor azul), footer (border-top azul + page number), Inter font bundled woff2, selo CONFIDENCIAL opcional via `res.company.lq_confidential_default` (related em `base.document.layout` para preview wizard). Estilo Boxed-base aplicado (tabelas com border 1px cinza, thead UPPERCASE fundo cinza claro + texto azul, total row fundo azul + texto branco). H2 + h2 span em laranja como acento. Paperformat A4 bundled noupdate=1 (margin_top=20 margin_bottom=10 margin_left=5 margin_right=8 header_spacing=20). Header/footer SEM `<table>` (float-based) para evitar bleed de borders de outros reports (invoice/inventory). Stripe lateral laranja REMOVIDO. Stale SCSS asset deletado (estava injetando border laranja no footer via web.report_assets_common). Commits no monorepo: 5a86948, 85adbf1, ccb7556, e842da1, d7b94f9, b2aed7a, 598699e, 7adc289, b83972d.
 
 ## Pendente
@@ -24,6 +25,14 @@
 - **Métricas/observabilidade**: log estruturado tokens in/out, latência, modelo, cache hit. Dashboard simples (kanban ou dashboard ir.ui.view).
 - **Histórico múltiplas sessões**: hoje 1 sessão por user. Permitir N com título auto-gerado pelo modelo.
 - **Tool calling para Anthropic provider**: implementação atual só lmstudio. Anthropic Claude tem `tools` array nativo similar.
+
+### afr_cme_rastreabilidade*
+- **Testes do fluxo crítico** — zero cobertura. Prioridade: (a) lote IQ+IB libera só com `pass`+`negativo`; (b) retrabalho cria novo `cme.process.lot` com `parent_lot_id`; (c) `reuse_count` > `max_reuse` bloqueia; (d) `cron_check_expired_units` marca expired; (e) `_check_can_distribute` bloqueia + log; (f) modo `third_party` exige `material_owner_partner_id`.
+- **Mapping RDC 15/2012** — manifest reivindica conformidade mas sem evidência no código. Documentar quais artigos cada regra atende (IQ obrigatório, validade, rastreabilidade, retrabalho).
+- **Promover `db_schema_patches.py`** — SQL bruto idempotente no `post_init_hook` (coluna `preparation_id` em `cme_sterilization_batch`) indica drift histórico. Mover para migration formal `16.0.1.0.1/pre-` e remover hook.
+- **README + CHANGELOG** — sem docs. Documentar arquitetura (jornada lote + estados trace_unit), fluxos totem (5 estações), bridge supervisório.
+- **Seed produção** — só há demo. Criar dados mínimos para go-live (sem demo).
+- **Mapping IQ no bridge supervisório** — `action_sync_from_supervisorio_ciclo` só sincroniza IB. IQ permanece manual. Avaliar adicionar campo IQ no `afr.supervisorio.ciclos` e propagar.
 
 ### Outros
 - afr_ecm: criar `data/dms_access_group_data.xml` com `dms.access.group` default vinculando `group_ecm_user`, `group_ecm_manager` e `group_ecm_admin` em `group_ids`. Sem isso, novos users ECM não veem diretórios DMS até ajuste manual via UI/SQL. Workaround atual: SQL direto na DB.
