@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="param_auto_fill_cep" model="ir.config_parameter">
+        <field name="key">afr_brasil_lookup.auto_fill_cep</field>
+        <field name="value">False</field>
+    </record>
+
+    <record id="param_auto_fill_cnpj" model="ir.config_parameter">
+        <field name="key">afr_brasil_lookup.auto_fill_cnpj</field>
+        <field name="value">False</field>
+    </record>
+
+</odoo>
