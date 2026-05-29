@@ -23,6 +23,12 @@ Não altera permissões de acesso a modelos — apenas visibilidade de menu.
         "stock",
         "website",
         "spreadsheet_dashboard",
+        "contacts",
+        "sale",
+        "account",
+        "afr_qualificacao",
+        "hr",
+        "engc_os",
     ],
     "data": [
         "security/labquali_menu_groups.xml",
