@@ -34,9 +34,17 @@
                  lupa CEP fica na mesma linha do zip, logo apos o campo. -->
             <xpath expr="//div[hasclass('o_address_format')]" position="replace">
                 <div class="o_address_format">
-                    <field name="street" placeholder="Endereço..." class="o_address_street"
-                           attrs="{'readonly': [('type', '=', 'contact'), ('parent_id', '!=', False)]}"/>
+                    <div class="d-flex align-items-center" style="gap:8px;">
+                        <field name="street" placeholder="Logradouro..." class="o_address_street"
+                               style="flex:3 1 0;min-width:0;"
+                               attrs="{'readonly': [('type', '=', 'contact'), ('parent_id', '!=', False)]}"/>
+                        <field name="afr_street_number" placeholder="Nº"
+                               style="flex:1 1 0;min-width:0;"
+                               attrs="{'readonly': [('type', '=', 'contact'), ('parent_id', '!=', False)]}"/>
+                    </div>
                     <field name="street2" placeholder="Complemento..." class="o_address_street"
+                           attrs="{'readonly': [('type', '=', 'contact'), ('parent_id', '!=', False)]}"/>
+                    <field name="afr_district" placeholder="Bairro" class="o_address_street"
                            attrs="{'readonly': [('type', '=', 'contact'), ('parent_id', '!=', False)]}"/>
                     <div class="d-flex align-items-center" style="gap:8px;">
                         <field name="city" placeholder="Cidade" nolabel="1"
@@ -60,6 +68,9 @@
                                 attrs="{'invisible': [('zip', 'in', [False, ''])]}"
                                 help="Buscar endereço por CEP (BrasilAPI)"/>
                     </div>
+                    <field name="afr_ibge_code" placeholder="Cód. IBGE do município (NF-e)"
+                           class="o_address_street"
+                           attrs="{'readonly': [('type', '=', 'contact'), ('parent_id', '!=', False)]}"/>
                     <div name="partner_address_country" class="d-flex justify-content-between">
                         <field name="country_id" placeholder="País" class="o_address_country"
                                options="{'no_open': True, 'no_create': True}" on_change="1"

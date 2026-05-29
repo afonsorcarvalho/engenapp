@@ -4,7 +4,7 @@ import re
 import urllib.error
 import urllib.request
 
-from odoo import _, api, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
@@ -69,6 +69,27 @@ def _format_phone_br(area, number):
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
+    # ---------- campos NF-e (componentes separados, lossless) ----------
+    # Um campo por componente do layout NF-e 4.00 (enderEmit/enderDest).
+    # Ver docs/NFE_ADDRESS_READINESS.md. street = xLgr, street2 = xCpl.
+
+    afr_street_number = fields.Char(
+        string="Número",
+        size=60,
+        help="Número do endereço (NF-e: nro). Separado do logradouro.",
+    )
+    afr_district = fields.Char(
+        string="Bairro",
+        size=60,
+        help="Bairro/distrito (NF-e: xBairro). Separado do complemento.",
+    )
+    afr_ibge_code = fields.Char(
+        string="Cód. IBGE Município",
+        size=7,
+        help="Código IBGE do município com 7 dígitos (NF-e: cMun). "
+        "Preenchido pela consulta de CNPJ; a consulta de CEP não retorna.",
+    )
+
     # ---------- helpers ----------
 
     @staticmethod
@@ -103,10 +124,11 @@ class ResPartner(models.Model):
             "city": data.get("city") or self.city,
             "country_id": br.id if br else self.country_id.id,
         }
-        # neighborhood (bairro) -> street2 (Odoo base sem campo district)
+        # neighborhood (bairro) -> afr_district (campo proprio, NF-e xBairro).
+        # A API de CEP nao retorna numero nem codigo IBGE do municipio.
         bairro = data.get("neighborhood")
         if bairro:
-            vals["street2"] = bairro
+            vals["afr_district"] = bairro
 
         state_id = self._brl_state_id_by_uf(data.get("state"))
         if state_id:
@@ -130,19 +152,9 @@ class ResPartner(models.Model):
         phones = data.get("phones") or []
         emails = data.get("emails") or []
 
-        # Endereço: street + number agrupados em street; complement + district em street2
-        street_parts = [addr.get("street") or ""]
-        if addr.get("number"):
-            street_parts.append(str(addr["number"]))
-        street_final = ", ".join(p for p in street_parts if p).strip(", ") or False
-
-        street2_parts = []
-        if addr.get("details"):
-            street2_parts.append(addr["details"])
-        if addr.get("district"):
-            street2_parts.append(addr["district"])
-        street2_final = " - ".join(street2_parts) or False
-
+        # Endereço lossless: cada componente NF-e em seu proprio campo.
+        # street=xLgr (logradouro puro), afr_street_number=nro,
+        # street2=xCpl (complemento), afr_district=xBairro, afr_ibge_code=cMun.
         zip_raw = self._brl_clean_digits(addr.get("zip"))
         zip_final = _format_cep(zip_raw) if zip_raw else False
 
@@ -155,12 +167,18 @@ class ResPartner(models.Model):
             ),
             "country_id": br.id if br else self.country_id.id,
         }
-        if street_final:
-            vals["street"] = street_final
-        if street2_final:
-            vals["street2"] = street2_final
+        if addr.get("street"):
+            vals["street"] = addr["street"]
+        if addr.get("number"):
+            vals["afr_street_number"] = str(addr["number"])
+        if addr.get("details"):
+            vals["street2"] = addr["details"]
+        if addr.get("district"):
+            vals["afr_district"] = addr["district"]
         if addr.get("city"):
             vals["city"] = addr["city"]
+        if addr.get("municipality"):
+            vals["afr_ibge_code"] = str(addr["municipality"])
         if zip_final:
             vals["zip"] = zip_final
 

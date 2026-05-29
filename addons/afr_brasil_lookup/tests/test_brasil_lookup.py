@@ -28,6 +28,7 @@ FAKE_CNPJ_RESPONSE = {
         "number": "123",
         "details": "Sala 4",
         "district": "Centro",
+        "municipality": 3550308,
         "city": "São Paulo",
         "state": "SP",
         "zip": "01001000",
@@ -68,6 +69,7 @@ class TestBrasilLookup(TransactionCase):
         self.partner.zip = "01310-100"
         self.partner.action_brl_lookup_cep()
         self.assertEqual(self.partner.street, "Avenida Paulista")
+        self.assertEqual(self.partner.afr_district, "Bela Vista")
         self.assertEqual(self.partner.city, "São Paulo")
         self.assertEqual(self.partner.state_id, self.state_sp)
         self.assertEqual(self.partner.country_id, self.br)
@@ -93,8 +95,11 @@ class TestBrasilLookup(TransactionCase):
         self.partner.vat = "11.222.333/0001-81"
         self.partner.action_brl_lookup_cnpj()
         self.assertEqual(self.partner.name, "ACME INDUSTRIA LTDA")
-        self.assertEqual(self.partner.street, "Rua das Flores, 123")
-        self.assertEqual(self.partner.street2, "Sala 4 - Centro")
+        self.assertEqual(self.partner.street, "Rua das Flores")
+        self.assertEqual(self.partner.afr_street_number, "123")
+        self.assertEqual(self.partner.street2, "Sala 4")
+        self.assertEqual(self.partner.afr_district, "Centro")
+        self.assertEqual(self.partner.afr_ibge_code, "3550308")
         self.assertEqual(self.partner.city, "São Paulo")
         self.assertEqual(self.partner.state_id, self.state_sp)
         self.assertEqual(self.partner.country_id, self.br)
