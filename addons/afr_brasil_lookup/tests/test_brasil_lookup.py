@@ -134,3 +134,20 @@ class TestBrasilLookup(TransactionCase):
         self.partner.zip = "01310-100"
         self.partner._onchange_zip_brl()
         self.assertEqual(self.partner.street, "Avenida Paulista")
+
+    @patch("odoo.addons.afr_brasil_lookup.models.res_partner._http_get_json")
+    def test_onchange_cnpj_newid_updates_form(self, mock_http):
+        # Regressao: em registro virtual de onchange (NewId, parceiro novo no
+        # form), write() nao reflete no formulario; update() sim.
+        mock_http.return_value = FAKE_CNPJ_RESPONSE
+        self.env["ir.config_parameter"].sudo().set_param(
+            "afr_brasil_lookup.auto_fill_cnpj", "True"
+        )
+        rec = self.env["res.partner"].new({"name": "Novo"})
+        rec.vat = "11.222.333/0001-81"
+        rec._onchange_vat_brl()
+        self.assertEqual(rec.name, "ACME INDUSTRIA LTDA")
+        self.assertEqual(rec.afr_trade_name, "ACME")
+        self.assertEqual(rec.afr_street_number, "123")
+        self.assertEqual(rec.afr_district, "Centro")
+        self.assertEqual(rec.afr_ibge_code, "3550308")

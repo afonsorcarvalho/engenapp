@@ -140,7 +140,10 @@ class ResPartner(models.Model):
         if state_id:
             vals["state_id"] = state_id
 
-        self.write(vals)
+        # update() em vez de write(): persiste em registro real (botao) e
+        # tambem atualiza o cache em registro virtual de onchange (NewId),
+        # onde write() nao reflete no formulario.
+        self.update(vals)
         return True
 
     # ---------- CNPJ ----------
@@ -200,7 +203,8 @@ class ResPartner(models.Model):
         if emails:
             vals["email"] = (emails[0].get("address") or "").lower() or False
 
-        self.write(vals)
+        # update() em vez de write(): ver nota no action_brl_lookup_cep.
+        self.update(vals)
         return True
 
     # ---------- Onchange (opt-in via ICP) ----------
