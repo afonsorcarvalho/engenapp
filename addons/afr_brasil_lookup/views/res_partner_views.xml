@@ -11,9 +11,8 @@
             <xpath expr="//field[@name='zip']" position="after">
                 <button name="action_brl_lookup_cep"
                         type="object"
-                        string="Buscar CEP"
-                        class="btn-link"
-                        icon="fa-search"
+                        class="btn-link oe_inline fa fa-search"
+                        title="Buscar CEP"
                         attrs="{'invisible': [('zip', 'in', [False, ''])]}"
                         help="Buscar endereço por CEP (BrasilAPI)"/>
             </xpath>
@@ -22,9 +21,8 @@
             <xpath expr="//field[@name='vat']" position="after">
                 <button name="action_brl_lookup_cnpj"
                         type="object"
-                        string="Buscar CNPJ"
-                        class="btn-link"
-                        icon="fa-search"
+                        class="btn-link oe_inline fa fa-search"
+                        title="Buscar CNPJ"
                         attrs="{'invisible': [('vat', 'in', [False, ''])]}"
                         help="Buscar dados de empresa por CNPJ (open.cnpja.com)"/>
             </xpath>
