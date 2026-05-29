@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Categoria para agrupar os perfis LabQuali nas Configurações de Usuário -->
+    <record id="module_category_labquali" model="ir.module.category">
+        <field name="name">LabQuali</field>
+        <field name="description">Perfis de acesso LabQuali</field>
+        <field name="sequence">90</field>
+    </record>
+
+    <!-- Grupo "Menu Completo": vê todos os menus de topo.
+         Admins (base.group_system) recebem automaticamente via implied_ids. -->
+    <record id="group_labquali_full_menu" model="res.groups">
+        <field name="name">Menu Completo</field>
+        <field name="category_id" ref="module_category_labquali"/>
+    </record>
+
+    <!-- Grupo "Operador LabQuali": perfil restrito ao menu simplificado.
+         NÃO recebe Menu Completo -> não vê os menus re-gateados abaixo. -->
+    <record id="group_labquali_operador" model="res.groups">
+        <field name="name">Operador LabQuali</field>
+        <field name="category_id" ref="module_category_labquali"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- Administradores do sistema implicam Menu Completo -->
+    <record id="base.group_system" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_labquali_full_menu'))]"/>
+    </record>
+
+</odoo>

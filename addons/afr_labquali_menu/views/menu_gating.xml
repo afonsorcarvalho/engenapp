@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Re-gateia os menus de topo desnecessários para exigir "Menu Completo".
+         Operadores não têm esse grupo => menus ocultos.
+         Admins têm (via implied_ids) => continuam vendo tudo.
+
+         groups_id ORIGINAIS (para restaurar caso desinstale; o uninstall NÃO
+         reverte automaticamente):
+           Discuss    (mail.menu_root_discuss)                         = [1]
+           Calendar   (calendar.mail_menu_calendar)                    = [1]
+           Dashboards (spreadsheet_dashboard.spreadsheet_dashboard_menu_root) = []
+           Website    (website.menu_website_configuration)             = [1]
+           Apps       (base.menu_management)                           = []
+           Inventory  (stock.menu_stock_root)                          = [25, 24]
+    -->
+
+    <!-- Discuss -->
+    <record id="mail.menu_root_discuss" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('group_labquali_full_menu')])]"/>
+    </record>
+
+    <!-- Calendar -->
+    <record id="calendar.mail_menu_calendar" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('group_labquali_full_menu')])]"/>
+    </record>
+
+    <!-- Dashboards (spreadsheet) -->
+    <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('group_labquali_full_menu')])]"/>
+    </record>
+
+    <!-- Website -->
+    <record id="website.menu_website_configuration" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('group_labquali_full_menu')])]"/>
+    </record>
+
+    <!-- Apps -->
+    <record id="base.menu_management" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('group_labquali_full_menu')])]"/>
+    </record>
+
+    <!-- Inventory -->
+    <record id="stock.menu_stock_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('group_labquali_full_menu')])]"/>
+    </record>
+
+</odoo>
