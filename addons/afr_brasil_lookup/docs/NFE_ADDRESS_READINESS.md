@@ -31,7 +31,7 @@ Grupo `emit` / `dest` (identificação):
 |---|---|---|---|
 | `CNPJ` / `CPF` | Sim | `vat` / `l10n_br_cpf_code` | ✅ (limpar máscara) |
 | `xNome` (razão social) | Sim | `name` | ✅ |
-| `xFant` (nome fantasia) | Não | — | ❌ (l10n_br nativo não tem) |
+| `xFant` (nome fantasia) | Não | `afr_trade_name` | ✅ (lookup CNPJ via `alias`) |
 | `IE` | Sim* | `l10n_br_ie_code` | ✅ |
 | `IM` | Não | `l10n_br_im_code` | ✅ |
 | `CNAE` | Não | — | ❌ |

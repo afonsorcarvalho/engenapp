@@ -12,6 +12,10 @@
             <xpath expr="//field[@name='vat']" position="replace"/>
 
             <xpath expr="//h1" position="after">
+                <label for="afr_trade_name" string="Nome Fantasia"
+                       attrs="{'invisible': [('is_company', '=', False)]}"/>
+                <field name="afr_trade_name" placeholder="Nome fantasia da empresa"
+                       attrs="{'invisible': [('is_company', '=', False)]}"/>
                 <label for="vat" string="CPF/CNPJ"/>
                 <div class="d-flex align-items-center" style="gap:6px;">
                     <field name="vat" placeholder="00.000.000/0000-00" on_change="1"

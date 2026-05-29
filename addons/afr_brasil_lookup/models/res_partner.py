@@ -73,6 +73,12 @@ class ResPartner(models.Model):
     # Um campo por componente do layout NF-e 4.00 (enderEmit/enderDest).
     # Ver docs/NFE_ADDRESS_READINESS.md. street = xLgr, street2 = xCpl.
 
+    afr_trade_name = fields.Char(
+        string="Nome Fantasia",
+        size=60,
+        help="Nome fantasia / nome de fantasia da empresa (NF-e: xFant). "
+        "Preenchido pela consulta de CNPJ (campo alias).",
+    )
     afr_street_number = fields.Char(
         string="Número",
         size=60,
@@ -167,6 +173,8 @@ class ResPartner(models.Model):
             ),
             "country_id": br.id if br else self.country_id.id,
         }
+        if data.get("alias"):
+            vals["afr_trade_name"] = data["alias"]
         if addr.get("street"):
             vals["street"] = addr["street"]
         if addr.get("number"):

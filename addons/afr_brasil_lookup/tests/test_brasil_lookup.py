@@ -95,6 +95,7 @@ class TestBrasilLookup(TransactionCase):
         self.partner.vat = "11.222.333/0001-81"
         self.partner.action_brl_lookup_cnpj()
         self.assertEqual(self.partner.name, "ACME INDUSTRIA LTDA")
+        self.assertEqual(self.partner.afr_trade_name, "ACME")
         self.assertEqual(self.partner.street, "Rua das Flores")
         self.assertEqual(self.partner.afr_street_number, "123")
         self.assertEqual(self.partner.street2, "Sala 4")
