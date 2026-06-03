@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree -->
+    <record id="view_os_visita_tree" model="ir.ui.view">
+        <field name="name">afr.qualificacao.os.visita.tree</field>
+        <field name="model">afr.qualificacao.os.visita</field>
+        <field name="arch" type="xml">
+            <tree decoration-danger="tecnico_conflict or travel_conflict">
+                <field name="sequence" widget="handle"/>
+                <field name="date"/>
+                <field name="time_start" widget="float_time"/>
+                <field name="time_stop" widget="float_time"/>
+                <field name="tecnico_id"/>
+                <field name="partner_id"/>
+                <field name="city"/>
+                <field name="equipment_ids" widget="many2many_tags"/>
+                <field name="planned_hours" sum="Horas"/>
+                <field name="travel_buffer_hours"/>
+                <field name="state"/>
+                <field name="tecnico_conflict" invisible="1"/>
+                <field name="travel_conflict" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form -->
+    <record id="view_os_visita_form" model="ir.ui.view">
+        <field name="name">afr.qualificacao.os.visita.form</field>
+        <field name="model">afr.qualificacao.os.visita</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="alert alert-warning" role="alert"
+                         attrs="{'invisible': [('tecnico_conflict', '=', False)]}">
+                        <field name="tecnico_conflict_msg" nolabel="1"/>
+                    </div>
+                    <div class="alert alert-warning" role="alert"
+                         attrs="{'invisible': [('travel_conflict', '=', False)]}">
+                        <field name="travel_conflict_msg" nolabel="1"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="os_id"/>
+                            <field name="tecnico_id"/>
+                            <field name="date"/>
+                            <field name="time_start" widget="float_time"/>
+                            <field name="time_stop" widget="float_time"/>
+                        </group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="city"/>
+                            <field name="planned_hours"/>
+                            <field name="travel_buffer_hours"/>
+                            <field name="state"/>
+                        </group>
+                    </group>
+                    <group string="Equipamentos">
+                        <field name="equipment_ids" widget="many2many_tags" nolabel="1"/>
+                    </group>
+                    <group string="Observações">
+                        <field name="note" nolabel="1"/>
+                    </group>
+                    <field name="tecnico_conflict" invisible="1"/>
+                    <field name="travel_conflict" invisible="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Calendar (agenda nativa) -->
+    <record id="view_os_visita_calendar" model="ir.ui.view">
+        <field name="name">afr.qualificacao.os.visita.calendar</field>
+        <field name="model">afr.qualificacao.os.visita</field>
+        <field name="arch" type="xml">
+            <calendar string="Agenda de Visitas"
+                      date_start="date_start" date_stop="date_stop"
+                      color="tecnico_id" mode="month"
+                      quick_add="false" event_open_popup="true">
+                <field name="os_id"/>
+                <field name="tecnico_id" filters="1" avatar_field="image_128"/>
+                <field name="partner_id" filters="1"/>
+                <field name="city"/>
+                <field name="state" filters="1" invisible="1"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- Search -->
+    <record id="view_os_visita_search" model="ir.ui.view">
+        <field name="name">afr.qualificacao.os.visita.search</field>
+        <field name="model">afr.qualificacao.os.visita</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="os_id"/>
+                <field name="tecnico_id"/>
+                <field name="partner_id"/>
+                <field name="city"/>
+                <!-- Sem filtro por conflito: tecnico_conflict/travel_conflict são
+                     computed non-stored (sem método search), não podem ir em domínio.
+                     A decoração vermelha na tree já os surfa. -->
+                <filter name="planejada" string="Planejada"
+                        domain="[('state', '=', 'planned')]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="g_tecnico" string="Técnico"
+                            context="{'group_by': 'tecnico_id'}"/>
+                    <filter name="g_data" string="Data"
+                            context="{'group_by': 'date'}"/>
+                    <filter name="g_cliente" string="Cliente"
+                            context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action + menu -->
+    <record id="action_os_visita" model="ir.actions.act_window">
+        <field name="name">Agenda de Visitas</field>
+        <field name="res_model">afr.qualificacao.os.visita</field>
+        <field name="view_mode">calendar,tree,form</field>
+        <field name="search_view_id" ref="view_os_visita_search"/>
+    </record>
+
+    <menuitem id="menu_os_visita"
+              name="Agenda de Visitas"
+              action="action_os_visita"
+              parent="afr_qualificacao.menu_afr_qualificacao_root"
+              sequence="7"/>
+</odoo>

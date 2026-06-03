@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_afr_qualificacao_os_form_agendamento" model="ir.ui.view">
+        <field name="name">afr.qualificacao.os.form.agendamento</field>
+        <field name="model">afr.qualificacao.os</field>
+        <field name="inherit_id" ref="afr_qualificacao.view_afr_qualificacao_os_form"/>
+        <field name="arch" type="xml">
+            <!-- Stat button -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button type="object" name="action_view_visitas"
+                        class="oe_stat_button" icon="fa-calendar">
+                    <field name="visita_count" widget="statinfo" string="Visitas"/>
+                </button>
+            </xpath>
+            <!-- Aba Visitas -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Visitas" name="visitas">
+                    <field name="visita_ids" context="{'default_tecnico_id': tecnico_default_id}">
+                        <tree editable="bottom"
+                              decoration-danger="tecnico_conflict or travel_conflict">
+                            <field name="sequence" widget="handle"/>
+                            <field name="date"/>
+                            <field name="time_start" widget="float_time"/>
+                            <field name="time_stop" widget="float_time"/>
+                            <field name="tecnico_id"/>
+                            <field name="equipment_ids" widget="many2many_tags"/>
+                            <field name="planned_hours"/>
+                            <field name="travel_buffer_hours"/>
+                            <field name="state"/>
+                            <field name="tecnico_conflict" invisible="1"/>
+                            <field name="travel_conflict" invisible="1"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
