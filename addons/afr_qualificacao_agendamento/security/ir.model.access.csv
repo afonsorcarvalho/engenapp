@@ -2,3 +2,4 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_afr_qualificacao_os_visita_technician,afr.qualificacao.os.visita.technician,model_afr_qualificacao_os_visita,afr_qualificacao.group_afr_qualificacao_technician,1,1,0,0
 access_afr_qualificacao_os_visita_user,afr.qualificacao.os.visita.user,model_afr_qualificacao_os_visita,afr_qualificacao.group_afr_qualificacao_user,1,1,1,0
 access_afr_qualificacao_os_visita_manager,afr.qualificacao.os.visita.manager,model_afr_qualificacao_os_visita,afr_qualificacao.group_afr_qualificacao_manager,1,1,1,1
+access_suggest_wizard,afr.qualificacao.os.suggest.wizard,model_afr_qualificacao_os_suggest_wizard,afr_qualificacao.group_afr_qualificacao_user,1,1,1,1

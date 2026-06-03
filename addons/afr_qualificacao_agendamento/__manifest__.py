@@ -9,6 +9,7 @@
     "depends": ["afr_qualificacao"],
     "data": [
         "security/ir.model.access.csv",
+        "views/suggest_visitas_wizard_views.xml",
         "views/os_visita_views.xml",
         "views/qualificacao_os_views.xml",
     ],

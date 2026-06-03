@@ -33,6 +33,20 @@
                     </field>
                 </page>
             </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="action_open_suggest_wizard" type="object"
+                        string="Sugerir visitas" class="btn-secondary"
+                        attrs="{'invisible': [('state', 'not in', ['draft', 'scheduled'])]}"/>
+            </xpath>
         </field>
+    </record>
+
+    <!-- Deprecação: remove a calendar antiga da OS (substituída pela Agenda de Visitas) -->
+    <record id="afr_qualificacao.action_afr_qualificacao_os" model="ir.actions.act_window">
+        <field name="view_mode">tree,kanban,form</field>
+    </record>
+
+    <record id="afr_qualificacao.view_afr_qualificacao_os_calendar" model="ir.ui.view">
+        <field name="active" eval="False"/>
     </record>
 </odoo>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_suggest_visitas_wizard_form" model="ir.ui.view">
+        <field name="name">afr.qualificacao.os.suggest.wizard.form</field>
+        <field name="model">afr.qualificacao.os.suggest.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Sugerir visitas">
+                <p class="text-muted">
+                    Gera as visitas diárias da OS distribuindo as horas estimadas
+                    pela jornada. Substitui as visitas planejadas; preserva as realizadas.
+                </p>
+                <group>
+                    <field name="os_id" invisible="1"/>
+                    <field name="tecnico_id"/>
+                    <field name="date_start"/>
+                </group>
+                <footer>
+                    <button name="action_generate" type="object"
+                            string="Gerar visitas" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
