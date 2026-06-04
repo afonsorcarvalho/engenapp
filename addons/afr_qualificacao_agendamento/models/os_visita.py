@@ -251,6 +251,11 @@ class AfrQualificacaoOsVisita(models.Model):
                 "planned_hours": v.planned_hours,
                 "state": v.state,
                 "equipment_names": ", ".join(v.equipment_ids.mapped("name")),
+                "instrument_names": ", ".join(
+                    filter(None, v.instrument_ids.mapped(
+                        lambda i: i.tag or i.id_number or i.name
+                    ))
+                ),
                 "conflict": bool(
                     v.tecnico_conflict or v.travel_conflict
                     or v.instrument_conflict or v.calibration_conflict
@@ -272,4 +277,31 @@ class AfrQualificacaoOsVisita(models.Model):
                 "Não é possível reagendar uma visita já realizada."
             ))
         visita.write({"date": new_date, "tecnico_id": new_tecnico_id})
+        return True
+
+    @api.model
+    def board_technician_options(self):
+        """Técnicos marcados is_tecnico=True, para o seletor do board."""
+        techs = self.env["hr.employee"].search([("is_tecnico", "=", True)])
+        return [{"id": t.id, "name": t.name} for t in techs]
+
+    @api.model
+    def board_os_options(self):
+        """OS ativas (não done/cancelled) para o seletor de nova visita."""
+        oss = self.env["afr.qualificacao.os"].search([
+            ("state", "not in", ("done", "cancelled")),
+        ])
+        return [{
+            "id": o.id,
+            "name": "%s - %s" % (o.name or "", o.partner_id.name or ""),
+        } for o in oss]
+
+    @api.model
+    def board_create_visita(self, os_id, tecnico_id, date):
+        """Cria visita mínima (os+técnico+data) a partir do seletor do board."""
+        self.create({
+            "os_id": os_id,
+            "tecnico_id": tecnico_id,
+            "date": date,
+        })
         return True

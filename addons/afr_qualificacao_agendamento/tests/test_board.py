@@ -67,3 +67,47 @@ class TestBoard(TransactionCase):
         v.state = "done"
         with self.assertRaises(UserError):
             self.Visita.board_reschedule(v.id, "2026-06-12", self.t2.id)
+
+    def test_board_technician_options(self):
+        self.t1.is_tecnico = True
+        # t2 fica False
+        opts = self.Visita.board_technician_options()
+        ids = {o["id"] for o in opts}
+        self.assertIn(self.t1.id, ids)
+        self.assertNotIn(self.t2.id, ids)
+        for o in opts:
+            self.assertIn("id", o)
+            self.assertIn("name", o)
+
+    def test_board_os_options_excludes_closed(self):
+        os_open = self._make_os()
+        os_open.state = "in_progress"
+        os_done = self._make_os()
+        os_done.state = "done"
+        os_cancel = self._make_os()
+        os_cancel.state = "cancelled"
+        opts = self.Visita.board_os_options()
+        ids = {o["id"] for o in opts}
+        self.assertIn(os_open.id, ids)
+        self.assertNotIn(os_done.id, ids)
+        self.assertNotIn(os_cancel.id, ids)
+
+    def test_board_os_options_name_format(self):
+        os1 = self._make_os()
+        partner = self.env["res.partner"].create({"name": "Cliente X"})
+        os1.partner_id = partner
+        opts = self.Visita.board_os_options()
+        match = [o for o in opts if o["id"] == os1.id]
+        self.assertEqual(len(match), 1)
+        self.assertIn("Cliente X", match[0]["name"])
+        self.assertIn(os1.name, match[0]["name"])
+
+    def test_board_create_visita(self):
+        os1 = self._make_os()
+        self.Visita.board_create_visita(os1.id, self.t1.id, "2026-06-10")
+        v = self.Visita.search([
+            ("os_id", "=", os1.id), ("tecnico_id", "=", self.t1.id),
+            ("date", "=", "2026-06-10"),
+        ])
+        self.assertEqual(len(v), 1)
+        self.assertEqual(v.date, date(2026, 6, 10))
