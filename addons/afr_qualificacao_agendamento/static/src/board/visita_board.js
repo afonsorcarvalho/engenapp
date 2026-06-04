@@ -1,7 +1,7 @@
 /** @odoo-module **/
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
-import { useService } from "@web/core/utils/hooks";
+import { useService, useExternalListener } from "@web/core/utils/hooks";
 
 function isoDate(d) {
     const y = d.getFullYear();
@@ -37,7 +37,14 @@ export class VisitaBoard extends Component {
             date_to: isoDate(sunday),
             technicians: [],
             visitas: [],
+            pinnedTecnicos: [],
+            openDropdown: null,
+            tecnicoOptions: [],
+            osOptions: [],
+            tecnicoOptionsLoaded: false,
+            osOptionsLoaded: false,
         });
+        useExternalListener(window, "click", () => this.closeDropdowns());
         onWillStart(() => this._fetch());
     }
 
@@ -60,6 +67,20 @@ export class VisitaBoard extends Component {
             guard++;
         }
         return out;
+    }
+
+    get displayTechnicians() {
+        const byId = {};
+        for (const t of this.state.technicians) {
+            byId[t.id] = { id: t.id, name: t.name };
+        }
+        for (const t of this.state.pinnedTecnicos) {
+            if (!byId[t.id]) {
+                byId[t.id] = { id: t.id, name: t.name };
+            }
+        }
+        return Object.values(byId).sort((a, b) =>
+            (a.name || "").localeCompare(b.name || ""));
     }
 
     _span() {
@@ -94,6 +115,51 @@ export class VisitaBoard extends Component {
         }
         return t;
     }
+
+    async openTecnicoDropdown() {
+        if (!this.state.tecnicoOptionsLoaded) {
+            this.state.tecnicoOptions = await this.orm.call(
+                "afr.qualificacao.os.visita", "board_technician_options", []);
+            this.state.tecnicoOptionsLoaded = true;
+        }
+        this.state.openDropdown =
+            this.state.openDropdown === "tecnico" ? null : "tecnico";
+    }
+    addTecnico(tec) {
+        if (!this.state.pinnedTecnicos.some((t) => t.id === tec.id)) {
+            this.state.pinnedTecnicos.push({ id: tec.id, name: tec.name });
+        }
+        this.state.openDropdown = null;
+    }
+    async openOsDropdown(tecnicoId, day) {
+        if (!this.state.osOptionsLoaded) {
+            this.state.osOptions = await this.orm.call(
+                "afr.qualificacao.os.visita", "board_os_options", []);
+            this.state.osOptionsLoaded = true;
+        }
+        const key = `os:${tecnicoId}:${day}`;
+        this.state.openDropdown = this.state.openDropdown === key ? null : key;
+    }
+    async addVisita(osId, tecnicoId, day) {
+        this.state.openDropdown = null;
+        await this.orm.call("afr.qualificacao.os.visita", "board_create_visita",
+            [osId, tecnicoId, day]);
+        await this._fetch();
+    }
+    closeDropdowns() {
+        if (this.state.openDropdown !== null) {
+            this.state.openDropdown = null;
+        }
+    }
+    onAddTecnicoClick(ev) {
+        ev.stopPropagation();
+        this.openTecnicoDropdown();
+    }
+    onAddVisitaClick(ev, tecnicoId, day) {
+        ev.stopPropagation();
+        this.openOsDropdown(tecnicoId, day);
+    }
+    stopDropdownClick(ev) { ev.stopPropagation(); }
 
     get todayDate() {
         return isoDate(new Date());
@@ -154,6 +220,8 @@ export class VisitaBoard extends Component {
             res_id: visitaId,
             views: [[false, "form"]],
             target: "new",
+        }, {
+            onClose: () => this._fetch(),
         });
     }
 }
