@@ -17,7 +17,7 @@
                 <page string="Visitas" name="visitas">
                     <field name="visita_ids" context="{'default_tecnico_id': tecnico_default_id}">
                         <tree editable="bottom"
-                              decoration-danger="tecnico_conflict or travel_conflict">
+                              decoration-danger="tecnico_conflict or travel_conflict or instrument_conflict or calibration_conflict">
                             <field name="sequence" widget="handle"/>
                             <field name="date"/>
                             <field name="time_start" widget="float_time"/>
@@ -29,6 +29,8 @@
                             <field name="state"/>
                             <field name="tecnico_conflict" invisible="1"/>
                             <field name="travel_conflict" invisible="1"/>
+                            <field name="instrument_conflict" invisible="1"/>
+                            <field name="calibration_conflict" invisible="1"/>
                         </tree>
                     </field>
                 </page>

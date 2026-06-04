@@ -12,7 +12,15 @@
         "views/suggest_visitas_wizard_views.xml",
         "views/os_visita_views.xml",
         "views/qualificacao_os_views.xml",
+        "views/visita_board_action.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "afr_qualificacao_agendamento/static/src/board/visita_board.scss",
+            "afr_qualificacao_agendamento/static/src/board/visita_board.xml",
+            "afr_qualificacao_agendamento/static/src/board/visita_board.js",
+        ],
+    },
     "installable": True,
     "application": False,
 }

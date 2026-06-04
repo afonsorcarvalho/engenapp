@@ -1,0 +1,72 @@
+.o_vb_board {
+    padding: 12px;
+    height: 100%;
+    overflow: auto;
+
+    .o_vb_toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+
+        .o_vb_sep { color: #6c757d; }
+        .o_vb_date { max-width: 160px; }
+    }
+
+    .o_vb_grid_wrap { overflow-x: auto; }
+
+    table.o_vb_grid {
+        border-collapse: collapse;
+        width: 100%;
+
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 4px;
+            vertical-align: top;
+            min-width: 110px;
+        }
+        th { background: #f8f9fa; text-align: center; font-size: 12px; }
+        .o_vb_corner, .o_vb_tec {
+            position: sticky;
+            left: 0;
+            background: #f8f9fa;
+            min-width: 140px;
+            font-weight: 600;
+            z-index: 1;
+        }
+        .o_vb_cell { height: 56px; }
+        .o_vb_empty { text-align: center; color: #6c757d; padding: 24px; }
+    }
+
+    .o_vb_bar {
+        display: flex;
+        flex-direction: column;
+        border-radius: 4px;
+        padding: 2px 6px;
+        margin-bottom: 3px;
+        cursor: grab;
+        color: #fff;
+        font-size: 11px;
+        line-height: 1.2;
+
+        .o_vb_bar_os { font-weight: 600; }
+        .o_vb_bar_partner { opacity: .85; }
+
+        &:active { cursor: grabbing; }
+        &.o_vb_done { opacity: .55; }
+        &.o_vb_conflict {
+            outline: 2px solid #dc3545;
+            outline-offset: -2px;
+        }
+    }
+
+    // paleta de 8 cores por OS
+    .o_vb_color_1 { background: #1f77b4; }
+    .o_vb_color_2 { background: #2ca02c; }
+    .o_vb_color_3 { background: #9467bd; }
+    .o_vb_color_4 { background: #ff7f0e; }
+    .o_vb_color_5 { background: #17a2b8; }
+    .o_vb_color_6 { background: #e377c2; }
+    .o_vb_color_7 { background: #8c564b; }
+    .o_vb_color_8 { background: #7f7f7f; }
+}

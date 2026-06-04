@@ -5,7 +5,7 @@
         <field name="name">afr.qualificacao.os.visita.tree</field>
         <field name="model">afr.qualificacao.os.visita</field>
         <field name="arch" type="xml">
-            <tree decoration-danger="tecnico_conflict or travel_conflict">
+            <tree decoration-danger="tecnico_conflict or travel_conflict or instrument_conflict or calibration_conflict">
                 <field name="sequence" widget="handle"/>
                 <field name="date"/>
                 <field name="time_start" widget="float_time"/>
@@ -14,11 +14,14 @@
                 <field name="partner_id"/>
                 <field name="city"/>
                 <field name="equipment_ids" widget="many2many_tags"/>
+                <field name="instrument_ids" widget="many2many_tags" optional="hide"/>
                 <field name="planned_hours" sum="Horas"/>
                 <field name="travel_buffer_hours"/>
                 <field name="state"/>
                 <field name="tecnico_conflict" invisible="1"/>
                 <field name="travel_conflict" invisible="1"/>
+                <field name="instrument_conflict" invisible="1"/>
+                <field name="calibration_conflict" invisible="1"/>
             </tree>
         </field>
     </record>
@@ -37,6 +40,14 @@
                     <div class="alert alert-warning" role="alert"
                          attrs="{'invisible': [('travel_conflict', '=', False)]}">
                         <field name="travel_conflict_msg" nolabel="1"/>
+                    </div>
+                    <div class="alert alert-warning" role="alert"
+                         attrs="{'invisible': [('instrument_conflict', '=', False)]}">
+                        <field name="instrument_conflict_msg" nolabel="1"/>
+                    </div>
+                    <div class="alert alert-warning" role="alert"
+                         attrs="{'invisible': [('calibration_conflict', '=', False)]}">
+                        <field name="calibration_conflict_msg" nolabel="1"/>
                     </div>
                     <group>
                         <group>
@@ -57,11 +68,18 @@
                     <group string="Equipamentos">
                         <field name="equipment_ids" widget="many2many_tags" nolabel="1"/>
                     </group>
+                    <group string="Instrumentos">
+                        <field name="instrument_ids" widget="many2many_tags" nolabel="1"/>
+                        <button name="action_pull_instruments_from_plan" type="object"
+                                string="Puxar do plano F10" class="btn-link"/>
+                    </group>
                     <group string="Observações">
                         <field name="note" nolabel="1"/>
                     </group>
                     <field name="tecnico_conflict" invisible="1"/>
                     <field name="travel_conflict" invisible="1"/>
+                    <field name="instrument_conflict" invisible="1"/>
+                    <field name="calibration_conflict" invisible="1"/>
                 </sheet>
             </form>
         </field>

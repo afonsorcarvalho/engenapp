@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="afr_qualificacao_agendamento.VisitaBoard" owl="1">
+        <div class="o_vb_board">
+            <div class="o_vb_toolbar">
+                <button class="btn btn-secondary" t-on-click="prevRange">‹</button>
+                <button class="btn btn-secondary" t-on-click="today">Hoje</button>
+                <button class="btn btn-secondary" t-on-click="nextRange">›</button>
+                <input type="date" class="o_vb_date" t-att-value="state.date_from"
+                       t-on-change="onChangeFrom"/>
+                <span class="o_vb_sep">até</span>
+                <input type="date" class="o_vb_date" t-att-value="state.date_to"
+                       t-on-change="onChangeTo"/>
+            </div>
+            <div class="o_vb_grid_wrap">
+                <table class="o_vb_grid">
+                    <thead>
+                        <tr>
+                            <th class="o_vb_corner">Técnico</th>
+                            <th t-foreach="days" t-as="day" t-key="day">
+                                <t t-esc="dayLabel(day)"/>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-if="!state.technicians.length">
+                            <td t-att-colspan="days.length + 1" class="o_vb_empty">
+                                Sem visitas no intervalo.
+                            </td>
+                        </tr>
+                        <tr t-foreach="state.technicians" t-as="tec" t-key="tec.id">
+                            <td class="o_vb_tec"><t t-esc="tec.name"/></td>
+                            <td t-foreach="days" t-as="day" t-key="day"
+                                class="o_vb_cell"
+                                t-on-dragover="onDragOver"
+                                t-on-drop="(ev) => this.onDrop(ev, tec.id, day)">
+                                <div t-foreach="cellVisitas(tec.id, day)" t-as="v" t-key="v.id"
+                                     class="o_vb_bar"
+                                     t-att-class="colorClass(v.os_id) + (v.conflict ? ' o_vb_conflict' : '') + (v.state === 'done' ? ' o_vb_done' : '')"
+                                     draggable="true"
+                                     t-on-dragstart="(ev) => this.onDragStart(ev, v.id)"
+                                     t-on-click="() => this.openVisita(v.id)"
+                                     t-att-title="barTitle(v)">
+                                    <span class="o_vb_bar_os" t-esc="v.os_name"/>
+                                    <span class="o_vb_bar_partner" t-esc="v.partner_name"/>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </t>
+</templates>

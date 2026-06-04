@@ -10,6 +10,7 @@ from datetime import datetime, time, timedelta
 from pytz import timezone, utc
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class AfrQualificacaoOsVisita(models.Model):
@@ -88,6 +89,21 @@ class AfrQualificacaoOsVisita(models.Model):
     )
     travel_conflict_msg = fields.Char(compute="_compute_conflicts")
 
+    instrument_ids = fields.Many2many(
+        "engc.calibration.instruments",
+        "afr_visita_instrument_rel", "visita_id", "instrument_id",
+        string="Instrumentos (validador/padrão)",
+        help="Instrumentos metrológicos usados nesta visita (atribuição manual).",
+    )
+    instrument_conflict = fields.Boolean(
+        string="Conflito de instrumento", compute="_compute_resource_conflicts"
+    )
+    instrument_conflict_msg = fields.Char(compute="_compute_resource_conflicts")
+    calibration_conflict = fields.Boolean(
+        string="Calibração vencida", compute="_compute_resource_conflicts"
+    )
+    calibration_conflict_msg = fields.Char(compute="_compute_resource_conflicts")
+
     # ───────── helpers ─────────
     def _local_to_utc(self, naive_dt):
         """Datetime naive local (tz do usuário) → naive UTC p/ armazenar."""
@@ -154,3 +170,106 @@ class AfrQualificacaoOsVisita(models.Model):
                     r.travel_conflict_msg = _(
                         "Deslocamento %s → %s: %.1f h livres < %.1f h necessárias."
                     ) % (prev.city, r.city, gap_h, need)
+
+    def _instrument_valid_on(self, instrument, day):
+        """True se o instrumento tem certificado válido na data `day`."""
+        return any(
+            c.validate_calibration and c.validate_calibration >= day
+            for c in instrument.certificate_ids
+        )
+
+    @api.depends("instrument_ids", "date", "date_start", "date_stop")
+    def _compute_resource_conflicts(self):
+        for r in self:
+            r.instrument_conflict = False
+            r.instrument_conflict_msg = False
+            r.calibration_conflict = False
+            r.calibration_conflict_msg = False
+            if not r.instrument_ids:
+                continue
+            # Conflito de recurso: instrumento em OS diferente, janela sobreposta.
+            if r.date_start and r.date_stop:
+                exclude = [("id", "!=", r._origin.id)] if r._origin.id else []
+                clash = self.search(exclude + [
+                    ("os_id", "!=", r.os_id.id),
+                    ("instrument_ids", "in", r.instrument_ids.ids),
+                    ("date_start", "<", r.date_stop),
+                    ("date_stop", ">", r.date_start),
+                ], limit=1)
+                if clash:
+                    shared = clash.instrument_ids & r.instrument_ids
+                    r.instrument_conflict = True
+                    r.instrument_conflict_msg = _(
+                        "Instrumento(s) %s já em uso na OS %s no período."
+                    ) % (", ".join(shared.mapped("display_name")),
+                         clash.os_id.name or _("(sem OS)"))
+            # Conflito de calibração: instrumento sem certificado válido na data.
+            if r.date:
+                expired = r.instrument_ids.filtered(
+                    lambda inst: not r._instrument_valid_on(inst, r.date)
+                )
+                if expired:
+                    r.calibration_conflict = True
+                    r.calibration_conflict_msg = _(
+                        "Calibração vencida/ausente em: %s (data %s)."
+                    ) % (", ".join(expired.mapped("display_name")),
+                         fields.Date.to_string(r.date))
+
+    def action_pull_instruments_from_plan(self):
+        """Pré-preenche instrument_ids a partir do plano de recursos (F10) da OS,
+        pelas linhas cujos equipamentos batem com os da visita."""
+        self.ensure_one()
+        lines = self.os_id.resource_plan_line_ids.filtered(
+            lambda l: l.instrument_id and (l.equipment_ids & self.equipment_ids)
+        )
+        self.instrument_ids = [(6, 0, lines.mapped("instrument_id").ids)]
+        return True
+
+    @api.model
+    def board_fetch(self, date_from, date_to):
+        """Dados do board: técnicos com visita no intervalo + visitas serializadas."""
+        visitas = self.search([
+            ("date", ">=", date_from),
+            ("date", "<=", date_to),
+        ], order="tecnico_id, date, sequence")
+        techs = {}
+        rows = []
+        for v in visitas:
+            if v.tecnico_id and v.tecnico_id.id not in techs:
+                techs[v.tecnico_id.id] = v.tecnico_id.name
+            msgs = [m for m in (
+                v.tecnico_conflict_msg, v.travel_conflict_msg,
+                v.instrument_conflict_msg, v.calibration_conflict_msg,
+            ) if m]
+            rows.append({
+                "id": v.id,
+                "tecnico_id": v.tecnico_id.id or False,
+                "date": fields.Date.to_string(v.date),
+                "os_id": v.os_id.id or False,
+                "os_name": v.os_id.name or "",
+                "partner_name": v.partner_id.name or "",
+                "planned_hours": v.planned_hours,
+                "state": v.state,
+                "equipment_names": ", ".join(v.equipment_ids.mapped("name")),
+                "conflict": bool(
+                    v.tecnico_conflict or v.travel_conflict
+                    or v.instrument_conflict or v.calibration_conflict
+                ),
+                "conflict_msg": " | ".join(msgs),
+            })
+        technicians = [
+            {"id": tid, "name": name}
+            for tid, name in sorted(techs.items(), key=lambda x: (x[1] or ""))
+        ]
+        return {"technicians": technicians, "visitas": rows}
+
+    @api.model
+    def board_reschedule(self, visita_id, new_date, new_tecnico_id):
+        """Drag-reschedule: grava nova data + técnico. Bloqueia visita realizada."""
+        visita = self.browse(visita_id)
+        if visita.state == "done":
+            raise UserError(_(
+                "Não é possível reagendar uma visita já realizada."
+            ))
+        visita.write({"date": new_date, "tecnico_id": new_tecnico_id})
+        return True
