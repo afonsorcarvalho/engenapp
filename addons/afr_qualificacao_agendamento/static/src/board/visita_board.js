@@ -1,7 +1,7 @@
 /** @odoo-module **/
-import { Component, useState, onWillStart } from "@odoo/owl";
+import { Component, useState, onWillStart, useExternalListener } from "@odoo/owl";
 import { registry } from "@web/core/registry";
-import { useService, useExternalListener } from "@web/core/utils/hooks";
+import { useService } from "@web/core/utils/hooks";
 
 function isoDate(d) {
     const y = d.getFullYear();
