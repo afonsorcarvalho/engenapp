@@ -40,7 +40,7 @@
                                 <div t-foreach="cellVisitas(tec.id, day)" t-as="v" t-key="v.id"
                                      class="o_vb_bar"
                                      t-att-class="colorClass(v.os_id) + (v.conflict ? ' o_vb_conflict' : '') + (v.state === 'done' ? ' o_vb_done' : '')"
-                                     t-att-draggable="v.state !== 'done'"
+                                     t-att-draggable="v.state !== 'done' ? 'true' : 'false'"
                                      t-on-dragstart="(ev) => this.onDragStart(ev, v.id)"
                                      t-on-click="() => this.openVisita(v.id)"
                                      t-att-title="barTitle(v)">
