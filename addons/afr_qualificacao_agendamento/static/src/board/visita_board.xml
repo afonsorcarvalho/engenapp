@@ -98,13 +98,13 @@
                                      class="o_vb_dropdown"
                                      t-att-style="dropdownStyle"
                                      t-on-click="(ev) => this.stopDropdownClick(ev)">
-                                    <div t-foreach="state.tecnicoOptions" t-as="tec" t-key="tec.id"
+                                    <div t-foreach="availableTecnicoOptions" t-as="tec" t-key="tec.id"
                                          class="o_vb_dropdown_item"
                                          t-on-click="() => this.addTecnico(tec)">
                                         <t t-esc="tec.name"/>
                                     </div>
-                                    <div t-if="!state.tecnicoOptions.length" class="o_vb_dropdown_empty">
-                                        Nenhum empregado marcado como técnico.
+                                    <div t-if="!availableTecnicoOptions.length" class="o_vb_dropdown_empty">
+                                        Todos os técnicos já estão no quadro.
                                     </div>
                                 </div>
                             </td>

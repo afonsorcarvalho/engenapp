@@ -87,6 +87,12 @@ export class VisitaBoard extends Component {
             (a.name || "").localeCompare(b.name || ""));
     }
 
+    get availableTecnicoOptions() {
+        // só técnicos que ainda NÃO estão no board
+        const present = new Set(this.displayTechnicians.map((t) => t.id));
+        return this.state.tecnicoOptions.filter((t) => !present.has(t.id));
+    }
+
     _span() {
         return Math.round(
             (parseISO(this.state.date_to) - parseISO(this.state.date_from)) / 86400000
