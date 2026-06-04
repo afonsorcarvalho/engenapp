@@ -56,6 +56,9 @@ export class VisitaBoard extends Component {
         );
         this.state.technicians = data.technicians;
         this.state.visitas = data.visitas;
+        // invalida cache de opções: OS pode ter mudado de estado / técnicos remarcados
+        this.state.tecnicoOptionsLoaded = false;
+        this.state.osOptionsLoaded = false;
     }
 
     get days() {
