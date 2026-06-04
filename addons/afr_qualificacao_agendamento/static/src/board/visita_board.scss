@@ -34,8 +34,21 @@
             font-weight: 600;
             z-index: 1;
         }
-        .o_vb_cell { height: 56px; }
+        .o_vb_cell { min-height: 80px; height: auto; vertical-align: top; }
         .o_vb_empty { text-align: center; color: #6c757d; padding: 24px; }
+        .o_vb_today {
+            background: #dbeafe !important;
+            font-weight: 700;
+            color: #1e40af;
+        }
+        .o_vb_today_cell {
+            background: #eff6ff;
+        }
+        .o_vb_drop_active {
+            background: #dbeafe;
+            outline: 2px dashed #2563eb;
+            outline-offset: -2px;
+        }
     }
 
     .o_vb_bar {
@@ -51,22 +64,58 @@
 
         .o_vb_bar_os { font-weight: 600; }
         .o_vb_bar_partner { opacity: .85; }
+        .o_vb_bar_instruments { opacity: .75; font-style: italic; font-size: 10px; }
+        .o_vb_bar_row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 4px;
+        }
+        .o_vb_hours {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-size: 10px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .o_vb_done_badge {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 10px;
+            margin-left: 4px;
+        }
+        .o_vb_bar_conflict_msg {
+            opacity: .9;
+            font-size: 10px;
+            color: #fecaca;
+            margin-top: 1px;
+        }
+        .o_vb_bar_resources {
+            opacity: .7;
+            font-size: 10px;
+        }
 
         &:active { cursor: grabbing; }
-        &.o_vb_done { opacity: .55; }
+        &.o_vb_done {
+            opacity: 0.5;
+            cursor: default;
+            filter: grayscale(20%);
+        }
         &.o_vb_conflict {
-            outline: 2px solid #dc3545;
-            outline-offset: -2px;
+            border-left: 4px solid #dc3545 !important;
+            border-radius: 0 4px 4px 0;
         }
     }
 
     // paleta de 8 cores por OS
-    .o_vb_color_1 { background: #1f77b4; }
-    .o_vb_color_2 { background: #2ca02c; }
-    .o_vb_color_3 { background: #9467bd; }
-    .o_vb_color_4 { background: #ff7f0e; }
-    .o_vb_color_5 { background: #17a2b8; }
-    .o_vb_color_6 { background: #e377c2; }
-    .o_vb_color_7 { background: #8c564b; }
-    .o_vb_color_8 { background: #7f7f7f; }
+    .o_vb_color_1 { background: #2563eb; } // azul vivo
+    .o_vb_color_2 { background: #16a34a; } // verde
+    .o_vb_color_3 { background: #7c3aed; } // violeta
+    .o_vb_color_4 { background: #ea580c; } // laranja escuro
+    .o_vb_color_5 { background: #0891b2; } // ciano
+    .o_vb_color_6 { background: #db2777; } // rosa
+    .o_vb_color_7 { background: #b45309; } // âmbar escuro
+    .o_vb_color_8 { background: #475569; } // cinza ardósia
 }

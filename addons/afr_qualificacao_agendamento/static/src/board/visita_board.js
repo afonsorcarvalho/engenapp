@@ -95,6 +95,10 @@ export class VisitaBoard extends Component {
         return t;
     }
 
+    get todayDate() {
+        return isoDate(new Date());
+    }
+
     async prevRange() {
         const span = this._span();
         this.state.date_from = addDays(this.state.date_from, -span);
@@ -123,8 +127,17 @@ export class VisitaBoard extends Component {
         ev.dataTransfer.effectAllowed = "move";
     }
     onDragOver(ev) { ev.preventDefault(); ev.dataTransfer.dropEffect = "move"; }
+    onDragEnter(ev) {
+        ev.currentTarget.classList.add("o_vb_drop_active");
+    }
+    onDragLeave(ev) {
+        if (!ev.relatedTarget || !ev.currentTarget.contains(ev.relatedTarget)) {
+            ev.currentTarget.classList.remove("o_vb_drop_active");
+        }
+    }
     async onDrop(ev, tecnicoId, day) {
         ev.preventDefault();
+        ev.currentTarget.classList.remove("o_vb_drop_active");
         const visitaId = parseInt(ev.dataTransfer.getData("text/plain"), 10);
         if (!visitaId) { return; }
         await this.orm.call(

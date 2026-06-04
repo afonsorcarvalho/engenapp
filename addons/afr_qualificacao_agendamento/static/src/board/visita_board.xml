@@ -17,7 +17,8 @@
                     <thead>
                         <tr>
                             <th class="o_vb_corner">Técnico</th>
-                            <th t-foreach="days" t-as="day" t-key="day">
+                            <th t-foreach="days" t-as="day" t-key="day"
+                                t-att-class="day === todayDate ? 'o_vb_today' : ''">
                                 <t t-esc="dayLabel(day)"/>
                             </th>
                         </tr>
@@ -31,18 +32,42 @@
                         <tr t-foreach="state.technicians" t-as="tec" t-key="tec.id">
                             <td class="o_vb_tec"><t t-esc="tec.name"/></td>
                             <td t-foreach="days" t-as="day" t-key="day"
-                                class="o_vb_cell"
+                                t-att-class="'o_vb_cell' + (day === todayDate ? ' o_vb_today_cell' : '')"
                                 t-on-dragover="onDragOver"
+                                t-on-dragenter="onDragEnter"
+                                t-on-dragleave="onDragLeave"
                                 t-on-drop="(ev) => this.onDrop(ev, tec.id, day)">
                                 <div t-foreach="cellVisitas(tec.id, day)" t-as="v" t-key="v.id"
                                      class="o_vb_bar"
                                      t-att-class="colorClass(v.os_id) + (v.conflict ? ' o_vb_conflict' : '') + (v.state === 'done' ? ' o_vb_done' : '')"
-                                     draggable="true"
+                                     t-att-draggable="v.state !== 'done'"
                                      t-on-dragstart="(ev) => this.onDragStart(ev, v.id)"
                                      t-on-click="() => this.openVisita(v.id)"
                                      t-att-title="barTitle(v)">
-                                    <span class="o_vb_bar_os" t-esc="v.os_name"/>
+                                    <!-- Linha 1: OS name + done badge + horas badge -->
+                                    <div class="o_vb_bar_row">
+                                        <span class="o_vb_bar_os">
+                                            <t t-esc="v.os_name"/>
+                                            <t t-if="v.state === 'done'">
+                                                <span class="o_vb_done_badge">&#10003;</span>
+                                            </t>
+                                        </span>
+                                        <span t-if="v.planned_hours" class="o_vb_hours">
+                                            <t t-esc="v.planned_hours"/>h
+                                        </span>
+                                    </div>
+                                    <!-- Linha 2: partner -->
                                     <span class="o_vb_bar_partner" t-esc="v.partner_name"/>
+                                    <!-- Linha 3: equipamentos + instrumentos -->
+                                    <div t-if="v.equipment_names || v.instrument_names" class="o_vb_bar_resources">
+                                        <t t-if="v.equipment_names">&#128295; <t t-esc="v.equipment_names"/></t>
+                                        <t t-if="v.equipment_names &amp;&amp; v.instrument_names"> · </t>
+                                        <t t-if="v.instrument_names">&#128208; <t t-esc="v.instrument_names"/></t>
+                                    </div>
+                                    <!-- Linha 4: mensagem de conflito -->
+                                    <div t-if="v.conflict &amp;&amp; v.conflict_msg" class="o_vb_bar_conflict_msg">
+                                        &#9888; <t t-esc="v.conflict_msg"/>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
