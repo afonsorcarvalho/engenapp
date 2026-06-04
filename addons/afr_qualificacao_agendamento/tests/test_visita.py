@@ -149,3 +149,38 @@ class TestVisita(TransactionCase):
         v2 = V.create({"os_id": os_camp.id, "tecnico_id": self.emp.id,
                        "date": date(2026, 6, 11), "travel_buffer_hours": 0.0})
         self.assertFalse(v2.travel_conflict)
+
+    def test_onchange_fill_time_stop(self):
+        """time_start + planned_hours preenche time_stop."""
+        from odoo.tests.common import Form
+        with Form(self.env["afr.qualificacao.os.visita"]) as f:
+            f.os_id = self.os
+            f.tecnico_id = self.emp
+            f.date = date(2026, 6, 10)
+            f.time_start = 8.0
+            f.planned_hours = 3.0
+            self.assertEqual(f.time_stop, 11.0)
+
+    def test_onchange_time_stop_grows_hours(self):
+        """Alongar time_stop aumenta planned_hours (grow-only)."""
+        from odoo.tests.common import Form
+        with Form(self.env["afr.qualificacao.os.visita"]) as f:
+            f.os_id = self.os
+            f.tecnico_id = self.emp
+            f.date = date(2026, 6, 10)
+            f.time_start = 8.0
+            f.planned_hours = 2.0   # time_stop -> 10.0
+            f.time_stop = 13.0      # +3h além do previsto
+            self.assertEqual(f.planned_hours, 5.0)
+
+    def test_onchange_time_stop_shrink_keeps_hours(self):
+        """Encurtar time_stop NÃO reduz planned_hours (grow-only)."""
+        from odoo.tests.common import Form
+        with Form(self.env["afr.qualificacao.os.visita"]) as f:
+            f.os_id = self.os
+            f.tecnico_id = self.emp
+            f.date = date(2026, 6, 10)
+            f.time_start = 8.0
+            f.planned_hours = 5.0   # time_stop -> 13.0
+            f.time_stop = 10.0      # encurta
+            self.assertEqual(f.planned_hours, 5.0)

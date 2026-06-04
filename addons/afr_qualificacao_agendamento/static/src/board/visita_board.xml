@@ -58,11 +58,13 @@
                                     </div>
                                     <!-- Linha 2: partner -->
                                     <span class="o_vb_bar_partner" t-esc="v.partner_name"/>
-                                    <!-- Linha 3: equipamentos + instrumentos -->
-                                    <div t-if="v.equipment_names || v.instrument_names" class="o_vb_bar_resources">
-                                        <t t-if="v.equipment_names">&#128295; <t t-esc="v.equipment_names"/></t>
-                                        <t t-if="v.equipment_names &amp;&amp; v.instrument_names"> · </t>
-                                        <t t-if="v.instrument_names">&#128208; <t t-esc="v.instrument_names"/></t>
+                                    <!-- Linha 3: equipamentos + instrumentos (um por linha) -->
+                                    <div t-if="(v.equipment_list &amp;&amp; v.equipment_list.length) || (v.instrument_list &amp;&amp; v.instrument_list.length)"
+                                         class="o_vb_bar_resources">
+                                        <div t-foreach="v.equipment_list" t-as="eq" t-key="'eq' + eq_index"
+                                             class="o_vb_bar_res_line">&#128295; <t t-esc="eq"/></div>
+                                        <div t-foreach="v.instrument_list" t-as="ins" t-key="'ins' + ins_index"
+                                             class="o_vb_bar_res_line">&#128208; <t t-esc="ins"/></div>
                                     </div>
                                     <!-- Linha 4: mensagem de conflito -->
                                     <div t-if="v.conflict &amp;&amp; v.conflict_msg" class="o_vb_bar_conflict_msg">

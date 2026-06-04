@@ -215,6 +215,32 @@ class AfrQualificacaoOsVisita(models.Model):
                     ) % (", ".join(expired.mapped("display_name")),
                          fields.Date.to_string(r.date))
 
+    @api.onchange("time_start", "planned_hours")
+    def _onchange_fill_time_stop(self):
+        """Hora fim = hora início + horas previstas (auto)."""
+        for r in self:
+            if r.planned_hours:
+                r.time_stop = r.time_start + r.planned_hours
+
+    @api.onchange("time_stop")
+    def _onchange_time_stop_hours(self):
+        """Ao alongar a hora fim, aumenta as horas previstas e avisa o usuário.
+        Grow-only por desenho: encurtar a hora fim não reduz as horas previstas."""
+        self.ensure_one()
+        new_hours = self.time_stop - self.time_start
+        if new_hours <= 0:
+            return
+        if new_hours > self.planned_hours:
+            old = self.planned_hours
+            self.planned_hours = new_hours
+            return {"warning": {
+                "title": _("Horas previstas atualizadas"),
+                "message": _(
+                    "A hora fim ampliou as horas previstas de %.2f h "
+                    "para %.2f h."
+                ) % (old, new_hours),
+            }}
+
     def action_pull_instruments_from_plan(self):
         """Pré-preenche instrument_ids a partir do plano de recursos (F10) da OS,
         pelas linhas cujos equipamentos batem com os da visita."""
@@ -251,11 +277,15 @@ class AfrQualificacaoOsVisita(models.Model):
                 "planned_hours": v.planned_hours,
                 "state": v.state,
                 "equipment_names": ", ".join(v.equipment_ids.mapped("name")),
+                "equipment_list": v.equipment_ids.mapped("name"),
                 "instrument_names": ", ".join(
                     filter(None, v.instrument_ids.mapped(
                         lambda i: i.tag or i.id_number or i.name
                     ))
                 ),
+                "instrument_list": list(filter(None, v.instrument_ids.mapped(
+                    lambda i: i.tag or i.id_number or i.name
+                ))),
                 "conflict": bool(
                     v.tecnico_conflict or v.travel_conflict
                     or v.instrument_conflict or v.calibration_conflict

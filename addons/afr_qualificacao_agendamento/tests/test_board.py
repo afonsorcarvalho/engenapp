@@ -35,7 +35,9 @@ class TestBoard(TransactionCase):
         self.assertEqual(len(data["visitas"]), 2)
         keys = ("id", "tecnico_id", "date", "os_id", "os_name",
                 "partner_name", "planned_hours", "state",
-                "equipment_names", "instrument_names", "conflict", "conflict_msg")
+                "equipment_names", "equipment_list",
+                "instrument_names", "instrument_list",
+                "conflict", "conflict_msg")
         for k in keys:
             self.assertIn(k, data["visitas"][0])
 

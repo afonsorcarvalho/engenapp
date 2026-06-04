@@ -67,7 +67,8 @@
                     </group>
                     <notebook>
                         <page string="Equipamentos">
-                            <field name="equipment_ids">
+                            <field name="equipment_ids"
+                                   domain="[('client_id', '=', partner_id)]">
                                 <tree editable="bottom">
                                     <field name="name"/>
                                 </tree>
