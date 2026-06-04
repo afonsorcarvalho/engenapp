@@ -24,12 +24,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr t-if="!state.technicians.length">
+                        <tr t-if="!displayTechnicians.length">
                             <td t-att-colspan="days.length + 1" class="o_vb_empty">
                                 Sem visitas no intervalo.
                             </td>
                         </tr>
-                        <tr t-foreach="state.technicians" t-as="tec" t-key="tec.id">
+                        <tr t-foreach="displayTechnicians" t-as="tec" t-key="tec.id">
                             <td class="o_vb_tec"><t t-esc="tec.name"/></td>
                             <td t-foreach="days" t-as="day" t-key="day"
                                 t-att-class="'o_vb_cell' + (day === todayDate ? ' o_vb_today_cell' : '')"
@@ -69,7 +69,46 @@
                                         &#9888; <t t-esc="v.conflict_msg"/>
                                     </div>
                                 </div>
+                                <!-- Botão "+" para adicionar visita (visível on-hover) -->
+                                <div class="o_vb_add_visita">
+                                    <button class="o_vb_add_btn"
+                                            t-on-click="(ev) => this.onAddVisitaClick(ev, tec.id, day)">+</button>
+                                    <div t-if="state.openDropdown === ('os:' + tec.id + ':' + day)"
+                                         class="o_vb_dropdown"
+                                         t-att-style="dropdownStyle"
+                                         t-on-click="(ev) => this.stopDropdownClick(ev)">
+                                        <div t-foreach="state.osOptions" t-as="os" t-key="os.id"
+                                             class="o_vb_dropdown_item"
+                                             t-on-click="() => this.addVisita(os.id, tec.id, day)">
+                                            <t t-esc="os.name"/>
+                                        </div>
+                                        <div t-if="!state.osOptions.length" class="o_vb_dropdown_empty">
+                                            Sem OS ativas.
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
+                        </tr>
+                        <!-- Linha-rodapé: adicionar técnico -->
+                        <tr class="o_vb_footer_row">
+                            <td class="o_vb_tec o_vb_add_tec_cell">
+                                <button class="o_vb_add_btn"
+                                        t-on-click="(ev) => this.onAddTecnicoClick(ev)">＋ Técnico</button>
+                                <div t-if="state.openDropdown === 'tecnico'"
+                                     class="o_vb_dropdown"
+                                     t-att-style="dropdownStyle"
+                                     t-on-click="(ev) => this.stopDropdownClick(ev)">
+                                    <div t-foreach="state.tecnicoOptions" t-as="tec" t-key="tec.id"
+                                         class="o_vb_dropdown_item"
+                                         t-on-click="() => this.addTecnico(tec)">
+                                        <t t-esc="tec.name"/>
+                                    </div>
+                                    <div t-if="!state.tecnicoOptions.length" class="o_vb_dropdown_empty">
+                                        Nenhum empregado marcado como técnico.
+                                    </div>
+                                </div>
+                            </td>
+                            <td t-att-colspan="days.length"></td>
                         </tr>
                     </tbody>
                 </table>

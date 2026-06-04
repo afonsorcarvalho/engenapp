@@ -43,6 +43,7 @@ export class VisitaBoard extends Component {
             osOptions: [],
             tecnicoOptionsLoaded: false,
             osOptionsLoaded: false,
+            dropdownPos: { top: 0, left: 0 },
         });
         useExternalListener(window, "click", () => this.closeDropdowns());
         onWillStart(() => this._fetch());
@@ -153,13 +154,29 @@ export class VisitaBoard extends Component {
     }
     onAddTecnicoClick(ev) {
         ev.stopPropagation();
+        this._captureDropdownPos(ev);
         this.openTecnicoDropdown();
     }
     onAddVisitaClick(ev, tecnicoId, day) {
         ev.stopPropagation();
+        this._captureDropdownPos(ev);
         this.openOsDropdown(tecnicoId, day);
     }
     stopDropdownClick(ev) { ev.stopPropagation(); }
+    _captureDropdownPos(ev) {
+        // posição fixed do botão clicado — escapa ao clipping dos overflows ancestrais
+        const rect = ev.currentTarget.getBoundingClientRect();
+        const width = 220; // min-width do dropdown
+        let left = rect.left;
+        if (left + width > window.innerWidth) {
+            left = Math.max(8, window.innerWidth - width - 8);
+        }
+        this.state.dropdownPos = { top: rect.bottom, left: left };
+    }
+    get dropdownStyle() {
+        const p = this.state.dropdownPos;
+        return `position:fixed;top:${p.top}px;left:${p.left}px;`;
+    }
 
     get todayDate() {
         return isoDate(new Date());
