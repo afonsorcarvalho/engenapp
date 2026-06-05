@@ -274,7 +274,7 @@ class AfrQualificacaoOsVisita(models.Model):
                 "os_id": v.os_id.id or False,
                 "os_name": v.os_id.name or "",
                 "partner_name": v.partner_id.name or "",
-                "planned_hours": v.planned_hours,
+                "planned_hours": round(v.planned_hours, 1),
                 "state": v.state,
                 "equipment_names": ", ".join(v.equipment_ids.mapped("name")),
                 "equipment_list": v.equipment_ids.mapped("name"),
