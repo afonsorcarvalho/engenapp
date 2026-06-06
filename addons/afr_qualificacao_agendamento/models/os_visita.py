@@ -247,6 +247,49 @@ class AfrQualificacaoOsVisita(models.Model):
                 ) % (old, new_hours),
             }}
 
+    overflow_next_day = fields.Boolean(
+        string="Passa do dia",
+        compute="_compute_overflow_next_day",
+        help="Hora início + horas previstas ultrapassa o fim do dia (24h). "
+             "Use 'Dividir em 2 dias' para criar a visita-continuação.",
+    )
+
+    @api.depends("time_start", "planned_hours")
+    def _compute_overflow_next_day(self):
+        for r in self:
+            r.overflow_next_day = bool(
+                r.planned_hours > 0.0
+                and (r.time_start + r.planned_hours) > 24.0
+            )
+
+    def action_split_overflow(self):
+        """Divide a visita: o que cabe até 24h fica no dia; o resto vira uma
+        visita-continuação no dia seguinte (mesmo técnico/OS/equip/instrumentos)."""
+        self.ensure_one()
+        fits = 24.0 - self.time_start
+        if self.planned_hours <= fits:
+            raise UserError(_(
+                "Esta visita cabe no dia; não há horas a transbordar."))
+        rest = self.planned_hours - fits
+        # visita atual fica com o que cabe até o fim do dia
+        self.write({"planned_hours": fits, "time_stop": 23.9833})
+        # continuação no dia seguinte, começando 00:00 com o resto
+        cont = self.copy({
+            "date": self.date + timedelta(days=1),
+            "time_start": 0.0,
+            "planned_hours": rest,
+            "time_stop": rest if rest <= 24.0 else 23.9833,
+            "travel_buffer_hours": 0.0,
+        })
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Visita-continuação"),
+            "res_model": "afr.qualificacao.os.visita",
+            "res_id": cont.id,
+            "view_mode": "form",
+            "target": "current",
+        }
+
     def action_pull_instruments_from_plan(self):
         """Pré-preenche instrument_ids a partir do plano de recursos (F10) da OS,
         pelas linhas cujos equipamentos batem com os da visita."""

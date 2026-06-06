@@ -111,6 +111,43 @@ class TestVisita(TransactionCase):
         self.os.action_schedule()
         self.assertEqual(self.os.state, "scheduled")
 
+    def test_overflow_flag(self):
+        """time_start + planned_hours > 24 → overflow_next_day."""
+        V = self.env["afr.qualificacao.os.visita"]
+        v = V.create({"os_id": self.os.id, "tecnico_id": self.emp.id,
+                      "date": date(2026, 6, 10),
+                      "time_start": 20.0, "planned_hours": 8.0})
+        self.assertTrue(v.overflow_next_day)
+        v2 = V.create({"os_id": self.os.id, "tecnico_id": self.emp.id,
+                       "date": date(2026, 6, 10),
+                       "time_start": 8.0, "planned_hours": 8.0})
+        self.assertFalse(v2.overflow_next_day)
+
+    def test_split_overflow_creates_continuation(self):
+        """Dividir: dia atual fica com o que cabe; resto vira visita no dia +1."""
+        V = self.env["afr.qualificacao.os.visita"]
+        v = V.create({"os_id": self.os.id, "tecnico_id": self.emp.id,
+                      "date": date(2026, 6, 10),
+                      "time_start": 20.0, "planned_hours": 8.0})
+        action = v.action_split_overflow()
+        # fits = 24 - 20 = 4; rest = 8 - 4 = 4
+        self.assertEqual(v.planned_hours, 4.0)
+        cont = V.browse(action["res_id"])
+        self.assertEqual(cont.date, date(2026, 6, 11))
+        self.assertEqual(cont.planned_hours, 4.0)
+        self.assertEqual(cont.time_start, 0.0)
+        self.assertEqual(cont.tecnico_id, v.tecnico_id)
+        self.assertEqual(cont.os_id, v.os_id)
+
+    def test_split_overflow_no_overflow_raises(self):
+        from odoo.exceptions import UserError
+        V = self.env["afr.qualificacao.os.visita"]
+        v = V.create({"os_id": self.os.id, "tecnico_id": self.emp.id,
+                      "date": date(2026, 6, 10),
+                      "time_start": 8.0, "planned_hours": 4.0})
+        with self.assertRaises(UserError):
+            v.action_split_overflow()
+
     def test_tecnico_conflict_same_day(self):
         """Mesmo técnico, duas visitas no mesmo dia → conflito de técnico."""
         V = self.env["afr.qualificacao.os.visita"]

@@ -49,6 +49,14 @@
                          attrs="{'invisible': [('calibration_conflict', '=', False)]}">
                         <field name="calibration_conflict_msg" nolabel="1"/>
                     </div>
+                    <div class="alert alert-info" role="alert"
+                         attrs="{'invisible': [('overflow_next_day', '=', False)]}">
+                        <field name="overflow_next_day" invisible="1"/>
+                        As horas previstas ultrapassam o fim do dia.
+                        <button name="action_split_overflow" type="object"
+                                string="Dividir em 2 dias" class="btn-link"/>
+                        cria a visita-continuação no dia seguinte com as horas restantes.
+                    </div>
                     <group>
                         <group>
                             <field name="os_id"/>
