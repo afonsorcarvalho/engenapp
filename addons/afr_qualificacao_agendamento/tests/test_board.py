@@ -63,6 +63,20 @@ class TestBoard(TransactionCase):
         self.assertEqual(v.date, date(2026, 6, 12))
         self.assertEqual(v.tecnico_id, self.t2)
 
+    def test_board_delete_visita(self):
+        os1 = self._make_os()
+        v = self._make_visita(os1, date(2026, 6, 10), self.t1)
+        self.Visita.board_delete_visita(v.id)
+        self.assertFalse(v.exists())
+
+    def test_board_set_hours(self):
+        os1 = self._make_os()
+        v = self._make_visita(os1, date(2026, 6, 10), self.t1)
+        self.Visita.board_set_hours(v.id, 8.0, 12.0)
+        self.assertEqual(v.time_start, 8.0)
+        self.assertEqual(v.time_stop, 12.0)
+        self.assertEqual(v.planned_hours, 4.0)  # fim - início
+
     def test_board_reschedule_done_blocked(self):
         os1 = self._make_os()
         v = self._make_visita(os1, date(2026, 6, 10), self.t1)

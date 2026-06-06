@@ -303,6 +303,23 @@ class AfrQualificacaoOsVisita(models.Model):
         self.browse(visita_id)._split_overflow()
         return True
 
+    @api.model
+    def board_delete_visita(self, visita_id):
+        """Lixeira do board: apaga a visita."""
+        self.browse(visita_id).unlink()
+        return True
+
+    @api.model
+    def board_set_hours(self, visita_id, time_start, time_stop):
+        """Edição inline do horário no card do board. Grava início/fim e
+        recalcula horas previstas = fim - início (quando válido)."""
+        visita = self.browse(visita_id)
+        vals = {"time_start": time_start, "time_stop": time_stop}
+        if time_stop > time_start:
+            vals["planned_hours"] = time_stop - time_start
+        visita.write(vals)
+        return True
+
     def action_pull_instruments_from_plan(self):
         """Pré-preenche instrument_ids a partir do plano de recursos (F10) da OS,
         pelas linhas cujos equipamentos batem com os da visita."""
@@ -339,8 +356,14 @@ class AfrQualificacaoOsVisita(models.Model):
                 "planned_hours": round(v.planned_hours, 1),
                 "state": v.state,
                 "overflow": v.overflow_next_day,
-                "equipment_names": ", ".join(v.equipment_ids.mapped("name")),
-                "equipment_list": v.equipment_ids.mapped("name"),
+                "time_start": v.time_start,
+                "time_stop": v.time_stop,
+                "equipment_names": ", ".join(filter(None, v.equipment_ids.mapped(
+                    lambda e: e.apelido or e.tag or e.name
+                ))),
+                "equipment_list": list(filter(None, v.equipment_ids.mapped(
+                    lambda e: e.apelido or e.tag or e.name
+                ))),
                 "instrument_names": ", ".join(
                     filter(None, v.instrument_ids.mapped(
                         lambda i: i.tag or i.id_number or i.name

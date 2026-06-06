@@ -2,6 +2,7 @@
 import { Component, useState, onWillStart, useExternalListener } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 
 function isoDate(d) {
     const y = d.getFullYear();
@@ -29,6 +30,7 @@ export class VisitaBoard extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
+        this.dialog = useService("dialog");
         const monday = startOfWeek(new Date());
         const sunday = new Date(monday);
         sunday.setDate(monday.getDate() + 6);
@@ -44,6 +46,7 @@ export class VisitaBoard extends Component {
             tecnicoOptionsLoaded: false,
             osOptionsLoaded: false,
             dropdownPos: { top: 0, left: 0 },
+            osFilter: "",
         });
         useExternalListener(window, "click", () => this.closeDropdowns());
         onWillStart(() => this._fetch());
@@ -147,9 +150,17 @@ export class VisitaBoard extends Component {
                 "afr.qualificacao.os.visita", "board_os_options", []);
             this.state.osOptionsLoaded = true;
         }
+        this.state.osFilter = "";
         const key = `os:${tecnicoId}:${day}`;
         this.state.openDropdown = this.state.openDropdown === key ? null : key;
     }
+    get filteredOsOptions() {
+        const q = (this.state.osFilter || "").trim().toLowerCase();
+        if (!q) { return this.state.osOptions; }
+        return this.state.osOptions.filter(
+            (o) => (o.name || "").toLowerCase().includes(q));
+    }
+    onOsFilterInput(ev) { this.state.osFilter = ev.target.value; }
     async addVisita(osId, tecnicoId, day) {
         this.state.openDropdown = null;
         await this.orm.call("afr.qualificacao.os.visita", "board_create_visita",
@@ -162,6 +173,44 @@ export class VisitaBoard extends Component {
             "board_split_overflow", [visitaId]);
         await this._fetch();
     }
+    onDeleteVisita(ev, visitaId) {
+        ev.stopPropagation();
+        this.dialog.add(ConfirmationDialog, {
+            title: "Apagar visita",
+            body: "Tem certeza que deseja apagar esta visita?",
+            confirmLabel: "Apagar",
+            cancelLabel: "Cancelar",
+            confirm: async () => {
+                await this.orm.call("afr.qualificacao.os.visita",
+                    "board_delete_visita", [visitaId]);
+                await this._fetch();
+            },
+            cancel: () => {},
+        });
+    }
+    hhmm(f) {
+        // float horas → "HH:MM"
+        const h = Math.floor(f || 0);
+        let m = Math.round(((f || 0) - h) * 60);
+        let hh = h;
+        if (m === 60) { m = 0; hh = h + 1; }
+        return String(hh).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+    }
+    _toFloat(s) {
+        // "HH:MM" → float horas
+        const [h, m] = (s || "0:0").split(":").map(Number);
+        return (h || 0) + (m || 0) / 60;
+    }
+    async onSetHour(ev, visitaId, which, currentStart, currentStop) {
+        ev.stopPropagation();
+        const val = this._toFloat(ev.target.value);
+        const start = which === "start" ? val : currentStart;
+        const stop = which === "stop" ? val : currentStop;
+        await this.orm.call("afr.qualificacao.os.visita",
+            "board_set_hours", [visitaId, start, stop]);
+        await this._fetch();
+    }
+    stopBar(ev) { ev.stopPropagation(); }
     closeDropdowns() {
         if (this.state.openDropdown !== null) {
             this.state.openDropdown = null;
