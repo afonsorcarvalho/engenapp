@@ -135,9 +135,27 @@ class TestVisita(TransactionCase):
         cont = V.browse(action["res_id"])
         self.assertEqual(cont.date, date(2026, 6, 11))
         self.assertEqual(cont.planned_hours, 4.0)
-        self.assertEqual(cont.time_start, 0.0)
+        # continuação mantém o MESMO horário de início da origem
+        self.assertEqual(cont.time_start, 20.0)
         self.assertEqual(cont.tecnico_id, v.tecnico_id)
         self.assertEqual(cont.os_id, v.os_id)
+
+    def test_board_split_overflow_reapplies(self):
+        """board_split_overflow divide; a continuação que ainda transborda
+        mantém overflow=True (botão reaparece)."""
+        V = self.env["afr.qualificacao.os.visita"]
+        v = V.create({"os_id": self.os.id, "tecnico_id": self.emp.id,
+                      "date": date(2026, 6, 10),
+                      "time_start": 8.0, "planned_hours": 40.0})
+        # fits = 16; rest = 24 → continuação 8h + 24h = 32 > 24 → ainda transborda
+        V.board_split_overflow(v.id)
+        self.assertEqual(v.planned_hours, 16.0)
+        cont = V.search([("os_id", "=", self.os.id),
+                         ("date", "=", date(2026, 6, 11))], limit=1)
+        self.assertTrue(cont)
+        self.assertEqual(cont.time_start, 8.0)
+        self.assertEqual(cont.planned_hours, 24.0)
+        self.assertTrue(cont.overflow_next_day)
 
     def test_split_overflow_no_overflow_raises(self):
         from odoo.exceptions import UserError

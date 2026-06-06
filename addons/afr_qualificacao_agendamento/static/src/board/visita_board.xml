@@ -55,6 +55,9 @@
                                         <span t-if="v.planned_hours" class="o_vb_hours">
                                             <t t-esc="v.planned_hours"/>h
                                         </span>
+                                        <button t-if="v.overflow" class="o_vb_split_btn"
+                                                title="Passa do dia — dividir: criar visita-continuação no dia seguinte com o resto das horas"
+                                                t-on-click="(ev) => this.onSplitOverflow(ev, v.id)">+</button>
                                     </div>
                                     <!-- Linha 2: partner -->
                                     <span class="o_vb_bar_partner" t-esc="v.partner_name"/>

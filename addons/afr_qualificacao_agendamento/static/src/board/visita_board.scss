@@ -78,6 +78,21 @@
             white-space: nowrap;
             flex-shrink: 0;
         }
+        .o_vb_split_btn {
+            flex-shrink: 0;
+            border: none;
+            background: rgba(255, 255, 255, 0.35);
+            color: #fff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            line-height: 1;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            &:hover { background: rgba(255, 255, 255, 0.6); color: #1e293b; }
+        }
         .o_vb_done_badge {
             background: rgba(255, 255, 255, 0.25);
             border-radius: 10px;

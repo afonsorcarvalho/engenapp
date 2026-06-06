@@ -156,6 +156,12 @@ export class VisitaBoard extends Component {
             [osId, tecnicoId, day]);
         await this._fetch();
     }
+    async onSplitOverflow(ev, visitaId) {
+        ev.stopPropagation();
+        await this.orm.call("afr.qualificacao.os.visita",
+            "board_split_overflow", [visitaId]);
+        await this._fetch();
+    }
     closeDropdowns() {
         if (this.state.openDropdown !== null) {
             this.state.openDropdown = null;

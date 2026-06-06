@@ -262,9 +262,11 @@ class AfrQualificacaoOsVisita(models.Model):
                 and (r.time_start + r.planned_hours) > 24.0
             )
 
-    def action_split_overflow(self):
+    def _split_overflow(self):
         """Divide a visita: o que cabe até 24h fica no dia; o resto vira uma
-        visita-continuação no dia seguinte (mesmo técnico/OS/equip/instrumentos)."""
+        visita-continuação no dia seguinte com o MESMO horário de início
+        (mesmo técnico/OS/equip/instrumentos). Retorna a continuação.
+        Se a continuação ainda transbordar, ela própria mostra o botão."""
         self.ensure_one()
         fits = 24.0 - self.time_start
         if self.planned_hours <= fits:
@@ -273,14 +275,19 @@ class AfrQualificacaoOsVisita(models.Model):
         rest = self.planned_hours - fits
         # visita atual fica com o que cabe até o fim do dia
         self.write({"planned_hours": fits, "time_stop": 23.9833})
-        # continuação no dia seguinte, começando 00:00 com o resto
-        cont = self.copy({
+        # continuação no dia seguinte, MESMO horário de início, com o resto
+        cont_stop = self.time_start + rest
+        return self.copy({
             "date": self.date + timedelta(days=1),
-            "time_start": 0.0,
+            "time_start": self.time_start,
             "planned_hours": rest,
-            "time_stop": rest if rest <= 24.0 else 23.9833,
+            "time_stop": cont_stop if cont_stop <= 24.0 else 23.9833,
             "travel_buffer_hours": 0.0,
         })
+
+    def action_split_overflow(self):
+        """Botão do form: divide e abre a visita-continuação."""
+        cont = self._split_overflow()
         return {
             "type": "ir.actions.act_window",
             "name": _("Visita-continuação"),
@@ -289,6 +296,12 @@ class AfrQualificacaoOsVisita(models.Model):
             "view_mode": "form",
             "target": "current",
         }
+
+    @api.model
+    def board_split_overflow(self, visita_id):
+        """Botão '+' do board: divide a visita (sem abrir form)."""
+        self.browse(visita_id)._split_overflow()
+        return True
 
     def action_pull_instruments_from_plan(self):
         """Pré-preenche instrument_ids a partir do plano de recursos (F10) da OS,
@@ -325,6 +338,7 @@ class AfrQualificacaoOsVisita(models.Model):
                 "partner_name": v.partner_id.name or "",
                 "planned_hours": round(v.planned_hours, 1),
                 "state": v.state,
+                "overflow": v.overflow_next_day,
                 "equipment_names": ", ".join(v.equipment_ids.mapped("name")),
                 "equipment_list": v.equipment_ids.mapped("name"),
                 "instrument_names": ", ".join(
