@@ -54,6 +54,12 @@ class AfrQualificacaoOsVisita(models.Model):
         string="Equipamentos",
         help="Equipamentos trabalhados nesta visita.",
     )
+    os_equipment_ids = fields.Many2many(
+        "engc.equipment",
+        related="os_id.equipment_ids",
+        string="Equipamentos da OS",
+        help="Equipamentos elencados na OS (domínio do seletor de equipamentos).",
+    )
     planned_hours = fields.Float(
         string="Horas previstas",
         help="Horas de trabalho previstas no dia (≤ jornada do equipamento).",
