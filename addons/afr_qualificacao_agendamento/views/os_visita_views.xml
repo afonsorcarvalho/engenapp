@@ -161,9 +161,14 @@
         <field name="search_view_id" ref="view_os_visita_search"/>
     </record>
 
+    <menuitem id="menu_agendamento"
+              name="Agendamento"
+              parent="afr_qualificacao.menu_afr_qualificacao_root"
+              sequence="7"/>
+
     <menuitem id="menu_os_visita"
               name="Agenda de Visitas"
               action="action_os_visita"
-              parent="afr_qualificacao.menu_afr_qualificacao_root"
-              sequence="7"/>
+              parent="menu_agendamento"
+              sequence="1"/>
 </odoo>

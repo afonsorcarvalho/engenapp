@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="action_visita_board" model="ir.actions.client">
-        <field name="name">Quadro de Agenda</field>
+        <field name="name">Programar Agenda</field>
         <field name="tag">afr_qualif_visita_board</field>
     </record>
 
     <menuitem id="menu_visita_board"
-              name="Quadro de Agenda"
-              parent="afr_qualificacao.menu_afr_qualificacao_root"
+              name="Programar Agenda"
+              parent="afr_qualificacao_agendamento.menu_agendamento"
               action="action_visita_board"
-              sequence="8"/>
+              sequence="2"/>
 </odoo>
