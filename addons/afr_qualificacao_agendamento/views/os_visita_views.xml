@@ -78,8 +78,8 @@
                         <page string="Equipamentos">
                             <field name="equipment_ids"
                                    domain="[('id', 'in', os_equipment_ids)]"
-                                   options="{'no_create': True}">
-                                <tree>
+                                   options="{'no_create': True, 'no_quick_create': True, 'no_create_edit': True}">
+                                <tree create="false" edit="false">
                                     <field name="name"/>
                                 </tree>
                             </field>
@@ -87,8 +87,9 @@
                         <page string="Instrumentos">
                             <button name="action_pull_instruments_from_plan" type="object"
                                     string="Puxar do plano F10" class="btn-link"/>
-                            <field name="instrument_ids" options="{'no_create': True}">
-                                <tree>
+                            <field name="instrument_ids"
+                                   options="{'no_create': True, 'no_quick_create': True, 'no_create_edit': True}">
+                                <tree create="false" edit="false">
                                     <field name="tag"/>
                                     <field name="id_number"/>
                                     <field name="name"/>
