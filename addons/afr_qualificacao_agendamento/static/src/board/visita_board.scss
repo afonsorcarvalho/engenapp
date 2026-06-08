@@ -142,6 +142,17 @@
             color: #fecaca;
             margin-top: 1px;
         }
+        .o_vb_bar_note {
+            opacity: .8;
+            font-size: 10px;
+            font-style: italic;
+            margin-top: 1px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            .fa-sticky-note-o { color: #ffe08a; }
+        }
         .o_vb_bar_resources {
             opacity: .7;
             font-size: 10px;

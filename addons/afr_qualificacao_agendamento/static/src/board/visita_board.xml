@@ -83,6 +83,10 @@
                                             <div t-foreach="v.instrument_list" t-as="ins" t-key="'ins' + ins_index"
                                                  class="o_vb_bar_res_line"><i class="fa fa-tachometer"/> <t t-esc="ins"/></div>
                                         </div>
+                                        <!-- observações da visita -->
+                                        <div t-if="v.note" class="o_vb_bar_note" t-att-title="v.note">
+                                            <i class="fa fa-sticky-note-o"/> <t t-esc="v.note"/>
+                                        </div>
                                         <!-- mensagem de conflito -->
                                         <div t-if="v.conflict &amp;&amp; v.conflict_msg" class="o_vb_bar_conflict_msg">
                                             <i class="fa fa-exclamation-triangle"/> <t t-esc="v.conflict_msg"/>

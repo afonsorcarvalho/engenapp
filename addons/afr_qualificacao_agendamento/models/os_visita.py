@@ -377,6 +377,7 @@ class AfrQualificacaoOsVisita(models.Model):
                     or v.instrument_conflict or v.calibration_conflict
                 ),
                 "conflict_msg": " | ".join(msgs),
+                "note": v.note or "",
             })
         technicians = [
             {"id": tid, "name": name}
