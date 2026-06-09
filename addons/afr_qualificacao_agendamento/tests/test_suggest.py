@@ -2,6 +2,7 @@
 from datetime import date, timedelta
 from unittest.mock import patch
 
+from odoo import fields
 from odoo.exceptions import UserError
 from odoo.tests.common import TransactionCase, tagged
 
@@ -39,6 +40,14 @@ class TestSuggest(TransactionCase):
         self.equip_a = self._make_equipment("São Paulo")
         self.os = self.env["afr.qualificacao.os"].create({"name": "OS-SUG-1"})
         self.os.sale_order_id = self.so.id
+        # Datas de início relativas a hoje (futuras) — regra de "não programar
+        # no passado" (a visita 'done' do test de re-run fica em data fixa
+        # passada de propósito: visita realizada é isenta da trava).
+        base = fields.Date.context_today(
+            self.env["afr.qualificacao.os.visita"]) + timedelta(days=30)
+        self.d0 = base                       # antigo 2026-06-10
+        self.d1 = base + timedelta(days=1)    # antigo 2026-06-11
+        self.d2 = base + timedelta(days=2)    # antigo 2026-06-12
 
     def _rows(self, *triples):
         # triples: (equipment, hours, jornada)
@@ -53,12 +62,12 @@ class TestSuggest(TransactionCase):
         self._attach_qualif(self.os, self.equip_a)
         rows = self._rows((self.equip_a, 20.0, 8.0))
         with patch.object(type(self.so), "_qualif_schedule_rows", return_value=rows):
-            self.os._suggest_visitas(self.emp, date(2026, 6, 10))
+            self.os._suggest_visitas(self.emp, self.d0)
         vis = self.os.visita_ids.sorted("sequence")
         self.assertEqual(len(vis), 3)
         self.assertEqual(vis.mapped("planned_hours"), [8.0, 8.0, 4.0])
         self.assertEqual(vis.mapped("date"),
-                         [date(2026, 6, 10), date(2026, 6, 11), date(2026, 6, 12)])
+                         [self.d0, self.d1, self.d2])
         self.assertTrue(all(v.tecnico_id == self.emp for v in vis))
         self.assertTrue(all(v.equipment_ids == self.equip_a for v in vis))
 
@@ -67,7 +76,7 @@ class TestSuggest(TransactionCase):
         self._attach_qualif(self.os, self.equip_a)
         rows = self._rows((self.equip_a, 16.0, 8.0))
         with patch.object(type(self.so), "_qualif_schedule_rows", return_value=rows):
-            self.os._suggest_visitas(self.emp, date(2026, 6, 10))
+            self.os._suggest_visitas(self.emp, self.d0)
         vis = self.os.visita_ids.sorted("sequence")
         self.assertEqual(len(vis), 2)
         self.assertEqual(vis.mapped("planned_hours"), [8.0, 8.0])
@@ -79,7 +88,7 @@ class TestSuggest(TransactionCase):
         self._attach_qualif(self.os, equip_b, parallel_group="A")
         rows = self._rows((self.equip_a, 16.0, 8.0), (equip_b, 8.0, 8.0))
         with patch.object(type(self.so), "_qualif_schedule_rows", return_value=rows):
-            self.os._suggest_visitas(self.emp, date(2026, 6, 10))
+            self.os._suggest_visitas(self.emp, self.d0)
         vis = self.os.visita_ids.sorted("sequence")
         self.assertEqual(len(vis), 2)  # block_days = max(2, 1) = 2
         for v in vis:
@@ -92,12 +101,12 @@ class TestSuggest(TransactionCase):
         self._attach_qualif(self.os, equip_b)
         rows = self._rows((self.equip_a, 8.0, 8.0), (equip_b, 8.0, 8.0))
         with patch.object(type(self.so), "_qualif_schedule_rows", return_value=rows):
-            self.os._suggest_visitas(self.emp, date(2026, 6, 10))
+            self.os._suggest_visitas(self.emp, self.d0)
         vis = self.os.visita_ids.sorted("sequence")
         self.assertEqual(len(vis), 2)
-        self.assertEqual(vis[0].date, date(2026, 6, 10))
+        self.assertEqual(vis[0].date, self.d0)
         self.assertEqual(vis[0].equipment_ids, self.equip_a)
-        self.assertEqual(vis[1].date, date(2026, 6, 11))
+        self.assertEqual(vis[1].date, self.d1)
         self.assertEqual(vis[1].equipment_ids, equip_b)
 
     def test_rerun_replaces_planned_preserves_done(self):
@@ -109,8 +118,8 @@ class TestSuggest(TransactionCase):
         })
         rows = self._rows((self.equip_a, 8.0, 8.0))
         with patch.object(type(self.so), "_qualif_schedule_rows", return_value=rows):
-            self.os._suggest_visitas(self.emp, date(2026, 6, 10))
-            self.os._suggest_visitas(self.emp, date(2026, 6, 10))  # 2x
+            self.os._suggest_visitas(self.emp, self.d0)
+            self.os._suggest_visitas(self.emp, self.d0)  # 2x
         self.assertTrue(done.exists())
         planned = self.os.visita_ids.filtered(lambda v: v.state == "planned")
         self.assertEqual(len(planned), 1)  # não duplicou
@@ -118,7 +127,7 @@ class TestSuggest(TransactionCase):
     def test_no_sale_order_raises(self):
         os2 = self.env["afr.qualificacao.os"].create({"name": "OS-SUG-NOSO"})
         with self.assertRaises(UserError):
-            os2._suggest_visitas(self.emp, date(2026, 6, 10))
+            os2._suggest_visitas(self.emp, self.d0)
 
     def test_wizard_action_generate(self):
         """O wizard gera as visitas via _suggest_visitas."""
@@ -126,7 +135,7 @@ class TestSuggest(TransactionCase):
         rows = self._rows((self.equip_a, 8.0, 8.0))
         wiz = self.env["afr.qualificacao.os.suggest.wizard"].create({
             "os_id": self.os.id, "tecnico_id": self.emp.id,
-            "date_start": date(2026, 6, 10),
+            "date_start": self.d0,
         })
         with patch.object(type(self.so), "_qualif_schedule_rows", return_value=rows):
             action = wiz.action_generate()

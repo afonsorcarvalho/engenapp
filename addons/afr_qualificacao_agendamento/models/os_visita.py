@@ -10,7 +10,7 @@ from datetime import datetime, time, timedelta
 from pytz import timezone, utc
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 
 class AfrQualificacaoOsVisita(models.Model):
@@ -319,6 +319,77 @@ class AfrQualificacaoOsVisita(models.Model):
             vals["planned_hours"] = time_stop - time_start
         visita.write(vals)
         return True
+
+    # ───────── Travas ─────────
+    # Campos de agendamento: editá-los altera a programação da visita.
+    _SCHEDULE_FIELDS = frozenset({
+        "date", "time_start", "time_stop", "planned_hours",
+        "tecnico_id", "os_id", "equipment_ids", "instrument_ids",
+    })
+    # OS travada quando a qualificação já saiu do planejamento.
+    _OS_UNLOCKED_STATES = ("draft", "scheduled")
+
+    def _os_lock_error(self):
+        self.ensure_one()
+        label = dict(
+            self.os_id._fields["state"].selection
+        ).get(self.os_id.state, self.os_id.state)
+        return _(
+            "A qualificação %s está em execução (%s); a visita não pode ser "
+            "modificada."
+        ) % (self.os_id.name or "", label)
+
+    def write(self, vals):
+        if self._SCHEDULE_FIELDS & set(vals):
+            for r in self:
+                if r.os_id.state not in self._OS_UNLOCKED_STATES:
+                    raise UserError(r._os_lock_error())
+        return super().write(vals)
+
+    def unlink(self):
+        for r in self:
+            if r.os_id.state not in self._OS_UNLOCKED_STATES:
+                raise UserError(r._os_lock_error())
+        return super().unlink()
+
+    @api.constrains("equipment_ids", "date_start", "date_stop")
+    def _check_equipment_overlap(self):
+        """Bloqueia agendar o MESMO equipamento em horários sobrepostos —
+        um equipamento não pode estar em duas visitas ao mesmo tempo."""
+        for r in self:
+            if not r.equipment_ids or not r.date_start or not r.date_stop:
+                continue
+            clash = self.search([
+                ("id", "!=", r.id),
+                ("equipment_ids", "in", r.equipment_ids.ids),
+                ("date_start", "<", r.date_stop),
+                ("date_stop", ">", r.date_start),
+            ], limit=1)
+            if clash:
+                shared = clash.equipment_ids & r.equipment_ids
+                raise ValidationError(_(
+                    "Equipamento(s) %s já agendado(s) em horário sobreposto na "
+                    "visita %s (OS %s). Um equipamento não pode estar em duas "
+                    "visitas ao mesmo tempo."
+                ) % (
+                    ", ".join(shared.mapped("display_name")),
+                    clash.name or clash.id,
+                    clash.os_id.name or _("(sem OS)"),
+                ))
+
+    @api.constrains("date", "state")
+    def _check_date_not_past(self):
+        today = fields.Date.context_today(self)
+        for r in self:
+            # Visita realizada (done) é registro de fato passado — legítimo.
+            # A trava vale só para programar/replanejar visitas futuras.
+            if r.state == "done":
+                continue
+            if r.date and r.date < today:
+                raise ValidationError(_(
+                    "Não é possível programar uma visita para uma data passada "
+                    "(%s)."
+                ) % fields.Date.to_string(r.date))
 
     def action_pull_instruments_from_plan(self):
         """Pré-preenche instrument_ids a partir do plano de recursos (F10) da OS,

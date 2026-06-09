@@ -30,7 +30,12 @@
                             </td>
                         </tr>
                         <tr t-foreach="displayTechnicians" t-as="tec" t-key="tec.id">
-                            <td class="o_vb_tec"><t t-esc="tec.name"/></td>
+                            <td class="o_vb_tec">
+                                <img class="o_vb_tec_avatar"
+                                     t-att-src="'/web/image/hr.employee/' + tec.id + '/avatar_128'"
+                                     t-att-alt="tec.name" t-att-title="tec.name"/>
+                                <span class="o_vb_tec_name" t-esc="tec.name"/>
+                            </td>
                             <td t-foreach="days" t-as="day" t-key="day"
                                 t-att-class="'o_vb_cell' + (day === todayDate ? ' o_vb_today_cell' : '')"
                                 t-on-dragover="onDragOver"
