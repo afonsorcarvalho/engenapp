@@ -61,7 +61,7 @@
                                             <span t-if="v.planned_hours" class="o_vb_hours">
                                                 <t t-esc="v.planned_hours"/>h
                                             </span>
-                                            <button class="o_vb_trash_btn" title="Apagar visita"
+                                            <button t-if="v.state !== 'done'" class="o_vb_trash_btn" title="Apagar visita"
                                                     t-on-click="(ev) => this.onDeleteVisita(ev, v.id)"><i class="fa fa-trash-o"/></button>
                                         </div>
                                         <!-- Horário início–fim (editável) -->
@@ -69,12 +69,14 @@
                                             <input type="time" class="o_vb_time_in"
                                                    t-att-value="hhmm(v.time_start)"
                                                    draggable="false"
+                                                   t-att-disabled="v.state === 'done'"
                                                    t-on-click="(ev) => this.stopBar(ev)"
                                                    t-on-change="(ev) => this.onSetHour(ev, v.id, 'start', v.time_start, v.time_stop)"/>
                                             <span>–</span>
                                             <input type="time" class="o_vb_time_in"
                                                    t-att-value="hhmm(v.time_stop)"
                                                    draggable="false"
+                                                   t-att-disabled="v.state === 'done'"
                                                    t-on-click="(ev) => this.stopBar(ev)"
                                                    t-on-change="(ev) => this.onSetHour(ev, v.id, 'stop', v.time_start, v.time_stop)"/>
                                         </div>
@@ -98,7 +100,7 @@
                                         </div>
                                     </div>
                                     <!-- Faixa de divisão full-height quando passa do dia -->
-                                    <button t-if="v.overflow" class="o_vb_split_strip"
+                                    <button t-if="v.overflow &amp;&amp; v.state !== 'done'" class="o_vb_split_strip"
                                             title="Passa do dia — dividir: criar visita-continuação no dia seguinte com o resto das horas"
                                             t-on-click="(ev) => this.onSplitOverflow(ev, v.id)"><i class="fa fa-plus"/></button>
                                 </div>

@@ -297,16 +297,29 @@ class AfrQualificacaoOsVisita(models.Model):
             "target": "current",
         }
 
+    def _board_check_not_done(self):
+        """Visita realizada (done) é registro de fato; não se altera pelo
+        board. Mesma proteção do board_reschedule, para split/delete/horas."""
+        self.ensure_one()
+        if self.state == "done":
+            raise UserError(_(
+                "Não é possível modificar uma visita já realizada."
+            ))
+
     @api.model
     def board_split_overflow(self, visita_id):
         """Botão '+' do board: divide a visita (sem abrir form)."""
-        self.browse(visita_id)._split_overflow()
+        visita = self.browse(visita_id)
+        visita._board_check_not_done()
+        visita._split_overflow()
         return True
 
     @api.model
     def board_delete_visita(self, visita_id):
         """Lixeira do board: apaga a visita."""
-        self.browse(visita_id).unlink()
+        visita = self.browse(visita_id)
+        visita._board_check_not_done()
+        visita.unlink()
         return True
 
     @api.model
@@ -314,6 +327,7 @@ class AfrQualificacaoOsVisita(models.Model):
         """Edição inline do horário no card do board. Grava início/fim e
         recalcula horas previstas = fim - início (quando válido)."""
         visita = self.browse(visita_id)
+        visita._board_check_not_done()
         vals = {"time_start": time_start, "time_stop": time_stop}
         if time_stop > time_start:
             vals["planned_hours"] = time_stop - time_start

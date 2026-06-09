@@ -94,6 +94,29 @@ class TestBoard(TransactionCase):
         with self.assertRaises(UserError):
             self.Visita.board_reschedule(v.id, self.d12.isoformat(), self.t2.id)
 
+    def test_board_delete_done_blocked(self):
+        os1 = self._make_os()
+        v = self._make_visita(os1, self.d10, self.t1)
+        v.state = "done"
+        with self.assertRaises(UserError):
+            self.Visita.board_delete_visita(v.id)
+        self.assertTrue(v.exists())
+
+    def test_board_set_hours_done_blocked(self):
+        os1 = self._make_os()
+        v = self._make_visita(os1, self.d10, self.t1)
+        v.state = "done"
+        with self.assertRaises(UserError):
+            self.Visita.board_set_hours(v.id, 8.0, 12.0)
+
+    def test_board_split_overflow_done_blocked(self):
+        os1 = self._make_os()
+        v = self._make_visita(os1, self.d10, self.t1)
+        v.write({"time_start": 0.0, "planned_hours": 30.0})  # transborda
+        v.state = "done"
+        with self.assertRaises(UserError):
+            self.Visita.board_split_overflow(v.id)
+
     def test_board_technician_options(self):
         self.t1.is_tecnico = True
         # t2 fica False
