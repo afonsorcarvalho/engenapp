@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="labquali_homepage" name="LabQuali Homepage">
+        <t t-call="website.layout">
+            <t t-set="pageName" t-value="'labquali_homepage'"/>
+            <t t-set="no_breadcrumbs" t-value="True"/>
+
+            <!-- HERO -->
+            <section class="lq-hero">
+                <div class="container position-relative" style="z-index:1;">
+                    <div class="row">
+                        <div class="col-lg-7">
+                            <span class="lq-hero-badge">ISO 17025 - RDC 665/2022 - NR13</span>
+                            <h1>Qualificação e Calibração de<br/><span>Equipamentos</span><br/>de Esterilização</h1>
+                            <p class="lq-hero-sub">Laudos técnicos com rastreabilidade metrológica para autoclaves, estufas, câmaras de estabilidade e inspeções NR13.</p>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <a href="/contactus"
+                                   style="background:#FF6B35;color:#fff;font-weight:700;border-radius:8px;padding:14px 30px;box-shadow:0 8px 24px rgba(255,107,53,0.4);text-decoration:none;font-size:1rem;">
+                                    Solicitar Orçamento
+                                </a>
+                                <a href="#lq-services"
+                                   style="color:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:14px 28px;text-decoration:none;font-size:1rem;">
+                                    Ver Serviços
+                                </a>
+                            </div>
+                            <div class="lq-hero-stats">
+                                <div>
+                                    <div class="lq-stat-num">+500</div>
+                                    <div class="lq-stat-label">Equipamentos/ano</div>
+                                </div>
+                                <div>
+                                    <div class="lq-stat-num">15+</div>
+                                    <div class="lq-stat-label">Anos de experiência</div>
+                                </div>
+                                <div>
+                                    <div class="lq-stat-num">100%</div>
+                                    <div class="lq-stat-label">Laudos rastreáveis</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SERVICOS -->
+            <section class="lq-services" id="lq-services">
+                <div class="container">
+                    <div class="text-center mb-5">
+                        <span class="lq-section-tag">O que fazemos</span>
+                        <h2 class="lq-section-title">Nossos <span>Serviços</span></h2>
+                        <p class="text-muted mt-2" style="font-size:1rem;">Soluções completas de qualificação, calibração e inspeção para equipamentos críticos de saúde.</p>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="lq-service-card">
+                                <div class="lq-service-icon">IQ/OQ/PQ</div>
+                                <h3>Qualificação IQ/OQ/PQ</h3>
+                                <p>Qualificação de instalação, operacional e de desempenho conforme RDC 665/2022 e boas práticas de fabricação.</p>
+                                <span class="lq-service-tag">Autoclave · Estufa · Câmara</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="lq-service-card">
+                                <div class="lq-service-icon">CAL</div>
+                                <h3>Calibração de Sensores</h3>
+                                <p>Calibração de termopares, termômetros, manômetros e sensores de pressão com rastreabilidade metrológica RBC/Inmetro.</p>
+                                <span class="lq-service-tag">Temperatura · Pressão · Umidade</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="lq-service-card">
+                                <div class="lq-service-icon">NR13</div>
+                                <h3>Inspeção NR13</h3>
+                                <p>Inspeção de vasos de pressão, caldeiras e autoclaves conforme NR13 do MTE. Relatórios para fiscalização.</p>
+                                <span class="lq-service-tag">Vasos de Pressão · Caldeiras</span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="lq-service-card">
+                                <div class="lq-service-icon">MAP</div>
+                                <h3>Mapeamento Térmico</h3>
+                                <p>Mapeamento de temperatura em câmaras, estufas e geladeiras com malha de pontos e análise estatística completa.</p>
+                                <span class="lq-service-tag">Câmaras · Geladeiras · Incubadoras</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DIFERENCIAIS -->
+            <section class="lq-diff" id="lq-diff">
+                <div class="container">
+                    <div class="text-center mb-5">
+                        <span class="lq-section-tag">Por que a LabQuali</span>
+                        <h2 class="lq-section-title">Confiança técnica em <span>cada laudo</span></h2>
+                        <p class="lq-section-sub mt-2" style="font-size:1rem;">Combinamos expertise metrológica, sistemas digitais e atendimento ágil para garantir sua conformidade regulatória.</p>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="lq-diff-card">
+                                <div class="lq-diff-icon">RBC</div>
+                                <h3>Rastreabilidade Metrológica</h3>
+                                <p>Padrões calibrados em laboratórios acreditados pela RBC. Cadeia ininterrupta até o BIPM para temperatura e pressão.</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="lq-diff-card">
+                                <div class="lq-diff-icon">5D</div>
+                                <h3>Laudos em até 5 dias úteis</h3>
+                                <p>Sistema digital de geração de relatórios garante entrega ágil com assinatura eletrônica e acesso imediato.</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="lq-diff-card">
+                                <div class="lq-diff-icon">ENG</div>
+                                <h3>Equipe Especializada</h3>
+                                <p>Engenheiros e técnicos com formação em metrologia, farmácia industrial e engenharia hospitalar.</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="lq-diff-card">
+                                <div class="lq-diff-icon">WEB</div>
+                                <h3>Portal do Cliente</h3>
+                                <p>Acesse todos os seus laudos, histórico de qualificações e certificados a qualquer momento, de qualquer dispositivo.</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="lq-diff-card">
+                                <div class="lq-diff-icon">BR</div>
+                                <h3>Atendimento Nacional</h3>
+                                <p>Presença em todo o Brasil. Equipes locais nas principais capitais para atendimento presencial ágil.</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="lq-diff-card">
+                                <div class="lq-diff-icon">OK</div>
+                                <h3>Conformidade Regulatória</h3>
+                                <p>Laudos alinhados às exigências da ANVISA (RDC 665/2022), MTE (NR13) e normas ABNT aplicáveis.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- EQUIPAMENTOS -->
+            <section class="lq-equip" id="lq-equip">
+                <div class="container">
+                    <div class="text-center mb-5">
+                        <span class="lq-section-tag" style="color:#0A3D62;">Equipamentos Atendidos</span>
+                        <h2 class="lq-section-title">Expertise em equipamentos <span>críticos</span></h2>
+                        <p class="text-muted mt-2" style="font-size:1rem;">Trabalhamos com todo o parque de equipamentos de esterilização e controle de temperatura de hospitais, farmácias e indústrias.</p>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">AC</div><span>Autoclaves a Vapor</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">ES</div><span>Estufas de Esterilização</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">CE</div><span>Câmaras de Estabilidade</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">CF</div><span>Câmaras Frias</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">IN</div><span>Incubadoras</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">GF</div><span>Geladeiras Farmacêuticas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">VP</div><span>Vasos de Pressão</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">CA</div><span>Caldeiras</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">LI</div><span>Liofilizadores</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">TC</div><span>Túneis de Calor</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">LU</div><span>Lavadoras Ultrassônicas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">TS</div><span>Termômetros e Sondas</span></div></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CLIENTES -->
+            <section class="lq-clients" id="lq-clients">
+                <div class="container">
+                    <div class="text-center mb-4">
+                        <span class="lq-section-tag">Quem confia na LabQuali</span>
+                        <h2 class="lq-section-title">Clientes e <span>Parceiros</span></h2>
+                        <p class="text-muted mt-2" style="font-size:1rem;">Hospitais, farmácias, indústrias e laboratórios em todo o Brasil.</p>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-lg col-md-4 col-6"><div class="lq-client-logo">HOSPITAL A</div></div>
+                        <div class="col-lg col-md-4 col-6"><div class="lq-client-logo">FARMÁCIA B</div></div>
+                        <div class="col-lg col-md-4 col-6"><div class="lq-client-logo">LAB C</div></div>
+                        <div class="col-lg col-md-4 col-6"><div class="lq-client-logo">INDÚSTRIA D</div></div>
+                        <div class="col-lg col-md-4 col-6"><div class="lq-client-logo">HOSPITAL E</div></div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-lg col-md-4 col-6"><div class="lq-client-logo">CLÍNICA F</div></div>
+                        <div class="col-lg col-md-4 col-6"><div class="lq-client-logo">GRUPO G</div></div>
+                        <div class="col-lg col-md-4 col-6"><div class="lq-client-logo">UNIMED H</div></div>
+                        <div class="col-lg col-md-4 col-6"><div class="lq-client-logo">PHARMA I</div></div>
+                        <div class="col-lg col-md-4 col-6"><div class="lq-client-logo">SAÚDE J</div></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CTA FINAL -->
+            <section class="lq-cta" id="lq-contact">
+                <div class="container position-relative" style="z-index:1;">
+                    <h2>Pronto para estar em conformidade?</h2>
+                    <p class="mx-auto" style="max-width:540px;">Solicite um orçamento sem compromisso. Nossa equipe técnica entra em contato em até 24 horas úteis para entender suas necessidades.</p>
+                    <a href="/contactus" class="lq-cta-btn">Solicitar Orçamento Gratuito</a>
+                </div>
+            </section>
+
+        </t>
+    </template>
+</odoo>
