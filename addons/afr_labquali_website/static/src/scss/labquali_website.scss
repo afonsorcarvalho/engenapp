@@ -42,16 +42,16 @@ body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
 // ── Navbar ────────────────────────────────────────────────────────────
 .o_main_nav,
 header.o_top_fixed_element .navbar {
-    background-color: var(--lq-brand) !important;
-    border-bottom: none !important;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.25) !important;
+    background-color: #fff !important;
+    border-bottom: 2px solid var(--lq-brand) !important;
+    box-shadow: 0 2px 8px rgba(10,61,98,0.08) !important;
 
     .navbar-brand,
-    .navbar-brand:hover { color: #fff !important; font-weight: 800; font-size: 1.3rem; letter-spacing: -0.03rem; }
+    .navbar-brand:hover { color: var(--lq-brand) !important; font-weight: 800; font-size: 1.3rem; letter-spacing: -0.03rem; }
     .navbar-brand span { color: var(--lq-accent); }
 
-    .nav-link { color: rgba(255,255,255,0.75) !important; font-size: 0.875rem; font-weight: 500; }
-    .nav-link:hover, .nav-link:focus { color: #fff !important; }
+    .nav-link { color: var(--lq-brand) !important; font-size: 0.875rem; font-weight: 500; }
+    .nav-link:hover, .nav-link:focus { color: var(--lq-accent) !important; }
 
     .btn-primary,
     .o_btn_cta,
