@@ -1,0 +1,372 @@
+// addons/afr_labquali_website/static/src/scss/labquali_website.scss
+
+// ── Font Face ────────────────────────────────────────────────────────
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    src: url('/afr_labquali_layout/static/fonts/inter/Inter-Regular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 500;
+    src: url('/afr_labquali_layout/static/fonts/inter/Inter-Medium.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 700;
+    src: url('/afr_labquali_layout/static/fonts/inter/Inter-Bold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 800;
+    src: url('/afr_labquali_layout/static/fonts/inter/Inter-ExtraBold.woff2') format('woff2');
+}
+
+// ── Brand Variables ──────────────────────────────────────────────────
+:root {
+    --lq-brand:      #0A3D62;
+    --lq-brand-2:    #1E6091;
+    --lq-accent:     #FF6B35;
+    --lq-accent-2:   #D9482A;
+    --lq-gray:       #5A7184;
+    --lq-gray-light: #EEF2F5;
+    --lq-dark:       #071e32;
+}
+
+body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
+
+// ── Navbar ────────────────────────────────────────────────────────────
+.o_main_nav,
+header.o_top_fixed_element .navbar {
+    background-color: var(--lq-brand) !important;
+    border-bottom: none !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25) !important;
+
+    .navbar-brand,
+    .navbar-brand:hover { color: #fff !important; font-weight: 800; font-size: 1.3rem; letter-spacing: -0.03rem; }
+    .navbar-brand span { color: var(--lq-accent); }
+
+    .nav-link { color: rgba(255,255,255,0.75) !important; font-size: 0.875rem; font-weight: 500; }
+    .nav-link:hover, .nav-link:focus { color: #fff !important; }
+
+    .btn-primary,
+    .o_btn_cta,
+    a.btn.btn-primary {
+        background-color: var(--lq-accent) !important;
+        border-color: var(--lq-accent) !important;
+        color: #fff !important;
+        font-weight: 700;
+        border-radius: 6px;
+        padding: 8px 20px;
+        &:hover {
+            background-color: var(--lq-accent-2) !important;
+            border-color: var(--lq-accent-2) !important;
+        }
+    }
+}
+
+// ── Section helpers ───────────────────────────────────────────────────
+.lq-section-tag {
+    font-size: 0.6875rem;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--lq-accent);
+    font-weight: 700;
+    margin-bottom: 0.625rem;
+    display: block;
+}
+.lq-section-title {
+    font-size: 2.125rem;
+    font-weight: 800;
+    color: var(--lq-brand);
+    letter-spacing: -0.05rem;
+    line-height: 1.2;
+    span { color: var(--lq-accent); }
+}
+
+// ── Hero ──────────────────────────────────────────────────────────────
+.lq-hero {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #071e32 0%, #0A3D62 40%, #0d2f4a 70%, #1a0a00 100%);
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 120px 0 100px;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(255,107,53,0.12) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .lq-hero-badge {
+        display: inline-block;
+        background: rgba(255,107,53,0.18);
+        border: 1px solid rgba(255,107,53,0.4);
+        color: var(--lq-accent);
+        font-size: 0.6875rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-weight: 700;
+        padding: 5px 14px;
+        border-radius: 20px;
+        margin-bottom: 1.25rem;
+    }
+
+    h1 {
+        font-size: 3rem;
+        font-weight: 900;
+        line-height: 1.1;
+        color: #fff;
+        letter-spacing: -0.1rem;
+        margin-bottom: 1.125rem;
+        span { color: var(--lq-accent); }
+        @media (max-width: 768px) { font-size: 2.25rem; }
+    }
+
+    .lq-hero-sub {
+        font-size: 1.0625rem;
+        color: rgba(255,255,255,0.7);
+        line-height: 1.6;
+        margin-bottom: 2.25rem;
+        max-width: 540px;
+    }
+
+    .lq-hero-stats {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        display: flex;
+        gap: 2.5rem;
+        flex-wrap: wrap;
+
+        .lq-stat-num {
+            font-size: 1.75rem;
+            font-weight: 900;
+            color: var(--lq-accent);
+            line-height: 1;
+        }
+        .lq-stat-label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.55);
+            text-transform: uppercase;
+            letter-spacing: 0.0625rem;
+            margin-top: 2px;
+        }
+    }
+}
+
+// ── Serviços ──────────────────────────────────────────────────────────
+.lq-services {
+    padding: 80px 0;
+    background: #fff;
+
+    .lq-service-card {
+        border: 1px solid #EEF2F5;
+        border-radius: 12px;
+        padding: 28px 22px;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        transition: box-shadow 0.2s, transform 0.2s;
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: var(--lq-accent);
+        }
+        &:hover {
+            box-shadow: 0 8px 32px rgba(10,61,98,0.1);
+            transform: translateY(-2px);
+        }
+
+        .lq-service-icon {
+            width: 48px; height: 48px;
+            background: var(--lq-gray-light);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.375rem;
+            margin-bottom: 1rem;
+        }
+        h3 { font-size: 0.9375rem; font-weight: 700; color: var(--lq-brand); margin-bottom: 0.5rem; }
+        p   { font-size: 0.8125rem; color: var(--lq-gray); line-height: 1.6; margin: 0; }
+        .lq-service-tag {
+            display: inline-block;
+            margin-top: 0.875rem;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--lq-accent);
+            letter-spacing: 0.0625rem;
+            text-transform: uppercase;
+        }
+    }
+}
+
+// ── Diferenciais ──────────────────────────────────────────────────────
+.lq-diff {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #0A3D62 0%, #0d4e7a 100%);
+
+    .lq-section-title { color: #fff; }
+    .lq-section-sub   { color: rgba(255,255,255,0.6); }
+
+    .lq-diff-card {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 28px;
+        height: 100%;
+
+        .lq-diff-icon {
+            width: 52px; height: 52px;
+            background: rgba(255,107,53,0.15);
+            border: 1px solid rgba(255,107,53,0.3);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        h3 { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+        p  { font-size: 0.8125rem; color: rgba(255,255,255,0.6); line-height: 1.6; margin: 0; }
+    }
+}
+
+// ── Equipamentos ──────────────────────────────────────────────────────
+.lq-equip {
+    padding: 80px 0;
+    background: #F4F7FA;
+
+    .lq-equip-item {
+        background: #fff;
+        border: 1px solid #E0E8F0;
+        border-radius: 12px;
+        padding: 20px 12px;
+        text-align: center;
+        display: flex; flex-direction: column; align-items: center;
+        gap: 10px;
+        transition: box-shadow 0.2s;
+        &:hover { box-shadow: 0 4px 16px rgba(10,61,98,0.1); }
+
+        .lq-equip-icon {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #0A3D62, #1E6091);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem;
+            color: #fff;
+        }
+        span { font-size: 0.71875rem; font-weight: 600; color: var(--lq-brand); line-height: 1.3; }
+    }
+}
+
+// ── Clientes ──────────────────────────────────────────────────────────
+.lq-clients {
+    padding: 64px 0;
+    background: #fff;
+
+    .lq-client-logo {
+        height: 72px;
+        background: #F4F7FA;
+        border: 1px solid #E0E8F0;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--lq-gray);
+        letter-spacing: 0.0625rem;
+    }
+}
+
+// ── CTA ───────────────────────────────────────────────────────────────
+.lq-cta {
+    padding: 80px 0;
+    background: linear-gradient(120deg, #0A3D62 0%, #FF6B35 130%);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute; inset: 0;
+        background: repeating-linear-gradient(
+            -55deg, transparent, transparent 60px,
+            rgba(255,255,255,0.03) 60px, rgba(255,255,255,0.03) 61px
+        );
+        pointer-events: none;
+    }
+
+    h2 {
+        font-size: 2.375rem;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: -0.0625rem;
+        margin-bottom: 0.875rem;
+    }
+    p { font-size: 1.0625rem; color: rgba(255,255,255,0.8); margin-bottom: 2.25rem; }
+
+    .lq-cta-btn {
+        display: inline-block;
+        background: #fff;
+        color: #0A3D62 !important;
+        padding: 16px 40px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 800;
+        text-decoration: none !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+        &:hover { background: #EEF2F5; }
+    }
+}
+
+// ── Footer ────────────────────────────────────────────────────────────
+.lq-footer {
+    background: #071e32;
+    padding: 52px 0 28px;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.8125rem;
+
+    h4 {
+        color: #fff;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        letter-spacing: 0.03125rem;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+    }
+    ul { list-style: none; padding: 0; margin: 0; }
+    ul li { margin-bottom: 0.625rem; }
+    a { color: rgba(255,255,255,0.5); text-decoration: none; }
+    a:hover { color: #fff; }
+
+    .lq-footer-brand-name {
+        font-size: 1.375rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.03125rem;
+        margin-bottom: 0.75rem;
+        display: block;
+        span { color: var(--lq-accent); }
+    }
+
+    .lq-footer-divider {
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding-top: 1.375rem;
+        margin-top: 2.5rem;
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.4);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}
