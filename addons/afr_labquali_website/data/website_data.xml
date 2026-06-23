@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="labquali_home_page" model="website.page">
+        <field name="name">LabQuali — Qualificação e Calibração de Equipamentos</field>
+        <field name="url">/</field>
+        <field name="view_id" ref="labquali_homepage"/>
+        <field name="is_published">True</field>
+        <field name="website_indexed">True</field>
+    </record>
+</odoo>

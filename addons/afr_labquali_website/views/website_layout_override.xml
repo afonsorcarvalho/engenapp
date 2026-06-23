@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="labquali_footer" inherit_id="website.footer_custom" name="LabQuali Footer">
+        <xpath expr="//div[@id='footer']" position="replace">
+            <div id="footer" class="lq-footer oe_structure oe_structure_solo">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                            <span class="lq-footer-brand-name">Lab<span>Quali</span></span>
+                            <p>Qualificação e calibração de equipamentos críticos com rastreabilidade metrológica e conformidade regulatória.</p>
+                        </div>
+                        <div class="col-lg-2 col-md-3 col-6 mb-4 mb-lg-0">
+                            <h4>Serviços</h4>
+                            <ul>
+                                <li><a href="/contactus">Qualificação IQ/OQ/PQ</a></li>
+                                <li><a href="/contactus">Calibração de Sensores</a></li>
+                                <li><a href="/contactus">Inspeção NR13</a></li>
+                                <li><a href="/contactus">Mapeamento Térmico</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-2 col-md-3 col-6 mb-4 mb-lg-0">
+                            <h4>Empresa</h4>
+                            <ul>
+                                <li><a href="/">Sobre a LabQuali</a></li>
+                                <li><a href="/contactus">Certificações</a></li>
+                                <li><a href="/web#action=login">Portal do Cliente</a></li>
+                                <li><a href="/contactus">Contato</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                            <h4>Contato</h4>
+                            <ul>
+                                <t t-if="res_company.phone">
+                                    <li>&#128222; <t t-esc="res_company.phone"/></li>
+                                </t>
+                                <t t-if="res_company.email">
+                                    <li>&#9993; <a t-attf-href="mailto:#{res_company.email}"><t t-esc="res_company.email"/></a></li>
+                                </t>
+                                <t t-if="res_company.city">
+                                    <li>&#128205; <t t-esc="res_company.city"/><t t-if="res_company.state_id">, <t t-esc="res_company.state_id.name"/></t></li>
+                                </t>
+                                <li>Atendimento nacional</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="lq-footer-divider">
+                        <span>&#169; <t t-esc="datetime.date.today().year"/> <t t-esc="res_company.name"/>. Todos os direitos reservados.</span>
+                        <div>
+                            <a href="/privacy">Política de Privacidade</a>
+                            <a href="/terms" class="ms-3">Termos de Uso</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+        <!-- Hide the default Odoo copyright bar (our footer already has the © line) -->
+        <xpath expr="//div[hasclass('o_footer_copyright')]" position="attributes">
+            <attribute name="class" add="d-none" separator=" "/>
+        </xpath>
+    </template>
+</odoo>
