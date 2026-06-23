@@ -67,6 +67,11 @@ pointer aponta para um commit que não existe no remote (pointer quebrado).
 
 ## Browser Automation
 
+**Regra:** sempre que possível, testar a interface/UI eu mesmo via `agent-browser`
+(views, campos novos, fluxos de tela) antes de declarar pronto — não delegar o
+clique ao user. Após mudança de UI: restart container p/ assets, login (logout
+antes de re-login p/ evitar bounce stale), navegar e validar.
+
 Use `agent-browser` for web automation. Run `agent-browser --help` for all commands.
 
 Core workflow:

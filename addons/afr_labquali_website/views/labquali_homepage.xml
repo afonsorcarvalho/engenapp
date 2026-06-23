@@ -53,7 +53,7 @@
                     <div class="row g-4">
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
-                                <div class="lq-service-icon">⚗️</div>
+                                <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-icon" alt="Qualificação IQ/OQ/PQ"/>
                                 <h3>Qualificação IQ/OQ/PQ</h3>
                                 <p>Qualificação de instalação, operacional e de desempenho conforme RDC 665/2022 e boas práticas de fabricação.</p>
                                 <span class="lq-service-tag">Autoclave · Estufa · Câmara</span>
@@ -61,7 +61,7 @@
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
-                                <div class="lq-service-icon">🌡️</div>
+                                <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-icon" alt="Calibração de Sensores"/>
                                 <h3>Calibração de Sensores</h3>
                                 <p>Calibração de termopares, termômetros, manômetros e sensores de pressão com rastreabilidade metrológica RBC/Inmetro.</p>
                                 <span class="lq-service-tag">Temperatura · Pressão · Umidade</span>
@@ -69,7 +69,7 @@
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
-                                <div class="lq-service-icon">🛡️</div>
+                                <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-icon" alt="Inspeção NR13"/>
                                 <h3>Inspeção NR13</h3>
                                 <p>Inspeção de vasos de pressão, caldeiras e autoclaves conforme NR13 do MTE. Relatórios para fiscalização.</p>
                                 <span class="lq-service-tag">Vasos de Pressão · Caldeiras</span>
@@ -77,7 +77,7 @@
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
-                                <div class="lq-service-icon">📋</div>
+                                <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-icon" alt="Mapeamento Térmico"/>
                                 <h3>Mapeamento Térmico</h3>
                                 <p>Mapeamento de temperatura em câmaras, estufas e geladeiras com malha de pontos e análise estatística completa.</p>
                                 <span class="lq-service-tag">Câmaras · Geladeiras · Incubadoras</span>
@@ -98,42 +98,42 @@
                     <div class="row g-4">
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">📜</div>
+                                <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-diff-icon" alt="Rastreabilidade Metrológica"/>
                                 <h3>Rastreabilidade Metrológica</h3>
                                 <p>Padrões calibrados em laboratórios acreditados pela RBC. Cadeia ininterrupta até o BIPM para temperatura e pressão.</p>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">⚡</div>
+                                <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-diff-icon" alt="Laudos em até 5 dias úteis"/>
                                 <h3>Laudos em até 5 dias úteis</h3>
                                 <p>Sistema digital de geração de relatórios garante entrega ágil com assinatura eletrônica e acesso imediato.</p>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">🔬</div>
+                                <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-diff-icon" alt="Equipe Especializada"/>
                                 <h3>Equipe Especializada</h3>
                                 <p>Engenheiros e técnicos com formação em metrologia, farmácia industrial e engenharia hospitalar.</p>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">📱</div>
+                                <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-diff-icon" alt="Portal do Cliente"/>
                                 <h3>Portal do Cliente</h3>
                                 <p>Acesse todos os seus laudos, histórico de qualificações e certificados a qualquer momento, de qualquer dispositivo.</p>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">🗺️</div>
+                                <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-diff-icon" alt="Atendimento Nacional"/>
                                 <h3>Atendimento Nacional</h3>
                                 <p>Presença em todo o Brasil. Equipes locais nas principais capitais para atendimento presencial ágil.</p>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">✅</div>
+                                <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-diff-icon" alt="Conformidade Regulatória"/>
                                 <h3>Conformidade Regulatória</h3>
                                 <p>Laudos alinhados às exigências da ANVISA (RDC 665/2022), MTE (NR13) e normas ABNT aplicáveis.</p>
                             </div>
@@ -151,18 +151,18 @@
                         <p class="text-muted mt-2" style="font-size:1rem;">Trabalhamos com todo o parque de equipamentos de esterilização e controle de temperatura de hospitais, farmácias e indústrias.</p>
                     </div>
                     <div class="row g-3">
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🔩</div><span>Autoclaves a Vapor</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🔥</div><span>Estufas de Esterilização</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🌡️</div><span>Câmaras de Estabilidade</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">❄️</div><span>Câmaras Frias</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🧫</div><span>Incubadoras</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">💊</div><span>Geladeiras Farmacêuticas</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">⚙️</div><span>Vasos de Pressão</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🏭</div><span>Caldeiras</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🧊</div><span>Liofilizadores</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">♨️</div><span>Túneis de Calor</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🔊</div><span>Lavadoras Ultrassônicas</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">📡</div><span>Termômetros e Sondas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Autoclaves a Vapor"/><span>Autoclaves a Vapor</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Estufas de Esterilização"/><span>Estufas de Esterilização</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Câmaras de Estabilidade"/><span>Câmaras de Estabilidade</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Câmaras Frias"/><span>Câmaras Frias</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Incubadoras"/><span>Incubadoras</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Geladeiras Farmacêuticas"/><span>Geladeiras Farmacêuticas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Vasos de Pressão"/><span>Vasos de Pressão</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Caldeiras"/><span>Caldeiras</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Liofilizadores"/><span>Liofilizadores</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Túneis de Calor"/><span>Túneis de Calor</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Lavadoras Ultrassônicas"/><span>Lavadoras Ultrassônicas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Termômetros e Sondas"/><span>Termômetros e Sondas</span></div></div>
                     </div>
                 </div>
             </section>

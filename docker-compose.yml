@@ -54,6 +54,7 @@ services:
       - ./OCA-dms:/mnt/oca-dms
       - ./OCA-storage:/mnt/oca-storage
       - ./OCA-queue:/mnt/oca-queue
+      - ./customize-addons:/mnt/customize-addons
       - ./conf:/etc/odoo
     # Último recurso no Linux: descomente para o container usar a rede do host (LM em 127.0.0.1).
     # Exige ajustar acesso ao Odoo (porta 8069 no host) e remover/alterar o mapeamento "ports" acima.
