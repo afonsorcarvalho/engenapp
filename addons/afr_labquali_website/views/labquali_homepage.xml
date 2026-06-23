@@ -10,13 +10,13 @@
                 <div class="container position-relative" style="z-index:1;">
                     <div class="row">
                         <div class="col-lg-7">
-                            <span class="lq-hero-badge">ISO 17025 - RDC 665/2022 - NR13</span>
+                            <span class="lq-hero-badge">✓ ISO 17025 · RDC 665/2022 · NR13</span>
                             <h1>Qualificação e Calibração de<br/><span>Equipamentos</span><br/>de Esterilização</h1>
                             <p class="lq-hero-sub">Laudos técnicos com rastreabilidade metrológica para autoclaves, estufas, câmaras de estabilidade e inspeções NR13.</p>
                             <div class="d-flex gap-3 flex-wrap">
                                 <a href="/contactus"
                                    style="background:#FF6B35;color:#fff;font-weight:700;border-radius:8px;padding:14px 30px;box-shadow:0 8px 24px rgba(255,107,53,0.4);text-decoration:none;font-size:1rem;">
-                                    Solicitar Orçamento
+                                    Solicitar Orçamento →
                                 </a>
                                 <a href="#lq-services"
                                    style="color:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:14px 28px;text-decoration:none;font-size:1rem;">
@@ -53,7 +53,7 @@
                     <div class="row g-4">
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
-                                <div class="lq-service-icon">IQ/OQ/PQ</div>
+                                <div class="lq-service-icon">⚗️</div>
                                 <h3>Qualificação IQ/OQ/PQ</h3>
                                 <p>Qualificação de instalação, operacional e de desempenho conforme RDC 665/2022 e boas práticas de fabricação.</p>
                                 <span class="lq-service-tag">Autoclave · Estufa · Câmara</span>
@@ -61,7 +61,7 @@
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
-                                <div class="lq-service-icon">CAL</div>
+                                <div class="lq-service-icon">🌡️</div>
                                 <h3>Calibração de Sensores</h3>
                                 <p>Calibração de termopares, termômetros, manômetros e sensores de pressão com rastreabilidade metrológica RBC/Inmetro.</p>
                                 <span class="lq-service-tag">Temperatura · Pressão · Umidade</span>
@@ -69,7 +69,7 @@
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
-                                <div class="lq-service-icon">NR13</div>
+                                <div class="lq-service-icon">🛡️</div>
                                 <h3>Inspeção NR13</h3>
                                 <p>Inspeção de vasos de pressão, caldeiras e autoclaves conforme NR13 do MTE. Relatórios para fiscalização.</p>
                                 <span class="lq-service-tag">Vasos de Pressão · Caldeiras</span>
@@ -77,7 +77,7 @@
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
-                                <div class="lq-service-icon">MAP</div>
+                                <div class="lq-service-icon">📋</div>
                                 <h3>Mapeamento Térmico</h3>
                                 <p>Mapeamento de temperatura em câmaras, estufas e geladeiras com malha de pontos e análise estatística completa.</p>
                                 <span class="lq-service-tag">Câmaras · Geladeiras · Incubadoras</span>
@@ -98,42 +98,42 @@
                     <div class="row g-4">
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">RBC</div>
+                                <div class="lq-diff-icon">📜</div>
                                 <h3>Rastreabilidade Metrológica</h3>
                                 <p>Padrões calibrados em laboratórios acreditados pela RBC. Cadeia ininterrupta até o BIPM para temperatura e pressão.</p>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">5D</div>
+                                <div class="lq-diff-icon">⚡</div>
                                 <h3>Laudos em até 5 dias úteis</h3>
                                 <p>Sistema digital de geração de relatórios garante entrega ágil com assinatura eletrônica e acesso imediato.</p>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">ENG</div>
+                                <div class="lq-diff-icon">🔬</div>
                                 <h3>Equipe Especializada</h3>
                                 <p>Engenheiros e técnicos com formação em metrologia, farmácia industrial e engenharia hospitalar.</p>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">WEB</div>
+                                <div class="lq-diff-icon">📱</div>
                                 <h3>Portal do Cliente</h3>
                                 <p>Acesse todos os seus laudos, histórico de qualificações e certificados a qualquer momento, de qualquer dispositivo.</p>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">BR</div>
+                                <div class="lq-diff-icon">🗺️</div>
                                 <h3>Atendimento Nacional</h3>
                                 <p>Presença em todo o Brasil. Equipes locais nas principais capitais para atendimento presencial ágil.</p>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
-                                <div class="lq-diff-icon">OK</div>
+                                <div class="lq-diff-icon">✅</div>
                                 <h3>Conformidade Regulatória</h3>
                                 <p>Laudos alinhados às exigências da ANVISA (RDC 665/2022), MTE (NR13) e normas ABNT aplicáveis.</p>
                             </div>
@@ -151,18 +151,18 @@
                         <p class="text-muted mt-2" style="font-size:1rem;">Trabalhamos com todo o parque de equipamentos de esterilização e controle de temperatura de hospitais, farmácias e indústrias.</p>
                     </div>
                     <div class="row g-3">
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">AC</div><span>Autoclaves a Vapor</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">ES</div><span>Estufas de Esterilização</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">CE</div><span>Câmaras de Estabilidade</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">CF</div><span>Câmaras Frias</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">IN</div><span>Incubadoras</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">GF</div><span>Geladeiras Farmacêuticas</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">VP</div><span>Vasos de Pressão</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">CA</div><span>Caldeiras</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">LI</div><span>Liofilizadores</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">TC</div><span>Túneis de Calor</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">LU</div><span>Lavadoras Ultrassônicas</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">TS</div><span>Termômetros e Sondas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🔩</div><span>Autoclaves a Vapor</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🔥</div><span>Estufas de Esterilização</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🌡️</div><span>Câmaras de Estabilidade</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">❄️</div><span>Câmaras Frias</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🧫</div><span>Incubadoras</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">💊</div><span>Geladeiras Farmacêuticas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">⚙️</div><span>Vasos de Pressão</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🏭</div><span>Caldeiras</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🧊</div><span>Liofilizadores</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">♨️</div><span>Túneis de Calor</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">🔊</div><span>Lavadoras Ultrassônicas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><div class="lq-equip-icon">📡</div><span>Termômetros e Sondas</span></div></div>
                     </div>
                 </div>
             </section>
@@ -197,7 +197,7 @@
                 <div class="container position-relative" style="z-index:1;">
                     <h2>Pronto para estar em conformidade?</h2>
                     <p class="mx-auto" style="max-width:540px;">Solicite um orçamento sem compromisso. Nossa equipe técnica entra em contato em até 24 horas úteis para entender suas necessidades.</p>
-                    <a href="/contactus" class="lq-cta-btn">Solicitar Orçamento Gratuito</a>
+                    <a href="/contactus" class="lq-cta-btn">Solicitar Orçamento Gratuito →</a>
                 </div>
             </section>
 
