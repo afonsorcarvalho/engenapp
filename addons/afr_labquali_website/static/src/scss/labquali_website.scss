@@ -169,44 +169,58 @@ header.o_top_fixed_element .navbar {
     background: #fff;
 
     .lq-service-card {
-        border: 1px solid #EEF2F5;
-        border-radius: 12px;
-        padding: 28px 22px;
+        border: 1px solid #E0E8F0;
+        border-radius: 14px;
         height: 100%;
-        position: relative;
         overflow: hidden;
         transition: box-shadow 0.2s, transform 0.2s;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
 
-        &::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-            background: var(--lq-accent);
-        }
         &:hover {
-            box-shadow: 0 8px 32px rgba(10,61,98,0.1);
-            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(10,61,98,0.12);
+            transform: translateY(-3px);
         }
 
-        .lq-service-icon {
-            width: 64px; height: 64px;
-            border-radius: 10px;
+        .lq-card-img-wrap {
+            position: relative;
+            height: 190px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .lq-service-img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             display: block;
-            margin-bottom: 1rem;
         }
-        h3 { font-size: 0.9375rem; font-weight: 700; color: var(--lq-brand); margin-bottom: 0.5rem; }
-        p   { font-size: 0.8125rem; color: var(--lq-gray); line-height: 1.6; margin: 0; }
-        .lq-service-tag {
-            display: inline-block;
-            margin-top: 0.875rem;
-            font-size: 0.6875rem;
+
+        .lq-card-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--lq-brand);
+            color: #fff;
+            font-size: 0.625rem;
             font-weight: 700;
-            color: var(--lq-accent);
-            letter-spacing: 0.0625rem;
+            letter-spacing: 0.05rem;
             text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 20px;
         }
+
+        .lq-card-body {
+            padding: 20px 18px 22px;
+            border-top: 3px solid var(--lq-accent);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h3 { font-size: 1rem; font-weight: 700; color: var(--lq-brand); margin-bottom: 0.5rem; }
+        p   { font-size: 0.8125rem; color: var(--lq-gray); line-height: 1.6; margin: 0; flex: 1; }
     }
 }
 
