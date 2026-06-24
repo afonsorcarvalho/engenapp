@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_afr_labquali_homepage_public,afr.labquali.homepage public,model_afr_labquali_homepage,base.group_public,1,0,0,0
+access_afr_labquali_homepage_designer,afr.labquali.homepage designer,model_afr_labquali_homepage,website.group_website_designer,1,1,1,1

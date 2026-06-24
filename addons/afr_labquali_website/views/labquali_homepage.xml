@@ -4,6 +4,7 @@
         <t t-call="website.layout">
             <t t-set="pageName" t-value="'labquali_homepage'"/>
             <t t-set="no_breadcrumbs" t-value="True"/>
+            <t t-set="lq_imgs" t-value="env['afr.labquali.homepage'].sudo().search([], limit=1)"/>
 
             <!-- HERO -->
             <section class="lq-hero">
@@ -54,7 +55,12 @@
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
                                 <div class="lq-card-img-wrap">
-                                    <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-img" alt="Qualificação IQ/OQ/PQ"/>
+                                    <img t-att-src="'/web/image/afr.labquali.homepage/%d/svc_qualificacao' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'"
+                                         class="lq-service-img" alt="Qualificação IQ/OQ/PQ"
+                                         t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'"
+                                         t-att-data-oe-id="lq_imgs and lq_imgs.id"
+                                         t-att-data-oe-field="lq_imgs and 'svc_qualificacao'"
+                                         data-oe-type="image"/>
                                     <span class="lq-card-badge">Autoclave · Estufa · Câmara</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -66,7 +72,12 @@
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
                                 <div class="lq-card-img-wrap">
-                                    <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-img" alt="Calibração de Sensores"/>
+                                    <img t-att-src="'/web/image/afr.labquali.homepage/%d/svc_calibracao' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'"
+                                         class="lq-service-img" alt="Calibração de Sensores"
+                                         t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'"
+                                         t-att-data-oe-id="lq_imgs and lq_imgs.id"
+                                         t-att-data-oe-field="lq_imgs and 'svc_calibracao'"
+                                         data-oe-type="image"/>
                                     <span class="lq-card-badge">Temperatura · Pressão · Umidade</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -78,7 +89,12 @@
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
                                 <div class="lq-card-img-wrap">
-                                    <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-img" alt="Inspeção NR13"/>
+                                    <img t-att-src="'/web/image/afr.labquali.homepage/%d/svc_nr13' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'"
+                                         class="lq-service-img" alt="Inspeção NR13"
+                                         t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'"
+                                         t-att-data-oe-id="lq_imgs and lq_imgs.id"
+                                         t-att-data-oe-field="lq_imgs and 'svc_nr13'"
+                                         data-oe-type="image"/>
                                     <span class="lq-card-badge">Vasos de Pressão · Caldeiras</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -90,7 +106,12 @@
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
                                 <div class="lq-card-img-wrap">
-                                    <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-img" alt="Mapeamento Térmico"/>
+                                    <img t-att-src="'/web/image/afr.labquali.homepage/%d/svc_mapeamento' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'"
+                                         class="lq-service-img" alt="Mapeamento Térmico"
+                                         t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'"
+                                         t-att-data-oe-id="lq_imgs and lq_imgs.id"
+                                         t-att-data-oe-field="lq_imgs and 'svc_mapeamento'"
+                                         data-oe-type="image"/>
                                     <span class="lq-card-badge">Câmaras · Geladeiras · Incubadoras</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -115,7 +136,12 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-img" alt="Rastreabilidade Metrológica"/>
+                                    <img t-att-src="'/web/image/afr.labquali.homepage/%d/dif_rastreabilidade' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'"
+                                         class="lq-service-img" alt="Rastreabilidade Metrológica"
+                                         t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'"
+                                         t-att-data-oe-id="lq_imgs and lq_imgs.id"
+                                         t-att-data-oe-field="lq_imgs and 'dif_rastreabilidade'"
+                                         data-oe-type="image"/>
                                     <span class="lq-card-badge">RBC · BIPM · Inmetro</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -127,7 +153,12 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-img" alt="Laudos em até 5 dias úteis"/>
+                                    <img t-att-src="'/web/image/afr.labquali.homepage/%d/dif_laudos' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'"
+                                         class="lq-service-img" alt="Laudos em até 5 dias úteis"
+                                         t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'"
+                                         t-att-data-oe-id="lq_imgs and lq_imgs.id"
+                                         t-att-data-oe-field="lq_imgs and 'dif_laudos'"
+                                         data-oe-type="image"/>
                                     <span class="lq-card-badge">Assinatura Eletrônica · Digital</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -139,7 +170,12 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-img" alt="Equipe Especializada"/>
+                                    <img t-att-src="'/web/image/afr.labquali.homepage/%d/dif_equipe' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'"
+                                         class="lq-service-img" alt="Equipe Especializada"
+                                         t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'"
+                                         t-att-data-oe-id="lq_imgs and lq_imgs.id"
+                                         t-att-data-oe-field="lq_imgs and 'dif_equipe'"
+                                         data-oe-type="image"/>
                                     <span class="lq-card-badge">Metrologia · Farmácia · Engenharia</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -151,7 +187,12 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-img" alt="Portal do Cliente"/>
+                                    <img t-att-src="'/web/image/afr.labquali.homepage/%d/dif_portal' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'"
+                                         class="lq-service-img" alt="Portal do Cliente"
+                                         t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'"
+                                         t-att-data-oe-id="lq_imgs and lq_imgs.id"
+                                         t-att-data-oe-field="lq_imgs and 'dif_portal'"
+                                         data-oe-type="image"/>
                                     <span class="lq-card-badge">Online · 24/7 · Qualquer dispositivo</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -163,7 +204,12 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-img" alt="Atendimento Nacional"/>
+                                    <img t-att-src="'/web/image/afr.labquali.homepage/%d/dif_nacional' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'"
+                                         class="lq-service-img" alt="Atendimento Nacional"
+                                         t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'"
+                                         t-att-data-oe-id="lq_imgs and lq_imgs.id"
+                                         t-att-data-oe-field="lq_imgs and 'dif_nacional'"
+                                         data-oe-type="image"/>
                                     <span class="lq-card-badge">Todo o Brasil · Capitais</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -175,7 +221,12 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-service-img" alt="Conformidade Regulatória"/>
+                                    <img t-att-src="'/web/image/afr.labquali.homepage/%d/dif_conformidade' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'"
+                                         class="lq-service-img" alt="Conformidade Regulatória"
+                                         t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'"
+                                         t-att-data-oe-id="lq_imgs and lq_imgs.id"
+                                         t-att-data-oe-field="lq_imgs and 'dif_conformidade'"
+                                         data-oe-type="image"/>
                                     <span class="lq-card-badge">ANVISA · MTE · ABNT</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -197,18 +248,18 @@
                         <p class="text-muted mt-2" style="font-size:1rem;">Trabalhamos com todo o parque de equipamentos de esterilização e controle de temperatura de hospitais, farmácias e indústrias.</p>
                     </div>
                     <div class="row g-3">
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Autoclaves a Vapor"/><span>Autoclaves a Vapor</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Estufas de Esterilização"/><span>Estufas de Esterilização</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Câmaras de Estabilidade"/><span>Câmaras de Estabilidade</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Câmaras Frias"/><span>Câmaras Frias</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Incubadoras"/><span>Incubadoras</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Geladeiras Farmacêuticas"/><span>Geladeiras Farmacêuticas</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Vasos de Pressão"/><span>Vasos de Pressão</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Caldeiras"/><span>Caldeiras</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Liofilizadores"/><span>Liofilizadores</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Túneis de Calor"/><span>Túneis de Calor</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Lavadoras Ultrassônicas"/><span>Lavadoras Ultrassônicas</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img src="/afr_labquali_website/static/src/img/icon-placeholder.svg" class="lq-equip-icon" alt="Termômetros e Sondas"/><span>Termômetros e Sondas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_autoclave' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Autoclaves a Vapor" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_autoclave'" data-oe-type="image"/><span>Autoclaves a Vapor</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_estufa' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Estufas de Esterilização" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_estufa'" data-oe-type="image"/><span>Estufas de Esterilização</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_camara_estab' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Câmaras de Estabilidade" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_camara_estab'" data-oe-type="image"/><span>Câmaras de Estabilidade</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_camara_fria' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Câmaras Frias" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_camara_fria'" data-oe-type="image"/><span>Câmaras Frias</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_incubadora' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Incubadoras" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_incubadora'" data-oe-type="image"/><span>Incubadoras</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_geladeira' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Geladeiras Farmacêuticas" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_geladeira'" data-oe-type="image"/><span>Geladeiras Farmacêuticas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_vaso_pressao' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Vasos de Pressão" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_vaso_pressao'" data-oe-type="image"/><span>Vasos de Pressão</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_caldeira' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Caldeiras" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_caldeira'" data-oe-type="image"/><span>Caldeiras</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_liofilizador' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Liofilizadores" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_liofilizador'" data-oe-type="image"/><span>Liofilizadores</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_tunel_calor' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Túneis de Calor" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_tunel_calor'" data-oe-type="image"/><span>Túneis de Calor</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_lavadora' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Lavadoras Ultrassônicas" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_lavadora'" data-oe-type="image"/><span>Lavadoras Ultrassônicas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img t-att-src="'/web/image/afr.labquali.homepage/%d/eqp_termometro' % lq_imgs.id if lq_imgs else '/afr_labquali_website/static/src/img/icon-placeholder.svg'" class="lq-equip-icon" alt="Termômetros e Sondas" t-att-data-oe-model="lq_imgs and 'afr.labquali.homepage'" t-att-data-oe-id="lq_imgs and lq_imgs.id" t-att-data-oe-field="lq_imgs and 'eqp_termometro'" data-oe-type="image"/><span>Termômetros e Sondas</span></div></div>
                     </div>
                 </div>
             </section>
