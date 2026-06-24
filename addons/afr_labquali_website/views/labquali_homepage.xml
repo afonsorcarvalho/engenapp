@@ -55,7 +55,7 @@
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
                                 <div class="lq-card-img-wrap">
-                                    <img class="lq-service-img" alt="Qualificação IQ/OQ/PQ" t-field="lq_imgs.svc_qualificacao" t-options="{'widget': 'image'}"/>
+                                    <span class="lq-service-img" t-field="lq_imgs.svc_qualificacao" t-options="{'widget': 'image'}"/>
                                     <span class="lq-card-badge">Autoclave · Estufa · Câmara</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -67,7 +67,7 @@
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
                                 <div class="lq-card-img-wrap">
-                                    <img class="lq-service-img" alt="Calibração de Sensores" t-field="lq_imgs.svc_calibracao" t-options="{'widget': 'image'}"/>
+                                    <span class="lq-service-img" t-field="lq_imgs.svc_calibracao" t-options="{'widget': 'image'}"/>
                                     <span class="lq-card-badge">Temperatura · Pressão · Umidade</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -79,7 +79,7 @@
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
                                 <div class="lq-card-img-wrap">
-                                    <img class="lq-service-img" alt="Inspeção NR13" t-field="lq_imgs.svc_nr13" t-options="{'widget': 'image'}"/>
+                                    <span class="lq-service-img" t-field="lq_imgs.svc_nr13" t-options="{'widget': 'image'}"/>
                                     <span class="lq-card-badge">Vasos de Pressão · Caldeiras</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -91,7 +91,7 @@
                         <div class="col-lg-3 col-md-6">
                             <div class="lq-service-card">
                                 <div class="lq-card-img-wrap">
-                                    <img class="lq-service-img" alt="Mapeamento Térmico" t-field="lq_imgs.svc_mapeamento" t-options="{'widget': 'image'}"/>
+                                    <span class="lq-service-img" t-field="lq_imgs.svc_mapeamento" t-options="{'widget': 'image'}"/>
                                     <span class="lq-card-badge">Câmaras · Geladeiras · Incubadoras</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -116,7 +116,7 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img class="lq-service-img" alt="Rastreabilidade Metrológica" t-field="lq_imgs.dif_rastreabilidade" t-options="{'widget': 'image'}"/>
+                                    <span class="lq-service-img" t-field="lq_imgs.dif_rastreabilidade" t-options="{'widget': 'image'}"/>
                                     <span class="lq-card-badge">RBC · BIPM · Inmetro</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -128,7 +128,7 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img class="lq-service-img" alt="Laudos em até 5 dias úteis" t-field="lq_imgs.dif_laudos" t-options="{'widget': 'image'}"/>
+                                    <span class="lq-service-img" t-field="lq_imgs.dif_laudos" t-options="{'widget': 'image'}"/>
                                     <span class="lq-card-badge">Assinatura Eletrônica · Digital</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -140,7 +140,7 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img class="lq-service-img" alt="Equipe Especializada" t-field="lq_imgs.dif_equipe" t-options="{'widget': 'image'}"/>
+                                    <span class="lq-service-img" t-field="lq_imgs.dif_equipe" t-options="{'widget': 'image'}"/>
                                     <span class="lq-card-badge">Metrologia · Farmácia · Engenharia</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -152,7 +152,7 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img class="lq-service-img" alt="Portal do Cliente" t-field="lq_imgs.dif_portal" t-options="{'widget': 'image'}"/>
+                                    <span class="lq-service-img" t-field="lq_imgs.dif_portal" t-options="{'widget': 'image'}"/>
                                     <span class="lq-card-badge">Online · 24/7 · Qualquer dispositivo</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -164,7 +164,7 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img class="lq-service-img" alt="Atendimento Nacional" t-field="lq_imgs.dif_nacional" t-options="{'widget': 'image'}"/>
+                                    <span class="lq-service-img" t-field="lq_imgs.dif_nacional" t-options="{'widget': 'image'}"/>
                                     <span class="lq-card-badge">Todo o Brasil · Capitais</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -176,7 +176,7 @@
                         <div class="col-lg-4 col-md-6">
                             <div class="lq-diff-card">
                                 <div class="lq-card-img-wrap">
-                                    <img class="lq-service-img" alt="Conformidade Regulatória" t-field="lq_imgs.dif_conformidade" t-options="{'widget': 'image'}"/>
+                                    <span class="lq-service-img" t-field="lq_imgs.dif_conformidade" t-options="{'widget': 'image'}"/>
                                     <span class="lq-card-badge">ANVISA · MTE · ABNT</span>
                                 </div>
                                 <div class="lq-card-body">
@@ -198,18 +198,18 @@
                         <p class="text-muted mt-2" style="font-size:1rem;">Trabalhamos com todo o parque de equipamentos de esterilização e controle de temperatura de hospitais, farmácias e indústrias.</p>
                     </div>
                     <div class="row g-3">
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Autoclaves a Vapor" t-field="lq_imgs.eqp_autoclave" t-options="{'widget': 'image'}"/><span>Autoclaves a Vapor</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Estufas de Esterilização" t-field="lq_imgs.eqp_estufa" t-options="{'widget': 'image'}"/><span>Estufas de Esterilização</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Câmaras de Estabilidade" t-field="lq_imgs.eqp_camara_estab" t-options="{'widget': 'image'}"/><span>Câmaras de Estabilidade</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Câmaras Frias" t-field="lq_imgs.eqp_camara_fria" t-options="{'widget': 'image'}"/><span>Câmaras Frias</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Incubadoras" t-field="lq_imgs.eqp_incubadora" t-options="{'widget': 'image'}"/><span>Incubadoras</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Geladeiras Farmacêuticas" t-field="lq_imgs.eqp_geladeira" t-options="{'widget': 'image'}"/><span>Geladeiras Farmacêuticas</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Vasos de Pressão" t-field="lq_imgs.eqp_vaso_pressao" t-options="{'widget': 'image'}"/><span>Vasos de Pressão</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Caldeiras" t-field="lq_imgs.eqp_caldeira" t-options="{'widget': 'image'}"/><span>Caldeiras</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Liofilizadores" t-field="lq_imgs.eqp_liofilizador" t-options="{'widget': 'image'}"/><span>Liofilizadores</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Túneis de Calor" t-field="lq_imgs.eqp_tunel_calor" t-options="{'widget': 'image'}"/><span>Túneis de Calor</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Lavadoras Ultrassônicas" t-field="lq_imgs.eqp_lavadora" t-options="{'widget': 'image'}"/><span>Lavadoras Ultrassônicas</span></div></div>
-                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><img class="lq-equip-icon" alt="Termômetros e Sondas" t-field="lq_imgs.eqp_termometro" t-options="{'widget': 'image'}"/><span>Termômetros e Sondas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_autoclave" t-options="{'widget': 'image'}"/><span>Autoclaves a Vapor</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_estufa" t-options="{'widget': 'image'}"/><span>Estufas de Esterilização</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_camara_estab" t-options="{'widget': 'image'}"/><span>Câmaras de Estabilidade</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_camara_fria" t-options="{'widget': 'image'}"/><span>Câmaras Frias</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_incubadora" t-options="{'widget': 'image'}"/><span>Incubadoras</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_geladeira" t-options="{'widget': 'image'}"/><span>Geladeiras Farmacêuticas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_vaso_pressao" t-options="{'widget': 'image'}"/><span>Vasos de Pressão</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_caldeira" t-options="{'widget': 'image'}"/><span>Caldeiras</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_liofilizador" t-options="{'widget': 'image'}"/><span>Liofilizadores</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_tunel_calor" t-options="{'widget': 'image'}"/><span>Túneis de Calor</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_lavadora" t-options="{'widget': 'image'}"/><span>Lavadoras Ultrassônicas</span></div></div>
+                        <div class="col-lg-2 col-md-3 col-6"><div class="lq-equip-item"><span class="lq-equip-icon" t-field="lq_imgs.eqp_termometro" t-options="{'widget': 'image'}"/><span>Termômetros e Sondas</span></div></div>
                     </div>
                 </div>
             </section>
