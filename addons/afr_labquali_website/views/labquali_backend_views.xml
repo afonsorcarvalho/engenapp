@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form view -->
+    <record id="view_labquali_homepage_form" model="ir.ui.view">
+        <field name="name">afr.labquali.homepage.form</field>
+        <field name="model">afr.labquali.homepage</field>
+        <field name="arch" type="xml">
+            <form string="Imagens da Homepage LabQuali">
+                <sheet>
+                    <h1>Imagens da Homepage</h1>
+                    <p class="text-muted">Faça upload das fotos aqui. Alterações ficam guardadas na base de dados e não são apagadas em actualizações do módulo.</p>
+
+                    <notebook>
+                        <page string="Serviços">
+                            <group>
+                                <group string="Qualificação IQ/OQ/PQ">
+                                    <field name="svc_qualificacao" widget="image" options="{'size': [400, 200]}" nolabel="1"/>
+                                </group>
+                                <group string="Calibração de Sensores">
+                                    <field name="svc_calibracao" widget="image" options="{'size': [400, 200]}" nolabel="1"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Inspeção NR13">
+                                    <field name="svc_nr13" widget="image" options="{'size': [400, 200]}" nolabel="1"/>
+                                </group>
+                                <group string="Mapeamento Térmico">
+                                    <field name="svc_mapeamento" widget="image" options="{'size': [400, 200]}" nolabel="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Diferenciais">
+                            <group>
+                                <group string="Rastreabilidade Metrológica">
+                                    <field name="dif_rastreabilidade" widget="image" options="{'size': [400, 200]}" nolabel="1"/>
+                                </group>
+                                <group string="Laudos em 5 dias">
+                                    <field name="dif_laudos" widget="image" options="{'size': [400, 200]}" nolabel="1"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Equipe Especializada">
+                                    <field name="dif_equipe" widget="image" options="{'size': [400, 200]}" nolabel="1"/>
+                                </group>
+                                <group string="Portal do Cliente">
+                                    <field name="dif_portal" widget="image" options="{'size': [400, 200]}" nolabel="1"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Atendimento Nacional">
+                                    <field name="dif_nacional" widget="image" options="{'size': [400, 200]}" nolabel="1"/>
+                                </group>
+                                <group string="Conformidade Regulatória">
+                                    <field name="dif_conformidade" widget="image" options="{'size': [400, 200]}" nolabel="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Equipamentos">
+                            <group>
+                                <group string="Autoclaves a Vapor">
+                                    <field name="eqp_autoclave" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                                <group string="Estufas de Esterilização">
+                                    <field name="eqp_estufa" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                                <group string="Câmaras de Estabilidade">
+                                    <field name="eqp_camara_estab" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                                <group string="Câmaras Frias">
+                                    <field name="eqp_camara_fria" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Incubadoras">
+                                    <field name="eqp_incubadora" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                                <group string="Geladeiras Farmacêuticas">
+                                    <field name="eqp_geladeira" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                                <group string="Vasos de Pressão">
+                                    <field name="eqp_vaso_pressao" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                                <group string="Caldeiras">
+                                    <field name="eqp_caldeira" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Liofilizadores">
+                                    <field name="eqp_liofilizador" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                                <group string="Túneis de Calor">
+                                    <field name="eqp_tunel_calor" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                                <group string="Lavadoras Ultrassônicas">
+                                    <field name="eqp_lavadora" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                                <group string="Termômetros e Sondas">
+                                    <field name="eqp_termometro" widget="image" options="{'size': [300, 160]}" nolabel="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_labquali_homepage_images" model="ir.actions.act_window">
+        <field name="name">Imagens da Homepage</field>
+        <field name="res_model">afr.labquali.homepage</field>
+        <field name="view_mode">form</field>
+        <field name="res_id">1</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- Menu under Website -->
+    <menuitem
+        id="menu_labquali_images_root"
+        name="LabQuali"
+        parent="website.menu_website_configuration"
+        sequence="100"/>
+
+    <menuitem
+        id="menu_labquali_homepage_images"
+        name="Imagens da Homepage"
+        parent="menu_labquali_images_root"
+        action="action_labquali_homepage_images"
+        sequence="10"/>
+
+</odoo>

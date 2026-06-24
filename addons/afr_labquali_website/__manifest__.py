@@ -10,6 +10,7 @@
     "data": [
         "security/ir.model.access.csv",
         "views/labquali_homepage.xml",
+        "views/labquali_backend_views.xml",
         "views/website_layout_override.xml",
         "data/website_data.xml",
         "data/labquali_images_data.xml",
