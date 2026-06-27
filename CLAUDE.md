@@ -94,3 +94,12 @@ Core workflow:
   o comando docker no main loop; acelera os passos de teste e preserva contexto.
   (Dentro de subagent-driven-development, o próprio implementer/reviewer já roda
   seus testes; a regra vale para runs de teste feitos pelo orquestrador.)
+
+## Regras por módulo
+
+### afr_labquali_website
+- **Sempre bump de versão no `__manifest__.py` a cada modificação.** Toda mudança
+  (feat/fix/style) deve incluir incremento de `"version"` no commit. Esquema
+  `16.0.MAJOR.MINOR.PATCH`: feat → bump MINOR; fix/style → bump PATCH. Sem bump =
+  o `-u` no remoto pode não reprocessar assets/views de forma confiável. Conferir
+  o bump ANTES de commitar.
