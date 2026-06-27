@@ -430,3 +430,30 @@ header.o_top_fixed_element .navbar {
         gap: 0.5rem;
     }
 }
+
+// ── GSAP — performance hints ─────────────────────────────────────────
+// Estado inicial das animações vem do JS (gsap.from), NUNCA opacity:0 aqui,
+// para o conteúdo continuar visível se o JS não rodar.
+.lq-hero .container,
+.lq-service-card,
+.lq-diff-card,
+.lq-equip-item,
+.lq-client-logo,
+.lq-cta-btn {
+    will-change: transform, opacity;
+}
+
+// Movimento reduzido → desliga qualquer transform/animação residual
+@media (prefers-reduced-motion: reduce) {
+    .lq-hero .container,
+    .lq-service-card,
+    .lq-diff-card,
+    .lq-equip-item,
+    .lq-client-logo,
+    .lq-cta-btn {
+        will-change: auto;
+        transform: none !important;
+        opacity: 1 !important;
+        animation: none !important;
+    }
+}

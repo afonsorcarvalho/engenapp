@@ -17,7 +17,10 @@
     ],
     "assets": {
         "web.assets_frontend": [
+            "afr_labquali_website/static/src/lib/gsap.min.js",
+            "afr_labquali_website/static/src/lib/ScrollTrigger.min.js",
             "afr_labquali_website/static/src/scss/labquali_website.scss",
+            "afr_labquali_website/static/src/js/labquali_animations.js",
         ],
     },
     "installable": True,
