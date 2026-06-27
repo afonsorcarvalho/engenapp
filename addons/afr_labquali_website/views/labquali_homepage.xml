@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- noupdate=1: congela o arch da homepage. Após install, as edições feitas no
+         Website Builder (textos) vencem; o -u NÃO sobrescreve. Mudanças de estrutura
+         via código exigem edição no builder ou port manual. (imagens já são noupdate
+         no model afr.labquali.homepage; assets GSAP ficam no manifest, não afetados.) -->
+    <data noupdate="1">
     <template id="labquali_homepage" name="LabQuali Homepage">
         <t t-call="website.layout">
             <t t-set="pageName" t-value="'labquali_homepage'"/>
@@ -250,4 +255,5 @@
 
         </t>
     </template>
+    </data>
 </odoo>
