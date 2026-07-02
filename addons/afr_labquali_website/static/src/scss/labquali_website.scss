@@ -371,16 +371,50 @@ header.o_top_fixed_element .navbar {
     padding: 64px 0;
     background: #fff;
 
-    .lq-client-logo {
-        height: 72px;
-        background: var(--lq-fog);
-        border: 1px solid var(--lq-hairline);
-        border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
+    // Painel de prova agregada (substitui parede de logos placeholder).
+    // Números laranja = Calibration Point Rule; sobre navy passa contraste.
+    .lq-proof {
+        background: linear-gradient(135deg, var(--lq-dark) 0%, var(--lq-brand) 100%);
+        border-radius: 16px;
+        padding: clamp(32px, 5vw, 48px) 32px;
+        display: flex;
+        justify-content: center;
+        gap: clamp(1.5rem, 5vw, 4.5rem);
+        flex-wrap: wrap;
+        text-align: center;
+    }
+    .lq-proof-num {
+        font-size: clamp(2.25rem, 5vw, 2.75rem);
+        font-weight: 900;
+        color: var(--lq-accent);
+        line-height: 1;
+        letter-spacing: -0.03em;
+        span { font-size: 0.62em; }
+    }
+    .lq-proof-label {
+        margin-top: 0.5rem;
         font-size: 0.75rem;
-        font-weight: 700;
-        color: var(--lq-gray);
-        letter-spacing: 0.0625rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06rem;
+        color: rgba(255,255,255,0.72);
+    }
+    .lq-proof-segments {
+        margin-top: 1.75rem;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+
+        span {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--lq-brand);
+            background: var(--lq-fog);
+            border: 1px solid var(--lq-hairline);
+            border-radius: 20px;
+            padding: 6px 16px;
+        }
     }
 }
 
