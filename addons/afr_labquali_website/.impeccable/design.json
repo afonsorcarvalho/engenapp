@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-02T00:00:00Z",
+  "title": "Design System: LabQuali Website",
+  "extensions": {
+    "colorMeta": {
+      "engineering-navy": { "role": "primary", "displayName": "Engineering Navy", "canonical": "#0A3D62", "tonalRamp": ["#03151f", "#071e32", "#0a3d62", "#134f7c", "#1e6091", "#3f7fac", "#79a6c8", "#c3d8e8"] },
+      "calibration-orange": { "role": "tertiary", "displayName": "Calibration Orange", "canonical": "#FF6B35", "tonalRamp": ["#3d1300", "#6b2810", "#a83a1a", "#d9482a", "#ff6b35", "#ff8d63", "#ffb193", "#ffd9c9"] },
+      "slate-gray": { "role": "neutral", "displayName": "Slate Gray", "canonical": "#5A7184", "tonalRamp": ["#1a232b", "#2c3a45", "#3f525f", "#5a7184", "#7d90a0", "#a3b2be", "#cbd5dd", "#eef2f5"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "H1 do hero, único no fold." },
+      "title": { "displayName": "Section Title", "purpose": "Título de seção, peso 800 tracking apertado." },
+      "label": { "displayName": "Label", "purpose": "Tags/badges uppercase — uso restrito, evitar eyebrow por seção." }
+    },
+    "shadows": [
+      { "name": "navy-lift", "value": "0 8px 32px rgba(10,61,98,0.12)", "purpose": "Hover de service card sobre claro." },
+      { "name": "deep-lift", "value": "0 8px 32px rgba(0,0,0,0.3)", "purpose": "Hover de card sobre fundo navy." },
+      { "name": "soft-lift", "value": "0 4px 16px rgba(10,61,98,0.1)", "purpose": "Hover de item de equipamento." },
+      { "name": "cta-float", "value": "0 8px 32px rgba(0,0,0,0.25)", "purpose": "Botão CTA branco em repouso sobre gradiente." }
+    ],
+    "motion": [
+      { "name": "card-hover", "value": "box-shadow 0.2s, transform 0.2s", "purpose": "Elevação de card no hover (translateY -3px)." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "CTA laranja de calibração, preciso e confiante.",
+      "html": "<button class=\"ds-btn-primary\">Solicitar cotação</button>",
+      "css": ".ds-btn-primary { background: #ff6b35; color: #fff; font-weight: 700; border: 1px solid #ff6b35; border-radius: 6px; padding: 8px 20px; font-family: Inter, 'Segoe UI', Arial, sans-serif; transition: background 0.2s, border-color 0.2s; } .ds-btn-primary:hover { background: #d9482a; border-color: #d9482a; } .ds-btn-primary:focus-visible { outline: 2px solid #0a3d62; outline-offset: 2px; }"
+    },
+    {
+      "name": "CTA Button (inverted)",
+      "kind": "button",
+      "refersTo": "cta-button",
+      "description": "Botão branco sobre gradiente navy→laranja da seção final.",
+      "html": "<a href=\"#\" class=\"ds-cta-btn\">Falar com especialista</a>",
+      "css": ".ds-cta-btn { display: inline-block; background: #fff; color: #0a3d62; font-weight: 800; font-size: 1rem; padding: 16px 40px; border-radius: 8px; text-decoration: none; box-shadow: 0 8px 32px rgba(0,0,0,0.25); font-family: Inter, 'Segoe UI', Arial, sans-serif; transition: background 0.2s; } .ds-cta-btn:hover { background: #eef2f5; }"
+    },
+    {
+      "name": "Service Card",
+      "kind": "card",
+      "refersTo": "service-card",
+      "description": "Card de serviço, plano em repouso, topo laranja de 3px como cota.",
+      "html": "<article class=\"ds-service-card\"><div class=\"ds-card-body\"><h3>Qualificação de autoclaves</h3><p>Protocolos IQ/OQ/PQ com rastreabilidade RBC.</p></div></article>",
+      "css": ".ds-service-card { background: #fff; border: 1px solid #e0e8f0; border-radius: 14px; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s; font-family: Inter, 'Segoe UI', Arial, sans-serif; } .ds-service-card:hover { box-shadow: 0 8px 32px rgba(10,61,98,0.12); transform: translateY(-3px); } .ds-service-card .ds-card-body { padding: 20px 18px 22px; border-top: 3px solid #ff6b35; } .ds-service-card h3 { font-size: 1rem; font-weight: 700; color: #0a3d62; margin: 0 0 0.5rem; } .ds-service-card p { font-size: 0.8125rem; color: #5a7184; line-height: 1.6; margin: 0; }"
+    },
+    {
+      "name": "Section Title",
+      "kind": "custom",
+      "refersTo": "title",
+      "description": "Título de seção com palavra-valor em laranja.",
+      "html": "<h2 class=\"ds-section-title\">Expertise em equipamentos <span>críticos</span></h2>",
+      "css": ".ds-section-title { font-family: Inter, 'Segoe UI', Arial, sans-serif; font-size: 2.125rem; font-weight: 800; color: #0a3d62; letter-spacing: -0.05rem; line-height: 1.2; margin: 0; text-wrap: balance; } .ds-section-title span { color: #ff6b35; }"
+    },
+    {
+      "name": "Navbar",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Navbar branca com base navy e brand de acento.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-brand\" href=\"#\">Lab<span>Quali</span></a><a class=\"ds-navlink\" href=\"#\">Serviços</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 1.5rem; background: #fff; border-bottom: 2px solid #0a3d62; box-shadow: 0 2px 8px rgba(10,61,98,0.08); padding: 0.75rem 1.5rem; font-family: Inter, 'Segoe UI', Arial, sans-serif; } .ds-brand { color: #0a3d62; font-weight: 800; font-size: 1.3rem; letter-spacing: -0.03rem; text-decoration: none; } .ds-brand span { color: #ff6b35; } .ds-navlink { color: #0a3d62; font-size: 0.875rem; font-weight: 500; text-decoration: none; } .ds-navlink:hover { color: #ff6b35; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Certified Blueprint",
+    "overview": "LabQuali é uma planta técnica certificada, não um folheto de vendas. Fundo azul de engenharia, marcações em laranja de calibração exatamente onde uma medida importa. Comunica rigor, confiança e competência técnica; rejeita o template SaaS genérico. Credibilidade vem de prova visível e execução impecável do layout.",
+    "keyCharacteristics": [
+      "Navy de engenharia domina; laranja de calibração pontua ≤15% da superfície.",
+      "Contraste tipográfico por peso (400→900), não por família.",
+      "Superfícies planas; profundidade só em hover/estado.",
+      "Prova técnica sobre adjetivos de marketing."
+    ],
+    "rules": [
+      { "name": "The Calibration Point Rule", "body": "Calibration Orange só onde há medida a marcar: CTA, número de prova, palavra-valor. Nunca preenchimento. Raridade é a mensagem.", "section": "colors" },
+      { "name": "The Cold-Warm Rule", "body": "Navy frio domina; laranja quente pontua. Nunca inverter o domínio. Calor vem do acento e da tipografia, nunca do fundo.", "section": "colors" },
+      { "name": "The Weight-Not-Family Rule", "body": "Hierarquia por peso Inter (400 vs 900), família única. Nunca segunda família para dar contraste.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Superfícies planas em repouso; sombra só em hover. Sombras de superfície clara tingidas de navy, não preto.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do manter Calibration Orange em ≤15% da superfície.",
+      "Do contrastar hierarquia por peso Inter (400→900), família única.",
+      "Do tingir sombras de superfície clara com navy, nunca preto neutro.",
+      "Do manter superfícies planas em repouso; sombra só em hover.",
+      "Do usar o border-top laranja de 3px como marcação de cota."
+    ],
+    "donts": [
+      "Don't virar isto num template SaaS genérico: cards idênticos infinitos, hero-metric com gradiente, hype de startup.",
+      "Don't repetir a tag uppercase-tracked acima de toda seção — eyebrow-scaffold de AI.",
+      "Don't inverter o domínio cold-warm: navy domina, laranja pontua.",
+      "Don't introduzir segunda família tipográfica.",
+      "Don't usar border-left/right colorido >1px como faixa lateral decorativa.",
+      "Don't deixar cinza claro sobre fundo tingido em corpo longo sem checar contraste 4.5:1."
+    ]
+  }
+}

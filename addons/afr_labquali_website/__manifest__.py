@@ -1,7 +1,7 @@
 # addons/afr_labquali_website/__manifest__.py
 {
     "name": "LabQuali Website",
-    "version": "16.0.1.1.1",
+    "version": "16.0.1.1.2",
     "category": "Website",
     "license": "LGPL-3",
     "author": "AFR Sistemas",
@@ -12,9 +12,9 @@
         "views/labquali_homepage.xml",
         "views/labquali_backend_views.xml",
         "views/website_layout_override.xml",
-        "data/website_data.xml",
         "data/labquali_images_data.xml",
     ],
+    "post_init_hook": "post_init_hook",
     "assets": {
         "web.assets_frontend": [
             "afr_labquali_website/static/src/lib/gsap.min.js",

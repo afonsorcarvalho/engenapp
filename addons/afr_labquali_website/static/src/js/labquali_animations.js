@@ -34,7 +34,16 @@
         var toArray = gsap.utils.toArray;
 
         // ================= HERO — entrada no load =================
-        var heroTl = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.9 } });
+        var heroEls = toArray(
+            ".lq-hero .lq-hero-badge, .lq-hero h1, .lq-hero .lq-hero-sub, .lq-hero .d-flex a, .lq-hero .lq-hero-stats > div"
+        );
+        gsap.set(heroEls, { willChange: "transform, opacity" });
+        var heroTl = gsap.timeline({
+            defaults: { ease: "power3.out", duration: 0.9 },
+            onComplete: function () {
+                gsap.set(heroEls, { clearProps: "willChange" });
+            },
+        });
         heroTl
             .from(".lq-hero .lq-hero-badge", { y: 30, opacity: 0, duration: 0.6 })
             .from(".lq-hero h1", { y: 40, opacity: 0 }, "-=0.35")
@@ -90,6 +99,8 @@
             window.ScrollTrigger.batch(items, {
                 start: "top 82%",
                 onEnter: function (batch) {
+                    // will-change transiente: liga só durante a animação, limpa ao fim
+                    gsap.set(batch, { willChange: "transform, opacity" });
                     gsap.from(batch, {
                         y: opts.y || 50,
                         opacity: 0,
@@ -98,6 +109,9 @@
                         ease: "power3.out",
                         stagger: opts.stagger || 0.1,
                         overwrite: true,
+                        onComplete: function () {
+                            gsap.set(batch, { clearProps: "willChange" });
+                        },
                     });
                 },
             });
@@ -137,6 +151,8 @@
         }
         var ctaBtn = document.querySelector(".lq-cta-btn");
         if (ctaBtn) {
+            // float contínuo (repeat infinito) → will-change persistente é justificado aqui
+            gsap.set(ctaBtn, { willChange: "transform" });
             gsap.to(ctaBtn, {
                 y: -8,
                 duration: 1.4,
