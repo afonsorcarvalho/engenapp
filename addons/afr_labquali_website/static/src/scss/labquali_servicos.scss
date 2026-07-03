@@ -1,0 +1,81 @@
+// addons/afr_labquali_website/static/src/scss/labquali_servicos.scss
+//
+// Marca da página /our-services usando snippets nativos do Odoo.
+// Escopo em .lq-servicos (wrapper no #wrap da página) para não vazar
+// overrides para outras páginas de snippet (/contactus etc.).
+// Reusa tokens --lq-* definidos no :root de labquali_website.scss.
+
+.lq-servicos {
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+
+    // ── 1) Banner (s_cover) ──────────────────────────────────────────
+    .s_cover {
+        background: linear-gradient(135deg, var(--lq-dark) 0%, var(--lq-brand) 55%, #0d2f4a 100%);
+        color: #fff;
+
+        h1 {
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            color: #fff;
+            text-wrap: balance;
+            .lq-accent { color: var(--lq-accent); }
+        }
+        p, .lead { color: rgba(255, 255, 255, 0.75); }
+    }
+
+    // ── 2) Serviços (s_three_columns) — cards flat + topo laranja ─────
+    .s_three_columns .card {
+        border: 1px solid var(--lq-hairline);
+        border-top: 3px solid var(--lq-accent);
+        border-radius: 14px;
+        background: #fff;
+        transition: box-shadow 0.2s, transform 0.2s;
+
+        &:hover {
+            box-shadow: 0 8px 32px rgba(10, 61, 98, 0.12);
+            transform: translateY(-3px);
+        }
+
+        h3, h4, .card-title { color: var(--lq-brand); font-weight: 700; }
+        p { color: var(--lq-gray); }
+    }
+
+    // ── 3) Detalhe por serviço (s_image_text / s_text_image) ─────────
+    .s_image_text, .s_text_image {
+        h2, h3 { color: var(--lq-brand); font-weight: 800; letter-spacing: -0.02em; }
+        img { border-radius: 14px; }
+        ul li::marker { color: var(--lq-accent); }
+        strong { color: var(--lq-brand); }
+    }
+
+    // ── 4) Depoimentos (s_quotes_carousel) ───────────────────────────
+    .s_quotes_carousel {
+        .s_blockquote, blockquote { color: var(--lq-brand); }
+        .s_blockquote_author, footer, small { color: var(--lq-accent); font-weight: 600; }
+    }
+
+    // ── 5) CTA (s_call_to_action) — Cold-Warm: campo navy, botão laranja
+    .s_call_to_action {
+        background: linear-gradient(135deg, var(--lq-dark), var(--lq-brand)) !important;
+        color: #fff;
+
+        h2, h3 { color: #fff; font-weight: 900; }
+        p, .lead { color: rgba(255, 255, 255, 0.8); }
+
+        .btn_cta, .btn-primary, a.btn {
+            background: var(--lq-accent);
+            border-color: var(--lq-accent);
+            color: #fff !important;
+            font-weight: 700;
+            &:hover { background: var(--lq-accent-2); border-color: var(--lq-accent-2); }
+        }
+    }
+
+    // Movimento reduzido
+    @media (prefers-reduced-motion: reduce) {
+        .s_three_columns .card {
+            transition: none;
+            &:hover { transform: none; }
+        }
+    }
+}
