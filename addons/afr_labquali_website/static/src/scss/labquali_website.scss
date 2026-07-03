@@ -85,3 +85,62 @@ header.o_top_fixed_element .navbar {
         }
     }
 }
+
+// ── Footer ────────────────────────────────────────────────────────────
+// Navy (Cold-Warm: navy domina). Respiro generoso; marca LabQuali em ênfase.
+.lq-footer {
+    background: var(--lq-dark) !important;   // !important: bate o preset de cor do tema
+    color: rgba(255,255,255,0.62);
+    padding: 72px 0 32px;
+    font-size: 0.875rem;
+    line-height: 1.7;
+
+    .row { row-gap: 2.5rem; }   // respiro quando colunas quebram
+
+    // Marca — segue a logo (Lab branco + Quali laranja), maior e forte
+    .lq-footer-brand-name {
+        display: inline-block;
+        font-size: 1.875rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        margin-bottom: 1.125rem;
+        span { color: var(--lq-accent); }
+    }
+    > .container > .row > div:first-child p {
+        color: rgba(255,255,255,0.58);
+        max-width: 34ch;
+        line-height: 1.75;
+        margin: 0;
+    }
+
+    h4 {
+        color: #fff;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 1.25rem;
+    }
+    ul { list-style: none; padding: 0; margin: 0; }
+    ul li { margin-bottom: 0.75rem; }
+    a { color: rgba(255,255,255,0.62); text-decoration: none; transition: color 0.15s; }
+    a:hover { color: var(--lq-accent); }
+
+    .lq-footer-divider {
+        border-top: 1px solid rgba(255,255,255,0.1);
+        margin-top: 3.5rem;
+        padding-top: 1.75rem;
+        font-size: 0.8125rem;
+        color: rgba(255,255,255,0.45);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+
+        a { color: rgba(255,255,255,0.5); }
+        a:hover { color: #fff; }
+    }
+}
