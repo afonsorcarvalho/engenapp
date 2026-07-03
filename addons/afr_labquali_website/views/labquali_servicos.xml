@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Página /our-services como DADO do módulo (deployável). noupdate=1:
+         edições no builder vencem depois da 1ª instalação. Snippets nativos.
+         Imagens via /web/image com id dinâmico do registro afr.labquali.homepage.
+         O post_init_hook despublica qualquer página demo concorrente em /our-services. -->
+    <data noupdate="1">
+    <template id="servicos_page_view" name="LabQuali Serviços">
+        <t t-call="website.layout">
+            <t t-set="pageName" t-value="'servicos'"/>
+            <div id="wrap" class="oe_structure oe_empty lq-servicos">
+                <t t-set="lq_imgs" t-value="env['afr.labquali.homepage'].sudo().search([], limit=1)"/>
+
+                <section class="s_cover o_animate o_anim_fade_in pt96 pb96" data-snippet="s_cover" data-name="Capa">
+                    <div class="container">
+                        <h1>Rastreabilidade <span class="lq-accent">metrológica</span>, do sensor ao relatório.</h1>
+                        <p class="lead">Qualificação, calibração e inspeção de equipamentos críticos com cadeia rastreável RBC/Inmetro.</p>
+                    </div>
+                </section>
+
+                <section class="s_three_columns o_animate o_anim_fade_in pt96 pb64" data-vcss="001" data-snippet="s_three_columns" data-name="Serviços">
+                    <div class="container">
+                        <div class="row d-flex align-items-stretch">
+                            <div class="col-lg-4 col-md-6 pt16 pb16">
+                                <div class="card text-bg-white h-100">
+                                    <img class="card-img-top" t-att-src="'/web/image/afr.labquali.homepage/%s/svc_qualificacao' % lq_imgs.id" alt="Qualificação" loading="lazy"/>
+                                    <div class="card-body"><h3 class="card-title">Qualificação</h3><p class="card-text">QI/QO/QD de autoclaves, estufas e câmaras conforme RDC 665/2022 e boas práticas de fabricação.</p></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 pt16 pb16">
+                                <div class="card text-bg-white h-100">
+                                    <img class="card-img-top" t-att-src="'/web/image/afr.labquali.homepage/%s/svc_calibracao' % lq_imgs.id" alt="Calibração de Sensores" loading="lazy"/>
+                                    <div class="card-body"><h3 class="card-title">Calibração de Sensores</h3><p class="card-text">Termopares, termômetros, manômetros e sensores de pressão com rastreabilidade metrológica RBC/Inmetro.</p></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 pt16 pb16">
+                                <div class="card text-bg-white h-100">
+                                    <img class="card-img-top" t-att-src="'/web/image/afr.labquali.homepage/%s/svc_nr13' % lq_imgs.id" alt="Inspeção NR13" loading="lazy"/>
+                                    <div class="card-body"><h3 class="card-title">Inspeção NR13</h3><p class="card-text">Vasos de pressão, caldeiras e autoclaves conforme NR13 do MTE. Relatórios para fiscalização.</p></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="s_image_text o_animate o_anim_fade_in pt64 pb64" data-snippet="s_image_text" data-name="Imagem-Texto">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6 pt16 pb16"><img class="img img-fluid w-100" t-att-src="'/web/image/afr.labquali.homepage/%s/svc_qualificacao' % lq_imgs.id" alt="Qualificação" loading="lazy"/></div>
+                            <div class="col-lg-6 pt16 pb16">
+                                <h2>Qualificação de Equipamentos</h2>
+                                <ul>
+                                    <li><strong>QI — Qualificação de Instalação:</strong> verifica se o equipamento foi instalado conforme especificação do fabricante e requisitos de projeto.</li>
+                                    <li><strong>QO — Qualificação de Operação:</strong> comprova operação dentro dos parâmetros em toda a faixa de trabalho.</li>
+                                    <li><strong>QD — Qualificação de Desempenho:</strong> demonstra desempenho consistente e reprodutível na rotina, com carga real.</li>
+                                </ul>
+                                <p><strong>Normas:</strong> RDC 665/2022 (ANVISA), boas práticas de fabricação (BPF).</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="s_text_image o_animate o_anim_fade_in pt64 pb64" data-snippet="s_text_image" data-name="Texto-Imagem">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6 pt16 pb16 order-lg-2"><img class="img img-fluid w-100" t-att-src="'/web/image/afr.labquali.homepage/%s/svc_calibracao' % lq_imgs.id" alt="Calibração" loading="lazy"/></div>
+                            <div class="col-lg-6 pt16 pb16 order-lg-1">
+                                <h2>Calibração de Sensores</h2>
+                                <ul>
+                                    <li>Termopares, PT100, termômetros, manômetros e sensores de pressão/umidade.</li>
+                                    <li>Cadeia rastreável até o BIPM via laboratórios acreditados RBC.</li>
+                                    <li>Certificado com incerteza declarada.</li>
+                                </ul>
+                                <p><strong>Normas:</strong> RBC/Inmetro, ISO/IEC 17025.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="s_image_text o_animate o_anim_fade_in pt64 pb64" data-snippet="s_image_text" data-name="Imagem-Texto">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6 pt16 pb16"><img class="img img-fluid w-100" t-att-src="'/web/image/afr.labquali.homepage/%s/svc_nr13' % lq_imgs.id" alt="Inspeção NR13" loading="lazy"/></div>
+                            <div class="col-lg-6 pt16 pb16">
+                                <h2>Inspeção NR13</h2>
+                                <ul>
+                                    <li>Inspeção inicial, periódica e extraordinária de vasos de pressão, caldeiras e autoclaves.</li>
+                                    <li>Relatório e prontuário para fiscalização.</li>
+                                </ul>
+                                <p><strong>Normas:</strong> NR13 (MTE), ABNT aplicáveis.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="s_call_to_action o_animate o_anim_fade_in pt96 pb96" data-snippet="s_call_to_action" data-name="Chamada">
+                    <div class="container text-center">
+                        <h2>Precisa de qualificação ou calibração?</h2>
+                        <p class="lead">Solicite um orçamento sem compromisso. Retorno em até 24h úteis.</p>
+                        <a href="/contactus" class="btn btn-primary btn-lg">Solicitar Orçamento</a>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+    <record id="servicos_page" model="website.page">
+        <field name="name">Serviços</field>
+        <field name="url">/our-services</field>
+        <field name="view_id" ref="servicos_page_view"/>
+        <field name="is_published" eval="True"/>
+        <field name="website_indexed" eval="True"/>
+    </record>
+    </data>
+</odoo>
