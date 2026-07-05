@@ -1,7 +1,7 @@
 # addons/afr_labquali_website/__manifest__.py
 {
     "name": "LabQuali Website",
-    "version": "16.0.1.3.2",
+    "version": "16.0.1.4.1",
     "category": "Website",
     "license": "LGPL-3",
     "author": "AFR Sistemas",
@@ -9,8 +9,6 @@
     "depends": ["website", "afr_labquali_layout"],
     "data": [
         "security/ir.model.access.csv",
-        "views/labquali_homepage.xml",
-        "views/labquali_servicos.xml",
         "views/labquali_backend_views.xml",
         "views/website_layout_override.xml",
         "data/labquali_images_data.xml",

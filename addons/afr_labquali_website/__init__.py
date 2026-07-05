@@ -1,36 +1,33 @@
 # addons/afr_labquali_website/__init__.py
 from . import models
 
+# Chaves de views/páginas de CONTEÚDO que o módulo enviava em versões antigas
+# (<=16.0.1.3.x). O conteúdo agora vive no Website Builder (editável sem
+# upgrade); o módulo só entrega SCSS/footer/imagens. Este cleanup remove os
+# leftovers para que o conteúdo de builder (arch da própria página) sirva.
+_LEGACY_VIEW_KEYS = ["afr_labquali_website.labquali_homepage", "afr_labquali_website.servicos_page_view"]
 
-def _ensure_labquali_pages(env):
-    """Garante que as páginas LabQuali sejam as servidas. Idempotente.
 
-    1) Publica a homepage ("/", view key website.homepage) — o conteúdo LabQuali
-       é injetado por herança de website.homepage; se a página em "/" estiver
-       despublicada, o visitante anônimo cai na loja/404.
-    2) /our-services: REMOVE qualquer página demo concorrente (do tema). Não
-       basta despublicar: uma página website-específica despublicada ainda é
-       casada primeiro pelo _serve_page e devolve 404, sem cair na nossa página
-       genérica publicada. Por isso deletamos as concorrentes.
-    """
-    # 1) publicar homepage
+def _migrate_to_builder_content(env):
+    """Idempotente: publica a homepage e remove views/páginas de conteúdo legadas."""
+    View = env["ir.ui.view"].with_context(active_test=False)
+    Page = env["website.page"].with_context(active_test=False)
+
+    # 1) remover páginas cujo view é uma view de conteúdo legada
+    #    (unlink de website.page também apaga a view associada → usar .exists()
+    #     antes de apagar as views restantes para não re-deletar)
+    legacy_views = View.search([("key", "in", _LEGACY_VIEW_KEYS)])
+    if legacy_views:
+        Page.search([("view_id", "in", legacy_views.ids)]).unlink()
+        legacy_views.exists().unlink()
+
+    # 2) publicar a homepage (para "/" não cair na loja/404)
     for page in env["website.page"].search([("url", "=", "/")]):
         if page.view_id.key == "website.homepage" and not page.is_published:
             page.is_published = True
-
-    # 2) remover páginas demo concorrentes em /our-services
-    ours_view = env.ref("afr_labquali_website.servicos_page_view", raise_if_not_found=False)
-    ours_page = env.ref("afr_labquali_website.servicos_page", raise_if_not_found=False)
-    competitors = env["website.page"].with_context(active_test=False).search([("url", "=", "/our-services")])
-    for page in competitors:
-        if ours_page and page.id == ours_page.id:
-            continue
-        if ours_view and page.view_id.id == ours_view.id:
-            continue
-        page.unlink()
 
 
 def post_init_hook(cr, registry):
     from odoo import api, SUPERUSER_ID
     env = api.Environment(cr, SUPERUSER_ID, {})
-    _ensure_labquali_pages(env)
+    _migrate_to_builder_content(env)
