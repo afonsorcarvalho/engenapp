@@ -16,3 +16,7 @@
 [submodule "addons/afr_cme"]
 	path = addons/afr_cme
 	url = https://github.com/afonsorcarvalho/afr_cme_rastreabilidade.git
+[submodule "addons/afr_supervisorio_ciclos_extras"]
+	path = addons/afr_supervisorio_ciclos_extras
+	url = https://github.com/afonsorcarvalho/afr_supervisorio_ciclos_extras.git
+	branch = master
