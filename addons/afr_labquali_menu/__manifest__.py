@@ -11,7 +11,7 @@ Vendas, Qualificações, Faturamento e Funcionários.
 
 Não altera permissões de acesso a modelos — apenas visibilidade de menu.
 """,
-    "version": "16.0.1.0.0",
+    "version": "16.0.1.1.0",
     "author": "AFR Sistemas",
     "website": "https://afrsistemas.com.br",
     "license": "LGPL-3",
