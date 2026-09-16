@@ -617,3 +617,34 @@ class AfrQualificacaoOsVisita(models.Model):
                 for v in visitas.sudo()
             ],
         }
+
+    # Campos que a agenda do PWA pode gravar. `planned_hours` fica de fora de
+    # propósito: é derivado do par início/fim, não digitado.
+    _PWA_WRITABLE_FIELDS = frozenset({
+        "date", "time_start", "time_stop", "tecnico_id", "note",
+    })
+
+    @api.model
+    def pwa_visita_update(self, visita_id, vals):
+        """Edita uma visita a partir da agenda do PWA. Só Gestor.
+
+        Sem `sudo` no write: o Gestor tem write de verdade, e é justamente o
+        `write()` do modelo que carrega a trava de estado da OS que queremos
+        honrar. Um sudo aqui contornaria a própria regra que a spec preserva.
+        """
+        self._check_manager_only(_("editar a agenda de visitas"))
+        extra = set(vals) - self._PWA_WRITABLE_FIELDS
+        if extra:
+            raise UserError(_(
+                "Campo(s) não editável(is) pela agenda: %s."
+            ) % ", ".join(sorted(extra)))
+        visita = self.browse(visita_id)
+        visita._board_check_not_done()
+        vals = dict(vals)
+        start = vals.get("time_start", visita.time_start)
+        stop = vals.get("time_stop", visita.time_stop)
+        if ("time_start" in vals or "time_stop" in vals) and stop > start:
+            vals["planned_hours"] = stop - start
+        visita.write(vals)
+        my_employee_id = self.env.user.sudo().employee_id.id or False
+        return visita.sudo()._pwa_serialize(True, my_employee_id)

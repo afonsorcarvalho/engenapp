@@ -8,7 +8,7 @@ esconder o botão não protege nada.
 from datetime import timedelta
 
 from odoo import fields
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests.common import TransactionCase, tagged
 
 
@@ -45,6 +45,12 @@ class PwaAgendaCommon(TransactionCase):
                     "afr_qualificacao.group_afr_qualificacao_manager").id,
             ])],
         })
+        # Mesmo fuso do admin (`cls.env.user.tz` acima): sem isto, um write
+        # feito `with_user(user_gestor)` recomputa date_start/date_stop num
+        # relógio diferente do usado para criar os registros de comparação
+        # (ex. `_check_equipment_overlap`), mascarando sobreposições reais.
+        (cls.user_tec | cls.user_usr | cls.user_gestor).write(
+            {"tz": "America/Sao_Paulo"})
         cls.emp_tec = cls.env["hr.employee"].create({
             "name": "Téc Agenda", "user_id": cls.user_tec.id,
         })
@@ -239,3 +245,94 @@ class TestPwaAgendaFetch(PwaAgendaCommon):
         self.assertFalse(self.user_tec.has_group("hr.group_hr_user"))
         data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch()
         self.assertEqual(data["visitas"][0]["tecnico_name"], "Téc Agenda")
+
+
+class TestPwaAgendaUpdate(PwaAgendaCommon):
+
+    def _visita_editavel(self):
+        os1 = self._make_os("scheduled")
+        return self._make_visita(os1, self.d1, self.emp_tec,
+                                 time_start=8.0, time_stop=12.0,
+                                 planned_hours=4.0)
+
+    def test_tecnico_barrado(self):
+        v = self._visita_editavel()
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_tec).pwa_visita_update(
+                v.id, {"note": "x"})
+
+    def test_usuario_barrado(self):
+        v = self._visita_editavel()
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_usr).pwa_visita_update(
+                v.id, {"note": "x"})
+
+    def test_gestor_move_data(self):
+        v = self._visita_editavel()
+        row = self.Visita.with_user(self.user_gestor).pwa_visita_update(
+            v.id, {"date": fields.Date.to_string(self.d2)})
+        self.assertEqual(v.date, self.d2)
+        self.assertEqual(row["date"], fields.Date.to_string(self.d2))
+
+    def test_horas_recalculadas(self):
+        v = self._visita_editavel()
+        self.Visita.with_user(self.user_gestor).pwa_visita_update(
+            v.id, {"time_start": 9.0, "time_stop": 15.0})
+        self.assertEqual(v.planned_hours, 6.0)
+
+    def test_repasse_para_colega(self):
+        v = self._visita_editavel()
+        self.Visita.with_user(self.user_gestor).pwa_visita_update(
+            v.id, {"tecnico_id": self.emp_outro.id})
+        self.assertEqual(v.tecnico_id, self.emp_outro)
+
+    def test_campo_fora_da_whitelist(self):
+        v = self._visita_editavel()
+        for vals in ({"os_id": self._make_os().id}, {"state": "done"},
+                     {"planned_hours": 99.0}):
+            with self.assertRaises(UserError):
+                self.Visita.with_user(self.user_gestor).pwa_visita_update(
+                    v.id, vals)
+
+    def test_visita_realizada_recusa(self):
+        v = self._visita_editavel()
+        v.state = "done"
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_update(
+                v.id, {"note": "x"})
+
+    def test_os_em_execucao_recusa_agendamento(self):
+        v = self._visita_editavel()
+        v.os_id.state = "in_progress"
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_update(
+                v.id, {"date": fields.Date.to_string(self.d2)})
+
+    def test_data_passada_recusa(self):
+        v = self._visita_editavel()
+        ontem = fields.Date.to_string(self.hoje - timedelta(days=1))
+        with self.assertRaises(ValidationError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_update(
+                v.id, {"date": ontem})
+
+    def test_sobreposicao_de_equipamento_dispara_por_hora(self):
+        """`_check_equipment_overlap` observa `date_start`/`date_stop`, que são
+        computed stored derivados de `time_start`/`time_stop`. Mexer só na
+        hora precisa disparar a constraint — se não disparar, a promessa de
+        'travas preservadas' da spec é falsa."""
+        os1 = self._make_os("scheduled")
+        cat = self.env["engc.equipment.category"].create({"name": "Cat PWA"})
+        marca = self.env["engc.equipment.marca"].create({"name": "Marca PWA"})
+        equip = self.env["engc.equipment"].create({
+            "name": "Autoclave PWA", "category_id": cat.id,
+            "marca_id": marca.id, "model": "M1",
+            "serial_number": "SN-PWA",
+        })
+        self._make_visita(os1, self.d1, self.emp_tec, time_start=8.0,
+                          time_stop=12.0, equipment_ids=[(6, 0, [equip.id])])
+        v2 = self._make_visita(os1, self.d1, self.emp_outro, time_start=14.0,
+                               time_stop=16.0,
+                               equipment_ids=[(6, 0, [equip.id])])
+        with self.assertRaises(ValidationError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_update(
+                v2.id, {"time_start": 10.0, "time_stop": 11.0})
