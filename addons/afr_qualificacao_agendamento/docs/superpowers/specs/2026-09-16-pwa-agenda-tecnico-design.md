@@ -58,6 +58,21 @@ O guard é obrigatório no servidor, não basta esconder o botão: o proxy
 `/api/odoo` do PWA repassa `call_kw` sem allowlist de modelo/método, então
 qualquer sessão autenticada alcança qualquer método público.
 
+A hierarquia é `manager ⊃ user ⊃ technician` (`implied_ids` em
+`qualificacao_groups.xml:26-37`). Como a implicação desce, um Usuário comum
+**não** está no grupo Gestor e o guard o barra — ao contrário do que acontece
+com regras de registro, onde a implicação faz o Gestor cair na regra
+restritiva do Técnico e exige o par OR'ed.
+
+### Divulgação aceita
+
+`pwa_agenda_fetch` não tem guard e devolve a agenda da equipe inteira, com
+`partner_name`, `city` e `conflict_msg` de todos. `conflict_msg` é montado por
+`_compute_conflicts`, que interpola o **nome da OS conflitante** — ou seja, um
+técnico enxerga nomes de OS e clientes de colegas. É consequência direta da
+decisão 1 (leitura global) e está aceita, não é descuido. Restringir isso
+depois significa escopar a leitura, não remendar a mensagem.
+
 ### Travas preservadas
 
 - `write()` recusa `date`/`time_start`/`time_stop`/`planned_hours`/`tecnico_id`/
@@ -248,6 +263,12 @@ Mais:
 - Whitelist: `{"os_id": X}` e `{"state": "done"}` levantam `UserError`.
 - Janela: sem datas, devolve `server_today` e 14 dias; com datas, respeita.
 - `only_mine` filtra por empregado do usuário.
+- **Constraint dispara por hora, não só por data:** `_check_equipment_overlap`
+  observa `date_start`/`date_stop`, que são *computed stored* derivados de
+  `date`/`time_start`/`time_stop`. Um `pwa_visita_update` que mexe só em
+  `time_start`/`time_stop` para dentro de uma sobreposição precisa levantar
+  `ValidationError`. Se não levantar, a promessa de "travas preservadas" é
+  falsa e o conserto entra no plano — não se descobre isso no Bloco H.
 - **Regressão de delegação:** `pwa_agenda_fetch` chamado por usuário sem
   permissão em HR. É a armadilha `hr.employee` / `hr.employee.public` que já
   mordeu este módulo (`is_tecnico`) e o `engc_os`.
