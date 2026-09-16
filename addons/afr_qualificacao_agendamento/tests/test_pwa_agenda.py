@@ -116,3 +116,126 @@ class TestPwaAgendaAcl(PwaAgendaCommon):
     def test_guard_libera_gestor(self):
         Visita = self.Visita.with_user(self.user_gestor)
         self.assertIsNone(Visita._check_manager_only("testar o guard"))
+
+
+class TestPwaAgendaFetch(PwaAgendaCommon):
+
+    def test_payload_tem_janela_do_servidor(self):
+        data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch()
+        self.assertEqual(data["server_today"], fields.Date.to_string(self.hoje))
+        self.assertEqual(data["date_from"], fields.Date.to_string(self.hoje))
+        self.assertEqual(
+            data["date_to"],
+            fields.Date.to_string(self.hoje + timedelta(days=13)),
+        )
+
+    def test_janela_explicita_respeitada(self):
+        os1 = self._make_os()
+        self._make_visita(os1, self.d1, self.emp_tec)
+        self._make_visita(os1, self.d_fora, self.emp_tec)
+        data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch(
+            fields.Date.to_string(self.hoje),
+            fields.Date.to_string(self.hoje + timedelta(days=10)),
+            False,
+        )
+        ids = {v["id"] for v in data["visitas"]}
+        self.assertEqual(len(ids), 1)
+
+    def test_only_mine_filtra_por_empregado(self):
+        os1 = self._make_os()
+        minha = self._make_visita(os1, self.d1, self.emp_tec)
+        self._make_visita(os1, self.d2, self.emp_outro)
+        data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch(
+            only_mine=True)
+        self.assertEqual([v["id"] for v in data["visitas"]], [minha.id])
+        self.assertEqual(data["my_employee_id"], self.emp_tec.id)
+
+    def test_only_mine_ignorado_sem_empregado(self):
+        """Gestor administrativo não tem hr.employee. Filtrar por ele abriria
+        a tela vazia e sem explicação; o servidor devolve tudo e o front
+        desabilita o toggle."""
+        os1 = self._make_os()
+        self._make_visita(os1, self.d1, self.emp_tec)
+        data = self.Visita.with_user(self.user_gestor).pwa_agenda_fetch(
+            only_mine=True)
+        self.assertFalse(data["my_employee_id"])
+        self.assertEqual(len(data["visitas"]), 1)
+
+    def test_tecnico_ve_visita_de_colega(self):
+        os1 = self._make_os()
+        self._make_visita(os1, self.d1, self.emp_outro)
+        data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch(
+            only_mine=False)
+        self.assertEqual(len(data["visitas"]), 1)
+        self.assertFalse(data["visitas"][0]["is_mine"])
+
+    def test_chaves_do_serializer(self):
+        os1 = self._make_os()
+        self._make_visita(os1, self.d1, self.emp_tec,
+                          time_start=8.0, time_stop=12.0, planned_hours=4.0)
+        data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch()
+        row = data["visitas"][0]
+        for k in ("id", "date", "time_start", "time_stop", "planned_hours",
+                  "os_id", "os_name", "os_state", "partner_name", "city",
+                  "equipment_list", "instrument_list", "tecnico_id",
+                  "tecnico_name", "is_mine", "state", "overflow", "editable",
+                  "lock_reason", "conflict", "conflict_msg", "note"):
+            self.assertIn(k, row)
+        self.assertEqual(row["tecnico_name"], "Téc Agenda")
+
+    def test_tecnico_nunca_edita(self):
+        os1 = self._make_os()
+        self._make_visita(os1, self.d1, self.emp_tec)
+        data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch()
+        row = data["visitas"][0]
+        self.assertFalse(data["can_manage"])
+        self.assertFalse(row["editable"])
+        self.assertIn("Gestor", row["lock_reason"])
+
+    def test_gestor_edita_os_agendada(self):
+        os1 = self._make_os("scheduled")
+        self._make_visita(os1, self.d1, self.emp_tec)
+        data = self.Visita.with_user(self.user_gestor).pwa_agenda_fetch(
+            only_mine=False)
+        row = data["visitas"][0]
+        self.assertTrue(data["can_manage"])
+        self.assertTrue(row["editable"])
+        self.assertFalse(row["lock_reason"])
+
+    def test_gestor_travado_em_os_em_execucao(self):
+        os1 = self._make_os("scheduled")
+        self._make_visita(os1, self.d1, self.emp_tec)
+        os1.state = "in_progress"
+        data = self.Visita.with_user(self.user_gestor).pwa_agenda_fetch(
+            only_mine=False)
+        row = data["visitas"][0]
+        self.assertFalse(row["editable"])
+        self.assertIn("execução", row["lock_reason"])
+
+    def test_gestor_travado_em_visita_realizada(self):
+        os1 = self._make_os("scheduled")
+        v = self._make_visita(os1, self.d1, self.emp_tec)
+        v.state = "done"
+        data = self.Visita.with_user(self.user_gestor).pwa_agenda_fetch(
+            only_mine=False)
+        row = data["visitas"][0]
+        self.assertFalse(row["editable"])
+        self.assertIn("realizada", row["lock_reason"])
+
+    def test_conflito_exposto(self):
+        os1, os2 = self._make_os(), self._make_os()
+        self._make_visita(os1, self.d1, self.emp_tec)
+        self._make_visita(os2, self.d1, self.emp_tec)
+        data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch()
+        self.assertTrue(all(v["conflict"] for v in data["visitas"]))
+        self.assertTrue(all(v["conflict_msg"] for v in data["visitas"]))
+
+    def test_sem_permissao_hr_nao_estoura(self):
+        """Regressão da delegação hr.employee → hr.employee.public. O técnico
+        não lê hr.employee; ler `tecnico_id.name` sem sudo quebra a chamada
+        inteira. Já mordeu `is_tecnico` neste módulo e o `engc_os`."""
+        os1 = self._make_os()
+        self._make_visita(os1, self.d1, self.emp_tec)
+        self.assertFalse(self.user_tec.has_group("hr.group_hr_user"))
+        data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch()
+        self.assertEqual(data["visitas"][0]["tecnico_name"], "Téc Agenda")

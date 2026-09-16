@@ -508,3 +508,112 @@ class AfrQualificacaoOsVisita(models.Model):
             "date": date,
         })
         return True
+
+    # ───────── PWA Técnico ─────────
+    # Os `board_*` acima servem o board OWL do backend e devolvem a agenda
+    # inteira da equipe. Os `pwa_*` abaixo servem o app de campo: janela
+    # escopada, decisão de permissão embutida e o servidor como dono do
+    # relógio.
+    _PWA_WINDOW_DAYS = 14
+
+    def _pwa_lock_reason(self, is_manager):
+        """Por que esta visita NÃO é editável no PWA — ou False se for.
+
+        A ordem importa: quem não é Gestor recebe sempre a mesma frase, sem
+        vazar em que estado a OS do colega está.
+        """
+        self.ensure_one()
+        if not is_manager:
+            return _("Somente o Gestor edita a agenda.")
+        if self.state == "done":
+            return _("Visita já realizada.")
+        if self.os_id.state not in self._OS_UNLOCKED_STATES:
+            label = dict(
+                self.os_id._fields["state"].selection
+            ).get(self.os_id.state, self.os_id.state)
+            return _("OS em execução (%s).") % label
+        return False
+
+    def _pwa_serialize(self, is_manager, my_employee_id):
+        """Uma visita como o PWA a consome. Chamar sobre recordset em sudo."""
+        self.ensure_one()
+        msgs = [m for m in (
+            self.tecnico_conflict_msg, self.travel_conflict_msg,
+            self.instrument_conflict_msg, self.calibration_conflict_msg,
+        ) if m]
+        lock = self._pwa_lock_reason(is_manager)
+        return {
+            "id": self.id,
+            "date": fields.Date.to_string(self.date),
+            "time_start": self.time_start,
+            "time_stop": self.time_stop,
+            "planned_hours": round(self.planned_hours, 2),
+            "os_id": self.os_id.id or False,
+            "os_name": self.os_id.name or "",
+            "os_state": self.os_id.state or False,
+            "partner_name": self.partner_id.name or "",
+            "city": self.city or "",
+            "equipment_list": list(filter(None, self.equipment_ids.mapped(
+                lambda e: e.apelido or e.tag or e.name
+            ))),
+            "instrument_list": list(filter(None, self.instrument_ids.mapped(
+                lambda i: i.tag or i.id_number or i.name
+            ))),
+            "tecnico_id": self.tecnico_id.id or False,
+            "tecnico_name": self.tecnico_id.name or "",
+            "is_mine": bool(
+                my_employee_id and self.tecnico_id.id == my_employee_id
+            ),
+            "state": self.state,
+            "overflow": self.overflow_next_day,
+            "editable": not lock,
+            "lock_reason": lock,
+            "conflict": bool(
+                self.tecnico_conflict or self.travel_conflict
+                or self.instrument_conflict or self.calibration_conflict
+            ),
+            "conflict_msg": " | ".join(msgs),
+            "note": self.note or "",
+        }
+
+    @api.model
+    def pwa_agenda_fetch(self, date_from=None, date_to=None, only_mine=True):
+        """Agenda do PWA. Leitura liberada aos três grupos (a ACL já barra
+        quem não pertence a nenhum).
+
+        Datas vazias: o SERVIDOR define a janela. O relógio do aparelho é
+        fonte conhecida de defeito neste app — o payload devolve
+        `server_today` e o front navega a partir dele.
+        """
+        today = fields.Date.context_today(self)
+        d_from = fields.Date.to_date(date_from) if date_from else today
+        d_to = (
+            fields.Date.to_date(date_to) if date_to
+            else d_from + timedelta(days=self._PWA_WINDOW_DAYS - 1)
+        )
+        is_manager = self.env.user.has_group(
+            "afr_qualificacao.group_afr_qualificacao_manager"
+        )
+        # `employee_id` exige leitura de hr.employee, que o técnico não tem.
+        my_employee_id = self.env.user.sudo().employee_id.id or False
+        domain = [("date", ">=", d_from), ("date", "<=", d_to)]
+        # Sem empregado vinculado (caso do Gestor administrativo), `only_mine`
+        # não tem por onde filtrar: devolve tudo em vez de uma tela vazia.
+        if only_mine and my_employee_id:
+            domain.append(("tecnico_id", "=", my_employee_id))
+        # Busca com os direitos do usuário (a ACL de leitura vale); serializa
+        # em sudo por causa de `tecnico_id.name` — hr.employee delega para
+        # hr.employee.public quando o usuário não tem permissão em HR, e a
+        # leitura direta estoura.
+        visitas = self.search(domain, order="date, time_start, id")
+        return {
+            "server_today": fields.Date.to_string(today),
+            "date_from": fields.Date.to_string(d_from),
+            "date_to": fields.Date.to_string(d_to),
+            "my_employee_id": my_employee_id,
+            "can_manage": is_manager,
+            "visitas": [
+                v._pwa_serialize(is_manager, my_employee_id)
+                for v in visitas.sudo()
+            ],
+        }
