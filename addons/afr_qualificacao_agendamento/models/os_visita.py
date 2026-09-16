@@ -15,6 +15,7 @@ from odoo.exceptions import UserError, ValidationError
 
 class AfrQualificacaoOsVisita(models.Model):
     _name = "afr.qualificacao.os.visita"
+    _inherit = "afr.qualificacao.manager.guard.mixin"
     _description = "Visita de OS de Qualificação"
     _order = "date, time_start, id"
 
