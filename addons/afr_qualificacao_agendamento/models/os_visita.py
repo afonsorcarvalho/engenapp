@@ -652,3 +652,27 @@ class AfrQualificacaoOsVisita(models.Model):
         visita.write(vals)
         my_employee_id = self.env.user.sudo().employee_id.id or False
         return visita.sudo()._pwa_serialize(True, my_employee_id)
+
+    @api.model
+    def pwa_visita_create(self, os_id, tecnico_id, date):
+        """Cria visita mínima pela agenda do PWA. Só Gestor.
+
+        Mesmo conjunto de campos do `board_create_visita`; os seletores da
+        tela vêm de `board_os_options` e `board_technician_options`.
+        """
+        self._check_manager_only(_("criar visita pela agenda"))
+        visita = self.create({
+            "os_id": os_id, "tecnico_id": tecnico_id, "date": date,
+        })
+        my_employee_id = self.env.user.sudo().employee_id.id or False
+        return visita.sudo()._pwa_serialize(True, my_employee_id)
+
+    @api.model
+    def pwa_visita_delete(self, visita_id):
+        """Apaga visita pela agenda do PWA. Só Gestor. O `unlink()` do modelo
+        ainda recusa OS fora de draft/scheduled."""
+        self._check_manager_only(_("apagar visita pela agenda"))
+        visita = self.browse(visita_id)
+        visita._board_check_not_done()
+        visita.unlink()
+        return True

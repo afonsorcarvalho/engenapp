@@ -352,3 +352,54 @@ class TestPwaAgendaUpdate(PwaAgendaCommon):
         with self.assertRaises(ValidationError):
             self.Visita.with_user(self.user_gestor).pwa_visita_update(
                 v2.id, {"time_start": 10.0, "time_stop": 11.0})
+
+
+class TestPwaAgendaCreateDelete(PwaAgendaCommon):
+
+    def test_tecnico_nao_cria(self):
+        os1 = self._make_os("scheduled")
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_tec).pwa_visita_create(
+                os1.id, self.emp_tec.id, fields.Date.to_string(self.d1))
+
+    def test_usuario_nao_cria(self):
+        os1 = self._make_os("scheduled")
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_usr).pwa_visita_create(
+                os1.id, self.emp_tec.id, fields.Date.to_string(self.d1))
+
+    def test_gestor_cria_e_recebe_linha(self):
+        os1 = self._make_os("scheduled")
+        row = self.Visita.with_user(self.user_gestor).pwa_visita_create(
+            os1.id, self.emp_tec.id, fields.Date.to_string(self.d1))
+        self.assertTrue(row["id"])
+        self.assertEqual(row["os_id"], os1.id)
+        self.assertEqual(row["tecnico_id"], self.emp_tec.id)
+        self.assertTrue(row["editable"])
+
+    def test_tecnico_nao_apaga(self):
+        os1 = self._make_os("scheduled")
+        v = self._make_visita(os1, self.d1, self.emp_tec)
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_tec).pwa_visita_delete(v.id)
+
+    def test_gestor_apaga(self):
+        os1 = self._make_os("scheduled")
+        v = self._make_visita(os1, self.d1, self.emp_tec)
+        self.assertTrue(
+            self.Visita.with_user(self.user_gestor).pwa_visita_delete(v.id))
+        self.assertFalse(v.exists())
+
+    def test_nao_apaga_visita_realizada(self):
+        os1 = self._make_os("scheduled")
+        v = self._make_visita(os1, self.d1, self.emp_tec)
+        v.state = "done"
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_delete(v.id)
+
+    def test_nao_apaga_visita_de_os_em_execucao(self):
+        os1 = self._make_os("scheduled")
+        v = self._make_visita(os1, self.d1, self.emp_tec)
+        os1.state = "in_progress"
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_delete(v.id)
