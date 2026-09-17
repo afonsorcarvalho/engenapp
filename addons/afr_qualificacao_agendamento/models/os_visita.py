@@ -719,6 +719,34 @@ class AfrQualificacaoOsVisita(models.Model):
         return [{"id": t.id, "name": t.name} for t in techs]
 
     @api.model
+    def pwa_instrumento_options(self):
+        """Instrumentos para o painel de recursos e para o seletor da folha.
+
+        Sem `sudo`, ao contrário de `pwa_tecnico_options`:
+        `engc.calibration.instruments` tem leitura para `base.group_user`
+        (`engenapp/engc_os/security/ir.model.access.csv`), então não há a
+        armadilha de delegação que o `hr.employee` tem.
+
+        `validade` é a MAIOR `validate_calibration` entre os certificados —
+        um campo só, comparado no cliente com o dia escolhido. Devolver uma
+        matriz instrumento × dia seria carregar o servidor à toa: se a maior
+        validade não alcança o dia, nenhum certificado alcança.
+        """
+        out = []
+        for inst in self.env["engc.calibration.instruments"].search([]):
+            datas = [
+                c.validate_calibration
+                for c in inst.certificate_ids
+                if c.validate_calibration
+            ]
+            out.append({
+                "id": inst.id,
+                "name": inst.tag or inst.id_number or inst.name,
+                "validade": fields.Date.to_string(max(datas)) if datas else False,
+            })
+        return out
+
+    @api.model
     def pwa_visita_delete(self, visita_id):
         """Apaga visita pela agenda do PWA. Só Gestor. O `unlink()` do modelo
         ainda recusa OS fora de draft/scheduled."""

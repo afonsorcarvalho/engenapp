@@ -496,3 +496,46 @@ class TestPwaAgendaInstrumento(PwaAgendaCommon):
             only_mine=False)
         row = next(r for r in data["visitas"] if r["id"] == v.id)
         self.assertEqual(row["instrument_ids"], [])
+
+    def test_options_traz_maior_validade(self):
+        """`validade` é a maior data entre os certificados: se ela não alcança
+        o dia, nenhum certificado alcança."""
+        inst = self._instrumento("INS-VAL")
+        self.env["engc.calibration.instruments.certificates"].create({
+            "instrument_id": inst.id, "validate_calibration": "2026-01-31",
+        })
+        self.env["engc.calibration.instruments.certificates"].create({
+            "instrument_id": inst.id, "validate_calibration": "2027-06-30",
+        })
+        opts = self.Visita.with_user(self.user_gestor).pwa_instrumento_options()
+        row = next(o for o in opts if o["id"] == inst.id)
+        self.assertEqual(row["validade"], "2027-06-30")
+
+    def test_options_sem_certificado_devolve_validade_falsa(self):
+        inst = self._instrumento("INS-SEM-CERT")
+        opts = self.Visita.with_user(self.user_gestor).pwa_instrumento_options()
+        row = next(o for o in opts if o["id"] == inst.id)
+        self.assertFalse(row["validade"])
+
+    def test_options_chaves(self):
+        self._instrumento("INS-CHAVES")
+        opts = self.Visita.with_user(self.user_gestor).pwa_instrumento_options()
+        self.assertTrue(opts)
+        for k in ("id", "name", "validade"):
+            self.assertIn(k, opts[0])
+
+    def test_options_sem_permissao_hr_nao_estoura(self):
+        """Espelha `test_tecnico_options_sem_permissao_hr_nao_estoura`. Aqui
+        não deve haver `sudo` — `engc.calibration.instruments` é legível por
+        `base.group_user` —, mas o teste ancora que a chamada funciona para
+        quem não tem HR, que é o caso do Gestor recém-criado."""
+        self._instrumento("INS-HR")
+        self.assertFalse(self.user_gestor.has_group("hr.group_hr_user"))
+        opts = self.Visita.with_user(self.user_gestor).pwa_instrumento_options()
+        self.assertTrue(opts)
+
+    def test_options_visivel_ao_tecnico(self):
+        """Leitura é global na agenda; o método não tem guard de Gestor."""
+        self._instrumento("INS-TEC")
+        opts = self.Visita.with_user(self.user_tec).pwa_instrumento_options()
+        self.assertTrue(opts)
