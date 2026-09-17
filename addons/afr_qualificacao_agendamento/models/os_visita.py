@@ -515,12 +515,20 @@ class AfrQualificacaoOsVisita(models.Model):
     # escopada, decisão de permissão embutida e o servidor como dono do
     # relógio.
     _PWA_WINDOW_DAYS = 14
+    # Teto de span aceito do cliente: `conflict_msg` é computed não-armazenado
+    # (~3 search por linha serializada) — uma janela ilimitada é custo O(n)
+    # não-linear, não só payload grande.
+    _PWA_MAX_SPAN_DAYS = 92
+    _PWA_FETCH_LIMIT = 500
 
     def _pwa_lock_reason(self, is_manager):
         """Por que esta visita NÃO é editável no PWA — ou False se for.
 
         A ordem importa: quem não é Gestor recebe sempre a mesma frase, sem
-        vazar em que estado a OS do colega está.
+        vazar o MOTIVO específico do travamento (estado da visita vs. da OS)
+        — `os_state` em si já é serializado para todo mundo em
+        `_pwa_serialize`, então o que este método protege é o texto, não o
+        dado.
         """
         self.ensure_one()
         if not is_manager:
@@ -591,6 +599,12 @@ class AfrQualificacaoOsVisita(models.Model):
             fields.Date.to_date(date_to) if date_to
             else d_from + timedelta(days=self._PWA_WINDOW_DAYS - 1)
         )
+        if d_to < d_from:
+            raise UserError(_(
+                "Data final não pode ser anterior à data inicial."
+            ))
+        if (d_to - d_from).days > self._PWA_MAX_SPAN_DAYS:
+            d_to = d_from + timedelta(days=self._PWA_MAX_SPAN_DAYS)
         is_manager = self.env.user.has_group(
             "afr_qualificacao.group_afr_qualificacao_manager"
         )
@@ -605,7 +619,9 @@ class AfrQualificacaoOsVisita(models.Model):
         # em sudo por causa de `tecnico_id.name` — hr.employee delega para
         # hr.employee.public quando o usuário não tem permissão em HR, e a
         # leitura direta estoura.
-        visitas = self.search(domain, order="date, time_start, id")
+        visitas = self.search(
+            domain, order="date, time_start, id", limit=self._PWA_FETCH_LIMIT
+        )
         return {
             "server_today": fields.Date.to_string(today),
             "date_from": fields.Date.to_string(d_from),
@@ -659,13 +675,44 @@ class AfrQualificacaoOsVisita(models.Model):
 
         Mesmo conjunto de campos do `board_create_visita`; os seletores da
         tela vêm de `board_os_options` e `board_technician_options`.
+
+        `create()` não tem a trava de estado da OS que `write()`/`unlink()`
+        aplicam, e `board_os_options` oferece toda OS `not in (done,
+        cancelled)` — inclusive `in_progress`/`in_approved`/`approved`. Sem
+        este check, a visita nasce com `editable=False` e fica travada para
+        sempre (nem `write()` nem `unlink()` a aceitam).
         """
         self._check_manager_only(_("criar visita pela agenda"))
+        os_rec = self.env["afr.qualificacao.os"].browse(os_id)
+        if os_rec.state not in self._OS_UNLOCKED_STATES:
+            label = dict(
+                os_rec._fields["state"].selection
+            ).get(os_rec.state, os_rec.state)
+            raise UserError(_(
+                "A qualificação %s está em execução (%s); não é possível "
+                "criar visita."
+            ) % (os_rec.name or "", label))
         visita = self.create({
             "os_id": os_id, "tecnico_id": tecnico_id, "date": date,
         })
         my_employee_id = self.env.user.sudo().employee_id.id or False
         return visita.sudo()._pwa_serialize(True, my_employee_id)
+
+    @api.model
+    def pwa_tecnico_options(self):
+        """Técnicos para o seletor da agenda do PWA.
+
+        Espelha `board_technician_options`, mas em `sudo()`: `hr.employee`
+        só tem leitura para `hr.group_hr_user`/`base.group_system`, e o
+        grupo Gestor de Qualificação não implica grupo de HR. Hoje só
+        funciona no board porque os Gestores existentes têm a caixa de HR
+        marcada à mão — um Gestor novo sem ela levaria `AccessError` direto
+        em `board_technician_options`. Mesma armadilha de delegação
+        `hr.employee` → `hr.employee.public` já documentada em
+        `test_sem_permissao_hr_nao_estoura`.
+        """
+        techs = self.env["hr.employee"].sudo().search([("is_tecnico", "=", True)])
+        return [{"id": t.id, "name": t.name} for t in techs]
 
     @api.model
     def pwa_visita_delete(self, visita_id):

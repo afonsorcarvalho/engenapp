@@ -17,8 +17,12 @@ voltar ao desktop.
 ## Decisões de produto
 
 1. **Técnico comum: leitura.** Vê a agenda inteira da equipe, não edita nada.
-2. **Gestor (`group_afr_qualificacao_manager`): CRUD completo** no PWA — cria,
-   edita e apaga visita.
+2. **Gestor (`group_afr_qualificacao_manager`): CRUD completo** nas portas
+   `pwa_*` da agenda — cria, edita e apaga visita. A frase vale para essas
+   portas, não para o modelo: o ACL de `afr.qualificacao.os.visita` mantém
+   `write`/`create` para o grupo Usuário (`1,1,1,0`, inalterado por decisão
+   explícita desta spec — ver seção Segurança), e quem tem esse grupo alcança
+   o modelo direto por `call_kw`, sem passar pelo guard de Gestor.
 3. **As travas de agendamento existentes continuam valendo, inclusive para o
    Gestor.** Nenhuma regra de negócio é relaxada por causa desta feature.
 4. **Aba nova "Agenda"**, lista agrupada por dia, janela de 14 dias.
@@ -63,6 +67,26 @@ A hierarquia é `manager ⊃ user ⊃ technician` (`implied_ids` em
 **não** está no grupo Gestor e o guard o barra — ao contrário do que acontece
 com regras de registro, onde a implicação faz o Gestor cair na regra
 restritiva do Técnico e exige o par OR'ed.
+
+**Guard é parcial, não completo.** Ele protege os métodos `pwa_*` — a
+superfície nova desta feature. Ele NÃO protege os métodos `board_*`
+pré-existentes do mesmo modelo (`board_split_overflow`, `board_delete_visita`,
+`board_set_hours`, `board_reschedule`, `board_create_visita`), que não têm
+nenhum guard e continuam alcançáveis por `call_kw` sem allowlist — o mesmo
+proxy `/api/odoo` que motiva o guard nos `pwa_*` vale igual para eles.
+
+Contra o Técnico isso não importa: o ACL já barra `write`/`create` do grupo
+technician (`1,0,0,0`, decisão desta spec), então `call_kw` num `board_*`
+falha na ACL antes de chegar ao método. Mas contra o Usuário o guard dos
+`pwa_*` é **cosmético**: o grupo Usuário mantém ACL de escrita completa
+(`1,1,1,0`) e os `board_*` não perguntam por Gestor, então um Usuário comum
+alcança o mesmo efeito de `board_create_visita`/`board_delete_visita`/etc.
+que um Gestor teria pelos `pwa_*` — só que sem passar pelo guard. O guard só
+é *load-bearing* contra o Técnico, que a ACL já bloqueia de qualquer jeito.
+
+Follow-up nomeado, fora do escopo desta feature: ou (a) adicionar guard de
+Gestor aos `board_*`, ou (b) tirar o write do grupo Usuário do ACL e dar ao
+board OWL do backend um caminho de Gestor. Nenhuma das duas foi feita aqui.
 
 ### Divulgação aceita
 

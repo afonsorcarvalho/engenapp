@@ -236,6 +236,35 @@ class TestPwaAgendaFetch(PwaAgendaCommon):
         self.assertTrue(all(v["conflict"] for v in data["visitas"]))
         self.assertTrue(all(v["conflict_msg"] for v in data["visitas"]))
 
+    def test_janela_gigante_e_clampada(self):
+        d_from = fields.Date.to_string(self.hoje)
+        data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch(
+            d_from, "2100-01-01", False)
+        self.assertEqual(
+            data["date_to"],
+            fields.Date.to_string(
+                self.hoje + timedelta(days=self.Visita._PWA_MAX_SPAN_DAYS)),
+        )
+
+    def test_data_final_antes_da_inicial_recusa(self):
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_tec).pwa_agenda_fetch(
+                fields.Date.to_string(self.d2),
+                fields.Date.to_string(self.d1),
+                False,
+            )
+
+    def test_date_from_sem_date_to_usa_janela_a_partir_do_from(self):
+        """`d_from + 13`, não `hoje + 13` — os dois só coincidem quando
+        `date_from` é omitido."""
+        data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch(
+            fields.Date.to_string(self.d1), None, False)
+        self.assertEqual(data["date_from"], fields.Date.to_string(self.d1))
+        self.assertEqual(
+            data["date_to"],
+            fields.Date.to_string(self.d1 + timedelta(days=13)),
+        )
+
     def test_sem_permissao_hr_nao_estoura(self):
         """Regressão da delegação hr.employee → hr.employee.public. O técnico
         não lê hr.employee; ler `tecnico_id.name` sem sudo quebra a chamada
@@ -245,6 +274,17 @@ class TestPwaAgendaFetch(PwaAgendaCommon):
         self.assertFalse(self.user_tec.has_group("hr.group_hr_user"))
         data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch()
         self.assertEqual(data["visitas"][0]["tecnico_name"], "Téc Agenda")
+
+    def test_tecnico_options_sem_permissao_hr_nao_estoura(self):
+        """Mesma armadilha de `test_sem_permissao_hr_nao_estoura`, agora em
+        `pwa_tecnico_options`: um Gestor sem a caixa de HR marcada à mão não
+        pode tomar `AccessError` no seletor de técnico da agenda."""
+        emp = self.env["hr.employee"].create({
+            "name": "Téc Options PWA", "is_tecnico": True,
+        })
+        self.assertFalse(self.user_gestor.has_group("hr.group_hr_user"))
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_tecnico_options()
+        self.assertIn(emp.id, [o["id"] for o in opcoes])
 
 
 class TestPwaAgendaUpdate(PwaAgendaCommon):
@@ -376,6 +416,15 @@ class TestPwaAgendaCreateDelete(PwaAgendaCommon):
         self.assertEqual(row["os_id"], os1.id)
         self.assertEqual(row["tecnico_id"], self.emp_tec.id)
         self.assertTrue(row["editable"])
+
+    def test_gestor_nao_cria_em_os_em_execucao(self):
+        """`create()` não tem a trava de `write()`/`unlink()`, e
+        `board_os_options` oferece OS `in_progress`. Sem este guard, a
+        visita nasceria travada para sempre (nem edita, nem apaga)."""
+        os1 = self._make_os("in_progress")
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_create(
+                os1.id, self.emp_tec.id, fields.Date.to_string(self.d1))
 
     def test_tecnico_nao_apaga(self):
         os1 = self._make_os("scheduled")
