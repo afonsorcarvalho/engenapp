@@ -280,6 +280,22 @@ class TestPwaAgendaUpdate(PwaAgendaCommon):
             v.id, {"time_start": 9.0, "time_stop": 15.0})
         self.assertEqual(v.planned_hours, 6.0)
 
+    def test_hora_fim_zero_recusa(self):
+        """`time_stop=0.0` sozinho é falsy: sem a guarda, `stop <= start`
+        nunca é avaliado contra o `time_start` atual e o registro grava com
+        `planned_hours` desatualizado enquanto `_compute_datetimes` trata
+        `time_stop` falsy como fim do dia (23:59) — 4h viram 16h."""
+        v = self._visita_editavel()
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_update(
+                v.id, {"time_stop": 0.0})
+
+    def test_par_de_hora_invertido_recusa(self):
+        v = self._visita_editavel()
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_update(
+                v.id, {"time_start": 15.0, "time_stop": 9.0})
+
     def test_repasse_para_colega(self):
         v = self._visita_editavel()
         self.Visita.with_user(self.user_gestor).pwa_visita_update(

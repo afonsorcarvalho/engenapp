@@ -643,7 +643,11 @@ class AfrQualificacaoOsVisita(models.Model):
         vals = dict(vals)
         start = vals.get("time_start", visita.time_start)
         stop = vals.get("time_stop", visita.time_stop)
-        if ("time_start" in vals or "time_stop" in vals) and stop > start:
+        if "time_start" in vals or "time_stop" in vals:
+            if stop <= start:
+                raise UserError(_(
+                    "Hora fim (%.2f) precisa ser depois da hora início (%.2f)."
+                ) % (stop, start))
             vals["planned_hours"] = stop - start
         visita.write(vals)
         my_employee_id = self.env.user.sudo().employee_id.id or False
