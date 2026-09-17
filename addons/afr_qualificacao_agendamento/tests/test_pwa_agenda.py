@@ -518,11 +518,11 @@ class TestPwaAgendaInstrumento(PwaAgendaCommon):
         self.assertFalse(row["validade"])
 
     def test_options_chaves(self):
-        self._instrumento("INS-CHAVES")
+        inst = self._instrumento("INS-CHAVES")
         opts = self.Visita.with_user(self.user_gestor).pwa_instrumento_options()
-        self.assertTrue(opts)
+        row = next(o for o in opts if o["id"] == inst.id)
         for k in ("id", "name", "validade"):
-            self.assertIn(k, opts[0])
+            self.assertIn(k, row)
 
     def test_options_sem_permissao_hr_nao_estoura(self):
         """Espelha `test_tecnico_options_sem_permissao_hr_nao_estoura`. Aqui
