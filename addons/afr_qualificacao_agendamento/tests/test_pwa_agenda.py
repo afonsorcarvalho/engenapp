@@ -208,10 +208,10 @@ class TestPwaAgendaFetch(PwaAgendaCommon):
 
     def test_gestor_edita_os_agendada(self):
         os1 = self._make_os("scheduled")
-        self._make_visita(os1, self.d1, self.emp_tec)
+        v = self._make_visita(os1, self.d1, self.emp_tec)
         data = self.Visita.with_user(self.user_gestor).pwa_agenda_fetch(
             only_mine=False)
-        row = data["visitas"][0]
+        row = next(r for r in data["visitas"] if r["id"] == v.id)
         self.assertTrue(data["can_manage"])
         self.assertTrue(row["editable"])
         self.assertFalse(row["lock_reason"])
