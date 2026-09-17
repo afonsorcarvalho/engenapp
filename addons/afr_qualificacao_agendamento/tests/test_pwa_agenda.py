@@ -534,6 +534,32 @@ class TestPwaAgendaInstrumento(PwaAgendaCommon):
         opts = self.Visita.with_user(self.user_gestor).pwa_instrumento_options()
         self.assertTrue(opts)
 
+    def test_options_sem_rotulo_ganha_fallback(self):
+        """`tag`, `id_number` e `name` vazios não podem sair `False` — o TS
+        declara `name: string`, e `_pwa_serialize` já cobre esse caso no
+        `instrument_list` filtrando; aqui não há filtro, então precisa de
+        rótulo de fallback legível."""
+        inst = self.env["engc.calibration.instruments"].create({"name": False})
+        opts = self.Visita.with_user(self.user_gestor).pwa_instrumento_options()
+        row = next(o for o in opts if o["id"] == inst.id)
+        self.assertEqual(row["name"], "Instrumento #%s" % inst.id)
+
+    def test_options_ordenados_por_tag(self):
+        """Sem `_order` no model, `search([])` sairia em ordem de id — a
+        lista trocaria de posição a cada instrumento novo. Ordenar por
+        `tag, id_number, name` no `search` resolve sem depender do model
+        compartilhado (`engc.calibration.instruments`, usado fora desta
+        feature)."""
+        i_b = self.env["engc.calibration.instruments"].create({
+            "name": "N-B", "tag": "B-TAG-ORDER",
+        })
+        i_a = self.env["engc.calibration.instruments"].create({
+            "name": "N-A", "tag": "A-TAG-ORDER",
+        })
+        opts = self.Visita.with_user(self.user_gestor).pwa_instrumento_options()
+        ordem = [o["id"] for o in opts if o["id"] in (i_a.id, i_b.id)]
+        self.assertEqual(ordem, [i_a.id, i_b.id])
+
     def test_options_visivel_ao_tecnico(self):
         """Leitura é global na agenda; o método não tem guard de Gestor."""
         self._instrumento("INS-TEC")

@@ -746,7 +746,12 @@ class AfrQualificacaoOsVisita(models.Model):
         validade não alcança o dia, nenhum certificado alcança.
         """
         out = []
-        for inst in self.env["engc.calibration.instruments"].search([]):
+        # `order`: sem `_order` neste model, `search([])` sai em ordem de id —
+        # a lista trocaria de ordem a cada instrumento novo cadastrado. Os
+        # mesmos três campos do rótulo abaixo evitam uma segunda leitura.
+        for inst in self.env["engc.calibration.instruments"].search(
+            [], order="tag, id_number, name"
+        ):
             datas = [
                 c.validate_calibration
                 for c in inst.certificate_ids
@@ -754,7 +759,13 @@ class AfrQualificacaoOsVisita(models.Model):
             ]
             out.append({
                 "id": inst.id,
-                "name": inst.tag or inst.id_number or inst.name,
+                # `tag`/`id_number`/`name` podem estar todos vazios (cadastro
+                # incompleto); `_pwa_serialize` já filtra esse caso do
+                # `instrument_list`, mas aqui o TS declara `name: string` —
+                # `False` quebraria o contrato. Rótulo de fallback legível.
+                "name": inst.tag or inst.id_number or inst.name or _(
+                    "Instrumento #%s"
+                ) % inst.id,
                 "validade": fields.Date.to_string(max(datas)) if datas else False,
             })
         return out
