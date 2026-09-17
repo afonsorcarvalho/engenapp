@@ -642,6 +642,7 @@ class AfrQualificacaoOsVisita(models.Model):
     # propósito: é derivado do par início/fim, não digitado.
     _PWA_WRITABLE_FIELDS = frozenset({
         "date", "time_start", "time_stop", "tecnico_id", "note",
+        "instrument_ids",
     })
 
     @api.model
@@ -661,6 +662,18 @@ class AfrQualificacaoOsVisita(models.Model):
         visita = self.browse(visita_id)
         visita._board_check_not_done()
         vals = dict(vals)
+        if "instrument_ids" in vals:
+            ids = vals["instrument_ids"]
+            # Lista simples de ids, nunca tupla de comando do Odoo: um
+            # `(0, 0, {...})` vindo do cliente criaria registro de instrumento
+            # novo pela porta da agenda.
+            if not isinstance(ids, (list, tuple)) or not all(
+                isinstance(i, int) and not isinstance(i, bool) for i in ids
+            ):
+                raise UserError(_(
+                    "Instrumentos precisam vir como lista de ids."
+                ))
+            vals["instrument_ids"] = [(6, 0, list(ids))]
         start = vals.get("time_start", visita.time_start)
         stop = vals.get("time_stop", visita.time_stop)
         if "time_start" in vals or "time_stop" in vals:

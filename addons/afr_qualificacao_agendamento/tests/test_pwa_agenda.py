@@ -539,3 +539,57 @@ class TestPwaAgendaInstrumento(PwaAgendaCommon):
         self._instrumento("INS-TEC")
         opts = self.Visita.with_user(self.user_tec).pwa_instrumento_options()
         self.assertTrue(opts)
+
+    def test_gestor_grava_instrumentos(self):
+        os1 = self._make_os("scheduled")
+        v = self._make_visita(os1, self.d1, self.emp_tec)
+        i1 = self._instrumento("INS-W1")
+        i2 = self._instrumento("INS-W2")
+        row = self.Visita.with_user(self.user_gestor).pwa_visita_update(
+            v.id, {"instrument_ids": [i1.id, i2.id]})
+        self.assertEqual(sorted(v.instrument_ids.ids), sorted([i1.id, i2.id]))
+        self.assertEqual(sorted(row["instrument_ids"]), sorted([i1.id, i2.id]))
+
+    def test_lista_vazia_desliga_todos(self):
+        os1 = self._make_os("scheduled")
+        i1 = self._instrumento("INS-OFF")
+        v = self._make_visita(os1, self.d1, self.emp_tec,
+                              instrument_ids=[(6, 0, [i1.id])])
+        self.Visita.with_user(self.user_gestor).pwa_visita_update(
+            v.id, {"instrument_ids": []})
+        self.assertFalse(v.instrument_ids)
+
+    def test_recusa_tupla_de_comando(self):
+        """Um `(0, 0, {...})` criaria instrumento novo pela porta da agenda."""
+        os1 = self._make_os("scheduled")
+        v = self._make_visita(os1, self.d1, self.emp_tec)
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_update(
+                v.id, {"instrument_ids": [(0, 0, {"name": "FORJADO"})]})
+
+    def test_recusa_valor_nao_lista(self):
+        os1 = self._make_os("scheduled")
+        v = self._make_visita(os1, self.d1, self.emp_tec)
+        for ruim in ("abc", 7, {"id": 1}, [1, "dois"]):
+            with self.assertRaises(UserError):
+                self.Visita.with_user(self.user_gestor).pwa_visita_update(
+                    v.id, {"instrument_ids": ruim})
+
+    def test_tecnico_barrado(self):
+        os1 = self._make_os("scheduled")
+        v = self._make_visita(os1, self.d1, self.emp_tec)
+        i1 = self._instrumento("INS-BARRA")
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_tec).pwa_visita_update(
+                v.id, {"instrument_ids": [i1.id]})
+
+    def test_os_em_execucao_recusa(self):
+        """`instrument_ids` está em `_SCHEDULE_FIELDS`, então a trava de estado
+        da OS vale de graça — não é código novo, é o `write()` do modelo."""
+        os1 = self._make_os("scheduled")
+        v = self._make_visita(os1, self.d1, self.emp_tec)
+        i1 = self._instrumento("INS-TRAVA")
+        v.os_id.state = "in_progress"
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_update(
+                v.id, {"instrument_ids": [i1.id]})
