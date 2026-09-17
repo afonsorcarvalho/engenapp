@@ -564,6 +564,10 @@ class AfrQualificacaoOsVisita(models.Model):
             "equipment_list": list(filter(None, self.equipment_ids.mapped(
                 lambda e: e.apelido or e.tag or e.name
             ))),
+            # Os nomes servem ao card; os ids servem à folha (marcar o que já
+            # está escolhido) e ao painel de recursos (saber qual visita ocupa
+            # qual instrumento). Um não substitui o outro.
+            "instrument_ids": self.instrument_ids.ids,
             "instrument_list": list(filter(None, self.instrument_ids.mapped(
                 lambda i: i.tag or i.id_number or i.name
             ))),

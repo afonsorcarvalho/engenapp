@@ -137,15 +137,20 @@ class TestPwaAgendaFetch(PwaAgendaCommon):
 
     def test_janela_explicita_respeitada(self):
         os1 = self._make_os()
-        self._make_visita(os1, self.d1, self.emp_tec)
-        self._make_visita(os1, self.d_fora, self.emp_tec)
+        v1 = self._make_visita(os1, self.d1, self.emp_tec)
+        v2 = self._make_visita(os1, self.d_fora, self.emp_tec)
         data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch(
             fields.Date.to_string(self.hoje),
             fields.Date.to_string(self.hoje + timedelta(days=10)),
             False,
         )
+        # Escopado às visitas que este teste criou: `qualificacao-dev` tem
+        # outras visitas reais dentro de janelas de 14 dias (dado de dev
+        # semeado para o dono do produto testar), então "sou a única linha
+        # devolvida" não é uma afirmação verdadeira nem deveria ser.
         ids = {v["id"] for v in data["visitas"]}
-        self.assertEqual(len(ids), 1)
+        self.assertIn(v1.id, ids)
+        self.assertNotIn(v2.id, ids)
 
     def test_only_mine_filtra_por_empregado(self):
         os1 = self._make_os()
@@ -161,19 +166,22 @@ class TestPwaAgendaFetch(PwaAgendaCommon):
         a tela vazia e sem explicação; o servidor devolve tudo e o front
         desabilita o toggle."""
         os1 = self._make_os()
-        self._make_visita(os1, self.d1, self.emp_tec)
+        v = self._make_visita(os1, self.d1, self.emp_tec)
         data = self.Visita.with_user(self.user_gestor).pwa_agenda_fetch(
             only_mine=True)
         self.assertFalse(data["my_employee_id"])
-        self.assertEqual(len(data["visitas"]), 1)
+        # Escopado: a prova de que `only_mine` foi ignorado é a visita deste
+        # teste aparecer no resultado, não o resultado ter exatamente 1 linha
+        # — o banco de dev tem outras visitas reais na mesma janela.
+        self.assertIn(v.id, [r["id"] for r in data["visitas"]])
 
     def test_tecnico_ve_visita_de_colega(self):
         os1 = self._make_os()
-        self._make_visita(os1, self.d1, self.emp_outro)
+        v = self._make_visita(os1, self.d1, self.emp_outro)
         data = self.Visita.with_user(self.user_tec).pwa_agenda_fetch(
             only_mine=False)
-        self.assertEqual(len(data["visitas"]), 1)
-        self.assertFalse(data["visitas"][0]["is_mine"])
+        row = next(r for r in data["visitas"] if r["id"] == v.id)
+        self.assertFalse(row["is_mine"])
 
     def test_chaves_do_serializer(self):
         os1 = self._make_os()
@@ -210,11 +218,11 @@ class TestPwaAgendaFetch(PwaAgendaCommon):
 
     def test_gestor_travado_em_os_em_execucao(self):
         os1 = self._make_os("scheduled")
-        self._make_visita(os1, self.d1, self.emp_tec)
+        v = self._make_visita(os1, self.d1, self.emp_tec)
         os1.state = "in_progress"
         data = self.Visita.with_user(self.user_gestor).pwa_agenda_fetch(
             only_mine=False)
-        row = data["visitas"][0]
+        row = next(r for r in data["visitas"] if r["id"] == v.id)
         self.assertFalse(row["editable"])
         self.assertIn("execução", row["lock_reason"])
 
@@ -224,7 +232,7 @@ class TestPwaAgendaFetch(PwaAgendaCommon):
         v.state = "done"
         data = self.Visita.with_user(self.user_gestor).pwa_agenda_fetch(
             only_mine=False)
-        row = data["visitas"][0]
+        row = next(r for r in data["visitas"] if r["id"] == v.id)
         self.assertFalse(row["editable"])
         self.assertIn("realizada", row["lock_reason"])
 
@@ -452,3 +460,39 @@ class TestPwaAgendaCreateDelete(PwaAgendaCommon):
         os1.state = "in_progress"
         with self.assertRaises(UserError):
             self.Visita.with_user(self.user_gestor).pwa_visita_delete(v.id)
+
+
+class TestPwaAgendaInstrumento(PwaAgendaCommon):
+
+    @classmethod
+    def _instrumento(cls, nome, validade=None):
+        """Instrumento com, opcionalmente, um certificado válido até `validade`."""
+        inst = cls.env["engc.calibration.instruments"].create({"name": nome})
+        if validade:
+            cls.env["engc.calibration.instruments.certificates"].create({
+                "instrument_id": inst.id,
+                "validate_calibration": validade,
+            })
+        return inst
+
+    def test_serializer_devolve_ids_de_instrumento(self):
+        os1 = self._make_os()
+        i1 = self._instrumento("INS-A")
+        i2 = self._instrumento("INS-B")
+        v = self._make_visita(os1, self.d1, self.emp_tec,
+                              instrument_ids=[(6, 0, [i1.id, i2.id])])
+        data = self.Visita.with_user(self.user_gestor).pwa_agenda_fetch(
+            only_mine=False)
+        row = next(r for r in data["visitas"] if r["id"] == v.id)
+        self.assertIn("instrument_ids", row)
+        self.assertEqual(sorted(row["instrument_ids"]), sorted([i1.id, i2.id]))
+        # Os nomes continuam vindo; uma chave não substitui a outra.
+        self.assertEqual(len(row["instrument_list"]), 2)
+
+    def test_visita_sem_instrumento_devolve_lista_vazia(self):
+        os1 = self._make_os()
+        v = self._make_visita(os1, self.d1, self.emp_tec)
+        data = self.Visita.with_user(self.user_gestor).pwa_agenda_fetch(
+            only_mine=False)
+        row = next(r for r in data["visitas"] if r["id"] == v.id)
+        self.assertEqual(row["instrument_ids"], [])
