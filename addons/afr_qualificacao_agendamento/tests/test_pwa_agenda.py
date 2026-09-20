@@ -53,8 +53,11 @@ class PwaAgendaCommon(TransactionCase):
             {"tz": "America/Sao_Paulo"})
         cls.emp_tec = cls.env["hr.employee"].create({
             "name": "Téc Agenda", "user_id": cls.user_tec.id,
+            "is_tecnico": True,
         })
-        cls.emp_outro = cls.env["hr.employee"].create({"name": "Téc Outro"})
+        cls.emp_outro = cls.env["hr.employee"].create({
+            "name": "Téc Outro", "is_tecnico": True,
+        })
         cls.Visita = cls.env["afr.qualificacao.os.visita"]
         # Datas futuras: `_check_date_not_past` proíbe programar no passado,
         # e uma suíte com data fixa envelheceria.

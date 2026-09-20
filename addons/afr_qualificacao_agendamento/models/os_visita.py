@@ -32,6 +32,7 @@ class AfrQualificacaoOsVisita(models.Model):
         string="Técnico",
         required=True,
         index=True,
+        domain=[("is_tecnico", "=", True)],
         help="Técnico desta visita. Editável para reatribuir grupos paralelos.",
     )
     date = fields.Date(string="Data", required=True, index=True)
@@ -391,6 +392,24 @@ class AfrQualificacaoOsVisita(models.Model):
                     clash.name or clash.id,
                     clash.os_id.name or _("(sem OS)"),
                 ))
+
+    @api.constrains("tecnico_id")
+    def _check_tecnico_is_tecnico(self):
+        """Fecha TODOS os caminhos de gravação (board, PWA, importação, RPC
+        direto) — o `domain` do campo acima é só filtro de UI, não trava
+        nada sozinho. `tecnico_id.is_tecnico` é lido sem `sudo`; funciona
+        mesmo para quem não tem grupo de HR porque `hr.employee._read`
+        delega para `hr.employee.public`, que espelha o campo
+        (`models/hr_employee_public.py`)."""
+        for r in self:
+            if r.tecnico_id and not r.tecnico_id.is_tecnico:
+                raise ValidationError(_(
+                    "%s não está marcado como técnico de qualificação. "
+                    "Só empregados marcados como técnico podem receber "
+                    "visita — marque a caixa \"Técnico de Qualificação\" no "
+                    "cadastro do empregado (RH → Empregados) antes de "
+                    "atribuir esta visita."
+                ) % r.tecnico_id.name)
 
     @api.constrains("date", "state")
     def _check_date_not_past(self):

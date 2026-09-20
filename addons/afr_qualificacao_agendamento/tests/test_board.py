@@ -22,8 +22,12 @@ class TestBoard(TransactionCase):
         super().setUp()
         self.env.user.tz = "America/Sao_Paulo"
         self._n = 0
-        self.t1 = self.env["hr.employee"].create({"name": "Ana"})
-        self.t2 = self.env["hr.employee"].create({"name": "Bruno"})
+        self.t1 = self.env["hr.employee"].create({
+            "name": "Ana", "is_tecnico": True,
+        })
+        self.t2 = self.env["hr.employee"].create({
+            "name": "Bruno", "is_tecnico": True,
+        })
         self.Visita = self.env["afr.qualificacao.os.visita"]
         # Datas relativas a hoje (futuras) — suite não envelhece com a regra
         # de "não programar no passado".
@@ -118,8 +122,9 @@ class TestBoard(TransactionCase):
             self.Visita.board_split_overflow(v.id)
 
     def test_board_technician_options(self):
-        self.t1.is_tecnico = True
-        # t2 fica False
+        # setUp marca t1/t2 como técnico (create() precisa disso); aqui a
+        # intenção do teste é o filtro em si, então t2 volta a False.
+        self.t2.is_tecnico = False
         opts = self.Visita.board_technician_options()
         ids = {o["id"] for o in opts}
         self.assertIn(self.t1.id, ids)

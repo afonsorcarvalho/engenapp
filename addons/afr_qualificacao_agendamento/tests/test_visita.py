@@ -44,7 +44,9 @@ class TestVisita(TransactionCase):
         self._os_seq = 0
         self.cat = self.env["engc.equipment.category"].create({"name": "Cat Teste"})
         self.marca = self.env["engc.equipment.marca"].create({"name": "Marca Teste"})
-        self.emp = self.env["hr.employee"].create({"name": "Téc 1"})
+        self.emp = self.env["hr.employee"].create({
+            "name": "Téc 1", "is_tecnico": True,
+        })
         self.equip_sp = self._make_equipment("São Paulo")
         self.os = self._make_os(self.equip_sp)
         # Datas-base relativas a hoje (futuras) — evitam que a regra de
@@ -354,3 +356,29 @@ class TestVisita(TransactionCase):
             f.planned_hours = 5.0   # time_stop -> 13.0
             f.time_stop = 10.0      # encurta
             self.assertEqual(f.planned_hours, 5.0)
+
+    # ───────── Regra: só técnico (is_tecnico) pode receber visita ─────────
+    def test_create_tecnico_sem_flag_raises(self):
+        """Empregado sem is_tecnico não pode ser tecnico_id — ValidationError
+        com o nome do empregado na mensagem."""
+        V = self.env["afr.qualificacao.os.visita"]
+        nao_tecnico = self.env["hr.employee"].create({"name": "Fulano RH"})
+        with self.assertRaisesRegex(ValidationError, "Fulano RH"):
+            V.create({"os_id": self.os.id, "tecnico_id": nao_tecnico.id,
+                      "date": self.d0})
+
+    def test_create_tecnico_com_flag_ok(self):
+        """Empregado com is_tecnico=True: create passa normalmente."""
+        V = self.env["afr.qualificacao.os.visita"]
+        v = V.create({"os_id": self.os.id, "tecnico_id": self.emp.id,
+                      "date": self.d0})
+        self.assertTrue(v.exists())
+
+    def test_write_tecnico_sem_flag_raises(self):
+        """Reatribuir uma visita existente para um não-técnico → bloqueado."""
+        V = self.env["afr.qualificacao.os.visita"]
+        nao_tecnico = self.env["hr.employee"].create({"name": "Ciclano RH"})
+        v = V.create({"os_id": self.os.id, "tecnico_id": self.emp.id,
+                      "date": self.d0})
+        with self.assertRaisesRegex(ValidationError, "Ciclano RH"):
+            v.write({"tecnico_id": nao_tecnico.id})

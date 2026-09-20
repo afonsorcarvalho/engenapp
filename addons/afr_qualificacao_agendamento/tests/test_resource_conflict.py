@@ -40,7 +40,9 @@ class TestResourceConflict(TransactionCase):
         self._n = 0
         self.cat = self.env["engc.equipment.category"].create({"name": "Cat"})
         self.marca = self.env["engc.equipment.marca"].create({"name": "Marca"})
-        self.emp = self.env["hr.employee"].create({"name": "Téc 1"})
+        self.emp = self.env["hr.employee"].create({
+            "name": "Téc 1", "is_tecnico": True,
+        })
         # Datas de visita relativas a hoje (futuras) — regra de "não programar
         # no passado". Datas de certificado abaixo permanecem fixas.
         base = fields.Date.context_today(

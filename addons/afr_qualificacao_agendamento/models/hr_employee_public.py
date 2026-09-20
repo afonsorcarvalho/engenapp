@@ -28,6 +28,7 @@ class HrEmployeePublic(models.Model):
         string="Técnico de Qualificação",
         compute="_compute_is_tecnico",
         compute_sudo=True,
+        search="_search_is_tecnico",
         readonly=True,
     )
 
@@ -35,3 +36,19 @@ class HrEmployeePublic(models.Model):
         for rec in self:
             emp = self.env["hr.employee"].sudo().browse(rec.id)
             rec.is_tecnico = emp.is_tecnico if emp.exists() else False
+
+    def _search_is_tecnico(self, operator, value):
+        """Permite `search`/`name_search` por `is_tecnico` sem HR.
+
+        `is_tecnico` acima é `compute` sem `store`; por padrão um campo assim
+        não é pesquisável, e um domain que tente filtrar por ele levantaria
+        `ValueError` dentro de `hr.employee._search`'s fallback — que o core
+        (`hr/models/hr_employee.py::_search`) converte em `AccessError` antes
+        de chegar ao chamador. Isso afeta o domain do seletor `tecnico_id`
+        (`os_visita.py`), que agora restringe a `is_tecnico = True`: sem este
+        `search`, qualquer usuário sem grupo de HR (ex. Gestor de
+        Qualificação sem a caixa de HR marcada) veria o campo quebrar ao
+        abrir o seletor de técnico, em vez de simplesmente filtrar a lista.
+        """
+        emps = self.env["hr.employee"].sudo().search([("is_tecnico", operator, value)])
+        return [("id", "in", emps.ids)]

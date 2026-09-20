@@ -34,7 +34,9 @@ class TestSuggest(TransactionCase):
         self.env.user.tz = "America/Sao_Paulo"
         self.cat = self.env["engc.equipment.category"].create({"name": "Cat Teste"})
         self.marca = self.env["engc.equipment.marca"].create({"name": "Marca Teste"})
-        self.emp = self.env["hr.employee"].create({"name": "Téc 1"})
+        self.emp = self.env["hr.employee"].create({
+            "name": "Téc 1", "is_tecnico": True,
+        })
         self.partner = self.env["res.partner"].create({"name": "Cliente SO"})
         self.so = self.env["sale.order"].create({"partner_id": self.partner.id})
         self.equip_a = self._make_equipment("São Paulo")
