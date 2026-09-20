@@ -289,13 +289,37 @@ class TestPwaAgendaFetch(PwaAgendaCommon):
     def test_tecnico_options_sem_permissao_hr_nao_estoura(self):
         """Mesma armadilha de `test_sem_permissao_hr_nao_estoura`, agora em
         `pwa_tecnico_options`: um Gestor sem a caixa de HR marcada à mão não
-        pode tomar `AccessError` no seletor de técnico da agenda."""
+        pode tomar `AccessError` no seletor de técnico da agenda.
+
+        `color` no `assertIn` abaixo é a prova, não só a promessa: se a
+        leitura de `color` precisasse delegar para `hr.employee.public`
+        (como `is_tecnico` precisa), este teste já estouraria — o Gestor
+        daqui não tem grupo de HR. Ela não delega porque o método roda em
+        `.sudo()` (ver docstring de `pwa_tecnico_options`)."""
         emp = self.env["hr.employee"].create({
             "name": "Téc Options PWA", "is_tecnico": True,
         })
         self.assertFalse(self.user_gestor.has_group("hr.group_hr_user"))
         opcoes = self.Visita.with_user(self.user_gestor).pwa_tecnico_options()
         self.assertIn(emp.id, [o["id"] for o in opcoes])
+        row = next(o for o in opcoes if o["id"] == emp.id)
+        self.assertIn("color", row)
+
+    def test_tecnico_options_devolve_color(self):
+        """`color` acompanha `id`/`name`: técnico configurado sai com o
+        índice escolhido; um sem configuração sai em `0` — é o valor que o
+        front interpreta como "sem cor manual", caindo na cor automática
+        derivada do id (comportamento de hoje, sem regressão)."""
+        emp_colorido = self.env["hr.employee"].create({
+            "name": "Téc Colorido", "is_tecnico": True, "color": 4,
+        })
+        emp_sem_cor = self.env["hr.employee"].create({
+            "name": "Téc Sem Cor", "is_tecnico": True,
+        })
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_tecnico_options()
+        por_id = {o["id"]: o["color"] for o in opcoes}
+        self.assertEqual(por_id[emp_colorido.id], 4)
+        self.assertEqual(por_id[emp_sem_cor.id], 0)
 
 
 class TestPwaAgendaUpdate(PwaAgendaCommon):
@@ -524,8 +548,20 @@ class TestPwaAgendaInstrumento(PwaAgendaCommon):
         inst = self._instrumento("INS-CHAVES")
         opts = self.Visita.with_user(self.user_gestor).pwa_instrumento_options()
         row = next(o for o in opts if o["id"] == inst.id)
-        for k in ("id", "name", "validade"):
+        for k in ("id", "name", "validade", "color"):
             self.assertIn(k, row)
+
+    def test_options_devolve_color(self):
+        """Espelha `test_tecnico_options_devolve_color`: instrumento
+        configurado sai com o índice escolhido; um sem configuração sai em
+        `0` (cor automática, sem regressão)."""
+        inst_colorido = self._instrumento("INS-COR")
+        inst_colorido.color = 7
+        inst_sem_cor = self._instrumento("INS-SEM-COR")
+        opts = self.Visita.with_user(self.user_gestor).pwa_instrumento_options()
+        por_id = {o["id"]: o["color"] for o in opts}
+        self.assertEqual(por_id[inst_colorido.id], 7)
+        self.assertEqual(por_id[inst_sem_cor.id], 0)
 
     def test_options_sem_permissao_hr_nao_estoura(self):
         """Espelha `test_tecnico_options_sem_permissao_hr_nao_estoura`. Aqui
