@@ -746,9 +746,18 @@ class AfrQualificacaoOsVisita(models.Model):
         em `board_technician_options`. Mesma armadilha de delegação
         `hr.employee` → `hr.employee.public` já documentada em
         `test_sem_permissao_hr_nao_estoura`.
+
+        `color`: índice do seletor de cor nativo (0 = "sem cor" = cor
+        automática na agenda). NÃO precisa de espelho em
+        `hr.employee.public`, ao contrário de `is_tecnico`: a delegação só
+        acontece dentro de `hr.employee._read()` quando
+        `check_access_rights()` falha, e esse check devolve `True` de cara
+        quando `self.env.su` está ligado (`ir_model.py::IrModelAccess.check`)
+        — como este método já lê em `.sudo()`, a leitura de `color` nunca
+        passa pelo `hr.employee.public`.
         """
         techs = self.env["hr.employee"].sudo().search([("is_tecnico", "=", True)])
-        return [{"id": t.id, "name": t.name} for t in techs]
+        return [{"id": t.id, "name": t.name, "color": t.color} for t in techs]
 
     @api.model
     def pwa_instrumento_options(self):
@@ -786,6 +795,11 @@ class AfrQualificacaoOsVisita(models.Model):
                     "Instrumento #%s"
                 ) % inst.id,
                 "validade": fields.Date.to_string(max(datas)) if datas else False,
+                # Índice do seletor de cor nativo (`color` mora no submodule
+                # afr_qualificacao, engc.calibration.instruments); mesmo
+                # papel do `color` do técnico acima — 0 = "sem cor" = cor
+                # automática na agenda do PWA (triângulos).
+                "color": inst.color,
             })
         return out
 

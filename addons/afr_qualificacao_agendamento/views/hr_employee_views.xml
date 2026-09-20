@@ -7,6 +7,11 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='job_id']" position="after">
                 <field name="is_tecnico"/>
+                <!-- Cor do técnico na agenda do PWA (bolinhas). Campo `color`
+                     já existe no core (hr.employee); só expomos aqui com o
+                     seletor nativo. 0 = "sem cor" = cor automática derivada
+                     do id (comportamento atual, sem configuração). -->
+                <field name="color" widget="color_picker"/>
             </xpath>
         </field>
     </record>
