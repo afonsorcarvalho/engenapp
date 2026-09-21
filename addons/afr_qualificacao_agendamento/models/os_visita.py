@@ -664,6 +664,20 @@ class AfrQualificacaoOsVisita(models.Model):
         "instrument_ids",
     })
 
+    def _pwa_coerce_ids(self, label, ids):
+        """Valida `ids` como lista simples de inteiros e devolve a lista
+        (nunca a tupla de comando do Odoo): um `(0, 0, {...})` vindo do
+        cliente criaria um registro novo — de instrumento ou de equipamento
+        — pela porta da agenda, em vez de só referenciar um existente.
+        Compartilhado por `pwa_visita_update` e `pwa_visita_create`."""
+        if not isinstance(ids, (list, tuple)) or not all(
+            isinstance(i, int) and not isinstance(i, bool) for i in ids
+        ):
+            raise UserError(_(
+                "%s precisam vir como lista de ids."
+            ) % label)
+        return list(ids)
+
     @api.model
     def pwa_visita_update(self, visita_id, vals):
         """Edita uma visita a partir da agenda do PWA. Só Gestor.
@@ -682,17 +696,8 @@ class AfrQualificacaoOsVisita(models.Model):
         visita._board_check_not_done()
         vals = dict(vals)
         if "instrument_ids" in vals:
-            ids = vals["instrument_ids"]
-            # Lista simples de ids, nunca tupla de comando do Odoo: um
-            # `(0, 0, {...})` vindo do cliente criaria registro de instrumento
-            # novo pela porta da agenda.
-            if not isinstance(ids, (list, tuple)) or not all(
-                isinstance(i, int) and not isinstance(i, bool) for i in ids
-            ):
-                raise UserError(_(
-                    "Instrumentos precisam vir como lista de ids."
-                ))
-            vals["instrument_ids"] = [(6, 0, list(ids))]
+            ids = self._pwa_coerce_ids(_("Instrumentos"), vals["instrument_ids"])
+            vals["instrument_ids"] = [(6, 0, ids)]
         start = vals.get("time_start", visita.time_start)
         stop = vals.get("time_stop", visita.time_stop)
         if "time_start" in vals or "time_stop" in vals:
@@ -706,17 +711,24 @@ class AfrQualificacaoOsVisita(models.Model):
         return visita.sudo()._pwa_serialize(True, my_employee_id)
 
     @api.model
-    def pwa_visita_create(self, os_id, tecnico_id, date):
-        """Cria visita mínima pela agenda do PWA. Só Gestor.
+    def pwa_visita_create(self, os_id, tecnico_id, date,
+                           equipment_ids=None, instrument_ids=None):
+        """Cria visita pela agenda do PWA. Só Gestor.
 
-        Mesmo conjunto de campos do `board_create_visita`; os seletores da
-        tela vêm de `board_os_options` e `board_technician_options`.
+        Os seletores da tela vêm de `board_os_options`/`pwa_os_options` e
+        `board_technician_options`/`pwa_tecnico_options`.
 
         `create()` não tem a trava de estado da OS que `write()`/`unlink()`
         aplicam, e `board_os_options` oferece toda OS `not in (done,
         cancelled)` — inclusive `in_progress`/`in_approved`/`approved`. Sem
         este check, a visita nasce com `editable=False` e fica travada para
         sempre (nem `write()` nem `unlink()` a aceitam).
+
+        `equipment_ids`/`instrument_ids` são OPCIONAIS de propósito: a
+        folha manual "Nova visita" do PWA cria sem nenhum dos dois, e exigir
+        aqui quebraria esse fluxo. A obrigatoriedade é do lado do chat
+        (`lib/chat/tools.ts`, `criar_visita`), que recusa ANTES de chamar
+        este método — o servidor continua permissivo por desenho.
         """
         self._check_manager_only(_("criar visita pela agenda"))
         os_rec = self.env["afr.qualificacao.os"].browse(os_id)
@@ -728,9 +740,16 @@ class AfrQualificacaoOsVisita(models.Model):
                 "A qualificação %s está em execução (%s); não é possível "
                 "criar visita."
             ) % (os_rec.name or "", label))
-        visita = self.create({
-            "os_id": os_id, "tecnico_id": tecnico_id, "date": date,
-        })
+        vals = {"os_id": os_id, "tecnico_id": tecnico_id, "date": date}
+        if equipment_ids is not None:
+            vals["equipment_ids"] = [
+                (6, 0, self._pwa_coerce_ids(_("Equipamentos"), equipment_ids))
+            ]
+        if instrument_ids is not None:
+            vals["instrument_ids"] = [
+                (6, 0, self._pwa_coerce_ids(_("Instrumentos"), instrument_ids))
+            ]
+        visita = self.create(vals)
         my_employee_id = self.env.user.sudo().employee_id.id or False
         return visita.sudo()._pwa_serialize(True, my_employee_id)
 
@@ -800,6 +819,63 @@ class AfrQualificacaoOsVisita(models.Model):
                 # papel do `color` do técnico acima — 0 = "sem cor" = cor
                 # automática na agenda do PWA (triângulos).
                 "color": inst.color,
+            })
+        return out
+
+    @api.model
+    def pwa_os_options(self):
+        """OS que aceitam visita nova — folha "Nova visita" do PWA e
+        ferramenta `listar_os` do chat.
+
+        Ao contrário de `board_os_options` (usado pelo board OWL do backend,
+        que devolve TODA OS ativa — `not in (done, cancelled)` — para
+        consulta da equipe inteira), este já sai filtrado a
+        `_OS_UNLOCKED_STATES`: a mesma trava que `pwa_visita_create` aplica
+        na hora de gravar. Sem isso, o seletor oferece OS que o servidor
+        recusa (TODO do PWA, 2026-09-21) — corrigido aqui num método NOVO,
+        não estreitando `board_os_options`, que perderia a visão ampla que o
+        board precisa.
+
+        Sem `sudo`, como `pwa_instrumento_options`: `afr.qualificacao.os`
+        (grupos técnico/usuário/gestor, todos com leitura),
+        `engc.equipment` e `afr.qualificacao.resource.plan.line` (ambos
+        `base.group_user`) não têm a armadilha de delegação que o
+        `hr.employee` tem — nenhum dos três precisa driblar ACL.
+
+        Equipamentos e instrumentos sugeridos saem como `{id, name}` com o
+        MESMO rótulo legível do resto do módulo
+        (`apelido or tag or name` / `tag or id_number or name`), nunca o id
+        cru: quem lê é o modelo de chat, que cita o rótulo na prosa.
+        """
+        oss = self.env["afr.qualificacao.os"].search([
+            ("state", "in", self._OS_UNLOCKED_STATES),
+        ])
+        out = []
+        for o in oss:
+            equipamentos = [{
+                "id": e.id,
+                "name": e.apelido or e.tag or e.name or _(
+                    "Equipamento #%s"
+                ) % e.id,
+            } for e in o.equipment_ids]
+            # Plano de recursos (F10) é OPCIONAL: nas OS de demo ele está
+            # vazio (deriva de pontos de medição que as qualificações de
+            # demo não têm). `mapped` sobre um Many2one já deduplica e
+            # descarta linha sem instrumento sugerido — sem filtro extra.
+            instrumentos = [{
+                "id": i.id,
+                "name": i.tag or i.id_number or i.name or _(
+                    "Instrumento #%s"
+                ) % i.id,
+            } for i in o.resource_plan_line_ids.mapped("instrument_id")]
+            out.append({
+                "id": o.id,
+                "name": o.name or "",
+                "partner_name": o.partner_id.name or "",
+                "city": o.partner_id.city or "",
+                "state": o.state or False,
+                "equipment_list": equipamentos,
+                "instrument_suggestions": instrumentos,
             })
         return out
 

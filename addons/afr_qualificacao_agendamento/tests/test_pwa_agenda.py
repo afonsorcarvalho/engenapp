@@ -82,6 +82,36 @@ class PwaAgendaCommon(TransactionCase):
         vals.update(extra)
         return cls.Visita.create(vals)
 
+    @classmethod
+    def _equipamento(cls, nome, apelido=None, tag=None):
+        """Equipamento com apelido/tag OPCIONALMENTE distintos de `nome` —
+        testes de rótulo (`apelido or tag or name`) precisam desse
+        contraste para pegar mutação: um fixture onde os três campos são
+        iguais não discrimina qual deles o código realmente escolheu."""
+        cat = cls.env["engc.equipment.category"].create({"name": "Cat %s" % nome})
+        marca = cls.env["engc.equipment.marca"].create({"name": "Marca %s" % nome})
+        return cls.env["engc.equipment"].create({
+            "name": nome, "category_id": cat.id, "marca_id": marca.id,
+            "model": "M-%s" % nome, "serial_number": "SN-%s" % nome,
+            "apelido": apelido, "tag": tag,
+        })
+
+    @classmethod
+    def _attach_equipamento(cls, os, equipment):
+        """Vincula o equipamento à OS via `afr.qualificacao` — é assim que
+        `os.equipment_ids` (computed store) se preenche de verdade."""
+        return cls.env["afr.qualificacao"].create({
+            "os_id": os.id,
+            "equipment_id": equipment.id,
+            "qualification_type": "installation",
+        })
+
+    @classmethod
+    def _instrumento(cls, nome, tag=None, id_number=None):
+        return cls.env["engc.calibration.instruments"].create({
+            "name": nome, "tag": tag, "id_number": id_number,
+        })
+
 
 class TestPwaAgendaAcl(PwaAgendaCommon):
 
@@ -487,6 +517,185 @@ class TestPwaAgendaCreateDelete(PwaAgendaCommon):
         os1.state = "in_progress"
         with self.assertRaises(UserError):
             self.Visita.with_user(self.user_gestor).pwa_visita_delete(v.id)
+
+    def test_gestor_cria_com_equipamento_e_instrumento(self):
+        """O caminho do chat: `criar_visita` do PWA manda equipamento(s) e
+        instrumento(s) desde a criação — ao contrário da folha manual, que
+        continua criando sem nenhum dos dois (`test_gestor_cria_e_recebe_linha`
+        acima, que não muda)."""
+        os1 = self._make_os("scheduled")
+        equip = self._equipamento("EQ-CRIA")
+        inst = self._instrumento("INS-CRIA")
+        row = self.Visita.with_user(self.user_gestor).pwa_visita_create(
+            os1.id, self.emp_tec.id, fields.Date.to_string(self.d1),
+            equipment_ids=[equip.id], instrument_ids=[inst.id],
+        )
+        visita = self.Visita.browse(row["id"])
+        self.assertEqual(visita.equipment_ids.ids, [equip.id])
+        self.assertEqual(visita.instrument_ids.ids, [inst.id])
+        self.assertEqual(row["instrument_ids"], [inst.id])
+
+    def test_criar_sem_equipamento_nem_instrumento_continua_permissivo(self):
+        """Trava dos dentes (obrigatoriedade) é do lado do chat
+        (`lib/chat/tools.ts`), não do servidor — senão a folha manual
+        quebraria. Omitir os dois parâmetros continua criando a visita."""
+        os1 = self._make_os("scheduled")
+        row = self.Visita.with_user(self.user_gestor).pwa_visita_create(
+            os1.id, self.emp_tec.id, fields.Date.to_string(self.d1))
+        visita = self.Visita.browse(row["id"])
+        self.assertFalse(visita.equipment_ids)
+        self.assertFalse(visita.instrument_ids)
+
+    def test_criar_recusa_tupla_de_comando_em_equipamento(self):
+        """Espelha `test_recusa_tupla_de_comando` da atualização: um
+        `(0, 0, {...})` vindo do cliente criaria equipamento novo pela porta
+        da agenda."""
+        os1 = self._make_os("scheduled")
+        with self.assertRaises(UserError):
+            self.Visita.with_user(self.user_gestor).pwa_visita_create(
+                os1.id, self.emp_tec.id, fields.Date.to_string(self.d1),
+                equipment_ids=[(0, 0, {"name": "FORJADO"})],
+            )
+
+    def test_criar_recusa_valor_nao_lista_em_instrumento(self):
+        os1 = self._make_os("scheduled")
+        for ruim in ("abc", 7, {"id": 1}):
+            with self.assertRaises(UserError):
+                self.Visita.with_user(self.user_gestor).pwa_visita_create(
+                    os1.id, self.emp_tec.id, fields.Date.to_string(self.d1),
+                    instrument_ids=ruim,
+                )
+
+
+class TestPwaOsOptions(PwaAgendaCommon):
+    """`pwa_os_options`: seletor de OS do PWA (folha manual "Nova visita" e
+    a ferramenta `listar_os` do chat) — ao contrário de `board_os_options`
+    (usado pelo board OWL do backend, que devolve toda OS ativa), já sai
+    filtrado a `_OS_UNLOCKED_STATES`."""
+
+    def test_filtra_por_estado_desbloqueado(self):
+        os_ok = self._make_os("scheduled")
+        os_bloqueada = self._make_os("in_progress")
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        ids = {o["id"] for o in opcoes}
+        self.assertIn(os_ok.id, ids)
+        self.assertNotIn(os_bloqueada.id, ids)
+
+    def test_draft_tambem_aparece(self):
+        os_draft = self._make_os("draft")
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        self.assertIn(os_draft.id, {o["id"] for o in opcoes})
+
+    def test_devolve_cliente_cidade_e_estado(self):
+        os1 = self._make_os("scheduled")
+        os1.partner_id = self.env["res.partner"].create({
+            "name": "Cliente PWA OS", "city": "Cidade PWA OS",
+        }).id
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["partner_name"], "Cliente PWA OS")
+        self.assertEqual(row["city"], "Cidade PWA OS")
+        self.assertEqual(row["state"], "scheduled")
+        self.assertEqual(row["name"], os1.name)
+
+    def test_equipamento_usa_apelido_mesmo_com_tag_presente(self):
+        """Fixture com OS TRÊS campos preenchidos e DISTINTOS entre si —
+        `tag` também setado, não só ausente — para provar que a ordem é
+        `apelido` primeiro de verdade, não só "o único preenchido"."""
+        os1 = self._make_os("scheduled")
+        equip = self._equipamento(
+            "EQ-APELIDO", apelido="Apelido Distinto", tag="Tag Que Perde")
+        self._attach_equipamento(os1, equip)
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["equipment_list"], [{"id": equip.id, "name": "Apelido Distinto"}])
+
+    def test_equipamento_sem_apelido_usa_tag(self):
+        os1 = self._make_os("scheduled")
+        equip = self._equipamento("EQ-TAG", tag="TAG-DISTINTA")
+        self._attach_equipamento(os1, equip)
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["equipment_list"], [{"id": equip.id, "name": "TAG-DISTINTA"}])
+
+    def test_equipamento_sem_apelido_nem_tag_usa_name(self):
+        """`name` de `engc.equipment` é CAMPO COMPUTADO
+        (categoria+modelo+série+marca, ver `engc_equipments.py`), não um
+        Char livre — por isso o valor esperado vem de `equip.name` (o que o
+        modelo realmente calculou), não de uma string escolhida no teste."""
+        os1 = self._make_os("scheduled")
+        equip = self._equipamento("EQ-SO-NOME")
+        self._attach_equipamento(os1, equip)
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["equipment_list"], [{"id": equip.id, "name": equip.name}])
+
+    def test_plano_de_recursos_vazio_devolve_lista_vazia(self):
+        """Nas OS de demo o plano de recursos está vazio (deriva de pontos de
+        medição que as qualificações de demo não têm) — tratar como opcional,
+        nunca como pré-requisito."""
+        os1 = self._make_os("scheduled")
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["instrument_suggestions"], [])
+
+    def test_devolve_instrumento_sugerido_pelo_plano(self):
+        """`tag`, `id_number` e `name` TODOS distintos e presentes: prova que
+        `tag` vence de propósito, não só por ser o único campo preenchido."""
+        os1 = self._make_os("scheduled")
+        inst = self._instrumento(
+            "Nome Que Perde", tag="TAG-PLANO-DISTINTA", id_number="ID-QUE-PERDE")
+        self.env["afr.qualificacao.resource.plan.line"].create({
+            "os_id": os1.id,
+            "resource_role": "padrao",
+            "instrument_id": inst.id,
+        })
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(
+            row["instrument_suggestions"], [{"id": inst.id, "name": "TAG-PLANO-DISTINTA"}])
+
+    def test_instrumento_sugerido_sem_tag_usa_id_number(self):
+        os1 = self._make_os("scheduled")
+        inst = self._instrumento("Nome Que Perde 2", id_number="ID-DISTINTO")
+        self.env["afr.qualificacao.resource.plan.line"].create({
+            "os_id": os1.id, "resource_role": "padrao", "instrument_id": inst.id,
+        })
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(
+            row["instrument_suggestions"], [{"id": inst.id, "name": "ID-DISTINTO"}])
+
+    def test_instrumento_sugerido_dedupe_entre_linhas_do_plano(self):
+        """Duas linhas do plano (validador + padrão) sugerindo o MESMO
+        instrumento não podem duplicar a entrada — `mapped` sobre o
+        Many2one já deduplica; este teste prova que a dedupe sobrevive à
+        junção com o rótulo."""
+        os1 = self._make_os("scheduled")
+        inst = self._instrumento("INS-DUPLO", tag="TAG-DUPLO")
+        Line = self.env["afr.qualificacao.resource.plan.line"]
+        Line.create({"os_id": os1.id, "resource_role": "validador", "instrument_id": inst.id})
+        Line.create({"os_id": os1.id, "resource_role": "padrao", "instrument_id": inst.id})
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["instrument_suggestions"], [{"id": inst.id, "name": "TAG-DUPLO"}])
+
+    def test_sem_permissao_hr_nao_estoura(self):
+        """Mesma armadilha de `pwa_tecnico_options`/`pwa_instrumento_options`:
+        um Gestor sem a caixa de HR marcada à mão não pode tomar
+        `AccessError` só por chamar este seletor."""
+        os1 = self._make_os("scheduled")
+        self.assertFalse(self.user_gestor.has_group("hr.group_hr_user"))
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        self.assertIn(os1.id, {o["id"] for o in opcoes})
+
+    def test_visivel_ao_tecnico(self):
+        """Leitura é global (mesmo padrão de `pwa_instrumento_options`); não
+        há guard de Gestor aqui — quem decide o que pode GRAVAR é
+        `pwa_visita_create`."""
+        os1 = self._make_os("scheduled")
+        opcoes = self.Visita.with_user(self.user_tec).pwa_os_options()
+        self.assertIn(os1.id, {o["id"] for o in opcoes})
 
 
 class TestPwaAgendaInstrumento(PwaAgendaCommon):
