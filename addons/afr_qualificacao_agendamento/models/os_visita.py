@@ -5,6 +5,7 @@ Unidade agendável = OS × dia × técnico. Fase A: modelo base, datetimes
 computados para a calendar, e detecção de conflito de técnico/deslocamento
 (avisos não-bloqueantes — Task 5).
 """
+import math
 from datetime import datetime, time, timedelta
 
 from pytz import timezone, utc
@@ -846,6 +847,35 @@ class AfrQualificacaoOsVisita(models.Model):
         MESMO rótulo legível do resto do módulo
         (`apelido or tag or name` / `tag or id_number or name`), nunca o id
         cru: quem lê é o modelo de chat, que cita o rótulo na prosa.
+
+        `horas_previstas`/`jornada_horas_dia`/`dias_previstos` (Task
+        duração, 2026-09-21) dão ao chat o que falta pra avaliar se a
+        visita cabe no dia — hoje ele agenda sem essa informação. A duração
+        NÃO mora em `afr.qualificacao` (não há campo) nem em
+        `engc.equipment.duration` ("Duração da Manutenção" — outro
+        conceito, zerado nos dados reais): vem do ORÇAMENTO, via
+        `afr.qualificacao.sale_order_line_ids` (QI/QO/QS: back-ref
+        `sale_order_line.afr_qualificacao_id`; QD/Calib: agregado de
+        `cycle_ids`/`malha_ids.sale_order_line_id`).
+        `sale_order_line.product_uom_qty` = horas faturadas daquela
+        qualificação; `.work_hours_per_day` = jornada (h/dia) congelada da
+        proposta. CUIDADO: `resource_plan_line.hours_resource_usage` é
+        wall-clock de uso de recurso — o próprio código pede pra não
+        confundir nem somar com as horas faturadas; não é essa a fonte.
+
+        `qualificacao_ids.mapped("sale_order_line_ids")` agrega TODAS as
+        qualificações da OS de uma vez e já dedupe o Many2many — soma
+        direta sem risco de contar a mesma linha 2x.
+
+        Jornada divergente entre linhas (equipamentos diferentes podem
+        congelar jornadas diferentes) usa a MENOR não-zero: é a leitura
+        conservadora — superestimar quantas horas cabem no dia (usando a
+        maior) arrisca o chat achar que uma visita cabe quando não cabe.
+        Zero/ausente (linha legada) cai no padrão de 8h, o mesmo default do
+        campo. `dias_previstos` arredonda pra cima (`math.ceil`) sobre o
+        quociente já arredondado a 6 casas — sem o arredondo intermediário,
+        ruído de ponto flutuante em somas "redondas" (8.0 / 8.0) poderia
+        virar 1.0000000001 e inflar pra 2 dias.
         """
         oss = self.env["afr.qualificacao.os"].search([
             ("state", "in", self._OS_UNLOCKED_STATES),
@@ -868,6 +898,23 @@ class AfrQualificacaoOsVisita(models.Model):
                     "Instrumento #%s"
                 ) % i.id,
             } for i in o.resource_plan_line_ids.mapped("instrument_id")]
+            # `.sudo()`: `sale_order_line_ids` atravessa `sale_order_id.order_line`
+            # (model `sale.order`/`sale.order.line`), e os grupos Técnico/
+            # Usuário/Gestor de Qualificação NÃO implicam nenhum grupo de
+            # Vendas — um Gestor sem a caixa "Vendedor" marcada à mão toma
+            # `AccessError` direto aqui (achado ao rodar a suíte nova).
+            # Mesmo papel do `.sudo()` em `pwa_tecnico_options` pro
+            # `hr.employee`, mas para o módulo de Vendas.
+            linhas_so = o.sudo().qualificacao_ids.mapped("sale_order_line_ids")
+            horas_previstas = sum(linhas_so.mapped("product_uom_qty"))
+            jornadas_validas = [
+                j for j in linhas_so.mapped("work_hours_per_day") if j
+            ]
+            jornada_horas_dia = min(jornadas_validas) if jornadas_validas else 8.0
+            dias_previstos = (
+                math.ceil(round(horas_previstas / jornada_horas_dia, 6))
+                if horas_previstas else 0
+            )
             out.append({
                 "id": o.id,
                 "name": o.name or "",
@@ -876,6 +923,9 @@ class AfrQualificacaoOsVisita(models.Model):
                 "state": o.state or False,
                 "equipment_list": equipamentos,
                 "instrument_suggestions": instrumentos,
+                "horas_previstas": horas_previstas,
+                "jornada_horas_dia": jornada_horas_dia,
+                "dias_previstos": dias_previstos,
             })
         return out
 

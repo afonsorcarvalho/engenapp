@@ -112,6 +112,40 @@ class PwaAgendaCommon(TransactionCase):
             "name": nome, "tag": tag, "id_number": id_number,
         })
 
+    @classmethod
+    def _qualificacao_com_horas(cls, os, equipment, horas, jornada=8.0,
+                                 qualification_type="installation"):
+        """Qualificação ligada a uma linha SO com horas faturadas e jornada.
+
+        É daqui que `pwa_os_options` deriva `horas_previstas`/
+        `jornada_horas_dia` — NÃO de `engc.equipment.duration` ("Duração da
+        Manutenção", outro conceito, zerado nos dados reais). O caminho real
+        é `sale.order.line.product_uom_qty` (horas) + `.work_hours_per_day`
+        (jornada), achado por `afr.qualificacao.sale_order_line_ids` via
+        back-ref `sale_order_line.afr_qualificacao_id` (ramo QI/QO/QS de
+        `_compute_sale_order_line_ids`) — por isso a qualificação PRECISA de
+        `sale_order_id` setado; sem ele o compute devolve vazio.
+        """
+        partner = os.partner_id or cls.env["res.partner"].create(
+            {"name": "Cliente Horas PWA"})
+        so = cls.env["sale.order"].create({"partner_id": partner.id})
+        qualif = cls.env["afr.qualificacao"].create({
+            "os_id": os.id,
+            "equipment_id": equipment.id,
+            "qualification_type": qualification_type,
+            "sale_order_id": so.id,
+        })
+        produto = cls.env["product.product"].create(
+            {"name": "Serviço Qualif Teste PWA", "type": "service"})
+        cls.env["sale.order.line"].create({
+            "order_id": so.id,
+            "product_id": produto.id,
+            "product_uom_qty": horas,
+            "work_hours_per_day": jornada,
+            "afr_qualificacao_id": qualif.id,
+        })
+        return qualif
+
 
 class TestPwaAgendaAcl(PwaAgendaCommon):
 
@@ -696,6 +730,83 @@ class TestPwaOsOptions(PwaAgendaCommon):
         os1 = self._make_os("scheduled")
         opcoes = self.Visita.with_user(self.user_tec).pwa_os_options()
         self.assertIn(os1.id, {o["id"] for o in opcoes})
+
+    # ------------------------------------------------------------------
+    # Duração: horas previstas (orçamento) e jornada — para o chat avisar
+    # quando a visita não cabe no dia (Task duração, 2026-09-21)
+    # ------------------------------------------------------------------
+
+    def test_os_sem_orcamento_devolve_horas_zero_sem_erro(self):
+        """Várias OS legadas não têm orçamento vinculado — tratar como
+        horas zero, nunca como erro (não pode quebrar `listar_os`)."""
+        os1 = self._make_os("scheduled")
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["horas_previstas"], 0.0)
+        self.assertEqual(row["dias_previstos"], 0)
+
+    def test_horas_previstas_soma_linha_so_da_qualificacao(self):
+        os1 = self._make_os("scheduled")
+        equip = self._equipamento("EQ-HORAS")
+        self._qualificacao_com_horas(os1, equip, horas=6.0, jornada=8.0)
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["horas_previstas"], 6.0)
+        self.assertEqual(row["jornada_horas_dia"], 8.0)
+
+    def test_horas_previstas_soma_varias_qualificacoes_da_os(self):
+        """Duas qualificações (equipamentos distintos) na mesma OS — as
+        horas de cada uma somam no total da OS, sem duplicar nem perder
+        nenhuma das duas."""
+        os1 = self._make_os("scheduled")
+        eq1 = self._equipamento("EQ-H1")
+        eq2 = self._equipamento("EQ-H2")
+        self._qualificacao_com_horas(os1, eq1, horas=4.0, jornada=8.0)
+        self._qualificacao_com_horas(os1, eq2, horas=8.0, jornada=8.0)
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["horas_previstas"], 12.0)
+
+    def test_jornada_divergente_usa_a_menor_nao_zero(self):
+        """Jornadas divergentes entre linhas: decisão é usar a MENOR
+        não-zero — jornada é a leitura conservadora de "quanto cabe no
+        dia"; superestimar a capacidade (maior valor) arrisca o chat achar
+        que uma visita cabe quando na prática não cabe."""
+        os1 = self._make_os("scheduled")
+        eq1 = self._equipamento("EQ-J1")
+        eq2 = self._equipamento("EQ-J2")
+        self._qualificacao_com_horas(os1, eq1, horas=4.0, jornada=6.0)
+        self._qualificacao_com_horas(os1, eq2, horas=4.0, jornada=8.0)
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["jornada_horas_dia"], 6.0)
+
+    def test_jornada_zero_ou_ausente_cai_no_padrao_de_8h(self):
+        os1 = self._make_os("scheduled")
+        equip = self._equipamento("EQ-J0")
+        self._qualificacao_com_horas(os1, equip, horas=4.0, jornada=0.0)
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["jornada_horas_dia"], 8.0)
+
+    def test_dias_previstos_arredonda_para_cima(self):
+        os1 = self._make_os("scheduled")
+        equip = self._equipamento("EQ-DIAS")
+        # 10h faturadas / jornada de 8h/dia = 1.25 dias → arredonda p/ 2
+        self._qualificacao_com_horas(os1, equip, horas=10.0, jornada=8.0)
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["dias_previstos"], 2)
+
+    def test_dias_previstos_encaixa_exato_nao_arredonda_a_mais(self):
+        """8h faturadas / jornada de 8h/dia = exatamente 1 dia — não pode
+        virar 2 por ruído de ponto flutuante na divisão."""
+        os1 = self._make_os("scheduled")
+        equip = self._equipamento("EQ-DIAS-EXATO")
+        self._qualificacao_com_horas(os1, equip, horas=8.0, jornada=8.0)
+        opcoes = self.Visita.with_user(self.user_gestor).pwa_os_options()
+        row = next(o for o in opcoes if o["id"] == os1.id)
+        self.assertEqual(row["dias_previstos"], 1)
 
 
 class TestPwaAgendaInstrumento(PwaAgendaCommon):
