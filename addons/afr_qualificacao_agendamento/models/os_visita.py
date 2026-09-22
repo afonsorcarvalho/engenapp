@@ -904,7 +904,12 @@ class AfrQualificacaoOsVisita(models.Model):
             # Vendas — um Gestor sem a caixa "Vendedor" marcada à mão toma
             # `AccessError` direto aqui (achado ao rodar a suíte nova).
             # Mesmo papel do `.sudo()` em `pwa_tecnico_options` pro
-            # `hr.employee`, mas para o módulo de Vendas.
+            # `hr.employee`, mas para o módulo de Vendas. NOTA: este método
+            # não tem guard de Gestor (leitura é global, ver
+            # `test_visivel_ao_tecnico`) — o `.sudo()` também amplia o que
+            # um Técnico lê: horas faturadas de qualquer OS destravada, não
+            # só o caso do Gestor sem a caixa Vendedor. É só horas, não
+            # preço; aceitável, mas é ampliação de superfície real.
             linhas_so = o.sudo().qualificacao_ids.mapped("sale_order_line_ids")
             horas_previstas = sum(linhas_so.mapped("product_uom_qty"))
             jornadas_validas = [
