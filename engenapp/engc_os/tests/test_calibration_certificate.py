@@ -83,6 +83,13 @@ class TestCertificateSelection(CalibrationCase):
         self.certificate.validate_calibration = date.today() - relativedelta(days=1)
         self.assertEqual(len(self.instrument.get_certificate_valid()), 0)
 
+    def test_domain_unidade_sem_padrao_escolhido_nao_estoura(self):
+        """get_certificate_valid() agora faz ensure_one() no instrumento; uma
+        medição sem instrument_id ainda escolhido não pode quebrar o
+        _compute_unit_of_measurement_domain (mesma classe de erro do P0)."""
+        measurement = self.env['engc.calibration.measurement'].new({'title': 'X'})
+        self.assertEqual(measurement.unit_of_measurement_domain, '[["id", "in", []]]')
+
     def test_arquivos_de_idioma_no_mesmo_certificado(self):
         en = self.env['res.lang'].search([('code', '=', 'en_US')], limit=1)
         arquivo = self.env['engc.calibration.instruments.certificates.file'].create({

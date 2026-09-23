@@ -379,7 +379,16 @@ class CalibrationMeasurement (models.Model):
     @api.depends('instrument_id')
     def _compute_unit_of_measurement_domain(self):
         for rec in self:
-            certificates  = self.instrument_id.get_certificate_valid()
+            # get_certificate_valid() faz ensure_one() no instrumento (Task 3);
+            # sem essa guarda, uma linha de medição sem padrão escolhido ainda
+            # (instrument_id vazio) levantaria "Expected singleton" aqui — o
+            # mesmo tipo de erro que a Task 3 corrigiu no PDF. Também trocado
+            # `self.instrument_id` (bug pré-existente) por `rec.instrument_id`.
+            certificates = (
+                rec.instrument_id.get_certificate_valid()
+                if rec.instrument_id
+                else self.env['engc.calibration.instruments.certificates']
+            )
             uncertainty_lines = certificates.mapped(lambda r: r.uncertainty_lines)
             unit_of_measurement_lines = uncertainty_lines.mapped(lambda r: r.unit_of_measurement)
             rec.unit_of_measurement_domain = json.dumps(
