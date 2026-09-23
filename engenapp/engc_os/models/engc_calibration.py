@@ -215,12 +215,17 @@ class CalibrationInstrumentCertificates(models.Model):
         comodel_name='engc.calibration.instruments.uncertainty.lines',
         inverse_name='certificate',
     )
-    is_valid = fields.Boolean(string="É válido", compute="_compute_is_valid")
+    is_valid = fields.Boolean(
+        string="É válido",
+        compute="_compute_is_valid",
+        help="Certificado dentro do prazo de validade na data de hoje.",
+    )
 
     @api.depends('validate_calibration')
     def _compute_is_valid(self):
-        if self.validate_calibration :
-            return self.verify_is_valid()
+        hoje = date.today()
+        for rec in self:
+            rec.is_valid = bool(rec.validate_calibration) and rec.validate_calibration >= hoje
 
 
     @api.onchange('date_calibration')
@@ -228,10 +233,10 @@ class CalibrationInstrumentCertificates(models.Model):
         if self.date_calibration:
             self.date_next_calibration = self.date_calibration + relativedelta(years=1)
             self.validate_calibration = self.date_calibration + relativedelta(years=1)
-    
+
     def verify_is_valid(self):
-       # for rec in self:
-            return self.validate_calibration >= date.today()
+        self.ensure_one()
+        return bool(self.validate_calibration) and self.validate_calibration >= date.today()
 
         
   
