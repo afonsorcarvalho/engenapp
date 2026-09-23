@@ -46,10 +46,14 @@ def migrate(cr, version):
     if not version:
         return
 
-    # Sem predicado sobre superseded_by_id: nesta primeira migração a coluna
-    # acabou de ser criada por este mesmo upgrade e está toda NULL, então o
-    # filtro seria no-op — e evitá-lo tira a dependência da ordem entre a
-    # atualização do schema e o post-migrate.
+    # AND c.superseded_by_id IS NULL: idempotência. post-migrate roda DEPOIS
+    # de _auto_init, então a coluna sempre existe aqui (a segunda query deste
+    # mesmo script, mais abaixo, já dependia disso sem ressalva) — não há
+    # ordenação a proteger. O que o predicado evita é outra coisa: sem ele,
+    # rodar esta migração de novo (reprocessamento via latest_version, ou
+    # restauração parcial de backup) reencontra os MESMOS grupos — nada foi
+    # apagado, por desenho — e duplica de novo o anexo de ~879 KB e reescreve
+    # superseded_by_id à toa.
     cr.execute(
         """
         SELECT instrument_id, date_calibration, validate_calibration,
@@ -57,6 +61,7 @@ def migrate(cr, version):
           FROM engc_calibration_instruments_certificates
          WHERE date_calibration IS NOT NULL
            AND validate_calibration IS NOT NULL
+           AND superseded_by_id IS NULL
       GROUP BY instrument_id, date_calibration, validate_calibration
         HAVING count(*) > 1
         """

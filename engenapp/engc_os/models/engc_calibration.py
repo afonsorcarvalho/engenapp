@@ -417,7 +417,7 @@ class CalibrationMeasurement (models.Model):
             Pega os certificados válidos do instrumento de calibração
         '''
         certificates = self.instrument_id.certificate_ids.filtered(
-            lambda rec: rec.validate_calibration >= date.today() and not rec.superseded_by_id)
+            lambda rec: rec.verify_is_valid() and not rec.superseded_by_id)
         if len(certificates) == 0:
                 raise ValidationError(_("Verifique a Data de vencimento da Calibração do instrumento utilizado. Não é possível utilizar intrumento com calibração vencida"))
         return certificates

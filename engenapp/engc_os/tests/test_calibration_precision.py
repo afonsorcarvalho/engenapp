@@ -171,3 +171,18 @@ class TestCertificateDecimalsRendering(CalibrationCase):
         self.assertIn('<span>60</span>', html)
         self.assertNotIn('<span>60,00</span>', html)
         self.assertNotIn('<span>60,054</span>', html)
+
+    def test_unidade_vazia_nao_e_confundida_com_zero_casas(self):
+        """FIX 3 (revisão final): `l.unit_of_measurement.display_decimals or 0`
+        não distingue "sem unidade" (recordset vazio, display_decimals lê como
+        False) de "0 casas configurado de propósito" (caso do teste acima) —
+        os dois caem em `casas = 0`. Uma linha salva sem unidade não pode
+        truncar 60,054 para 60 como se fosse a configuração deliberada."""
+        vals = self.make_calibration_vals(issue_date=date.today())
+        calibration = self.env['engc.calibration'].create(vals)
+        measurement = self.make_measurement(
+            calibration_id=calibration.id, unit_of_measurement=False)
+        self.make_line(measurement, 60.0, 60.053, 60.055, 60.054)
+        html = self._render(calibration)
+        self.assertIn('<span>60,054</span>', html)
+        self.assertNotIn('<span>60</span>', html)

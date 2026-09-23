@@ -100,6 +100,20 @@ class TestCertificateSelection(CalibrationCase):
 
         self.assertEqual(measurement.resolution_instrument, 0.01)
 
+    def test_search_certificates_valid_ignora_certificado_sem_data(self):
+        """FIX 1 (revisão final): _search_certificates_valid() ainda comparava
+        `rec.validate_calibration >= date.today()` direto na lambda, sem passar
+        por verify_is_valid(). Um certificado salvo sem validate_calibration
+        (campo não é required) misturado com um certificado válido no mesmo
+        instrumento faz `False >= date.today()` — TypeError, antes de qualquer
+        curto-circuito do `and`."""
+        self.env['engc.calibration.instruments.certificates'].create({
+            'instrument_id': self.instrument.id,
+            'certificate_number': 'SEM-DATA-3',
+        })
+        measurement = self.make_measurement()
+        self.assertEqual(measurement.resolution_instrument, 0.01)
+
     def test_sem_certificado_valido_devolve_vazio_sem_estourar(self):
         """Review Focus 1: instrumento sem certificado válido."""
         self.certificate.validate_calibration = date.today() - relativedelta(days=1)

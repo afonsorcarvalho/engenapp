@@ -171,7 +171,7 @@
 
                                 <tr t-foreach="m.measurement_lines" t-as="l">
                                     <t t-set="casas"
-                                       t-value="l.unit_of_measurement.display_decimals or 0" />
+                                       t-value="l.unit_of_measurement.display_decimals if l.unit_of_measurement else 3" />
                                     <td class="text-center">
                                         <span t-field="l.true_quantity_value"
                                             t-options-widget="'float'"
