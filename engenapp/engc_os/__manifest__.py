@@ -32,6 +32,7 @@
         'data/cronograma_weekdays.xml',
         'data/sequence.xml',
         'data/preventive_cron.xml',
+        'data/decimal_precision.xml',
         'views/equipment_category_view.xml',
         'views/calibration_views.xml',
         'views/calibration_procedure_views.xml',

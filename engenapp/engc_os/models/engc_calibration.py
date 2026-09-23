@@ -297,16 +297,16 @@ class CalibrationIntrumentUncertaintyLines(models.Model):
     )
 
     
-    erro_value= fields.Float(string="Erro fiducial" )
-    uncertainty = fields.Float('Incerteza', 
-    required=True
-    ) 
-    coverage_factor= fields.Float(string="Fator K", 
+    erro_value= fields.Float(string="Erro fiducial", digits='Calibration')
+    uncertainty = fields.Float('Incerteza',
+    required=True, digits='Calibration'
+    )
+    coverage_factor= fields.Float(string="Fator K",
         required=True, default=2.0
      )
     veff = fields.Float(string = "Veff", help="Graus de liberdade efetiva. Para valores infinitos preencha com qualquer número maior que 100")
-    resolution = fields.Float(string = "Resolução", help="Resolução do padrão", 
-        required=True
+    resolution = fields.Float(string = "Resolução", help="Resolução do padrão",
+        required=True, digits='Calibration'
     )
     unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', ondelete='restrict', 
     required=True
@@ -387,29 +387,29 @@ class CalibrationMeasurement (models.Model):
             )
     
     uncertainty_instrument = fields.Float(
-        
-        readonly=True,
-   
+
+        readonly=True, digits='Calibration',
+
         )
     erro_value_instrument = fields.Float(
-       
-        readonly=True,
-   
+
+        readonly=True, digits='Calibration',
+
         )
     coverage_factor_instrument = fields.Float(
-        
+
         readonly=True,
-   
+
         )
     resolution_instrument = fields.Float(
-       
-        readonly=True,
-   
+
+        readonly=True, digits='Calibration',
+
         )
     veff_instrument = fields.Float(
-      
+
         readonly=True,
-   
+
         )
     #TODO fazer ele pegar o certificado valido mais novo, caso tenha mais de um certificado válido
     def _search_certificates_valid(self):
@@ -479,13 +479,13 @@ class CalibrationMeasurementLines (models.Model):
     measurement_id = fields.Many2one(string='Cod. Medidas', comodel_name='engc.calibration.measurement', ondelete='restrict')
 
     unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', related='measurement_id.unit_of_measurement' )
-    true_quantity_value = fields.Float(string="Valor Real" )
-    measurement_quantity_value_1= fields.Float(string="Leitura 01" )
-    measurement_quantity_value_2= fields.Float(string="Leitura 02" )
-    measurement_quantity_value_3= fields.Float(string="Leitura 03" )
-    measurement_quantity_value_mean= fields.Float(string="Média", compute="_compute_statistics", store=True)
-    erro_value= fields.Float(string="Valor Erro", compute="_compute_statistics", store=True )
-    uncertainty= fields.Float(string="Incerteza",compute="_compute_statistics", store=True )
+    true_quantity_value = fields.Float(string="Valor Real", digits='Calibration' )
+    measurement_quantity_value_1= fields.Float(string="Leitura 01", digits='Calibration' )
+    measurement_quantity_value_2= fields.Float(string="Leitura 02", digits='Calibration' )
+    measurement_quantity_value_3= fields.Float(string="Leitura 03", digits='Calibration' )
+    measurement_quantity_value_mean= fields.Float(string="Média", compute="_compute_statistics", store=True, digits='Calibration')
+    erro_value= fields.Float(string="Valor Erro", compute="_compute_statistics", store=True, digits='Calibration' )
+    uncertainty= fields.Float(string="Incerteza",compute="_compute_statistics", store=True, digits='Calibration' )
     coverage_factor= fields.Float(string="Fator K", default=2.0 )
     veff = fields.Float(string = "Veff",compute="_compute_statistics", store=True)
     resolutino_instrument = fields.Float(string = "Resolução do instrumento", compute="_compute_statistics", store=True)
