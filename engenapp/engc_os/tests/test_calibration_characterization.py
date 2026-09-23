@@ -38,9 +38,25 @@ class TestCalibrationCharacterization(CalibrationCase):
         self.assertAlmostEqual(line.uncertainty, 0.037318, places=5)
 
     def test_veff_atual_usa_constante_3(self):
-        """Fórmula vigente: 3*(uc/(s/2))**4 — não é Welch-Satterthwaite."""
+        """Fórmula vigente: 3*(uc/(s/2))**4 — não é Welch-Satterthwaite.
+
+        Valor conferido à mão para esta fixture:
+        uc = 0.018659224707009328, s = 0.0010000000000012221
+        veff = 3*(uc/(s/2))**4 = 5818561.333304913
+
+        NA FASE 3 este teste deve virar: a fórmula passa a ser
+        Welch-Satterthwaite (ν_eff = u_c⁴ / Σ(uᵢ⁴/νᵢ)), que substitui a
+        constante 3 e passa a consumir o veff do próprio certificado do
+        padrão (veff_instrument, que esta fixture grava como 2.0 e que a
+        fórmula atual ignora por completo). Isso deve derrubar veff em
+        várias ordens de grandeza — o assertAlmostEqual abaixo está
+        destinado a mudar nesse momento.
+        """
         m = self.make_measurement()
         line = self.make_line(m, 60.0, 60.053, 60.055, 60.054)
+        self.assertAlmostEqual(line.veff, 5818561.3, delta=1.0)
+        # Qualquer veff acima de 100 imprime "Infinito" no template do
+        # certificado — é por isso que a ordem de grandeza importa aqui.
         self.assertGreater(line.veff, 100.0)
 
     def test_tipo_a_usa_divisor_2_e_nao_raiz_de_n(self):
