@@ -1,3 +1,5 @@
+from odoo.exceptions import ValidationError
+
 from .common import CalibrationCase
 
 
@@ -82,3 +84,34 @@ class TestCalibrationPrecision(CalibrationCase):
         self.assertEqual(tuple(fg_m['resolution_instrument']['digits']), (16, 6))
         self.assertFalse(fg_m['coverage_factor_instrument'].get('digits'))
         self.assertFalse(fg_m['veff_instrument'].get('digits'))
+
+
+class TestUnitDisplayDecimals(CalibrationCase):
+
+    def test_default_de_tres_casas(self):
+        unidade = self.env['engc.calibration.measurement.unit'].create({
+            'name': 'Pressão', 'simbolo': 'bar',
+        })
+        self.assertEqual(unidade.display_decimals, 3)
+
+    def test_aceita_zero_casas(self):
+        """Review Focus 4: zero é valor legítimo (ex.: contagem de ciclos)."""
+        unidade = self.env['engc.calibration.measurement.unit'].create({
+            'name': 'Ciclos', 'simbolo': 'un', 'display_decimals': 0,
+        })
+        self.assertEqual(unidade.display_decimals, 0)
+
+    def test_rejeita_valor_negativo(self):
+        with self.assertRaises(ValidationError):
+            self.env['engc.calibration.measurement.unit'].create({
+                'name': 'Inválida', 'simbolo': 'x', 'display_decimals': -1,
+            })
+
+    def test_rejeita_acima_do_armazenado(self):
+        with self.assertRaises(ValidationError):
+            self.env['engc.calibration.measurement.unit'].create({
+                'name': 'Inválida', 'simbolo': 'x', 'display_decimals': 7,
+            })
+
+    def test_unidade_tempo_do_fixture_tem_tres_casas(self):
+        self.assertEqual(self.unit_tempo.display_decimals, 3)

@@ -650,5 +650,21 @@ class CalibrationMeasurementUnit (models.Model):
     _description = 'Unidade de Medida da Calibração'
 
     name = fields.Char("Unidade", tracking=True)
-    
+
     simbolo = fields.Char("Símbolo", tracking=True)
+
+    display_decimals = fields.Integer(
+        string="Casas decimais",
+        default=3,
+        required=True,
+        help="Quantas casas decimais usar ao imprimir valores desta unidade no "
+             "certificado. Tempo em segundos costuma pedir 3; temperatura, 2.",
+    )
+
+    @api.constrains('display_decimals')
+    def _check_display_decimals(self):
+        for rec in self:
+            if rec.display_decimals < 0 or rec.display_decimals > 6:
+                raise ValidationError(
+                    _("As casas decimais devem ficar entre 0 e 6 — 6 é a "
+                      "precisão com que os valores são armazenados."))

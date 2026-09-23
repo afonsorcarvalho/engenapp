@@ -170,23 +170,30 @@
                             <tbody>
 
                                 <tr t-foreach="m.measurement_lines" t-as="l">
+                                    <t t-set="casas"
+                                       t-value="l.unit_of_measurement.display_decimals or 0" />
                                     <td class="text-center">
-                                        <span t-field="l.true_quantity_value" />
+                                        <span t-field="l.true_quantity_value"
+                                            t-options-widget="'float'"
+                                            t-options-precision="casas" />
                                         <span t-field="l.unit_of_measurement.simbolo" />
                                     </td>
                                     <td class="text-center">
                                         <span t-field="l.measurement_quantity_value_mean"
-                                            t-options='{"widget": "float", "precision": 2}' />
+                                            t-options-widget="'float'"
+                                            t-options-precision="casas" />
                                         <span t-field="l.unit_of_measurement.simbolo" />
                                     </td>
                                     <td class="text-center">
                                         <span t-field="l.erro_value"
-                                            t-options='{"widget": "float", "precision": 2}' />
+                                            t-options-widget="'float'"
+                                            t-options-precision="casas" />
                                         <span t-field="l.unit_of_measurement.simbolo" />
                                     </td>
                                     <td class="text-center">
                                         <span t-field="l.uncertainty"
-                                            t-options='{"widget": "float", "precision": 2}' />
+                                            t-options-widget="'float'"
+                                            t-options-precision="casas" />
                                         <span t-field="l.unit_of_measurement.simbolo" />
                                     </td>
                                     <td class="text-center">
