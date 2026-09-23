@@ -40,11 +40,25 @@ não uma migração de dados.
    importação ou `create()` recebe **0,0** em incerteza, erro e resolução do padrão — e o sistema
    emite silenciosamente uma incerteza otimista, sem erro nenhum. Este repositório já faz escrita
    por RPC a partir do PWA; não é hipótese remota.
-3. **`is_valid` funciona por acidente.** O método `_compute_is_valid` não atribui o campo (só faz
-   `return`), o que normalmente derrubaria a leitura. Verifiquei na base: **ele retorna valores
-   corretos**, porque o `read()` do Odoo itera registro a registro e o campo acaba resolvido pelo
-   caminho de *fallback*. Ou seja, **não é P0** — mas é frágil, e o próprio código convive com duas
-   regras divergentes de validade (item 12 da tabela). Corrigir sim, com urgência baixa.
+3. **`is_valid` quebra em acesso direto — corrigido em 23/09/2026, era mais grave do que escrevi aqui
+   primeiro, mas não tão espalhado quanto eu disse na primeira correção.** O método
+   `_compute_is_valid` não atribui o campo (só faz `return`). Minha verificação inicial foi por RPC
+   (`search_read`), que devolveu valores corretos, e eu concluí "funciona por acidente, não é P0".
+   **Estava brando demais.** Ao escrever os testes, o acesso direto ao atributo (`rec.is_valid`)
+   levantou `ValueError: Compute method failed to assign` — e é exatamente isso que
+   `get_certificate_valid()` faz, via `self.certificate_ids.filtered(lambda rec: rec.is_valid)`.
+   Ou seja, o método já levantava exceção em qualquer recordset **quando `engc_os` roda sozinho**:
+   **também era P0**, real, e alguém já tinha esbarrado nele antes de mim. `afr_qualificacao`
+   (`addons/afr_qualificacao/models/calibration_instruments.py:122-135`) já carrega um hotfix que
+   sobrescreve `_compute_is_valid` com a mesma implementação corrigida — o docstring de lá é
+   explícito: "o compute `_compute_is_valid` no engc_os não itera self nem atribui valor — gera
+   CacheMiss/ValueError em qualquer leitura". É esse override que fazia a leitura por RPC contra
+   `labquali` (que tem `afr_qualificacao` instalado) devolver valor correto — não foi o `read()`
+   "resolvendo por fallback" como eu descrevi antes: era outro código, num módulo diferente,
+   silenciosamente mascarando o bug. Em qualquer base SEM `afr_qualificacao` instalado, o bug batia
+   direto. Com o compute corrigido no próprio `engc_os` (Task 2 desta fase), o override em
+   `afr_qualificacao` virou código morto duplicado — removê-lo é mudança em submodule e fica para
+   uma fase posterior.
 4. **Três colunas fixas de leitura.** Se o técnico preencher duas, a terceira entra como `0,0` no
    `mean()` e no `stdev()`. A média e o erro saem errados com aparência de corretos. Note que o
    certificado da sua imagem tem **uma leitura por ponto**, ITM constante de 0,035 e Veff = Inf —
@@ -144,6 +158,13 @@ três formas em que certificados reais são emitidos:
 | `point` — ponto discreto | `nominal_value` | o seu certificado de tempo: 60 s, 120 s, 480 s… |
 | `range` — faixa | `range_min`, `range_max` | "de 0 a 100 °C: U = 0,15 °C" |
 | `formula` — proporcional | `u_rel` (% da leitura), `u_abs` (parcela fixa) | "U = 0,5 % da leitura + 0,02 mV" |
+
+> ⚠️ **Correção de 23/09/2026, descoberta na implementação:** qualquer migração que pretenda copiar
+> o arquivo de um certificado **não pode usar SQL cru**. `certificate_calibration` — e todo campo
+> `fields.Binary` sem `attachment=False` — é guardado em `ir_attachment`, **sem coluna na tabela**.
+> Um `SELECT certificate_calibration` falha com `column does not exist`. A cópia do binário tem de
+> passar pelo ORM; SQL cru só serve para detectar os grupos de duplicatas, que usam colunas reais
+> (`instrument_id`, `date_calibration`, `validate_calibration`).
 
 Campos novos sugeridos na linha do certificado:
 
@@ -352,7 +373,7 @@ Recomendação:
 | # | Local | Problema | Severidade |
 |---|---|---|---|
 | 1 | [`get_certificate_valid`](../models/engc_calibration.py#L176) | Devolve *recordset*; o template faz `t-field` no resultado → `Expected singleton`. **Confirmado em `odoo-labquali`:** QPT-014 tem 3 certificados válidos. O `TODO` do código já reconhece. | **P0** |
-| 2 | [`_compute_is_valid`](../models/engc_calibration.py#L221) | Não atribui o campo (só `return`) e faz `if self.x` em recordset. **Verificado: retorna valores corretos hoje** (o `read()` itera por registro), mas depende de *fallback* do ORM. Corrigir por higiene. | Baixa |
+| 2 | [`_compute_is_valid`](../models/engc_calibration.py#L221) | Não atribui o campo (só `return`) e faz `if self.x` em recordset. **Correção 23/09: era P0, não "baixa", em qualquer base sem `afr_qualificacao` instalado.** Acesso direto (`rec.is_valid`, que é o que `get_certificate_valid()` faz via `.filtered`) levantava `ValueError: Compute method failed to assign`. Em `labquali` o bug ficava mascarado por um hotfix já existente em `afr_qualificacao/models/calibration_instruments.py:122-135` que sobrescreve o compute — não por fallback do `read()`. Esse override agora é código morto duplicado (remoção fica para fase posterior, é mudança em submodule). | **P0** (corrigido) |
 | 3 | [`_search_statistics`](../models/engc_calibration.py#L376) | `uncertainty_id_line.resolution` em recordset multi-linha → `Expected singleton` assim que houver certificado multiponto. É o bloqueio da questão 1. | **P0** |
 | 4 | [`onchange_unit_of_measurement`](../models/engc_calibration.py#L398) | Única via de preenchimento das contribuições do padrão. Criação por RPC/import → tudo 0,0 → incerteza otimista **sem erro visível**. | **Alta** |
 | 5 | [`_compute_statistics`](../models/engc_calibration.py#L449) | `@api.depends` não inclui os campos `*_instrument`; alterar o padrão não recalcula as medidas. | **Alta** |

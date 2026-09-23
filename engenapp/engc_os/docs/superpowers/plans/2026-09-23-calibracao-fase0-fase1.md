@@ -38,7 +38,7 @@ O relatório lista o congelamento como Fase 4, por último. **Está errado e dev
 2. **Certificado com `validate_calibration` vazio.** `verify_is_valid()` compara `False >= date.today()` → `TypeError`. Registro assim é criável hoje (o campo não é `required`). Coberto na Task 2, Step 1.
 3. **Calibração com `date_next_calibration` vazio.** `_check_date_calibration` compara `date > False` → `TypeError` ao salvar. Coberto na Task 4, Step 1.
 4. **`display_decimals` zero, vazio ou não configurado** na unidade de medida → QWeb recebe `precision=0`/`None` e imprime valor truncado ou estoura. Coberto na Task 6, Step 1.
-5. **Valores históricos após a troca de coluna `double precision` → `numeric(16,6)`.** Medidas gravadas com mais de 6 casas são arredondadas pelo `ALTER TABLE`. Coberto na Task 5, Step 6 (verificação pós-upgrade em dado real).
+5. **Valores históricos após a troca de coluna `double precision` → `numeric`.** Medidas gravadas com mais de 6 casas são arredondadas pelo `ALTER TABLE`. Coberto na Task 5, Step 6 (verificação pós-upgrade em dado real).
 
 ---
 
@@ -1181,6 +1181,13 @@ docker exec odoo_engenapp-web-qualificacao-1 /entrypoint.sh -d qualificacao-dev 
 ```
 Esperado: 5 testes novos PASS, caracterização continua PASS, só a falha pré-existente.
 
+> ⚠️ **Correção de 23/09: os 5 testes acima NÃO guardam a mudança.** Apurado na execução e confirmado
+> por revisão contra o `fields.py` do Odoo 16: todos passam com `digits='Calibration'` removido de
+> todos os campos. O armazenamento (`double precision`) nunca esteve quebrado — o bug só aparece no
+> widget web, que lê `fields_get()['digits']`. É **obrigatório** acrescentar uma asserção
+> discriminante via `fields_get`, exigindo `(16, 6)` nos campos dimensionais e vazio nos adimensionais,
+> e vê-la falhar com o `digits` removido de propósito antes de confiar nela.
+
 - [ ] **Step 6: Conferir o dado histórico depois do ALTER TABLE**
 
 Review Focus 5 — confirmar que a coluna mudou de tipo e que nada virou NULL:
@@ -1195,7 +1202,13 @@ docker exec odoo_engenapp-db-qualificacao-1 psql -U odoo -d qualificacao-dev -c 
          count(true_quantity_value) AS com_valor
     FROM engc_calibration_measurement_lines;"
 ```
-Esperado: `numeric` com escala 6, e `com_valor` igual ao que era antes do upgrade.
+Esperado: tipo `numeric` e `com_valor` igual ao que era antes do upgrade.
+
+> **Correção de 23/09, apurada na execução:** a coluna vira `numeric` **sem escala no typmod** — não
+> `numeric(16,6)` como este plano previa. É comportamento padrão do Odoo: `Float.column_type` devolve
+> sempre `('numeric','numeric')` quando há `digits`, e o arredondamento é imposto na camada ORM
+> (`convert_to_column`/`convert_to_cache` via `float_round`), não por constraint de coluna. Portanto
+> `numeric_scale` vem **vazio** nessa consulta, e isso está certo.
 
 - [ ] **Step 7: Commit**
 
