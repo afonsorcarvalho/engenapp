@@ -173,14 +173,26 @@ class CalibrationInstrument(models.Model):
     
    
 
+    def get_valid_certificates(self):
+        """Todos os certificados válidos e não substituídos, do mais recente
+        para o mais antigo."""
+        self.ensure_one()
+        validos = self.certificate_ids.filtered(
+            lambda rec: rec.is_valid and not rec.superseded_by_id)
+        return validos.sorted(
+            key=lambda rec: (rec.date_calibration or date.min, rec.id),
+            reverse=True,
+        )
+
     def get_certificate_valid(self):
-        return  self.certificate_ids.filtered(lambda rec: rec.is_valid)
-    
+        """Certificado válido a usar — no máximo UM registro.
 
-     
-    
-
-    
+        Devolvia o recordset inteiro, o que quebrava o `t-field` do template
+        do certificado em qualquer instrumento com mais de um válido (caso
+        real: QPT-014, com três). Assinatura mantida por causa do QWeb.
+        """
+        self.ensure_one()
+        return self.get_valid_certificates()[:1]
 
 
 class CalibrationInstrumentCertificates(models.Model):
@@ -220,6 +232,19 @@ class CalibrationInstrumentCertificates(models.Model):
         compute="_compute_is_valid",
         help="Certificado dentro do prazo de validade na data de hoje.",
     )
+    certificate_file_ids = fields.One2many(
+        string='Arquivos / idiomas',
+        comodel_name='engc.calibration.instruments.certificates.file',
+        inverse_name='certificate_id',
+        help="Versões do MESMO certificado em outros idiomas. Não cadastre "
+             "aqui um certificado diferente — crie outro registro.")
+    superseded_by_id = fields.Many2one(
+        string='Substituído por',
+        comodel_name='engc.calibration.instruments.certificates',
+        ondelete='set null',
+        help="Preenchido quando este registro é duplicata de outro (ex.: a "
+             "mesma calibração cadastrada duas vezes, em idiomas diferentes). "
+             "Certificados substituídos são ignorados na escolha do válido.")
 
     @api.depends('validate_calibration')
     def _compute_is_valid(self):
@@ -238,9 +263,27 @@ class CalibrationInstrumentCertificates(models.Model):
         self.ensure_one()
         return bool(self.validate_calibration) and self.validate_calibration >= date.today()
 
-        
-  
 
+class CalibrationInstrumentCertificateFile(models.Model):
+    _name = 'engc.calibration.instruments.certificates.file'
+    _description = 'Arquivos do certificado (variantes de idioma)'
+    _order = 'id'
+
+    certificate_id = fields.Many2one(
+        string='Certificado',
+        comodel_name='engc.calibration.instruments.certificates',
+        ondelete='cascade',
+        required=True,
+        index=True,
+    )
+    lang_id = fields.Many2one(
+        string='Idioma', comodel_name='res.lang', ondelete='restrict')
+    name = fields.Char(
+        string='Identificação',
+        help="Como este arquivo é identificado. Ex.: o número do certificado "
+             "na versão em inglês.")
+    file = fields.Binary(string='Arquivo')
+    filename = fields.Char(string='Nome do arquivo')
 
 
 class CalibrationIntrumentUncertaintyLines(models.Model):

@@ -44,3 +44,50 @@ class TestCertificateValidity(CalibrationCase):
             'certificate_number': 'SEM-DATA-2',
         })
         self.assertFalse(cert.verify_is_valid())
+
+
+class TestCertificateSelection(CalibrationCase):
+
+    def _novo_certificado(self, numero, validade_anos=1, calibrado_em=None):
+        return self.env['engc.calibration.instruments.certificates'].create({
+            'instrument_id': self.instrument.id,
+            'certificate_number': numero,
+            'date_calibration': calibrado_em or date.today(),
+            'validate_calibration': date.today() + relativedelta(years=validade_anos),
+        })
+
+    def test_um_certificado_valido_devolve_ele(self):
+        self.assertEqual(self.instrument.get_certificate_valid(), self.certificate)
+
+    def test_varios_validos_devolve_singleton(self):
+        """O caso QPT-014 real: 3 certificados válidos quebravam o PDF."""
+        self._novo_certificado('R1236/2026')
+        self._novo_certificado('R1236/2026 - Inglês')
+        escolhido = self.instrument.get_certificate_valid()
+        self.assertEqual(len(escolhido), 1)
+
+    def test_escolhe_o_de_calibracao_mais_recente(self):
+        antigo = self.certificate
+        antigo.date_calibration = date.today() - relativedelta(years=2)
+        novo = self._novo_certificado('R1236/2026', calibrado_em=date.today())
+        self.assertEqual(self.instrument.get_certificate_valid(), novo)
+
+    def test_certificado_substituido_e_ignorado(self):
+        dup = self._novo_certificado('R0712/2026 - Inglês')
+        dup.superseded_by_id = self.certificate.id
+        self.assertEqual(self.instrument.get_certificate_valid(), self.certificate)
+        self.assertNotIn(dup, self.instrument.get_valid_certificates())
+
+    def test_sem_certificado_valido_devolve_vazio_sem_estourar(self):
+        """Review Focus 1: instrumento sem certificado válido."""
+        self.certificate.validate_calibration = date.today() - relativedelta(days=1)
+        self.assertEqual(len(self.instrument.get_certificate_valid()), 0)
+
+    def test_arquivos_de_idioma_no_mesmo_certificado(self):
+        en = self.env['res.lang'].search([('code', '=', 'en_US')], limit=1)
+        arquivo = self.env['engc.calibration.instruments.certificates.file'].create({
+            'certificate_id': self.certificate.id,
+            'name': 'R0712/2026 - Inglês',
+            'lang_id': en.id if en else False,
+        })
+        self.assertIn(arquivo, self.certificate.certificate_file_ids)

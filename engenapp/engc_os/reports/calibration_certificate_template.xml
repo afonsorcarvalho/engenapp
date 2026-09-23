@@ -131,12 +131,20 @@
                         </div>
                         <div class="col-10">
                             <t t-foreach="o.instruments_ids" t-as="i">
+                                <t t-set="cert" t-value="i.get_certificate_valid()" />
                                 <span t-field="i.display_name" /> marca <span t-field="i.marca" />,
                                 modelo <span t-field="i.modelo" />, número de série <span
-                                    t-field="i.id_number" />.<br /> Certificado de calibração
-                                 emitido por <span t-field="i.get_certificate_valid().certificate_partner" /> sob o número <span
-                                    t-field="i.get_certificate_valid().certificate_number" /> com validade até <span 
-                                    t-field="i.get_certificate_valid().validate_calibration" /><br />
+                                    t-field="i.id_number" />.<br />
+                                <t t-if="cert">
+                                    Certificado de calibração emitido por <span
+                                        t-field="cert.certificate_partner" /> sob o número <span
+                                        t-field="cert.certificate_number" /> com validade até <span
+                                        t-field="cert.validate_calibration" /><br />
+                                </t>
+                                <t t-else="">
+                                    <span class="text-danger">Sem certificado de calibração
+                                        válido cadastrado para este padrão.</span><br />
+                                </t>
                             </t>
                         </div>
                     </div>
