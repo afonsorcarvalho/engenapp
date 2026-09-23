@@ -78,6 +78,28 @@ class TestCertificateSelection(CalibrationCase):
         self.assertEqual(self.instrument.get_certificate_valid(), self.certificate)
         self.assertNotIn(dup, self.instrument.get_valid_certificates())
 
+    def test_search_certificates_valid_ignora_substituido(self):
+        """_search_certificates_valid() é o segundo caminho de validade (usado
+        no onchange da medição, via _search_statistics) — não checava
+        superseded_by_id, reabrindo a mesma classe de erro do P0 (Expected
+        singleton) quando a duplicata carrega uma uncertainty_line na mesma
+        unidade do certificado mantido."""
+        dup = self._novo_certificado('R1236/2026 - Inglês')
+        self.env['engc.calibration.instruments.uncertainty.lines'].create({
+            'certificate': dup.id,
+            'unit_of_measurement': self.unit_tempo.id,
+            'uncertainty': 0.999,
+            'coverage_factor': 2.0,
+            'erro_value': 0.999,
+            'resolution': 0.999,
+            'veff': 2.0,
+        })
+        dup.superseded_by_id = self.certificate.id
+
+        measurement = self.make_measurement()
+
+        self.assertEqual(measurement.resolution_instrument, 0.01)
+
     def test_sem_certificado_valido_devolve_vazio_sem_estourar(self):
         """Review Focus 1: instrumento sem certificado válido."""
         self.certificate.validate_calibration = date.today() - relativedelta(days=1)

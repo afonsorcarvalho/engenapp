@@ -55,6 +55,8 @@ def migrate(cr, version):
         SELECT instrument_id, date_calibration, validate_calibration,
                array_agg(id ORDER BY id)
           FROM engc_calibration_instruments_certificates
+         WHERE date_calibration IS NOT NULL
+           AND validate_calibration IS NOT NULL
       GROUP BY instrument_id, date_calibration, validate_calibration
         HAVING count(*) > 1
         """
@@ -73,10 +75,13 @@ def migrate(cr, version):
         mantido, duplicatas = ids[0], ids[1:]
         for dup_id in duplicatas:
             dup = Certificate.browse(dup_id)
+            numero_arquivo = (dup.certificate_number or ('certificado-%s' % dup_id))
+            numero_arquivo = numero_arquivo.replace('/', '-')
             CertificateFile.create({
                 'certificate_id': mantido,
                 'name': dup.certificate_number,
                 'file': dup.certificate_calibration,
+                'filename': '%s.pdf' % numero_arquivo,
             })
             dup.write({'superseded_by_id': mantido})
             total += 1
@@ -90,6 +95,12 @@ def migrate(cr, version):
         "engc_os: %s certificado(s) duplicado(s) consolidado(s) em %s grupo(s). "
         "Nada foi apagado.", total, len(grupos),
     )
+
+    # env.flush_all(): os writes acima (superseded_by_id) ficam no buffer do
+    # ORM (`towrite`) até serem descarregados. Sem isso, a query SQL crua
+    # abaixo ainda vê o estado ANTES da consolidação e dispara um WARNING
+    # falso para os próprios grupos que acabaram de ser resolvidos.
+    env.flush_all()
 
     cr.execute(
         """

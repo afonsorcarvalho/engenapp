@@ -108,7 +108,7 @@
                           <tree editable="bottom">
                             <field name="name" />
                             <field name="lang_id" />
-                            <field name="file" widget="file" filename="filename" />
+                            <field name="file" widget="binary" filename="filename" />
                             <field name="filename" invisible="1" />
                           </tree>
                         </field>
