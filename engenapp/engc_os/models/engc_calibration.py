@@ -488,7 +488,7 @@ class CalibrationMeasurementLines (models.Model):
     uncertainty= fields.Float(string="Incerteza",compute="_compute_statistics", store=True, digits='Calibration' )
     coverage_factor= fields.Float(string="Fator K", default=2.0 )
     veff = fields.Float(string = "Veff",compute="_compute_statistics", store=True)
-    resolutino_instrument = fields.Float(string = "Resolução do instrumento", compute="_compute_statistics", store=True)
+    resolutino_instrument = fields.Float(string = "Resolução do instrumento", compute="_compute_statistics", store=True, digits='Calibration')
 
     @api.depends('measurement_id.instrument_id','measurement_id.unit_of_measurement','true_quantity_value','coverage_factor','measurement_quantity_value_1','measurement_quantity_value_2','measurement_quantity_value_3')
     def _compute_statistics(self):
