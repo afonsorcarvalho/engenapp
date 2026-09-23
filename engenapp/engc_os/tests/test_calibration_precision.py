@@ -1,3 +1,5 @@
+from datetime import date
+
 from odoo.exceptions import ValidationError
 
 from .common import CalibrationCase
@@ -115,3 +117,57 @@ class TestUnitDisplayDecimals(CalibrationCase):
 
     def test_unidade_tempo_do_fixture_tem_tres_casas(self):
         self.assertEqual(self.unit_tempo.display_decimals, 3)
+
+
+class TestCertificateDecimalsRendering(CalibrationCase):
+    """Guarda de regressão do bug real desta task.
+
+    `TestUnitDisplayDecimals` cobre só o campo Python `display_decimals` —
+    nenhum teste ali renderiza o certificado. Sem esta classe, reverter
+    `calibration_certificate_template.xml` para o hardcode antigo
+    (`t-options='{"widget": "float", "precision": 2}'`) deixaria os demais
+    48 testes de engc_os e os 919 do baseline verdes, e o bug que a Fase 1
+    inteira existe para corrigir (60,053 s virando 60,05 s no PDF) voltaria
+    sem ninguém perceber.
+
+    O report action `engc_os.report_engc_os_calibration_certificate` está
+    ligado ao modelo `engc.calibration` (`reports/engc_os_reports.xml`) —
+    os docids passados a `_render_qweb_html` são ids de `engc.calibration`,
+    não de `engc.os` nem de medição.
+    """
+
+    def _build_calibration_with_line(self, true_value, r1, r2, r3):
+        vals = self.make_calibration_vals(issue_date=date.today())
+        calibration = self.env['engc.calibration'].create(vals)
+        # make_measurement() (common.py) não define calibration_id no seu
+        # dict default; passar aqui via kw acrescenta o campo sem tocar no
+        # helper compartilhado.
+        measurement = self.make_measurement(calibration_id=calibration.id)
+        self.make_line(measurement, true_value, r1, r2, r3)
+        return calibration
+
+    def _render(self, calibration):
+        return self.env['ir.actions.report']._render_qweb_html(
+            'engc_os.report_engc_os_calibration_certificate', [calibration.id]
+        )[0].decode()
+
+    def test_valor_medido_imprime_tres_casas_nao_truncadas(self):
+        """Caso real: mean(60.053, 60.055, 60.054) = 60.054. Tem que
+        aparecer 60,054 no certificado — não pode voltar a truncar para
+        60,05 (o bug original desta task)."""
+        calibration = self._build_calibration_with_line(60.0, 60.053, 60.055, 60.054)
+        html = self._render(calibration)
+        # Fronteira exata via tag de fechamento: "60,05" é PREFIXO de
+        # "60,054", então um assertNotIn('60,05') ingênuo sempre casaria
+        # dentro de "60,054" e nunca detectaria o revert para precision=2.
+        # Ancorar em "<span>...</span>" completo resolve isso.
+        self.assertIn('<span>60,054</span>', html)
+        self.assertNotIn('<span>60,05</span>', html)
+
+    def test_display_decimals_zero_imprime_sem_casas(self):
+        self.unit_tempo.display_decimals = 0
+        calibration = self._build_calibration_with_line(60.0, 60.053, 60.055, 60.054)
+        html = self._render(calibration)
+        self.assertIn('<span>60</span>', html)
+        self.assertNotIn('<span>60,00</span>', html)
+        self.assertNotIn('<span>60,054</span>', html)

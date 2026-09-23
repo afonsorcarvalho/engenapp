@@ -1,21 +1,26 @@
-"""Preenche `display_decimals` para as unidades de medida já existentes.
+"""Rede de segurança: garante `display_decimals = 3` nas unidades de medida
+já existentes, para quem não passar pelo caminho normal de upgrade.
 
-Motivo (Task 6, Fase 1): o campo `display_decimals` (Integer, default=3) é
-novo nesta versão. Um `default=` do ORM só é aplicado a registros criados
-*depois* de o campo existir — as linhas de `engc.calibration.measurement.unit`
-que já estavam na base (dev e produção) recebem o default do banco para uma
-coluna inteira nova, que é `0`, não `3`.
+No caminho normal do Odoo 16, isto é redundante: `display_decimals` é
+`required=True` com `default=3`, e o `_auto_init`/`_init_column` do ORM
+preenche a coluna nova com esse default para as linhas já existentes ANTES
+de aplicar a constraint NOT NULL. Verificado na prática: rodando `-u
+engc_os` do zero na base `qualificacao-dev`, as 4 unidades pré-existentes
+(Celsius, Bar, %UR, Tempo) já apareceram com `display_decimals = 3` e esta
+migração não teve nada para corrigir (`0 unidade(s) ajustada(s)` no log).
 
-Sem esta migração, toda unidade pré-existente (ex.: "Tempo", usada em
-CAL0926.0001) imprimiria o certificado com ZERO casas decimais — ou seja,
-reintroduziria silenciosamente o bug que esta task inteira existe para
-corrigir (60,053 s viraria "60 s" em vez de manter os 2 dígitos antigos do
-hardcode, pior ainda).
+Ainda assim, este script fica como rede de segurança NÃO-DESTRUTIVA para
+caminhos de upgrade fora do padrão, onde esse backfill do ORM pode não ter
+rodado — por exemplo uma restauração parcial de backup, uma coluna criada
+por DDL manual, ou uma base que teve o campo adicionado sem o `default` (ex.
+por um patch aplicado fora de ordem). Nesses casos, uma unidade com
+`display_decimals = 0` faria o certificado imprimir os valores sem nenhuma
+casa decimal — o mesmo tipo de bug que esta task inteira existe para
+corrigir, só que na direção oposta (0 casas em vez de 2 truncadas).
 
-Não mexe em unidades que porventura já tenham sido configuradas com 0 casas
-de propósito (ex.: uma futura unidade "Ciclos") DEPOIS do upgrade — só atua
-sobre o estado imediatamente após a criação da coluna, quando tudo que não é
-NULL é exatamente o default do banco (0).
+Idempotente e conservador: só toca linhas em NULL ou 0; nunca sobrescreve
+uma unidade que tenha sido configurada de propósito com 0 casas decimais
+(ex.: uma futura unidade "Ciclos", contagem inteira) depois do upgrade.
 """
 
 import logging
