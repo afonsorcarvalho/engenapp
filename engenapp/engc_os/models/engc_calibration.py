@@ -60,8 +60,10 @@ class EngcCalibration(models.Model):
     @api.constrains("date_next_calibration", "date_calibration", )
     def _check_date_calibration(self):
         for rec in self:
+            if not rec.date_calibration or not rec.date_next_calibration:
+                continue
             if rec.date_calibration > rec.date_next_calibration:
-                raise ValidationError(_("A data de calibração não pode ser maor que a data da proxima calibração"))
+                raise ValidationError(_("A data de calibração não pode ser maior que a data da próxima calibração"))
     
     instruments_ids = fields.Many2many(string='Instrumentos padrão', comodel_name='engc.calibration.instruments', required=True)
     
@@ -81,30 +83,25 @@ class EngcCalibration(models.Model):
     def onchange_date_calibration(self):
         if self.date_calibration:
             self.date_next_calibration = self.date_calibration + relativedelta(years=1)
-    @api.onchange('measurement_ids')
-    def onchange_measurement_ids(self):
-        if self.measurement_ids:
-            _logger.info(self.measurement_ids)
-    
     # @api.ondelete(at_uninstall=False)
     # def _unlink_except_instruments_ids(self):
         
     #     if any(instrument.id in self.instruments_ids.mapped(lambda r: r.id) for instrument in self.measurement_ids.mapped(lambda r: r.instrument_id)):
     #         raise UserError("Não pode deletar um instrumento que está em um medida adquirida ")
         
-    @api.model
+    @api.model_create_multi
     def create(self, vals_list):
-        """Salva ou atualiza os dados no banco de dados"""
-        if 'company_id' in vals_list:
-            vals_list['name'] = self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
-                'engc.calibration_sequence') or _('New')
-        else:
-            vals_list['name'] = self.env['ir.sequence'].next_by_code('engc.calibration_sequence') or _('New')
-        
-        
-        result = super(EngcCalibration, self).create(vals_list)
-        self.action_confirmed()
-        return result
+        """Gera a sequência e já confirma as calibrações criadas."""
+        for vals in vals_list:
+            if vals.get('name', _('New')) == _('New'):
+                sequencia = self.env['ir.sequence']
+                if vals.get('company_id'):
+                    sequencia = sequencia.with_company(vals['company_id'])
+                vals['name'] = sequencia.next_by_code('engc.calibration_sequence') or _('New')
+
+        registros = super(EngcCalibration, self).create(vals_list)
+        registros.action_confirmed()
+        return registros
     
     def get_sign_date(self):
         '''
@@ -126,7 +123,7 @@ class EngcCalibration(models.Model):
             if resp:
                 if rec.os_id:
                     rec.os_id.calibration_created = True
-                    rec.os_id.calibration_id = self.id
+                    rec.os_id.calibration_id = rec.id
 
     def action_done(self):
         for rec in self:
@@ -342,9 +339,8 @@ class CalibrationMeasurement (models.Model):
     title = fields.Char("Título",help="O título que aparecerá no certificado acima das medidas adquiridas")
     calibration_id = fields.Many2one(string='Cod. Calibração', comodel_name='engc.calibration', ondelete='restrict')
     date_measurement= fields.Date("Data de aquisição")
-    measurement_lines = fields.One2many('engc.calibration.measurement.lines', 'measurement_id') 
-    uncertainty = fields.Char('Incerteza') 
-    coverage_factor= fields.Float(string="Fator K padrão", 
+    measurement_lines = fields.One2many('engc.calibration.measurement.lines', 'measurement_id')
+    coverage_factor= fields.Float(string="Fator K padrão",
     required=True, default=2.0, help="Fator de abrangência padrão que será utilizado no cálculo da incerteza das medições"
      )
     environmental_conditions = fields.Char('Condições ambientais', default="25 graus Celsius, Umidade Relativa 60%")
@@ -366,14 +362,9 @@ class CalibrationMeasurement (models.Model):
     )
     @api.depends('calibration_id')
     def _compute_instrument_id_domain(self):
-        domain = []
         for rec in self:
-            if rec.instrument_id_domain:
-                domain = [('id', 'in', rec.calibration_id.instruments_ids.mapped(lambda r: r.id))]
-            
-            rec.instrument_id_domain = json.dumps(domain)
-            
-          
+            ids_permitidos = rec.calibration_id.instruments_ids.ids
+            rec.instrument_id_domain = json.dumps([('id', 'in', ids_permitidos)])
 
 
     @api.depends('instrument_id')
@@ -486,11 +477,7 @@ class CalibrationMeasurementLines (models.Model):
 
    
     measurement_id = fields.Many2one(string='Cod. Medidas', comodel_name='engc.calibration.measurement', ondelete='restrict')
-    
-    related='field_name',
-    readonly=True,
-    store=True
-    
+
     unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', related='measurement_id.unit_of_measurement' )
     true_quantity_value = fields.Float(string="Valor Real" )
     measurement_quantity_value_1= fields.Float(string="Leitura 01" )
@@ -537,11 +524,15 @@ class CalibrationMeasurementLines (models.Model):
                 
                 # incerteza =  incerteza combinada*k
                 record.uncertainty = record.coverage_factor * combined_uncertainty
+                record.resolutino_instrument = resolution_instrument
 
                 #grau de liberdade efetivo
+                # Fórmula vigente (NÃO é Welch-Satterthwaite — ver seção 5.2 do
+                # relatório; a correção é da Fase 3). Aqui só se troca o except
+                # nu por um específico: leituras idênticas zeram o desvio padrão.
                 try:
                     record.veff = 3*(combined_uncertainty/(stdev(values)/2))**4
-                except:
+                except ZeroDivisionError:
                     record.veff = 0
 
 

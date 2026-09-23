@@ -63,9 +63,18 @@ class CalibrationCase(TransactionCase):
             'coverage_factor': 2.0,
         })
 
-    def make_equipment(self, name='Autoclave 001'):
+    def make_equipment(self, name=None):
         """engc.equipment tem 6 campos obrigatórios além do nome; todos
-        precisam de registro próprio. Conferido no código do modelo."""
+        precisam de registro próprio. Conferido no código do modelo.
+
+        `engc.equipment.marca` tem `unique(name)` e `engc.equipment` tem
+        `unique(serial_number, marca_id)` — chamar este helper mais de uma
+        vez por teste (ex.: `create()` em lote) precisa de nome/serial
+        distintos a cada chamada, daí o contador.
+        """
+        self._equip_seq = getattr(self, '_equip_seq', 0) + 1
+        if name is None:
+            name = 'Autoclave %03d' % self._equip_seq
         return self.env['engc.equipment'].create({
             'name': name,
             'category_id': self.env['engc.equipment.category'].create(
@@ -76,7 +85,7 @@ class CalibrationCase(TransactionCase):
             'location_id': self.env['engc.equipment.location'].create(
                 {'name': 'Sala Teste'}).id,
             'marca_id': self.env['engc.equipment.marca'].create(
-                {'name': 'Marca Teste'}).id,
+                {'name': 'Marca Teste %03d' % self._equip_seq}).id,
             'model': 'MOD-001',
             'serial_number': 'SN-%s' % name,
         })
