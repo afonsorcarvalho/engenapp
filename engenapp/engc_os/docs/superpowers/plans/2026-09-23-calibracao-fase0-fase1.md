@@ -1374,3 +1374,57 @@ unit of measurement (default 3), leaving the dimensionless k and veff at 2.
 - [ ] Rodar `superpowers:requesting-code-review` sobre a branch inteira.
 - [ ] Apresentar ao usuário: o PDF do QPT-014 gerando, e uma medida de tempo com 3 casas no certificado.
 - [ ] **Parar.** A Fase 2 (multiponto) altera o modelo de dados de certificados em uso no labquali e precisa de autorização explícita.
+
+---
+
+# Fecho da execução — 23/09/2026
+
+Fases 0 e 1 entregues em 14 commits (`c922ec8..fb58cad`), branch `feat/calibracao-incerteza-precisao`.
+Suíte: 40 métodos de teste no `engc_os` onde antes havia **zero**; baseline dos módulos dependentes
+(919 testes) inalterada, com a única falha pré-existente conhecida.
+
+## Defeitos deste plano apurados na execução
+
+Registrados porque quem executar a Fase 2 vai reler este documento:
+
+1. **A migração raw-SQL da Task 3 não funcionava.** `certificate_calibration` e o novo `file` são
+   `fields.Binary` com `attachment=True` (padrão do Odoo) — moram em `ir_attachment`, **sem coluna**.
+   `SELECT`/`INSERT` cru falha com `column does not exist`. Cópia de binário tem de passar pelo ORM.
+2. **Os testes da Task 5 não guardavam nada.** Os cinco passavam com `digits='Calibration'` removido
+   de todos os campos: o armazenamento (`double precision`) nunca esteve quebrado, o bug só aparecia
+   no widget web. Guarda real = asserção sobre `fields_get()['digits']`.
+3. **A Task 6 tinha o mesmo buraco no QWeb.** Reverter o template para `precision: 2` deixava os 959
+   testes verdes. Guarda real = renderizar com `_render_qweb_html` e asserir na saída, ancorando a
+   asserção negativa na tag inteira (`<span>60,05</span>`), porque `60,05` é prefixo de `60,054`.
+4. **O grep do rename da Task 4 estava escopado errado** (`engenapp/` em vez do monorepo):
+   `resolutino_instrument` é referenciado por `addons/afr_qualificacao/views/qualificacao_subrecords_views.xml:130`.
+5. **A coluna não vira `numeric(16,6)`** e sim `numeric` sem escala; o arredondamento é do ORM.
+6. **O predicado omitido na migração 16.0.1.0.0 foi um erro meu**, justificado por uma suposta
+   dependência de ordem de schema que não existe — `post-migrate` roda depois do `_auto_init`.
+
+## Pendências herdadas (nenhuma bloqueia merge)
+
+| # | Item | Quando |
+|---|---|---|
+| 1 | `_search_statistics` estoura `Expected singleton` com 2+ certificados válidos distintos que tenham linha de incerteza na mesma unidade. **Reproduzido na prática.** | **Fase 2** (é o bloqueador dela) |
+| 2 | Rename `resolutino_instrument` → `resolution_instrument_line`, coordenado com a view do submodule `afr_qualificacao` | Fase 2+ |
+| 3 | Remover o hotfix duplicado `_compute_is_valid` em `addons/afr_qualificacao/models/calibration_instruments.py:122-135` — virou código morto | Fase 2+ |
+| 4 | `_compute_has_valid_certificate` e `_compute_coverage` (mesmo arquivo, :192 e :222) ignoram `superseded_by_id` — 3ª e 4ª definições de "certificado válido" | Fase 2 |
+| 5 | `CalibrationMeasurement.create` e `CalibrationMeasurementProcedure.create` continuam `@api.model`, tratam `vals_list` como dict e usam `force_company` (depreciado no 16) | cedo, é barato |
+| 6 | `_compute_statistics` sem os campos `*_instrument` no `@api.depends` (item #5 da spec, severidade Alta) | Fase 2 |
+| 7 | Sem guarda server-side contra auto-supersede / ciclo de supersede | qualquer hora |
+| 8 | `make_equipment(name=...)` do fixture: `engc.equipment.name` é compute store sem inverse, o valor é descartado | quando alguém asserir `equipment.name` |
+
+## Mudança de comportamento visível ao usuário
+
+Calibração criada por `afr_qualificacao.action_create_engc_calibration()` agora nasce em
+**"Em andamento"** e não mais em "Rascunho" — consequência intencional da correção do item #6
+(o `create()` chamava `action_confirmed()` num recordset vazio, então nunca confirmava nada).
+
+## Pergunta em aberto
+
+A base `odoo-labquali` tem 24 certificados de padrão mas **zero calibrações emitidas**. A tabela da
+imagem que originou esta análise (60,053 s, ±ITM 0,035, Veff Inf) veio de outra base, ainda não
+identificada. **Antes de rodar `-u engc_os` em qualquer base com calibração real**, identificar qual
+é: as garantias de segurança apuradas aqui (ALTER TABLE sobre tabela vazia, nenhum certificado
+reescrito) valem só para o labquali.
