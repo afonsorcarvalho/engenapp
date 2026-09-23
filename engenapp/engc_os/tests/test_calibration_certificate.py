@@ -35,3 +35,12 @@ class TestCertificateValidity(CalibrationCase):
         })
         lote = self.certificate | cert2
         self.assertEqual(lote.mapped('is_valid'), [True, False])
+
+    def test_verify_is_valid_sem_data_nao_estoura(self):
+        """verify_is_valid() é API pública (base do get_valid_certificates da
+        Task 3); precisa ser segura contra data vazia tanto quanto o compute."""
+        cert = self.env['engc.calibration.instruments.certificates'].create({
+            'instrument_id': self.instrument.id,
+            'certificate_number': 'SEM-DATA-2',
+        })
+        self.assertFalse(cert.verify_is_valid())
