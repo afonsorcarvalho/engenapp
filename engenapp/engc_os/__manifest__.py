@@ -16,7 +16,7 @@
     # Check https://github.com/odoo/odoo/blob/14.0/odoo/addons/base/data/ir_module_category_data.xml
     # for the full list
     'category': 'Services',
-    'version': '0.1',
+    'version': '16.0.2.0.0',
 
 
     # any module necessary for this one to work correctly
@@ -32,6 +32,7 @@
         'data/cronograma_weekdays.xml',
         'data/sequence.xml',
         'data/preventive_cron.xml',
+        'data/decimal_precision.xml',
         'views/equipment_category_view.xml',
         'views/calibration_views.xml',
         'views/calibration_procedure_views.xml',

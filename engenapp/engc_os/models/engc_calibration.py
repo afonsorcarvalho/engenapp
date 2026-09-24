@@ -60,8 +60,10 @@ class EngcCalibration(models.Model):
     @api.constrains("date_next_calibration", "date_calibration", )
     def _check_date_calibration(self):
         for rec in self:
+            if not rec.date_calibration or not rec.date_next_calibration:
+                continue
             if rec.date_calibration > rec.date_next_calibration:
-                raise ValidationError(_("A data de calibração não pode ser maor que a data da proxima calibração"))
+                raise ValidationError(_("A data de calibração não pode ser maior que a data da próxima calibração"))
     
     instruments_ids = fields.Many2many(string='Instrumentos padrão', comodel_name='engc.calibration.instruments', required=True)
     
@@ -81,30 +83,25 @@ class EngcCalibration(models.Model):
     def onchange_date_calibration(self):
         if self.date_calibration:
             self.date_next_calibration = self.date_calibration + relativedelta(years=1)
-    @api.onchange('measurement_ids')
-    def onchange_measurement_ids(self):
-        if self.measurement_ids:
-            _logger.info(self.measurement_ids)
-    
     # @api.ondelete(at_uninstall=False)
     # def _unlink_except_instruments_ids(self):
         
     #     if any(instrument.id in self.instruments_ids.mapped(lambda r: r.id) for instrument in self.measurement_ids.mapped(lambda r: r.instrument_id)):
     #         raise UserError("Não pode deletar um instrumento que está em um medida adquirida ")
         
-    @api.model
+    @api.model_create_multi
     def create(self, vals_list):
-        """Salva ou atualiza os dados no banco de dados"""
-        if 'company_id' in vals_list:
-            vals_list['name'] = self.env['ir.sequence'].with_context(force_company=self.env.user.company_id.id).next_by_code(
-                'engc.calibration_sequence') or _('New')
-        else:
-            vals_list['name'] = self.env['ir.sequence'].next_by_code('engc.calibration_sequence') or _('New')
-        
-        
-        result = super(EngcCalibration, self).create(vals_list)
-        self.action_confirmed()
-        return result
+        """Gera a sequência e já confirma as calibrações criadas."""
+        for vals in vals_list:
+            if vals.get('name', _('New')) == _('New'):
+                sequencia = self.env['ir.sequence']
+                if vals.get('company_id'):
+                    sequencia = sequencia.with_company(vals['company_id'])
+                vals['name'] = sequencia.next_by_code('engc.calibration_sequence') or _('New')
+
+        registros = super(EngcCalibration, self).create(vals_list)
+        registros.action_confirmed()
+        return registros
     
     def get_sign_date(self):
         '''
@@ -126,7 +123,7 @@ class EngcCalibration(models.Model):
             if resp:
                 if rec.os_id:
                     rec.os_id.calibration_created = True
-                    rec.os_id.calibration_id = self.id
+                    rec.os_id.calibration_id = rec.id
 
     def action_done(self):
         for rec in self:
@@ -173,14 +170,26 @@ class CalibrationInstrument(models.Model):
     
    
 
+    def get_valid_certificates(self):
+        """Todos os certificados válidos e não substituídos, do mais recente
+        para o mais antigo."""
+        self.ensure_one()
+        validos = self.certificate_ids.filtered(
+            lambda rec: rec.is_valid and not rec.superseded_by_id)
+        return validos.sorted(
+            key=lambda rec: (rec.date_calibration or date.min, rec.id),
+            reverse=True,
+        )
+
     def get_certificate_valid(self):
-        return  self.certificate_ids.filtered(lambda rec: rec.is_valid)
-    
+        """Certificado válido a usar — no máximo UM registro.
 
-     
-    
-
-    
+        Devolvia o recordset inteiro, o que quebrava o `t-field` do template
+        do certificado em qualquer instrumento com mais de um válido (caso
+        real: QPT-014, com três). Assinatura mantida por causa do QWeb.
+        """
+        self.ensure_one()
+        return self.get_valid_certificates()[:1]
 
 
 class CalibrationInstrumentCertificates(models.Model):
@@ -215,12 +224,30 @@ class CalibrationInstrumentCertificates(models.Model):
         comodel_name='engc.calibration.instruments.uncertainty.lines',
         inverse_name='certificate',
     )
-    is_valid = fields.Boolean(string="É válido", compute="_compute_is_valid")
+    is_valid = fields.Boolean(
+        string="É válido",
+        compute="_compute_is_valid",
+        help="Certificado dentro do prazo de validade na data de hoje.",
+    )
+    certificate_file_ids = fields.One2many(
+        string='Arquivos / idiomas',
+        comodel_name='engc.calibration.instruments.certificates.file',
+        inverse_name='certificate_id',
+        help="Versões do MESMO certificado em outros idiomas. Não cadastre "
+             "aqui um certificado diferente — crie outro registro.")
+    superseded_by_id = fields.Many2one(
+        string='Substituído por',
+        comodel_name='engc.calibration.instruments.certificates',
+        ondelete='set null',
+        help="Preenchido quando este registro é duplicata de outro (ex.: a "
+             "mesma calibração cadastrada duas vezes, em idiomas diferentes). "
+             "Certificados substituídos são ignorados na escolha do válido.")
 
     @api.depends('validate_calibration')
     def _compute_is_valid(self):
-        if self.validate_calibration :
-            return self.verify_is_valid()
+        hoje = date.today()
+        for rec in self:
+            rec.is_valid = bool(rec.validate_calibration) and rec.validate_calibration >= hoje
 
 
     @api.onchange('date_calibration')
@@ -228,14 +255,32 @@ class CalibrationInstrumentCertificates(models.Model):
         if self.date_calibration:
             self.date_next_calibration = self.date_calibration + relativedelta(years=1)
             self.validate_calibration = self.date_calibration + relativedelta(years=1)
-    
+
     def verify_is_valid(self):
-       # for rec in self:
-            return self.validate_calibration >= date.today()
+        self.ensure_one()
+        return bool(self.validate_calibration) and self.validate_calibration >= date.today()
 
-        
-  
 
+class CalibrationInstrumentCertificateFile(models.Model):
+    _name = 'engc.calibration.instruments.certificates.file'
+    _description = 'Arquivos do certificado (variantes de idioma)'
+    _order = 'id'
+
+    certificate_id = fields.Many2one(
+        string='Certificado',
+        comodel_name='engc.calibration.instruments.certificates',
+        ondelete='cascade',
+        required=True,
+        index=True,
+    )
+    lang_id = fields.Many2one(
+        string='Idioma', comodel_name='res.lang', ondelete='restrict')
+    name = fields.Char(
+        string='Identificação',
+        help="Como este arquivo é identificado. Ex.: o número do certificado "
+             "na versão em inglês.")
+    file = fields.Binary(string='Arquivo')
+    filename = fields.Char(string='Nome do arquivo')
 
 
 class CalibrationIntrumentUncertaintyLines(models.Model):
@@ -252,16 +297,16 @@ class CalibrationIntrumentUncertaintyLines(models.Model):
     )
 
     
-    erro_value= fields.Float(string="Erro fiducial" )
-    uncertainty = fields.Float('Incerteza', 
-    required=True
-    ) 
-    coverage_factor= fields.Float(string="Fator K", 
+    erro_value= fields.Float(string="Erro fiducial", digits='Calibration')
+    uncertainty = fields.Float('Incerteza',
+    required=True, digits='Calibration'
+    )
+    coverage_factor= fields.Float(string="Fator K",
         required=True, default=2.0
      )
     veff = fields.Float(string = "Veff", help="Graus de liberdade efetiva. Para valores infinitos preencha com qualquer número maior que 100")
-    resolution = fields.Float(string = "Resolução", help="Resolução do padrão", 
-        required=True
+    resolution = fields.Float(string = "Resolução", help="Resolução do padrão",
+        required=True, digits='Calibration'
     )
     unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', ondelete='restrict', 
     required=True
@@ -294,9 +339,8 @@ class CalibrationMeasurement (models.Model):
     title = fields.Char("Título",help="O título que aparecerá no certificado acima das medidas adquiridas")
     calibration_id = fields.Many2one(string='Cod. Calibração', comodel_name='engc.calibration', ondelete='restrict')
     date_measurement= fields.Date("Data de aquisição")
-    measurement_lines = fields.One2many('engc.calibration.measurement.lines', 'measurement_id') 
-    uncertainty = fields.Char('Incerteza') 
-    coverage_factor= fields.Float(string="Fator K padrão", 
+    measurement_lines = fields.One2many('engc.calibration.measurement.lines', 'measurement_id')
+    coverage_factor= fields.Float(string="Fator K padrão",
     required=True, default=2.0, help="Fator de abrangência padrão que será utilizado no cálculo da incerteza das medições"
      )
     environmental_conditions = fields.Char('Condições ambientais', default="25 graus Celsius, Umidade Relativa 60%")
@@ -318,20 +362,24 @@ class CalibrationMeasurement (models.Model):
     )
     @api.depends('calibration_id')
     def _compute_instrument_id_domain(self):
-        domain = []
         for rec in self:
-            if rec.instrument_id_domain:
-                domain = [('id', 'in', rec.calibration_id.instruments_ids.mapped(lambda r: r.id))]
-            
-            rec.instrument_id_domain = json.dumps(domain)
-            
-          
+            ids_permitidos = rec.calibration_id.instruments_ids.ids
+            rec.instrument_id_domain = json.dumps([('id', 'in', ids_permitidos)])
 
 
     @api.depends('instrument_id')
     def _compute_unit_of_measurement_domain(self):
         for rec in self:
-            certificates  = self.instrument_id.get_certificate_valid()
+            # get_certificate_valid() faz ensure_one() no instrumento (Task 3);
+            # sem essa guarda, uma linha de medição sem padrão escolhido ainda
+            # (instrument_id vazio) levantaria "Expected singleton" aqui — o
+            # mesmo tipo de erro que a Task 3 corrigiu no PDF. Também trocado
+            # `self.instrument_id` (bug pré-existente) por `rec.instrument_id`.
+            certificates = (
+                rec.instrument_id.get_certificate_valid()
+                if rec.instrument_id
+                else self.env['engc.calibration.instruments.certificates']
+            )
             uncertainty_lines = certificates.mapped(lambda r: r.uncertainty_lines)
             unit_of_measurement_lines = uncertainty_lines.mapped(lambda r: r.unit_of_measurement)
             rec.unit_of_measurement_domain = json.dumps(
@@ -339,36 +387,37 @@ class CalibrationMeasurement (models.Model):
             )
     
     uncertainty_instrument = fields.Float(
-        
-        readonly=True,
-   
+
+        readonly=True, digits='Calibration',
+
         )
     erro_value_instrument = fields.Float(
-       
-        readonly=True,
-   
+
+        readonly=True, digits='Calibration',
+
         )
     coverage_factor_instrument = fields.Float(
-        
+
         readonly=True,
-   
+
         )
     resolution_instrument = fields.Float(
-       
-        readonly=True,
-   
+
+        readonly=True, digits='Calibration',
+
         )
     veff_instrument = fields.Float(
-      
+
         readonly=True,
-   
+
         )
     #TODO fazer ele pegar o certificado valido mais novo, caso tenha mais de um certificado válido
     def _search_certificates_valid(self):
         '''
             Pega os certificados válidos do instrumento de calibração
         '''
-        certificates = self.instrument_id.certificate_ids.filtered(lambda rec: rec.validate_calibration >= date.today())
+        certificates = self.instrument_id.certificate_ids.filtered(
+            lambda rec: rec.verify_is_valid() and not rec.superseded_by_id)
         if len(certificates) == 0:
                 raise ValidationError(_("Verifique a Data de vencimento da Calibração do instrumento utilizado. Não é possível utilizar intrumento com calibração vencida"))
         return certificates
@@ -428,22 +477,18 @@ class CalibrationMeasurementLines (models.Model):
 
    
     measurement_id = fields.Many2one(string='Cod. Medidas', comodel_name='engc.calibration.measurement', ondelete='restrict')
-    
-    related='field_name',
-    readonly=True,
-    store=True
-    
+
     unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', related='measurement_id.unit_of_measurement' )
-    true_quantity_value = fields.Float(string="Valor Real" )
-    measurement_quantity_value_1= fields.Float(string="Leitura 01" )
-    measurement_quantity_value_2= fields.Float(string="Leitura 02" )
-    measurement_quantity_value_3= fields.Float(string="Leitura 03" )
-    measurement_quantity_value_mean= fields.Float(string="Média", compute="_compute_statistics", store=True)
-    erro_value= fields.Float(string="Valor Erro", compute="_compute_statistics", store=True )
-    uncertainty= fields.Float(string="Incerteza",compute="_compute_statistics", store=True )
+    true_quantity_value = fields.Float(string="Valor Real", digits='Calibration' )
+    measurement_quantity_value_1= fields.Float(string="Leitura 01", digits='Calibration' )
+    measurement_quantity_value_2= fields.Float(string="Leitura 02", digits='Calibration' )
+    measurement_quantity_value_3= fields.Float(string="Leitura 03", digits='Calibration' )
+    measurement_quantity_value_mean= fields.Float(string="Média", compute="_compute_statistics", store=True, digits='Calibration')
+    erro_value= fields.Float(string="Valor Erro", compute="_compute_statistics", store=True, digits='Calibration' )
+    uncertainty= fields.Float(string="Incerteza",compute="_compute_statistics", store=True, digits='Calibration' )
     coverage_factor= fields.Float(string="Fator K", default=2.0 )
     veff = fields.Float(string = "Veff",compute="_compute_statistics", store=True)
-    resolutino_instrument = fields.Float(string = "Resolução do instrumento", compute="_compute_statistics", store=True)
+    resolutino_instrument = fields.Float(string = "Resolução do instrumento", compute="_compute_statistics", store=True, digits='Calibration')
 
     @api.depends('measurement_id.instrument_id','measurement_id.unit_of_measurement','true_quantity_value','coverage_factor','measurement_quantity_value_1','measurement_quantity_value_2','measurement_quantity_value_3')
     def _compute_statistics(self):
@@ -479,11 +524,15 @@ class CalibrationMeasurementLines (models.Model):
                 
                 # incerteza =  incerteza combinada*k
                 record.uncertainty = record.coverage_factor * combined_uncertainty
+                record.resolutino_instrument = resolution_instrument
 
                 #grau de liberdade efetivo
+                # Fórmula vigente (NÃO é Welch-Satterthwaite — ver seção 5.2 do
+                # relatório; a correção é da Fase 3). Aqui só se troca o except
+                # nu por um específico: leituras idênticas zeram o desvio padrão.
                 try:
                     record.veff = 3*(combined_uncertainty/(stdev(values)/2))**4
-                except:
+                except ZeroDivisionError:
                     record.veff = 0
 
 
@@ -601,5 +650,21 @@ class CalibrationMeasurementUnit (models.Model):
     _description = 'Unidade de Medida da Calibração'
 
     name = fields.Char("Unidade", tracking=True)
-    
+
     simbolo = fields.Char("Símbolo", tracking=True)
+
+    display_decimals = fields.Integer(
+        string="Casas decimais",
+        default=3,
+        required=True,
+        help="Quantas casas decimais usar ao imprimir valores desta unidade no "
+             "certificado. Tempo em segundos costuma pedir 3; temperatura, 2.",
+    )
+
+    @api.constrains('display_decimals')
+    def _check_display_decimals(self):
+        for rec in self:
+            if rec.display_decimals < 0 or rec.display_decimals > 6:
+                raise ValidationError(
+                    _("As casas decimais devem ficar entre 0 e 6 — 6 é a "
+                      "precisão com que os valores são armazenados."))
