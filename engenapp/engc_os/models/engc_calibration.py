@@ -624,19 +624,21 @@ class CalibrationMeasurement (models.Model):
     certificate_id = fields.Many2one(
         string="Certificado do padrão",
         comodel_name='engc.calibration.instruments.certificates',
-        compute='_compute_certificate_id',
+        compute='_compute_certificate_info',
         help="O certificado válido mais recente do padrão escolhido — o mesmo "
              "que o PDF do certificado de calibração cita.")
     certificate_validate = fields.Date(
         string="Validade do certificado",
-        related='certificate_id.validate_calibration', readonly=True)
+        compute='_compute_certificate_info', readonly=True)
 
     @api.depends('instrument_id')
-    def _compute_certificate_id(self):
+    def _compute_certificate_info(self):
         for rec in self:
-            rec.certificate_id = (
+            certificate = (
                 rec.instrument_id.get_certificate_valid()
                 if rec.instrument_id else False)
+            rec.certificate_id = certificate
+            rec.certificate_validate = certificate.validate_calibration if certificate else False
 
     @api.onchange('instrument_id')
     def onchange_instrument_id(self):
