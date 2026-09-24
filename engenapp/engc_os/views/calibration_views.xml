@@ -35,6 +35,9 @@
               type="object" />
             <button name="action_done" string="Concluir" class="oe_highlight" states="confirmed"
               type="object" />
+            <button name="action_recalcular_padrao" string="Recalcular Padrão" states="confirmed"
+              type="object"
+              help="Recalcula as linhas de medição pendentes contra o certificado do padrão — use depois de cadastrar no certificado um ponto que faltava." />
             <button name="action_draft" string="Rascunho" class="oe_highlight" states="done"
               type="object" />
             <field name="state" widget="statusbar" />
@@ -218,6 +221,7 @@
                   <field name="standard_resolution" optional="hide"/>
                   <field name="standard_coverage_factor" optional="hide"/>
                   <field name="standard_veff" optional="hide"/>
+                  <field name="standard_veff_infinito" optional="hide"/>
                 </tree>
                 </field>
              

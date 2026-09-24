@@ -135,3 +135,26 @@ class TestCertificateSelection(CalibrationCase):
             'lang_id': en.id if en else False,
         })
         self.assertIn(arquivo, self.certificate.certificate_file_ids)
+
+
+class TestCertificateNameGet(CalibrationCase):
+    """FIX 1 (revisão final): sem name_get, o painel de certificado da
+    medição mostrava 'engc.calibration.instruments.certificates,1284' em
+    vez de 'R1236/2026' — o fallback padrão do Odoo para um modelo sem
+    _rec_name nem name_get."""
+
+    def test_nome_e_o_numero_do_certificado_quando_preenchido(self):
+        self.assertEqual(self.certificate.display_name, 'R0712/2026')
+
+    def test_sem_numero_ainda_produz_rotulo_nao_vazio(self):
+        cert = self.env['engc.calibration.instruments.certificates'].create({
+            'instrument_id': self.instrument.id,
+            'date_calibration': date.today(),
+        })
+        self.assertTrue(cert.display_name)
+
+    def test_sem_numero_e_sem_data_ainda_produz_rotulo_nao_vazio(self):
+        cert = self.env['engc.calibration.instruments.certificates'].create({
+            'instrument_id': self.instrument.id,
+        })
+        self.assertTrue(cert.display_name)

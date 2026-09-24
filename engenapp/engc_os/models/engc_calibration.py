@@ -139,11 +139,17 @@ class EngcCalibration(models.Model):
                 lambda l: l.standard_status != 'ok')
             if pendentes:
                 detalhe = "\n".join(
-                    "- %s: %s" % (l.true_quantity_value, l.standard_message or l.standard_status)
+                    "- %s (%s): %s" % (
+                        l.measurement_id.title or l.measurement_id.name,
+                        l.true_quantity_value,
+                        l.standard_message or l.standard_status)
                     for l in pendentes)
                 raise ValidationError(_(
                     "Não é possível concluir: %(quantas)s linha(s) de medição "
-                    "não resolvem os valores do padrão.\n\n%(detalhe)s",
+                    "não resolvem os valores do padrão.\n\n%(detalhe)s\n\n"
+                    "Se o certificado do padrão foi corrigido (ex.: um ponto "
+                    "que faltava foi cadastrado), use o botão \"Recalcular "
+                    "Padrão\" no cabeçalho e tente concluir de novo.",
                     quantas=len(pendentes), detalhe=detalhe))
 
             rec.write({
@@ -158,6 +164,27 @@ class EngcCalibration(models.Model):
 
                 'state': 'draft'
             })
+
+    def action_recalcular_padrao(self):
+        """Recalcula os standard_* das linhas ainda não resolvidas.
+
+        _compute_standard_contribution deliberadamente NÃO depende das
+        uncertainty_lines do certificado (decisão D5): editar o certificado
+        depois de emitido não pode reescrever retroativamente uma
+        calibração já registrada. Isso cria uma armadilha comum: o técnico
+        mede fora da faixa do certificado, cadastra o ponto que faltava no
+        instrumento padrão, e a linha CONTINUA 'fora_faixa' — nada dispara
+        o compute de novo, porque nada que está no @api.depends mudou.
+
+        Este botão dispara o recompute explicitamente, só nas linhas ainda
+        pendentes, para o técnico ter um caminho depois de corrigir o
+        certificado sem precisar tocar em true_quantity_value só para
+        forçar o compute."""
+        for rec in self:
+            pendentes = rec.measurement_ids.measurement_lines.filtered(
+                lambda l: l.standard_status != 'ok')
+            if pendentes:
+                pendentes._compute_standard_contribution()
 
 
 class CalibrationInstrument(models.Model):
@@ -258,6 +285,29 @@ class CalibrationInstrumentCertificates(models.Model):
         hoje = date.today()
         for rec in self:
             rec.is_valid = bool(rec.validate_calibration) and rec.validate_calibration >= hoje
+
+    def name_get(self):
+        """Sem isto, o fallback do Odoo é "model,id" — foi exatamente o
+        que apareceu no painel de certificado da medição (Fase 2): em vez
+        de "R1236/2026", o campo mostrava
+        "engc.calibration.instruments.certificates,1284".
+
+        Usa name_get (não _rec_name) de propósito: _rec_name mudaria o
+        display_name em TODO lugar, inclusive no widget de
+        superseded_by_id; e certificate_number não é obrigatório, então um
+        certificado salvo sem número precisa de um rótulo não-vazio mesmo
+        assim.
+        """
+        result = []
+        for rec in self:
+            if rec.certificate_number:
+                name = rec.certificate_number
+            elif rec.date_calibration:
+                name = _("Certificado de %s") % rec.date_calibration
+            else:
+                name = "%s,%s" % (rec._name, rec.id)
+            result.append((rec.id, name))
+        return result
 
 
     @api.onchange('date_calibration')

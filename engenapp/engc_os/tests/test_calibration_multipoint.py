@@ -348,6 +348,54 @@ class TestBlockingOnDone(CalibrationCase):
         self.assertIn('warning', aviso)
         self.assertIn('2000', aviso['warning']['message'])
 
+    def test_done_recusa_identifica_a_medicao(self):
+        """FIX 3 (revisão final): com duas medições que pudessem repetir o
+        mesmo true_quantity_value, o técnico não tinha como saber qual
+        linha corrigir — só o valor aparecia na mensagem."""
+        cal, medicao = self._cal_com_ponto_unico()
+        medicao.title = 'Canal A'
+        self.make_line(medicao, 2000.0, 2000.0, 2000.0, 2000.0)
+        with self.assertRaises(ValidationError) as ctx:
+            cal.action_done()
+        self.assertIn('Canal A', str(ctx.exception))
+
+    def test_recalcular_padrao_desbloqueia_apos_certificado_corrigido(self):
+        """FIX 2 (revisão final): _compute_standard_contribution não
+        depende das uncertainty_lines do certificado (D5) — cadastrar o
+        ponto que faltava não muda a linha sozinho. O botão
+        action_recalcular_padrao precisa disparar o recompute
+        explicitamente."""
+        cal, medicao = self._cal_com_ponto_unico()
+        linha = self.make_line(medicao, 1200.0, 1200.0, 1200.0, 1200.0)
+        self.assertEqual(linha.standard_status, 'fora_faixa')
+
+        self.env['engc.calibration.instruments.uncertainty.lines'].create({
+            'certificate': self.certificate.id,
+            'unit_of_measurement': self.unit_tempo.id,
+            'is_generic': False,
+            'nominal_value': 1200.0,
+            'erro_value': -0.002,
+            'uncertainty': 0.035,
+            'coverage_factor': 2.0,
+            'resolution': 0.01,
+        })
+        # Sozinho, cadastrar o ponto no certificado não muda a linha —
+        # é exatamente a armadilha que o botão resolve (D5).
+        self.assertEqual(linha.standard_status, 'fora_faixa')
+
+        cal.action_recalcular_padrao()
+        # O botão e o "Concluir" são dois cliques separados na UI — duas
+        # RPCs distintas, cada uma com seu próprio cache de transação no
+        # servidor. Ler standard_status direto depois de
+        # action_recalcular_padrao() só prova que o CACHE mudou; para
+        # provar que o clique seguinte (que lê do zero) também vê 'ok', é
+        # preciso forçar a ida ao banco.
+        self.env.flush_all()
+        self.env.invalidate_all()
+        self.assertEqual(linha.standard_status, 'ok')
+        cal.action_done()
+        self.assertEqual(cal.state, 'done')
+
 
 class TestAceitacaoCronometro(CalibrationCase):
     """O caso que motivou a fase: o certificado R0712/2026 do QPS-001,
