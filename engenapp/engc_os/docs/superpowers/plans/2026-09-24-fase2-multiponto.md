@@ -1465,3 +1465,82 @@ standard's values moved from the block down to the line.
 - [ ] Rodar `superpowers:requesting-code-review` sobre a branch inteira.
 - [ ] Validar na UI por `agent-browser`: cadastrar os 6 pontos no certificado, criar uma medição com duas linhas em pontos distintos, e conferir que as colunas `standard_*` mostram valores diferentes por linha.
 - [ ] Apresentar ao usuário e **parar**. A Fase 3 exige o congelamento antes.
+
+---
+
+# Fecho da execução — 24/09/2026
+
+Fase 2 entregue em 13 commits (`c45c440..b472a5f`), branch `feat/calibracao-fase2-multiponto`.
+Módulo em `16.0.3.0.0`. Suíte do `engc_os` saiu de 40 para **80 métodos**; baseline dos módulos
+dependentes inalterada, com a única falha pré-existente conhecida.
+
+**Nenhuma fórmula de incerteza mudou.** Os quatro testes de caracterização que fixam números foram
+verificados byte a byte através do commit mais arriscado (Task 4), com comparação programática do
+corpo de `_compute_statistics` entre o commit pai e o filho.
+
+## Validado em dado vivo, não só por teste
+
+Semeado num savepoint e revertido:
+
+| O quê | Resultado |
+|---|---|
+| Nome do certificado na tela | `R0712/2026` (e `Certificado de 2026-09-24` sem número) |
+| Seis pontos cadastrados | sem reclamação de constraint |
+| **Duas linhas, dois pontos** | 60 s → erro −0,0020; 120 s → erro −0,0030 — o núcleo da fase |
+| Linha fora da faixa | `fora_faixa`; `action_done` recusa nomeando medição, valor, faixa e o botão |
+| Botão Recalcular Padrão | destrava a linha; `action_done` passa a aceitar |
+
+## Defeitos deste plano apurados na execução
+
+1. **O teste do certificado vencido não podia funcionar como escrito.** Vencia o certificado depois
+   de criar a linha e invalidava o cache — mas os `standard_*` são `store=True` e a validade do
+   certificado está (deliberadamente) fora do `@api.depends`, então a leitura traria o valor gravado.
+   Corrigido para vencer antes de criar a linha.
+2. **A lista de arquivos da Task 4 não incluía `tests/common.py`**, cujo `make_measurement()` chamava
+   o `onchange_unit_of_measurement` que a própria task apaga. Sem isso, quase todo teste do módulo
+   estouraria `AttributeError`.
+3. **A mensagem de auditoria de Veff estava invertida.** Mandava *marcar* `Veff infinito`, mas o
+   `_init_column` já marca todas as linhas antigas. A instrução certa é *desmarcar* quando o papel
+   declara valor finito — senão a Fase 3 descarta o número em silêncio e a auditoria vira no-op.
+4. **A ruling de que o `-u` reescreveria incertezas emitidas estava errada no mecanismo** — ver abaixo.
+
+## O que realmente acontece no próximo `-u` (correção importante)
+
+O upgrade **não** reescreve o `uncertainty` gravado. Prova no fonte do Odoo: `Field.__set__`
+(`fields.py:1301-1337`), ramo `protected_ids`, com o comentário literal *"records being computed:
+no business logic, no recomputation"* — escreve sem chamar `modified()`. Corroborado no banco:
+as linhas históricas têm `standard_*` preenchidos e `resolutino_instrument` ainda `NULL`.
+
+O comportamento real é outro, e administrativamente pior: o `uncertainty` gravado fica na base
+antiga **ao lado** dos `standard_*` na base nova, e vira de base **na primeira edição de qualquer
+leitura daquela linha** — no tempo em que alguém editar, não num evento único e datado.
+
+**Correção da regra:** o gatilho do congelamento não é o `-u`, é a primeira edição de uma linha
+antiga. A migração agora emite um WARNING quando a base tem linhas de medição, dizendo isso.
+
+## Checklist obrigatório antes do `-u` numa base real
+
+1. **18 dos 24 certificados do labquali não têm linha de incerteza.** Com a regra nova, calibrações
+   que usem esses padrões **deixam de poder ser concluídas** (antes eram aceitas em silêncio com
+   zeros). Cadastrar as linhas antes, ou aceitar que esses padrões ficam parados.
+2. **O labquali ainda roda o `engc_os` de antes das Fases 0 e 1** — o salto será de 16.0.1.x para
+   16.0.3.0.0, rodando as migrações da 2.0.0 e da 3.0.0 em sequência.
+3. **Conferir os `veff` finitos** que a migração listar no WARNING, contra o certificado em papel.
+   A Fase 3 lê o booleano `veff_infinito`, não o número.
+
+## Pendências herdadas (nenhuma bloqueia merge)
+
+| # | Item | Quando |
+|---|---|---|
+| 1 | `coverage_factor = 0` é gravado sem guarda; `_compute_statistics` cai no default 2,0, mas a Fase 3 vai dividir por ele. Fechar com `@api.constrains coverage_factor > 0` | **antes da Fase 3** |
+| 2 | A docstring de `test_veff_atual_usa_constante_3` aponta `veff_instrument`, campo que esta fase apagou. Vivo: `standard_veff` / `standard_veff_infinito` | antes da Fase 3 |
+| 3 | `veff` negativo escapa da conversão e do aviso da migração | qualquer hora |
+| 4 | O form da linha de incerteza não replica os `attrs` de readonly que a tree tem | qualquer hora |
+| 5 | Status `sem_unidade` é usado também quando a unidade não foi informada na medição, com rótulo que aponta para o certificado | qualquer hora |
+| 6 | `action_recalcular_padrao` não valida `state` no método (só o botão é restrito na view) | qualquer hora |
+| 7 | Rename de `resolutino_instrument`, coordenado com a view do submodule `afr_qualificacao` | Fase 3+ |
+| 8 | O PDF do certificado não diz qual ponto do padrão sustentou cada medição, nem declara a faixa calibrada — informação que auditoria esperaria num certificado multiponto | Fase 4 |
+
+## Ordem das fases
+
+Continua valendo, com a correção do gatilho acima: **0 → 1 → 2 → congelamento → 3.**
