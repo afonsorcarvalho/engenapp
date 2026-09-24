@@ -69,7 +69,10 @@ def migrate(cr, version):
     for linha_id, veff, numero, padrao in cr.fetchall():
         _logger.warning(
             "engc_os: linha de incerteza %s (padrão %s, certificado %s) tem "
-            "Veff FINITO = %s. Conferir no certificado em papel: se o "
-            "certificado declara infinito, marcar 'Veff infinito' na linha. "
-            "A Fase 3 vai consumir este valor no Welch-Satterthwaite.",
-            linha_id, padrao, numero, veff)
+            "Veff FINITO = %s gravado, mas 'Veff infinito' está MARCADO — é o "
+            "default que o upgrade aplicou a todas as linhas antigas. "
+            "Conferir no certificado em papel: se ele declara um valor finito, "
+            "DESMARQUE 'Veff infinito' nesta linha para que o número seja "
+            "usado. A Fase 3 lê o booleano, não o número: se ficar marcado, "
+            "o valor %s será descartado em silêncio.",
+            linha_id, padrao, numero, veff, veff)
