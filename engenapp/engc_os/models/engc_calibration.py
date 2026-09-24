@@ -309,7 +309,6 @@ class CalibrationInstrumentCertificates(models.Model):
         compute store=True chama isto, e um compute que estoura derruba
         todo `-u` do módulo sobre dado histórico já gravado.
         """
-        self.ensure_one()
         vazio = {
             'status': 'sem_unidade',
             'message': '',
@@ -321,6 +320,10 @@ class CalibrationInstrumentCertificates(models.Model):
             'resolution': 0.0,
             'source_line_id': False,
         }
+        if not self:
+            return dict(vazio, status='sem_certificado', message=_(
+                "Nenhum certificado válido para o padrão desta medição."))
+        self.ensure_one()
         if not unit:
             return dict(vazio, message=_("Unidade de medida não informada."))
 

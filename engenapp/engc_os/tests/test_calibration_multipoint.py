@@ -164,3 +164,24 @@ class TestSelectUncertaintyAt(CalibrationCase):
         self._ponto(120.0, coverage_factor=0.0)
         r = self.certificate._select_uncertainty_at(self.unit_tempo, 90.0)
         self.assertEqual(r['status'], 'ok')
+
+    def test_recordset_vazio_devolve_status(self):
+        """A garantia de "nunca levanta" tem de valer dentro do método, não
+        depender de cada chamador guardar o call site."""
+        vazio = self.env['engc.calibration.instruments.certificates']
+        r = vazio._select_uncertainty_at(self.unit_tempo, 60.0)
+        self.assertEqual(r['status'], 'sem_certificado')
+        self.assertEqual(r['uncertainty'], 0.0)
+
+    def test_bracketing_com_varios_pontos(self):
+        """Com 4 pontos, medir entre o 2º e o 3º tem de escolher esse par —
+        não o primeiro nem o último."""
+        self.unc_line.is_generic = False
+        self.unc_line.nominal_value = 0.0
+        self.unc_line.erro_value = 0.0
+        self._ponto(60.0, erro_value=-0.002, uncertainty=0.035)
+        self._ponto(120.0, erro_value=-0.006, uncertainty=0.045)
+        self._ponto(600.0, erro_value=-0.010, uncertainty=0.055)
+        r = self.certificate._select_uncertainty_at(self.unit_tempo, 90.0)
+        self.assertAlmostEqual(r['erro_value'], -0.004, places=6)
+        self.assertAlmostEqual(r['uncertainty'], 0.045, places=6)
