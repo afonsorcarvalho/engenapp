@@ -185,3 +185,123 @@ class TestSelectUncertaintyAt(CalibrationCase):
         r = self.certificate._select_uncertainty_at(self.unit_tempo, 90.0)
         self.assertAlmostEqual(r['erro_value'], -0.004, places=6)
         self.assertAlmostEqual(r['uncertainty'], 0.045, places=6)
+
+
+class TestStandardContributionOnLine(CalibrationCase):
+
+    def _calibracao_com_medicao(self):
+        cal = self.env['engc.calibration'].create(self.make_calibration_vals())
+        medicao = self.env['engc.calibration.measurement'].create({
+            'calibration_id': cal.id,
+            'title': 'Tempo',
+            'instrument_id': self.instrument.id,
+            'unit_of_measurement': self.unit_tempo.id,
+        })
+        return cal, medicao
+
+    def test_valores_chegam_sem_onchange(self):
+        """Review Focus 3: criação por RPC não dispara onchange. Antes desta
+        fase os valores do padrão ficavam 0,0 em silêncio."""
+        _, medicao = self._calibracao_com_medicao()
+        linha = self.make_line(medicao, 60.0, 60.053, 60.055, 60.054)
+        self.assertEqual(linha.standard_status, 'ok')
+        self.assertAlmostEqual(linha.standard_uncertainty, 0.035, places=6)
+        self.assertAlmostEqual(linha.standard_resolution, 0.01, places=6)
+        self.assertEqual(linha.standard_line_id, self.unc_line)
+
+    def test_cada_linha_pega_o_proprio_ponto(self):
+        """O ponto desta fase: duas linhas, dois pontos, dois conjuntos."""
+        self.unc_line.is_generic = False
+        self.unc_line.nominal_value = 60.0
+        self.unc_line.erro_value = -0.002
+        self.env['engc.calibration.instruments.uncertainty.lines'].create({
+            'certificate': self.certificate.id,
+            'unit_of_measurement': self.unit_tempo.id,
+            'is_generic': False,
+            'nominal_value': 1200.0,
+            'erro_value': -0.009,
+            'uncertainty': 0.035,
+            'coverage_factor': 2.0,
+            'resolution': 0.01,
+        })
+        _, medicao = self._calibracao_com_medicao()
+        curta = self.make_line(medicao, 60.0, 60.053, 60.055, 60.054)
+        longa = self.make_line(medicao, 1200.0, 1200.043, 1200.046, 1200.044)
+        self.assertAlmostEqual(curta.standard_erro, -0.002, places=6)
+        self.assertAlmostEqual(longa.standard_erro, -0.009, places=6)
+
+    def test_recalcula_ao_mudar_o_valor_real(self):
+        self.unc_line.is_generic = False
+        self.unc_line.nominal_value = 60.0
+        self.env['engc.calibration.instruments.uncertainty.lines'].create({
+            'certificate': self.certificate.id,
+            'unit_of_measurement': self.unit_tempo.id,
+            'is_generic': False, 'nominal_value': 120.0,
+            'erro_value': -0.006, 'uncertainty': 0.045,
+            'coverage_factor': 2.0, 'resolution': 0.01,
+        })
+        _, medicao = self._calibracao_com_medicao()
+        linha = self.make_line(medicao, 60.0, 60.0, 60.0, 60.0)
+        self.assertAlmostEqual(linha.standard_uncertainty, 0.035, places=6)
+        linha.true_quantity_value = 120.0
+        self.assertAlmostEqual(linha.standard_uncertainty, 0.045, places=6)
+
+    def test_sem_instrumento_nao_estoura(self):
+        """get_certificate_valid() faz ensure_one(); com instrument_id vazio
+        isso levantaria dentro de um compute store=True."""
+        cal = self.env['engc.calibration'].create(self.make_calibration_vals())
+        medicao = self.env['engc.calibration.measurement'].create({
+            'calibration_id': cal.id, 'title': 'Sem padrão',
+            'instrument_id': self.instrument.id,
+            'unit_of_measurement': self.unit_tempo.id,
+        })
+        linha = self.make_line(medicao, 60.0, 60.0, 60.0, 60.0)
+        medicao.instrument_id = False
+        self.assertEqual(linha.standard_status, 'sem_certificado')
+        self.assertEqual(linha.standard_uncertainty, 0.0)
+
+    def test_certificado_vencido_nao_estoura(self):
+        """O teste que protege todo -u futuro: o compute tem de ser total.
+
+        O certificado vence ANTES de a linha existir, de propósito. Os campos
+        standard_* são compute store=True e `validate_calibration` NÃO está no
+        @api.depends — nem deve estar: pela decisão D5 da spec, editar o
+        certificado amanhã não pode mudar retroativamente uma calibração já
+        emitida. Vencer o certificado depois de criar a linha só deixaria o
+        valor gravado intacto, e o teste não provaria nada.
+        """
+        from datetime import date
+        from dateutil.relativedelta import relativedelta
+        self.certificate.validate_calibration = date.today() - relativedelta(days=1)
+        _, medicao = self._calibracao_com_medicao()
+        linha = self.make_line(medicao, 60.0, 60.0, 60.0, 60.0)
+        self.assertEqual(linha.standard_status, 'sem_certificado')
+        self.assertEqual(linha.standard_uncertainty, 0.0)
+
+    def test_unidade_ausente_no_certificado(self):
+        """Review Focus 2."""
+        outra = self.env['engc.calibration.measurement.unit'].create(
+            {'name': 'Bar', 'simbolo': 'bar'})
+        cal = self.env['engc.calibration'].create(self.make_calibration_vals())
+        medicao = self.env['engc.calibration.measurement'].create({
+            'calibration_id': cal.id, 'title': 'Pressão',
+            'instrument_id': self.instrument.id,
+            'unit_of_measurement': outra.id,
+        })
+        linha = self.make_line(medicao, 1.0, 1.0, 1.0, 1.0)
+        self.assertEqual(linha.standard_status, 'sem_unidade')
+
+    def test_fora_da_faixa_marca_status(self):
+        self.unc_line.is_generic = False
+        self.unc_line.nominal_value = 60.0
+        self.env['engc.calibration.instruments.uncertainty.lines'].create({
+            'certificate': self.certificate.id,
+            'unit_of_measurement': self.unit_tempo.id,
+            'is_generic': False, 'nominal_value': 120.0,
+            'erro_value': -0.006, 'uncertainty': 0.045,
+            'coverage_factor': 2.0, 'resolution': 0.01,
+        })
+        _, medicao = self._calibracao_com_medicao()
+        linha = self.make_line(medicao, 2000.0, 2000.0, 2000.0, 2000.0)
+        self.assertEqual(linha.standard_status, 'fora_faixa')
+        self.assertIn('2000', linha.standard_message)

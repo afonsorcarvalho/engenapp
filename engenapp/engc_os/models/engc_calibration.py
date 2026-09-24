@@ -666,6 +666,84 @@ class CalibrationMeasurementLines (models.Model):
     veff = fields.Float(string = "Veff",compute="_compute_statistics", store=True)
     resolutino_instrument = fields.Float(string = "Resolução do instrumento", compute="_compute_statistics", store=True, digits='Calibration')
 
+    STANDARD_STATUS = [
+        ('ok', 'OK'),
+        ('sem_certificado', 'Sem certificado válido'),
+        ('sem_unidade', 'Unidade não consta do certificado'),
+        ('fora_faixa', 'Fora da faixa calibrada'),
+    ]
+
+    standard_status = fields.Selection(
+        string="Situação do padrão", selection=STANDARD_STATUS,
+        compute="_compute_standard_contribution", store=True)
+    standard_message = fields.Char(
+        string="Detalhe do padrão",
+        compute="_compute_standard_contribution", store=True)
+    standard_line_id = fields.Many2one(
+        string="Ponto do certificado",
+        comodel_name='engc.calibration.instruments.uncertainty.lines',
+        ondelete='set null',
+        compute="_compute_standard_contribution", store=True,
+        help="Qual linha do certificado do padrão sustentou esta medição.")
+    standard_uncertainty = fields.Float(
+        string="Incerteza do padrão", digits='Calibration',
+        compute="_compute_standard_contribution", store=True)
+    standard_erro = fields.Float(
+        string="Erro do padrão", digits='Calibration',
+        compute="_compute_standard_contribution", store=True)
+    standard_resolution = fields.Float(
+        string="Resolução do padrão", digits='Calibration',
+        compute="_compute_standard_contribution", store=True)
+    standard_coverage_factor = fields.Float(
+        string="Fator K do padrão",
+        compute="_compute_standard_contribution", store=True)
+    standard_veff = fields.Float(
+        string="Veff do padrão",
+        compute="_compute_standard_contribution", store=True)
+    standard_veff_infinito = fields.Boolean(
+        string="Veff do padrão infinito",
+        compute="_compute_standard_contribution", store=True)
+
+    @api.depends('true_quantity_value',
+                 'measurement_id.instrument_id',
+                 'measurement_id.unit_of_measurement')
+    def _compute_standard_contribution(self):
+        """Resolve as contribuições do padrão no ponto desta linha.
+
+        NUNCA levanta. Este compute é store=True, e um compute que estoura
+        derruba todo `-u` do módulo: o upgrade recomputa os campos de todas
+        as linhas já gravadas, e basta uma com certificado vencido ou ponto
+        fora de faixa para impedir qualquer atualização futura.
+
+        O bloqueio do técnico mora no onchange e em action_done().
+        """
+        sem_padrao = {
+            'status': 'sem_certificado',
+            'message': _("Nenhum certificado válido para o padrão desta medição."),
+            'erro_value': 0.0, 'uncertainty': 0.0, 'coverage_factor': 0.0,
+            'veff': 0.0, 'veff_infinito': False, 'resolution': 0.0,
+            'source_line_id': False,
+        }
+        for rec in self:
+            padrao = rec.measurement_id.instrument_id
+            certificado = padrao.get_certificate_valid() if padrao else padrao
+            if not certificado:
+                dados = sem_padrao
+            else:
+                dados = certificado._select_uncertainty_at(
+                    rec.measurement_id.unit_of_measurement,
+                    rec.true_quantity_value,
+                )
+            rec.standard_status = dados['status']
+            rec.standard_message = dados['message']
+            rec.standard_line_id = dados['source_line_id']
+            rec.standard_uncertainty = dados['uncertainty']
+            rec.standard_erro = dados['erro_value']
+            rec.standard_resolution = dados['resolution']
+            rec.standard_coverage_factor = dados['coverage_factor']
+            rec.standard_veff = dados['veff']
+            rec.standard_veff_infinito = dados['veff_infinito']
+
     @api.depends('measurement_id.instrument_id','measurement_id.unit_of_measurement','true_quantity_value','coverage_factor','measurement_quantity_value_1','measurement_quantity_value_2','measurement_quantity_value_3')
     def _compute_statistics(self):
         for rec in self:
