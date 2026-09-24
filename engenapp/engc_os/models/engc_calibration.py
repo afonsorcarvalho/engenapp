@@ -261,6 +261,118 @@ class CalibrationInstrumentCertificates(models.Model):
         self.ensure_one()
         return bool(self.validate_calibration) and self.validate_calibration >= date.today()
 
+    def _uncertainty_from_line(self, linha):
+        """Monta o dict de contribuições a partir de uma linha do certificado."""
+        return {
+            'status': 'ok',
+            'message': '',
+            'erro_value': linha.erro_value,
+            'uncertainty': linha.uncertainty,
+            'coverage_factor': linha.coverage_factor,
+            'veff': linha.veff,
+            'veff_infinito': linha.veff_infinito,
+            'resolution': linha.resolution,
+            'source_line_id': linha.id,
+        }
+
+    def _incerteza_padrao(self, linha):
+        """u = U / k.
+
+        Devolve 0.0 quando k é zero: cadastro incompleto não pode derrubar
+        um compute store=True, e um k ausente torna a linha incomparável,
+        não infinita.
+        """
+        if not linha.coverage_factor:
+            return 0.0
+        return linha.uncertainty / linha.coverage_factor
+
+    def _pior_ponto(self, a, b):
+        """O ponto de maior incerteza padrão entre dois.
+
+        Empate resolve pelo menor id, para o resultado não depender da
+        ordem de iteração do recordset (Review Focus 4).
+        """
+        casas = self.env['decimal.precision'].precision_get('Calibration')
+        ua = self._incerteza_padrao(a)
+        ub = self._incerteza_padrao(b)
+        comparacao = float_compare(ua, ub, precision_digits=casas)
+        if comparacao > 0:
+            return a
+        if comparacao < 0:
+            return b
+        return a if a.id <= b.id else b
+
+    def _select_uncertainty_at(self, unit, value):
+        """Contribuições do padrão na grandeza `unit`, no ponto `value`.
+
+        NUNCA levanta exceção — devolve sempre um dict com 'status'. Um
+        compute store=True chama isto, e um compute que estoura derruba
+        todo `-u` do módulo sobre dado histórico já gravado.
+        """
+        self.ensure_one()
+        vazio = {
+            'status': 'sem_unidade',
+            'message': '',
+            'erro_value': 0.0,
+            'uncertainty': 0.0,
+            'coverage_factor': 0.0,
+            'veff': 0.0,
+            'veff_infinito': False,
+            'resolution': 0.0,
+            'source_line_id': False,
+        }
+        if not unit:
+            return dict(vazio, message=_("Unidade de medida não informada."))
+
+        linhas = self.uncertainty_lines.filtered(
+            lambda r: r.unit_of_measurement == unit)
+        if not linhas:
+            return dict(vazio, message=_(
+                "O certificado %(cert)s não tem linha de incerteza para a "
+                "unidade %(unidade)s.",
+                cert=self.certificate_number or '',
+                unidade=unit.display_name))
+
+        genericas = linhas.filtered('is_generic')
+        if genericas:
+            return self._uncertainty_from_line(genericas[0])
+
+        casas = self.env['decimal.precision'].precision_get('Calibration')
+        pontos = linhas.sorted(key=lambda r: r.nominal_value)
+        minimo = pontos[0].nominal_value
+        maximo = pontos[-1].nominal_value
+
+        if (float_compare(value, minimo, precision_digits=casas) < 0
+                or float_compare(value, maximo, precision_digits=casas) > 0):
+            return dict(vazio, status='fora_faixa', message=_(
+                "Valor %(valor)s fora da faixa calibrada do certificado "
+                "%(cert)s (%(minimo)s a %(maximo)s).",
+                valor=value, cert=self.certificate_number or '',
+                minimo=minimo, maximo=maximo))
+
+        exatos = pontos.filtered(
+            lambda r: float_compare(
+                r.nominal_value, value, precision_digits=casas) == 0)
+        if exatos:
+            return self._uncertainty_from_line(exatos[0])
+
+        inferior = pontos.filtered(
+            lambda r: float_compare(
+                r.nominal_value, value, precision_digits=casas) < 0)[-1]
+        superior = pontos.filtered(
+            lambda r: float_compare(
+                r.nominal_value, value, precision_digits=casas) > 0)[0]
+
+        resultado = self._uncertainty_from_line(
+            self._pior_ponto(inferior, superior))
+
+        intervalo = superior.nominal_value - inferior.nominal_value
+        fracao = (value - inferior.nominal_value) / intervalo
+        resultado['erro_value'] = (
+            inferior.erro_value
+            + fracao * (superior.erro_value - inferior.erro_value))
+        return resultado
+
 
 class CalibrationInstrumentCertificateFile(models.Model):
     _name = 'engc.calibration.instruments.certificates.file'
