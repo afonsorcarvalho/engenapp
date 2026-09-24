@@ -562,77 +562,27 @@ class CalibrationMeasurement (models.Model):
                 [('id', 'in', unit_of_measurement_lines.mapped(lambda r: r.id))]
             )
     
-    uncertainty_instrument = fields.Float(
+    certificate_id = fields.Many2one(
+        string="Certificado do padrão",
+        comodel_name='engc.calibration.instruments.certificates',
+        compute='_compute_certificate_id',
+        help="O certificado válido mais recente do padrão escolhido — o mesmo "
+             "que o PDF do certificado de calibração cita.")
+    certificate_validate = fields.Date(
+        string="Validade do certificado",
+        related='certificate_id.validate_calibration', readonly=True)
 
-        readonly=True, digits='Calibration',
-
-        )
-    erro_value_instrument = fields.Float(
-
-        readonly=True, digits='Calibration',
-
-        )
-    coverage_factor_instrument = fields.Float(
-
-        readonly=True,
-
-        )
-    resolution_instrument = fields.Float(
-
-        readonly=True, digits='Calibration',
-
-        )
-    veff_instrument = fields.Float(
-
-        readonly=True,
-
-        )
-    #TODO fazer ele pegar o certificado valido mais novo, caso tenha mais de um certificado válido
-    def _search_certificates_valid(self):
-        '''
-            Pega os certificados válidos do instrumento de calibração
-        '''
-        certificates = self.instrument_id.certificate_ids.filtered(
-            lambda rec: rec.verify_is_valid() and not rec.superseded_by_id)
-        if len(certificates) == 0:
-                raise ValidationError(_("Verifique a Data de vencimento da Calibração do instrumento utilizado. Não é possível utilizar intrumento com calibração vencida"))
-        return certificates
-    
-    def _search_statistics(self):
-        # Procura a incerteza 
-        uncertainty_id_line = []
-        certificates = self._search_certificates_valid()
-        if len(certificates) == 0:
-            return uncertainty_id_line,[]
-        
-        uncertainty_id_line = certificates.uncertainty_lines
-        if len(uncertainty_id_line) > 0:
-            uncertainty_id_line = uncertainty_id_line.filtered(lambda rec: rec.unit_of_measurement.id == self.unit_of_measurement.id)
-            if len(uncertainty_id_line) == 0:
-                raise ValidationError(_("Verifique a unidade de medida selecionada. Não existe essa unidade no instrumento padrão utilizado."))
-        _logger.info(uncertainty_id_line)   
-
-        return uncertainty_id_line,certificates
-
+    @api.depends('instrument_id')
+    def _compute_certificate_id(self):
+        for rec in self:
+            rec.certificate_id = (
+                rec.instrument_id.get_certificate_valid()
+                if rec.instrument_id else False)
 
     @api.onchange('instrument_id')
     def onchange_instrument_id(self):
         self.unit_of_measurement = None
 
-    @api.onchange('unit_of_measurement')
-    def onchange_unit_of_measurement(self):
-        if self.unit_of_measurement:
-            uncertainty_id_line, certificate_instrument = self._search_statistics()
-            _logger.info(self.unit_of_measurement)
-            _logger.info(uncertainty_id_line)
-            _logger.info(certificate_instrument)
-           # self.certificate_instrument = certificate_instrument.id
-            self.resolution_instrument = uncertainty_id_line.resolution
-            self.coverage_factor_instrument = uncertainty_id_line.coverage_factor
-            self.uncertainty_instrument = uncertainty_id_line.uncertainty
-            self.erro_value_instrument = uncertainty_id_line.erro_value
-            self.veff_instrument = uncertainty_id_line.veff
-    
     @api.model
     def create(self, vals_list):
         """Salva ou atualiza os dados no banco de dados"""
@@ -744,17 +694,20 @@ class CalibrationMeasurementLines (models.Model):
             rec.standard_veff = dados['veff']
             rec.standard_veff_infinito = dados['veff_infinito']
 
-    @api.depends('measurement_id.instrument_id','measurement_id.unit_of_measurement','true_quantity_value','coverage_factor','measurement_quantity_value_1','measurement_quantity_value_2','measurement_quantity_value_3')
+    @api.depends('standard_uncertainty','standard_coverage_factor','standard_erro','standard_resolution','true_quantity_value','coverage_factor','measurement_quantity_value_1','measurement_quantity_value_2','measurement_quantity_value_3')
     def _compute_statistics(self):
         for rec in self:
-            uncertainty_instrument = rec.measurement_id.uncertainty_instrument
+            # Fase 2: os valores do padrão passaram a ser resolvidos por
+            # linha, no ponto dela. A ARITMÉTICA ABAIXO NÃO MUDOU — só a
+            # origem destes quatro números.
+            uncertainty_instrument = rec.standard_uncertainty
             k_instrument = 2.0
-            if rec.measurement_id.coverage_factor_instrument != 0: 
-                k_instrument = rec.measurement_id.coverage_factor_instrument
-        
-            erro_instrument = rec.measurement_id.erro_value_instrument
-            resolution_instrument= rec.measurement_id.resolution_instrument
-            
+            if rec.standard_coverage_factor != 0:
+                k_instrument = rec.standard_coverage_factor
+
+            erro_instrument = rec.standard_erro
+            resolution_instrument = rec.standard_resolution
+
             for record in rec:
                 values = [
                     record.measurement_quantity_value_1,

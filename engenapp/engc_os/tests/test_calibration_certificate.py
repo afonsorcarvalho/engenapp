@@ -78,12 +78,12 @@ class TestCertificateSelection(CalibrationCase):
         self.assertEqual(self.instrument.get_certificate_valid(), self.certificate)
         self.assertNotIn(dup, self.instrument.get_valid_certificates())
 
-    def test_search_certificates_valid_ignora_substituido(self):
-        """_search_certificates_valid() é o segundo caminho de validade (usado
-        no onchange da medição, via _search_statistics) — não checava
-        superseded_by_id, reabrindo a mesma classe de erro do P0 (Expected
-        singleton) quando a duplicata carrega uma uncertainty_line na mesma
-        unidade do certificado mantido."""
+    def test_certificado_substituido_nao_alimenta_a_linha(self):
+        """get_certificate_valid() (usado por _compute_standard_contribution,
+        que resolve os standard_* da linha) não pode deixar passar um
+        certificado substituído — reabriria a mesma classe de erro do P0
+        (Expected singleton) quando a duplicata carrega uma uncertainty_line
+        na mesma unidade do certificado mantido."""
         dup = self._novo_certificado('R1236/2026 - Inglês')
         self.env['engc.calibration.instruments.uncertainty.lines'].create({
             'certificate': dup.id,
@@ -97,22 +97,23 @@ class TestCertificateSelection(CalibrationCase):
         dup.superseded_by_id = self.certificate.id
 
         measurement = self.make_measurement()
+        linha = self.make_line(measurement, 60.0, 60.0, 60.0, 60.0)
+        self.assertAlmostEqual(linha.standard_resolution, 0.01, places=6)
 
-        self.assertEqual(measurement.resolution_instrument, 0.01)
-
-    def test_search_certificates_valid_ignora_certificado_sem_data(self):
-        """FIX 1 (revisão final): _search_certificates_valid() ainda comparava
-        `rec.validate_calibration >= date.today()` direto na lambda, sem passar
-        por verify_is_valid(). Um certificado salvo sem validate_calibration
-        (campo não é required) misturado com um certificado válido no mesmo
-        instrumento faz `False >= date.today()` — TypeError, antes de qualquer
-        curto-circuito do `and`."""
+    def test_certificado_sem_data_nao_alimenta_a_linha(self):
+        """FIX 1 (revisão final): a seleção de certificado válido ainda
+        comparava `rec.validate_calibration >= date.today()` direto na
+        lambda, sem passar por verify_is_valid(). Um certificado salvo sem
+        validate_calibration (campo não é required) misturado com um
+        certificado válido no mesmo instrumento faz `False >= date.today()`
+        — TypeError, antes de qualquer curto-circuito do `and`."""
         self.env['engc.calibration.instruments.certificates'].create({
             'instrument_id': self.instrument.id,
             'certificate_number': 'SEM-DATA-3',
         })
         measurement = self.make_measurement()
-        self.assertEqual(measurement.resolution_instrument, 0.01)
+        linha = self.make_line(measurement, 60.0, 60.0, 60.0, 60.0)
+        self.assertAlmostEqual(linha.standard_resolution, 0.01, places=6)
 
     def test_sem_certificado_valido_devolve_vazio_sem_estourar(self):
         """Review Focus 1: instrumento sem certificado válido."""

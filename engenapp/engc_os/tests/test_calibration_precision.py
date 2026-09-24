@@ -73,19 +73,16 @@ class TestCalibrationPrecision(CalibrationCase):
         self.assertFalse(fg_u['coverage_factor'].get('digits'))
         self.assertFalse(fg_u['veff'].get('digits'))
 
-        Meas = self.env['engc.calibration.measurement']
-        fg_m = Meas.fields_get([
-            'uncertainty_instrument',
-            'erro_value_instrument',
-            'resolution_instrument',
-            'coverage_factor_instrument',
-            'veff_instrument',
+        Lines = self.env['engc.calibration.measurement.lines']
+        fg_s = Lines.fields_get([
+            'standard_uncertainty', 'standard_erro', 'standard_resolution',
+            'standard_coverage_factor', 'standard_veff',
         ])
-        self.assertEqual(tuple(fg_m['uncertainty_instrument']['digits']), (16, 6))
-        self.assertEqual(tuple(fg_m['erro_value_instrument']['digits']), (16, 6))
-        self.assertEqual(tuple(fg_m['resolution_instrument']['digits']), (16, 6))
-        self.assertFalse(fg_m['coverage_factor_instrument'].get('digits'))
-        self.assertFalse(fg_m['veff_instrument'].get('digits'))
+        self.assertEqual(tuple(fg_s['standard_uncertainty']['digits']), (16, 6))
+        self.assertEqual(tuple(fg_s['standard_erro']['digits']), (16, 6))
+        self.assertEqual(tuple(fg_s['standard_resolution']['digits']), (16, 6))
+        self.assertFalse(fg_s['standard_coverage_factor'].get('digits'))
+        self.assertFalse(fg_s['standard_veff'].get('digits'))
 
 
 class TestUnitDisplayDecimals(CalibrationCase):

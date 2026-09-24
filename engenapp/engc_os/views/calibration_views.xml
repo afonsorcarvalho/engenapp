@@ -186,16 +186,12 @@
                 <field name="unit_of_measurement_domain" 
                 invisible="1"
                 />
-                <field name="uncertainty_instrument"/>
-                <field name="erro_value_instrument"/>
-               
+                <field name="certificate_id" readonly="1"
+                       options="{'no_open': True, 'no_create': True}"/>
+                <field name="certificate_validate" readonly="1"/>
+
               </group>
-              <group>
-                <field name="coverage_factor_instrument"/>
-                <field name="veff_instrument"/>
-                <field name="resolution_instrument"/>
-              </group>
-           
+
           </group>
           <notebook>
             <page string="Linhas">
@@ -214,6 +210,14 @@
                   <field name="uncertainty"/>
                   <field name="coverage_factor"/>
                   <field name="veff"/>
+                  <field name="standard_status" optional="show"/>
+                  <field name="standard_message" optional="hide"/>
+                  <field name="standard_line_id" optional="hide"/>
+                  <field name="standard_uncertainty" optional="hide"/>
+                  <field name="standard_erro" optional="hide"/>
+                  <field name="standard_resolution" optional="hide"/>
+                  <field name="standard_coverage_factor" optional="hide"/>
+                  <field name="standard_veff" optional="hide"/>
                 </tree>
                 </field>
              
