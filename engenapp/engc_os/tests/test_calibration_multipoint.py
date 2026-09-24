@@ -347,3 +347,72 @@ class TestBlockingOnDone(CalibrationCase):
         aviso = linha.onchange_true_quantity_value()
         self.assertIn('warning', aviso)
         self.assertIn('2000', aviso['warning']['message'])
+
+
+class TestAceitacaoCronometro(CalibrationCase):
+    """O caso que motivou a fase: o certificado R0712/2026 do QPS-001,
+    com os pontos e erros da tabela do PDF de exemplo."""
+
+    PONTOS = [
+        (0.0, 0.000), (60.0, -0.002), (120.0, -0.003),
+        (480.0, -0.003), (600.0, -0.002), (1200.0, -0.002),
+    ]
+
+    def setUp(self):
+        super().setUp()
+        self.unc_line.is_generic = False
+        self.unc_line.nominal_value = self.PONTOS[0][0]
+        self.unc_line.erro_value = self.PONTOS[0][1]
+        Linha = self.env['engc.calibration.instruments.uncertainty.lines']
+        for nominal, erro in self.PONTOS[1:]:
+            Linha.create({
+                'certificate': self.certificate.id,
+                'unit_of_measurement': self.unit_tempo.id,
+                'is_generic': False,
+                'nominal_value': nominal,
+                'erro_value': erro,
+                'uncertainty': 0.035,
+                'coverage_factor': 2.0,
+                'resolution': 0.01,
+                'veff_infinito': True,
+            })
+        cal = self.env['engc.calibration'].create(self.make_calibration_vals())
+        self.medicao = self.env['engc.calibration.measurement'].create({
+            'calibration_id': cal.id, 'title': 'Tempo',
+            'instrument_id': self.instrument.id,
+            'unit_of_measurement': self.unit_tempo.id,
+        })
+        self.cal = cal
+
+    def test_seis_pontos_cadastrados(self):
+        self.assertEqual(len(self.certificate.uncertainty_lines), 6)
+
+    def test_sobre_um_ponto_usa_o_erro_dele(self):
+        linha = self.make_line(self.medicao, 1200.0, 1200.043, 1200.046, 1200.044)
+        self.assertEqual(linha.standard_status, 'ok')
+        self.assertAlmostEqual(linha.standard_erro, -0.002, places=6)
+        self.assertAlmostEqual(linha.standard_uncertainty, 0.035, places=6)
+
+    def test_entre_dois_pontos_interpola(self):
+        """300 s fica entre 120 (-0,003) e 480 (-0,003): erro constante."""
+        linha = self.make_line(self.medicao, 300.0, 300.0, 300.0, 300.0)
+        self.assertEqual(linha.standard_status, 'ok')
+        self.assertAlmostEqual(linha.standard_erro, -0.003, places=6)
+
+    def test_interpolacao_com_erros_diferentes(self):
+        """90 s entre 60 (-0,002) e 120 (-0,003): meio do caminho."""
+        linha = self.make_line(self.medicao, 90.0, 90.0, 90.0, 90.0)
+        self.assertAlmostEqual(linha.standard_erro, -0.0025, places=6)
+
+    def test_fora_da_faixa_bloqueia_a_conclusao(self):
+        self.make_line(self.medicao, 2000.0, 2000.0, 2000.0, 2000.0)
+        with self.assertRaises(ValidationError):
+            self.cal.action_done()
+
+    def test_pontos_diferentes_na_mesma_medicao(self):
+        """A prova de que o escalar por bloco virou valor por linha."""
+        curta = self.make_line(self.medicao, 60.0, 60.053, 60.055, 60.054)
+        longa = self.make_line(self.medicao, 120.0, 120.043, 120.046, 120.044)
+        self.assertAlmostEqual(curta.standard_erro, -0.002, places=6)
+        self.assertAlmostEqual(longa.standard_erro, -0.003, places=6)
+        self.assertNotEqual(curta.standard_line_id, longa.standard_line_id)
