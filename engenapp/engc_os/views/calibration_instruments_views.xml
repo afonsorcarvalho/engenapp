@@ -72,12 +72,18 @@
                     <notebook>
                       <page string="Resultados">
                         <field name="uncertainty_lines">
-                          <tree editable="bottom" multi_edit="1">
+                          <tree editable="bottom" multi_edit="1"
+                                default_order="unit_of_measurement,nominal_value">
                             <field name="unit_of_measurement" width="3" />
+                            <field name="is_generic" width="1"/>
+                            <field name="nominal_value" width="1"
+                                   attrs="{'readonly': [('is_generic','=',True)]}"/>
                             <field name="erro_value" width="1"/>
                             <field name="uncertainty" width="1"/>
                             <field name="coverage_factor" width="1"/>
-                            <field name="veff" width="1" />
+                            <field name="veff_infinito" width="1"/>
+                            <field name="veff" width="1"
+                                   attrs="{'readonly': [('veff_infinito','=',True)]}"/>
                             <field name="resolution" width="1" />
                           </tree>
 
@@ -85,9 +91,12 @@
                             <group>
                               <group>
                                 <field name="unit_of_measurement" />
+                                <field name="is_generic" />
+                                <field name="nominal_value" />
                                 <field name="erro_value" />
                                 <field name="uncertainty" />
                                 <field name="coverage_factor" />
+                                <field name="veff_infinito" />
                                 <field name="veff" />
                                 <field name="resolution" />
                               </group>

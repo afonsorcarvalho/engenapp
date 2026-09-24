@@ -14,6 +14,7 @@ from odoo import models, fields, api, _
 from odoo import netsvc
 
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_compare
 from babel.dates import  format_date
 from odoo.tools.misc import  get_lang
 
@@ -308,18 +309,78 @@ class CalibrationIntrumentUncertaintyLines(models.Model):
     resolution = fields.Float(string = "Resolução", help="Resolução do padrão",
         required=True, digits='Calibration'
     )
-    unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', ondelete='restrict', 
+    unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', ondelete='restrict',
     required=True
     )
 
-    # _sql_constraints = [
-    #     (
-    #         'instrument_id_unit_of_measurement_uniq',
-    #         'unique (unit_of_measuremen)',
-    #         'A unidade de medida deve ser unica para cada instrumento'
-    #     ),
-    # ]
-    
+    is_generic = fields.Boolean(
+        string="Vale para toda a faixa",
+        default=True,
+        help="Marcado: a linha vale para qualquer valor medido — é o cadastro "
+             "antigo, um conjunto de valores por unidade. Desmarcado: a linha "
+             "vale para o ponto nominal indicado.",
+    )
+    nominal_value = fields.Float(
+        string="Valor nominal",
+        digits='Calibration',
+        help="O ponto calibrado a que esta linha se refere. Só tem efeito "
+             "com 'Vale para toda a faixa' desmarcado.",
+    )
+    veff_infinito = fields.Boolean(
+        string="Veff infinito",
+        default=True,
+        help="Marcado: graus de liberdade efetivos infinitos, o caso usual "
+             "em certificado de padrão. Desmarcado: usar o valor de Veff.",
+    )
+
+    @api.constrains('is_generic', 'nominal_value', 'certificate',
+                    'unit_of_measurement')
+    def _check_pontos_coerentes(self):
+        """Impede os três arranjos ambíguos dentro de um mesmo
+        (certificado, unidade).
+
+        A terceira checagem é a que fecha o bug que originou esta fase: sem
+        ela, duas linhas na mesma unidade fazem _search_statistics devolver
+        um recordset e qualquer leitura de campo levanta Expected singleton.
+        """
+        casas = self.env['decimal.precision'].precision_get('Calibration')
+        for rec in self:
+            irmas = rec.certificate.uncertainty_lines.filtered(
+                lambda r: r.unit_of_measurement == rec.unit_of_measurement
+                and r.id != rec.id
+            )
+            genericas = irmas.filtered('is_generic')
+            if rec.is_generic:
+                if genericas:
+                    raise ValidationError(_(
+                        "Já existe uma linha 'vale para toda a faixa' para a "
+                        "unidade %s neste certificado."
+                    ) % rec.unit_of_measurement.display_name)
+                if irmas - genericas:
+                    raise ValidationError(_(
+                        "Não é possível misturar uma linha 'vale para toda a "
+                        "faixa' com linhas de ponto na unidade %s. Ou a "
+                        "unidade tem um conjunto único de valores, ou tem "
+                        "pontos nominais."
+                    ) % rec.unit_of_measurement.display_name)
+            else:
+                if genericas:
+                    raise ValidationError(_(
+                        "A unidade %s já tem uma linha 'vale para toda a "
+                        "faixa' neste certificado. Desmarque-a antes de "
+                        "cadastrar pontos."
+                    ) % rec.unit_of_measurement.display_name)
+                repetido = (irmas - genericas).filtered(
+                    lambda r: float_compare(
+                        r.nominal_value, rec.nominal_value,
+                        precision_digits=casas) == 0
+                )
+                if repetido:
+                    raise ValidationError(_(
+                        "Já existe uma linha para o valor nominal %s na "
+                        "unidade %s deste certificado."
+                    ) % (rec.nominal_value,
+                         rec.unit_of_measurement.display_name))
 
 
 class CalibrationTypes(models.Model):
