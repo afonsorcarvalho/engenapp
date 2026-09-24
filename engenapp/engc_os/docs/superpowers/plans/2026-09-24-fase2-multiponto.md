@@ -679,18 +679,24 @@ class TestStandardContributionOnLine(CalibrationCase):
         })
         linha = self.make_line(medicao, 60.0, 60.0, 60.0, 60.0)
         medicao.instrument_id = False
-        linha.invalidate_recordset()
         self.assertEqual(linha.standard_status, 'sem_certificado')
         self.assertEqual(linha.standard_uncertainty, 0.0)
 
     def test_certificado_vencido_nao_estoura(self):
-        """O teste que protege todo -u futuro: o compute tem de ser total."""
+        """O teste que protege todo -u futuro: o compute tem de ser total.
+
+        O certificado vence ANTES de a linha existir, de propósito. Os campos
+        standard_* são compute store=True e `validate_calibration` NÃO está no
+        @api.depends — nem deve estar: pela decisão D5 da spec, editar o
+        certificado amanhã não pode mudar retroativamente uma calibração já
+        emitida. Vencer o certificado depois de criar a linha só deixaria o
+        valor gravado intacto, e o teste não provaria nada.
+        """
         from datetime import date
         from dateutil.relativedelta import relativedelta
+        self.certificate.validate_calibration = date.today() - relativedelta(days=1)
         _, medicao = self._calibracao_com_medicao()
         linha = self.make_line(medicao, 60.0, 60.0, 60.0, 60.0)
-        self.certificate.validate_calibration = date.today() - relativedelta(days=1)
-        linha.invalidate_recordset()
         self.assertEqual(linha.standard_status, 'sem_certificado')
         self.assertEqual(linha.standard_uncertainty, 0.0)
 
