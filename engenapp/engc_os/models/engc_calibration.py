@@ -132,11 +132,20 @@ class EngcCalibration(models.Model):
                 raise ValidationError(_("Verifique a Data de Calibração"))
             if not rec.date_next_calibration:
                 raise ValidationError(_("Verifique a Data da proxima Calibração"))
-            if not rec.date_next_calibration:
-                raise ValidationError(_("Verifique a Data da proxima Calibração"))
             if not rec.technician_id:
                 raise ValidationError(_("Verifique o Calibrado por"))
-                
+
+            pendentes = rec.measurement_ids.measurement_lines.filtered(
+                lambda l: l.standard_status != 'ok')
+            if pendentes:
+                detalhe = "\n".join(
+                    "- %s: %s" % (l.true_quantity_value, l.standard_message or l.standard_status)
+                    for l in pendentes)
+                raise ValidationError(_(
+                    "Não é possível concluir: %(quantas)s linha(s) de medição "
+                    "não resolvem os valores do padrão.\n\n%(detalhe)s",
+                    quantas=len(pendentes), detalhe=detalhe))
+
             rec.write({
                     'state': 'done',
                     'issue_date': date.today(),
@@ -653,6 +662,17 @@ class CalibrationMeasurementLines (models.Model):
     standard_veff_infinito = fields.Boolean(
         string="Veff do padrão infinito",
         compute="_compute_standard_contribution", store=True)
+
+    @api.onchange('true_quantity_value')
+    def onchange_true_quantity_value(self):
+        """Avisa na hora quando o ponto não resolve. Não bloqueia: quem
+        bloqueia é action_done()."""
+        self.ensure_one()
+        if self.standard_status and self.standard_status != 'ok':
+            return {'warning': {
+                'title': _("Padrão não resolvido neste ponto"),
+                'message': self.standard_message or '',
+            }}
 
     @api.depends('true_quantity_value',
                  'measurement_id.instrument_id',

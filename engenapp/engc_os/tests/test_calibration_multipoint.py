@@ -305,3 +305,45 @@ class TestStandardContributionOnLine(CalibrationCase):
         linha = self.make_line(medicao, 2000.0, 2000.0, 2000.0, 2000.0)
         self.assertEqual(linha.standard_status, 'fora_faixa')
         self.assertIn('2000', linha.standard_message)
+
+
+class TestBlockingOnDone(CalibrationCase):
+
+    def _cal_com_ponto_unico(self):
+        self.unc_line.is_generic = False
+        self.unc_line.nominal_value = 60.0
+        cal = self.env['engc.calibration'].create(self.make_calibration_vals())
+        medicao = self.env['engc.calibration.measurement'].create({
+            'calibration_id': cal.id, 'title': 'Tempo',
+            'instrument_id': self.instrument.id,
+            'unit_of_measurement': self.unit_tempo.id,
+        })
+        return cal, medicao
+
+    def test_done_recusa_linha_fora_da_faixa(self):
+        cal, medicao = self._cal_com_ponto_unico()
+        self.make_line(medicao, 2000.0, 2000.0, 2000.0, 2000.0)
+        with self.assertRaises(ValidationError) as ctx:
+            cal.action_done()
+        self.assertIn('2000', str(ctx.exception))
+
+    def test_done_aceita_tudo_resolvido(self):
+        cal, medicao = self._cal_com_ponto_unico()
+        self.make_line(medicao, 60.0, 60.0, 60.0, 60.0)
+        cal.action_done()
+        self.assertEqual(cal.state, 'done')
+
+    def test_done_sem_nenhuma_linha_nao_estoura(self):
+        """Review Focus 5: a validação percorre linhas; com zero linhas não
+        pode estourar nem aprovar em falso."""
+        cal, _ = self._cal_com_ponto_unico()
+        cal.action_done()
+        self.assertEqual(cal.state, 'done')
+
+    def test_onchange_avisa_sem_bloquear(self):
+        cal, medicao = self._cal_com_ponto_unico()
+        linha = self.make_line(medicao, 60.0, 60.0, 60.0, 60.0)
+        linha.true_quantity_value = 2000.0
+        aviso = linha.onchange_true_quantity_value()
+        self.assertIn('warning', aviso)
+        self.assertIn('2000', aviso['warning']['message'])
