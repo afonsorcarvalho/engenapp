@@ -40,7 +40,9 @@ class CalibrationCase(TransactionCase):
         })
 
     def make_measurement(self, **kw):
-        """Cria uma medição já com o onchange do padrão disparado."""
+        """Cria uma medição. Os valores do padrão não moram mais aqui — cada
+        linha resolve os seus (standard_*) por compute, no seu próprio
+        ponto, quando é criada (ver make_line)."""
         vals = {
             'title': 'Tempo',
             'date_measurement': date.today(),
@@ -49,8 +51,6 @@ class CalibrationCase(TransactionCase):
         }
         vals.update(kw)
         measurement = self.env['engc.calibration.measurement'].create(vals)
-        # O preenchimento dos campos *_instrument só acontece via onchange hoje.
-        measurement.onchange_unit_of_measurement()
         return measurement
 
     def make_line(self, measurement, true_value, r1, r2, r3):

@@ -14,6 +14,7 @@ from odoo import models, fields, api, _
 from odoo import netsvc
 
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_compare
 from babel.dates import  format_date
 from odoo.tools.misc import  get_lang
 
@@ -131,11 +132,26 @@ class EngcCalibration(models.Model):
                 raise ValidationError(_("Verifique a Data de Calibração"))
             if not rec.date_next_calibration:
                 raise ValidationError(_("Verifique a Data da proxima Calibração"))
-            if not rec.date_next_calibration:
-                raise ValidationError(_("Verifique a Data da proxima Calibração"))
             if not rec.technician_id:
                 raise ValidationError(_("Verifique o Calibrado por"))
-                
+
+            pendentes = rec.measurement_ids.measurement_lines.filtered(
+                lambda l: l.standard_status != 'ok')
+            if pendentes:
+                detalhe = "\n".join(
+                    "- %s (%s): %s" % (
+                        l.measurement_id.title or l.measurement_id.name,
+                        l.true_quantity_value,
+                        l.standard_message or l.standard_status)
+                    for l in pendentes)
+                raise ValidationError(_(
+                    "Não é possível concluir: %(quantas)s linha(s) de medição "
+                    "não resolvem os valores do padrão.\n\n%(detalhe)s\n\n"
+                    "Se o certificado do padrão foi corrigido (ex.: um ponto "
+                    "que faltava foi cadastrado), use o botão \"Recalcular "
+                    "Padrão\" no cabeçalho e tente concluir de novo.",
+                    quantas=len(pendentes), detalhe=detalhe))
+
             rec.write({
                     'state': 'done',
                     'issue_date': date.today(),
@@ -148,6 +164,27 @@ class EngcCalibration(models.Model):
 
                 'state': 'draft'
             })
+
+    def action_recalcular_padrao(self):
+        """Recalcula os standard_* das linhas ainda não resolvidas.
+
+        _compute_standard_contribution deliberadamente NÃO depende das
+        uncertainty_lines do certificado (decisão D5): editar o certificado
+        depois de emitido não pode reescrever retroativamente uma
+        calibração já registrada. Isso cria uma armadilha comum: o técnico
+        mede fora da faixa do certificado, cadastra o ponto que faltava no
+        instrumento padrão, e a linha CONTINUA 'fora_faixa' — nada dispara
+        o compute de novo, porque nada que está no @api.depends mudou.
+
+        Este botão dispara o recompute explicitamente, só nas linhas ainda
+        pendentes, para o técnico ter um caminho depois de corrigir o
+        certificado sem precisar tocar em true_quantity_value só para
+        forçar o compute."""
+        for rec in self:
+            pendentes = rec.measurement_ids.measurement_lines.filtered(
+                lambda l: l.standard_status != 'ok')
+            if pendentes:
+                pendentes._compute_standard_contribution()
 
 
 class CalibrationInstrument(models.Model):
@@ -249,6 +286,29 @@ class CalibrationInstrumentCertificates(models.Model):
         for rec in self:
             rec.is_valid = bool(rec.validate_calibration) and rec.validate_calibration >= hoje
 
+    def name_get(self):
+        """Sem isto, o fallback do Odoo é "model,id" — foi exatamente o
+        que apareceu no painel de certificado da medição (Fase 2): em vez
+        de "R1236/2026", o campo mostrava
+        "engc.calibration.instruments.certificates,1284".
+
+        Usa name_get (não _rec_name) de propósito: _rec_name mudaria o
+        display_name em TODO lugar, inclusive no widget de
+        superseded_by_id; e certificate_number não é obrigatório, então um
+        certificado salvo sem número precisa de um rótulo não-vazio mesmo
+        assim.
+        """
+        result = []
+        for rec in self:
+            if rec.certificate_number:
+                name = rec.certificate_number
+            elif rec.date_calibration:
+                name = _("Certificado de %s") % rec.date_calibration
+            else:
+                name = "%s,%s" % (rec._name, rec.id)
+            result.append((rec.id, name))
+        return result
+
 
     @api.onchange('date_calibration')
     def onchange_date_calibration(self):
@@ -259,6 +319,121 @@ class CalibrationInstrumentCertificates(models.Model):
     def verify_is_valid(self):
         self.ensure_one()
         return bool(self.validate_calibration) and self.validate_calibration >= date.today()
+
+    def _uncertainty_from_line(self, linha):
+        """Monta o dict de contribuições a partir de uma linha do certificado."""
+        return {
+            'status': 'ok',
+            'message': '',
+            'erro_value': linha.erro_value,
+            'uncertainty': linha.uncertainty,
+            'coverage_factor': linha.coverage_factor,
+            'veff': linha.veff,
+            'veff_infinito': linha.veff_infinito,
+            'resolution': linha.resolution,
+            'source_line_id': linha.id,
+        }
+
+    def _incerteza_padrao(self, linha):
+        """u = U / k.
+
+        Devolve 0.0 quando k é zero: cadastro incompleto não pode derrubar
+        um compute store=True, e um k ausente torna a linha incomparável,
+        não infinita.
+        """
+        if not linha.coverage_factor:
+            return 0.0
+        return linha.uncertainty / linha.coverage_factor
+
+    def _pior_ponto(self, a, b):
+        """O ponto de maior incerteza padrão entre dois.
+
+        Empate resolve pelo menor id, para o resultado não depender da
+        ordem de iteração do recordset (Review Focus 4).
+        """
+        casas = self.env['decimal.precision'].precision_get('Calibration')
+        ua = self._incerteza_padrao(a)
+        ub = self._incerteza_padrao(b)
+        comparacao = float_compare(ua, ub, precision_digits=casas)
+        if comparacao > 0:
+            return a
+        if comparacao < 0:
+            return b
+        return a if a.id <= b.id else b
+
+    def _select_uncertainty_at(self, unit, value):
+        """Contribuições do padrão na grandeza `unit`, no ponto `value`.
+
+        NUNCA levanta exceção — devolve sempre um dict com 'status'. Um
+        compute store=True chama isto, e um compute que estoura derruba
+        todo `-u` do módulo sobre dado histórico já gravado.
+        """
+        vazio = {
+            'status': 'sem_unidade',
+            'message': '',
+            'erro_value': 0.0,
+            'uncertainty': 0.0,
+            'coverage_factor': 0.0,
+            'veff': 0.0,
+            'veff_infinito': False,
+            'resolution': 0.0,
+            'source_line_id': False,
+        }
+        if not self:
+            return dict(vazio, status='sem_certificado', message=_(
+                "Nenhum certificado válido para o padrão desta medição."))
+        self.ensure_one()
+        if not unit:
+            return dict(vazio, message=_("Unidade de medida não informada."))
+
+        linhas = self.uncertainty_lines.filtered(
+            lambda r: r.unit_of_measurement == unit)
+        if not linhas:
+            return dict(vazio, message=_(
+                "O certificado %(cert)s não tem linha de incerteza para a "
+                "unidade %(unidade)s.",
+                cert=self.certificate_number or '',
+                unidade=unit.display_name))
+
+        genericas = linhas.filtered('is_generic')
+        if genericas:
+            return self._uncertainty_from_line(genericas[0])
+
+        casas = self.env['decimal.precision'].precision_get('Calibration')
+        pontos = linhas.sorted(key=lambda r: r.nominal_value)
+        minimo = pontos[0].nominal_value
+        maximo = pontos[-1].nominal_value
+
+        if (float_compare(value, minimo, precision_digits=casas) < 0
+                or float_compare(value, maximo, precision_digits=casas) > 0):
+            return dict(vazio, status='fora_faixa', message=_(
+                "Valor %(valor)s fora da faixa calibrada do certificado "
+                "%(cert)s (%(minimo)s a %(maximo)s).",
+                valor=value, cert=self.certificate_number or '',
+                minimo=minimo, maximo=maximo))
+
+        exatos = pontos.filtered(
+            lambda r: float_compare(
+                r.nominal_value, value, precision_digits=casas) == 0)
+        if exatos:
+            return self._uncertainty_from_line(exatos[0])
+
+        inferior = pontos.filtered(
+            lambda r: float_compare(
+                r.nominal_value, value, precision_digits=casas) < 0)[-1]
+        superior = pontos.filtered(
+            lambda r: float_compare(
+                r.nominal_value, value, precision_digits=casas) > 0)[0]
+
+        resultado = self._uncertainty_from_line(
+            self._pior_ponto(inferior, superior))
+
+        intervalo = superior.nominal_value - inferior.nominal_value
+        fracao = (value - inferior.nominal_value) / intervalo
+        resultado['erro_value'] = (
+            inferior.erro_value
+            + fracao * (superior.erro_value - inferior.erro_value))
+        return resultado
 
 
 class CalibrationInstrumentCertificateFile(models.Model):
@@ -308,18 +483,78 @@ class CalibrationIntrumentUncertaintyLines(models.Model):
     resolution = fields.Float(string = "Resolução", help="Resolução do padrão",
         required=True, digits='Calibration'
     )
-    unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', ondelete='restrict', 
+    unit_of_measurement = fields.Many2one(string='Unidade de medida', comodel_name='engc.calibration.measurement.unit', ondelete='restrict',
     required=True
     )
 
-    # _sql_constraints = [
-    #     (
-    #         'instrument_id_unit_of_measurement_uniq',
-    #         'unique (unit_of_measuremen)',
-    #         'A unidade de medida deve ser unica para cada instrumento'
-    #     ),
-    # ]
-    
+    is_generic = fields.Boolean(
+        string="Vale para toda a faixa",
+        default=True,
+        help="Marcado: a linha vale para qualquer valor medido — é o cadastro "
+             "antigo, um conjunto de valores por unidade. Desmarcado: a linha "
+             "vale para o ponto nominal indicado.",
+    )
+    nominal_value = fields.Float(
+        string="Valor nominal",
+        digits='Calibration',
+        help="O ponto calibrado a que esta linha se refere. Só tem efeito "
+             "com 'Vale para toda a faixa' desmarcado.",
+    )
+    veff_infinito = fields.Boolean(
+        string="Veff infinito",
+        default=True,
+        help="Marcado: graus de liberdade efetivos infinitos, o caso usual "
+             "em certificado de padrão. Desmarcado: usar o valor de Veff.",
+    )
+
+    @api.constrains('is_generic', 'nominal_value', 'certificate',
+                    'unit_of_measurement')
+    def _check_pontos_coerentes(self):
+        """Impede os três arranjos ambíguos dentro de um mesmo
+        (certificado, unidade).
+
+        A terceira checagem é a que fecha o bug que originou esta fase: sem
+        ela, duas linhas na mesma unidade fazem _search_statistics devolver
+        um recordset e qualquer leitura de campo levanta Expected singleton.
+        """
+        casas = self.env['decimal.precision'].precision_get('Calibration')
+        for rec in self:
+            irmas = rec.certificate.uncertainty_lines.filtered(
+                lambda r: r.unit_of_measurement == rec.unit_of_measurement
+                and r.id != rec.id
+            )
+            genericas = irmas.filtered('is_generic')
+            if rec.is_generic:
+                if genericas:
+                    raise ValidationError(_(
+                        "Já existe uma linha 'vale para toda a faixa' para a "
+                        "unidade %s neste certificado."
+                    ) % rec.unit_of_measurement.display_name)
+                if irmas - genericas:
+                    raise ValidationError(_(
+                        "Não é possível misturar uma linha 'vale para toda a "
+                        "faixa' com linhas de ponto na unidade %s. Ou a "
+                        "unidade tem um conjunto único de valores, ou tem "
+                        "pontos nominais."
+                    ) % rec.unit_of_measurement.display_name)
+            else:
+                if genericas:
+                    raise ValidationError(_(
+                        "A unidade %s já tem uma linha 'vale para toda a "
+                        "faixa' neste certificado. Desmarque-a antes de "
+                        "cadastrar pontos."
+                    ) % rec.unit_of_measurement.display_name)
+                repetido = (irmas - genericas).filtered(
+                    lambda r: float_compare(
+                        r.nominal_value, rec.nominal_value,
+                        precision_digits=casas) == 0
+                )
+                if repetido:
+                    raise ValidationError(_(
+                        "Já existe uma linha para o valor nominal %s na "
+                        "unidade %s deste certificado."
+                    ) % (rec.nominal_value,
+                         rec.unit_of_measurement.display_name))
 
 
 class CalibrationTypes(models.Model):
@@ -386,77 +621,29 @@ class CalibrationMeasurement (models.Model):
                 [('id', 'in', unit_of_measurement_lines.mapped(lambda r: r.id))]
             )
     
-    uncertainty_instrument = fields.Float(
+    certificate_id = fields.Many2one(
+        string="Certificado do padrão",
+        comodel_name='engc.calibration.instruments.certificates',
+        compute='_compute_certificate_info',
+        help="O certificado válido mais recente do padrão escolhido — o mesmo "
+             "que o PDF do certificado de calibração cita.")
+    certificate_validate = fields.Date(
+        string="Validade do certificado",
+        compute='_compute_certificate_info', readonly=True)
 
-        readonly=True, digits='Calibration',
-
-        )
-    erro_value_instrument = fields.Float(
-
-        readonly=True, digits='Calibration',
-
-        )
-    coverage_factor_instrument = fields.Float(
-
-        readonly=True,
-
-        )
-    resolution_instrument = fields.Float(
-
-        readonly=True, digits='Calibration',
-
-        )
-    veff_instrument = fields.Float(
-
-        readonly=True,
-
-        )
-    #TODO fazer ele pegar o certificado valido mais novo, caso tenha mais de um certificado válido
-    def _search_certificates_valid(self):
-        '''
-            Pega os certificados válidos do instrumento de calibração
-        '''
-        certificates = self.instrument_id.certificate_ids.filtered(
-            lambda rec: rec.verify_is_valid() and not rec.superseded_by_id)
-        if len(certificates) == 0:
-                raise ValidationError(_("Verifique a Data de vencimento da Calibração do instrumento utilizado. Não é possível utilizar intrumento com calibração vencida"))
-        return certificates
-    
-    def _search_statistics(self):
-        # Procura a incerteza 
-        uncertainty_id_line = []
-        certificates = self._search_certificates_valid()
-        if len(certificates) == 0:
-            return uncertainty_id_line,[]
-        
-        uncertainty_id_line = certificates.uncertainty_lines
-        if len(uncertainty_id_line) > 0:
-            uncertainty_id_line = uncertainty_id_line.filtered(lambda rec: rec.unit_of_measurement.id == self.unit_of_measurement.id)
-            if len(uncertainty_id_line) == 0:
-                raise ValidationError(_("Verifique a unidade de medida selecionada. Não existe essa unidade no instrumento padrão utilizado."))
-        _logger.info(uncertainty_id_line)   
-
-        return uncertainty_id_line,certificates
-
+    @api.depends('instrument_id')
+    def _compute_certificate_info(self):
+        for rec in self:
+            certificate = (
+                rec.instrument_id.get_certificate_valid()
+                if rec.instrument_id else False)
+            rec.certificate_id = certificate
+            rec.certificate_validate = certificate.validate_calibration if certificate else False
 
     @api.onchange('instrument_id')
     def onchange_instrument_id(self):
         self.unit_of_measurement = None
 
-    @api.onchange('unit_of_measurement')
-    def onchange_unit_of_measurement(self):
-        if self.unit_of_measurement:
-            uncertainty_id_line, certificate_instrument = self._search_statistics()
-            _logger.info(self.unit_of_measurement)
-            _logger.info(uncertainty_id_line)
-            _logger.info(certificate_instrument)
-           # self.certificate_instrument = certificate_instrument.id
-            self.resolution_instrument = uncertainty_id_line.resolution
-            self.coverage_factor_instrument = uncertainty_id_line.coverage_factor
-            self.uncertainty_instrument = uncertainty_id_line.uncertainty
-            self.erro_value_instrument = uncertainty_id_line.erro_value
-            self.veff_instrument = uncertainty_id_line.veff
-    
     @api.model
     def create(self, vals_list):
         """Salva ou atualiza os dados no banco de dados"""
@@ -490,17 +677,109 @@ class CalibrationMeasurementLines (models.Model):
     veff = fields.Float(string = "Veff",compute="_compute_statistics", store=True)
     resolutino_instrument = fields.Float(string = "Resolução do instrumento", compute="_compute_statistics", store=True, digits='Calibration')
 
-    @api.depends('measurement_id.instrument_id','measurement_id.unit_of_measurement','true_quantity_value','coverage_factor','measurement_quantity_value_1','measurement_quantity_value_2','measurement_quantity_value_3')
+    STANDARD_STATUS = [
+        ('ok', 'OK'),
+        ('sem_certificado', 'Sem certificado válido'),
+        ('sem_unidade', 'Unidade não consta do certificado'),
+        ('fora_faixa', 'Fora da faixa calibrada'),
+    ]
+
+    standard_status = fields.Selection(
+        string="Situação do padrão", selection=STANDARD_STATUS,
+        compute="_compute_standard_contribution", store=True)
+    standard_message = fields.Char(
+        string="Detalhe do padrão",
+        compute="_compute_standard_contribution", store=True)
+    standard_line_id = fields.Many2one(
+        string="Ponto do certificado",
+        comodel_name='engc.calibration.instruments.uncertainty.lines',
+        ondelete='set null',
+        compute="_compute_standard_contribution", store=True,
+        help="Qual linha do certificado do padrão sustentou esta medição.")
+    standard_uncertainty = fields.Float(
+        string="Incerteza do padrão", digits='Calibration',
+        compute="_compute_standard_contribution", store=True)
+    standard_erro = fields.Float(
+        string="Erro do padrão", digits='Calibration',
+        compute="_compute_standard_contribution", store=True)
+    standard_resolution = fields.Float(
+        string="Resolução do padrão", digits='Calibration',
+        compute="_compute_standard_contribution", store=True)
+    standard_coverage_factor = fields.Float(
+        string="Fator K do padrão",
+        compute="_compute_standard_contribution", store=True)
+    standard_veff = fields.Float(
+        string="Veff do padrão",
+        compute="_compute_standard_contribution", store=True)
+    standard_veff_infinito = fields.Boolean(
+        string="Veff do padrão infinito",
+        compute="_compute_standard_contribution", store=True)
+
+    @api.onchange('true_quantity_value')
+    def onchange_true_quantity_value(self):
+        """Avisa na hora quando o ponto não resolve. Não bloqueia: quem
+        bloqueia é action_done()."""
+        self.ensure_one()
+        if self.standard_status and self.standard_status != 'ok':
+            return {'warning': {
+                'title': _("Padrão não resolvido neste ponto"),
+                'message': self.standard_message or '',
+            }}
+
+    @api.depends('true_quantity_value',
+                 'measurement_id.instrument_id',
+                 'measurement_id.unit_of_measurement')
+    def _compute_standard_contribution(self):
+        """Resolve as contribuições do padrão no ponto desta linha.
+
+        NUNCA levanta. Este compute é store=True, e um compute que estoura
+        derruba todo `-u` do módulo: o upgrade recomputa os campos de todas
+        as linhas já gravadas, e basta uma com certificado vencido ou ponto
+        fora de faixa para impedir qualquer atualização futura.
+
+        O bloqueio do técnico mora no onchange e em action_done().
+        """
+        sem_padrao = {
+            'status': 'sem_certificado',
+            'message': _("Nenhum certificado válido para o padrão desta medição."),
+            'erro_value': 0.0, 'uncertainty': 0.0, 'coverage_factor': 0.0,
+            'veff': 0.0, 'veff_infinito': False, 'resolution': 0.0,
+            'source_line_id': False,
+        }
+        for rec in self:
+            padrao = rec.measurement_id.instrument_id
+            certificado = padrao.get_certificate_valid() if padrao else padrao
+            if not certificado:
+                dados = sem_padrao
+            else:
+                dados = certificado._select_uncertainty_at(
+                    rec.measurement_id.unit_of_measurement,
+                    rec.true_quantity_value,
+                )
+            rec.standard_status = dados['status']
+            rec.standard_message = dados['message']
+            rec.standard_line_id = dados['source_line_id']
+            rec.standard_uncertainty = dados['uncertainty']
+            rec.standard_erro = dados['erro_value']
+            rec.standard_resolution = dados['resolution']
+            rec.standard_coverage_factor = dados['coverage_factor']
+            rec.standard_veff = dados['veff']
+            rec.standard_veff_infinito = dados['veff_infinito']
+
+    @api.depends('standard_uncertainty','standard_coverage_factor','standard_erro','standard_resolution','true_quantity_value','coverage_factor','measurement_quantity_value_1','measurement_quantity_value_2','measurement_quantity_value_3')
     def _compute_statistics(self):
         for rec in self:
-            uncertainty_instrument = rec.measurement_id.uncertainty_instrument
+            # Fase 2: os valores do padrão passaram a ser resolvidos por
+            # linha, no ponto dela. A ARITMÉTICA ABAIXO NÃO MUDOU — só a
+            # origem destes quatro números.
+            uncertainty_instrument = rec.standard_uncertainty
             k_instrument = 2.0
-            if rec.measurement_id.coverage_factor_instrument != 0: 
-                k_instrument = rec.measurement_id.coverage_factor_instrument
-        
-            erro_instrument = rec.measurement_id.erro_value_instrument
-            resolution_instrument= rec.measurement_id.resolution_instrument
-            
+            if rec.standard_coverage_factor != 0:
+                k_instrument = rec.standard_coverage_factor
+
+            erro_instrument = rec.standard_erro
+            resolution_instrument = rec.standard_resolution
+
             for record in rec:
                 values = [
                     record.measurement_quantity_value_1,

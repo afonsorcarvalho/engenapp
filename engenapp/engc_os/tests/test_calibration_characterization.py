@@ -14,12 +14,23 @@ class TestCalibrationCharacterization(CalibrationCase):
     de commit.
     """
 
-    def test_padrao_preenchido_pelo_onchange(self):
+    def test_padrao_resolvido_na_linha(self):
+        """VIRADO NA FASE 2, de propósito.
+
+        Antes: os valores do padrão moravam em engc.calibration.measurement
+        e só eram preenchidos pelo onchange da unidade. Agora moram em cada
+        linha, resolvidos no ponto dela, por compute.
+
+        A aritmética de _compute_statistics NÃO mudou — os outros testes
+        desta classe continuam afirmando exatamente os mesmos números.
+        """
         m = self.make_measurement()
-        self.assertAlmostEqual(m.uncertainty_instrument, 0.035, places=6)
-        self.assertAlmostEqual(m.coverage_factor_instrument, 2.0, places=6)
-        self.assertAlmostEqual(m.erro_value_instrument, 0.01, places=6)
-        self.assertAlmostEqual(m.resolution_instrument, 0.01, places=6)
+        line = self.make_line(m, 60.0, 60.053, 60.055, 60.054)
+        self.assertEqual(line.standard_status, 'ok')
+        self.assertAlmostEqual(line.standard_uncertainty, 0.035, places=6)
+        self.assertAlmostEqual(line.standard_coverage_factor, 2.0, places=6)
+        self.assertAlmostEqual(line.standard_erro, 0.01, places=6)
+        self.assertAlmostEqual(line.standard_resolution, 0.01, places=6)
 
     def test_media_e_erro(self):
         m = self.make_measurement()
