@@ -56,6 +56,64 @@
 - **Histórico múltiplas sessões**: hoje 1 sessão por user. Permitir N com título auto-gerado pelo modelo.
 - **Tool calling para Anthropic provider**: implementação atual só lmstudio. Anthropic Claude tem `tools` array nativo similar.
 
+### engc_os — calibração
+
+Fases 0, 1 e 2 entregues e **pushadas** em `origin/main-monorepo` (80 métodos de teste
+em 5 arquivos, onde antes havia zero). Análise e roadmap em
+`engenapp/engc_os/docs/2026-09-23-analise-calibracao-incerteza-precisao.md`; fechos de
+execução no rodapé dos planos em `engenapp/engc_os/docs/superpowers/plans/`.
+
+#### Deploy remoto labquali — checklist acumulado (NÃO disparar até o user avisar)
+
+Decidido em 2026-09-24: acumular tudo aqui e rodar de uma vez, com as migrações.
+
+- `-u engc_os` na labquali: salto de `16.0.1.x` → `16.0.3.0.0`, rodando as migrações
+  `2.0.0` e `3.0.0` em sequência. **Backup do banco antes** — a Fase 1 muda tipo de coluna.
+- **18 dos 24 certificados de padrão não têm linha de incerteza.** Decidido pelo user
+  (2026-09-24): **aceitar os padrões parados**. Calibração que use um deles não poderá ser
+  concluída até o user cadastrar as linhas. Antes do `-u` essas calibrações eram aceitas em
+  silêncio com zeros — a regra nova recusa em vez de mentir. **Não bloqueia o deploy.**
+- **Auditar `veff_infinito` depois do `-u`.** A migração marca TODAS as linhas antigas como
+  "Veff infinito" e emite WARNING listando as que declaram valor finito — essas precisam ser
+  **desmarcadas** contra o certificado em papel. A Fase 3 lê o booleano, não o número: sem a
+  auditoria ela descarta o valor finito em silêncio.
+- **Sem risco de congelamento na labquali:** o banco não tem calibração emitida (confirmado
+  pelo user em 2026-09-24), então não existe linha de medição antiga para mudar de base. A
+  ressalva do fecho da Fase 2 (o `uncertainty` gravado vira de base na primeira edição de uma
+  leitura antiga) vale só para bases com calibração já realizada.
+- A base que originou a tabela da análise (60,053 s / ITM 0,035 / Veff Inf) continua não
+  identificada. Só importa se um dia for rodar `-u` nela — não é a labquali.
+
+#### Antes da Fase 3 (correção do GUM, ≈2-3 dias)
+
+- `@api.constrains` em `coverage_factor > 0`. Hoje grava 0 sem guarda; `_compute_statistics`
+  cai no default 2,0, mas a Fase 3 vai **dividir** por ele.
+- A auditoria dos `veff` acima é pré-requisito, não opcional.
+
+#### Limpeza (verificada no código, não bloqueia)
+
+- Rename `resolutino_instrument` → `resolution_instrument_line` (typo). 5 referências,
+  cruza o submodule: `addons/afr_qualificacao/views/qualificacao_subrecords_views.xml:130`.
+- **Código morto:** override `_compute_is_valid` em
+  `addons/afr_qualificacao/models/calibration_instruments.py:122-135`. Existia porque o
+  compute do `engc_os` não iterava `self`; hoje itera e atribui certo.
+- `_compute_has_valid_certificate` (:193) e `_compute_coverage` (:226) no mesmo arquivo
+  ignoram `superseded_by_id` — 3ª e 4ª definições concorrentes de "certificado válido".
+- `CalibrationMeasurement.create` (:647) e `CalibrationMeasurementProcedure.create` (:869)
+  no `engc_calibration.py`: `@api.model` tratando `vals_list` como dict, com `force_company`
+  (depreciado no 16).
+- Menores: `veff` negativo escapa da conversão e do aviso da migração; o form da linha de
+  incerteza não replica os `attrs` de readonly da tree; status `sem_unidade` com rótulo que
+  aponta para o certificado mesmo quando a unidade faltou na medição;
+  `action_recalcular_padrao` sem validação de `state` no método (só o botão é restrito na view).
+
+#### Fase 4 — Rastreabilidade (≈2 dias, não começada)
+
+Congelamento em `action_done`; orçamento de incerteza em JSON; tabela do orçamento no
+certificado; bloqueio de edição no modelo. Junto: **o PDF do certificado não diz qual ponto
+do padrão sustentou cada medição, nem declara a faixa calibrada** — informação que auditoria
+espera num certificado multiponto.
+
 ### afr_cme_rastreabilidade*
 - **Testes do fluxo crítico** — zero cobertura. Prioridade: (a) lote IQ+IB libera só com `pass`+`negativo`; (b) retrabalho cria novo `cme.process.lot` com `parent_lot_id`; (c) `reuse_count` > `max_reuse` bloqueia; (d) `cron_check_expired_units` marca expired; (e) `_check_can_distribute` bloqueia + log; (f) modo `third_party` exige `material_owner_partner_id`.
 - **Mapping RDC 15/2012** — manifest reivindica conformidade mas sem evidência no código. Documentar quais artigos cada regra atende (IQ obrigatório, validade, rastreabilidade, retrabalho).
