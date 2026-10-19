@@ -20,3 +20,7 @@
 	path = addons/afr_supervisorio_ciclos_extras
 	url = https://github.com/afonsorcarvalho/afr_supervisorio_ciclos_extras.git
 	branch = master
+[submodule "addons/afr_qualificacao_levantamento"]
+	path = addons/afr_qualificacao_levantamento
+	url = https://github.com/afonsorcarvalho/afr_qualificacao_levantamento.git
+	branch = main
