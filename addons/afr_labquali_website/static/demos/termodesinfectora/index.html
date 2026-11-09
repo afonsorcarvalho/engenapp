@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LabQuali · Qualificação de termodesinfectoras</title>
+<meta name="description" content="Qualificação de lavadoras termodesinfectoras para hospitais e CMEs conforme ABNT NBR ISO 15883. Doze termopares na carga, A0 calculado e relatório assinado.">
+<meta name="theme-color" content="#05080d">
+<link rel="icon" href="/afr_labquali_website/static/demos/termodesinfectora/logo-dark.svg" data-old="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2305080d'/><circle cx='16' cy='16' r='8' fill='none' stroke='%23ff6a2b' stroke-width='3'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="preload" as="image" href="seq/f_0001.webp">
+<link rel="stylesheet" href="scrollcraft.css">
+<style>
+  :root {
+    --sc-canvas:     #05080d;
+    --sc-surface:    #0b1119;
+    --sc-ink:        #eef2f6;
+    --sc-ink-soft:   #8d9aa8;
+    --sc-accent:     #ff6a2b;
+    --sc-accent-ink: #120700;
+    --sc-font-display: "Manrope", system-ui, sans-serif;
+    --sc-font-text:    "Manrope", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --line: rgba(255,255,255,.08);
+    --line-2: rgba(255,255,255,.14);
+    --ok: #3ddc97;
+    --navy: #0d2a4a;
+    --pad: clamp(20px, 4vw, 64px);
+  }
+  html { background: var(--sc-canvas); }
+  body { background: var(--sc-canvas); color: var(--sc-ink); font-family: var(--sc-font-text); -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--sc-accent); color: var(--sc-accent-ink); }
+  a { color: inherit; }
+
+  /* ---------- top bar ---------- */
+  .bar {
+    position: fixed; inset: 0 0 auto 0; z-index: 60; height: 68px;
+    display: flex; align-items: center; gap: 28px; padding: 0 var(--pad);
+    background: linear-gradient(to bottom, rgba(5,8,13,.78), rgba(5,8,13,0));
+    backdrop-filter: blur(0px);
+  }
+  .bar.is-solid { background: rgba(5,8,13,.82); backdrop-filter: blur(14px) saturate(1.2); border-bottom: 1px solid var(--line); }
+  .mark { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.08rem; letter-spacing: -.01em; text-decoration: none; }
+  .mark small { font-weight: 500; color: var(--sc-ink-soft); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; margin-left: 4px; }
+  .bar nav { display: flex; gap: 4px; margin-left: auto; }
+  .bar nav a { text-decoration: none; font-size: .88rem; color: var(--sc-ink-soft); padding: 8px 12px; border-radius: 8px; transition: color .2s; }
+  .bar nav a:hover, .bar nav a.is-on { color: var(--sc-ink); }
+  .bar nav a:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+    font: inherit; font-weight: 700; font-size: .92rem; letter-spacing: .005em;
+    padding: 11px 18px; border-radius: 999px; border: 0; cursor: pointer;
+    background: var(--sc-accent); color: var(--sc-accent-ink);
+    transition: transform .2s cubic-bezier(.2,.8,.2,1), background .2s;
+  }
+  .btn:hover { transform: translateY(-1px); background: #ff7c45; }
+  .btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .btn svg { transition: transform .2s; }
+  .btn:hover svg { transform: translateX(3px); }
+
+  .eyebrow { font-family: var(--mono); font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--sc-accent); }
+  .mono { font-family: var(--mono); }
+
+  /* ---------- A1 hero: rendered autoclave sequence ---------- */
+  .hero { background: #070b12; }
+  .hero canvas, .hero .sc-stage__poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  @media (min-width: 861px) {
+    /* park the machine right of the headline; the render's own dark studio fills the gap */
+    .hero canvas, .hero .sc-stage__poster { transform: translateX(19vw) scale(.86); transform-origin: 50% 55%;
+      -webkit-mask-image: radial-gradient(75% 85% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(75% 85% at 50% 50%, #000 62%, transparent 100%); }
+  }
+  .hero__scrim { position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, rgba(5,8,13,.86) 0%, rgba(5,8,13,.55) 30%, rgba(5,8,13,0) 55%),
+                linear-gradient(0deg, rgba(5,8,13,.9) 0%, rgba(5,8,13,0) 22%); }
+  .hero__copy { position: absolute; left: var(--pad); bottom: clamp(56px, 12vh, 140px); max-width: 620px; }
+  .hero h1 { font-weight: 800; font-size: clamp(2.6rem, 6.2vw, 5.6rem); line-height: .98; letter-spacing: -.045em; margin: 18px 0 22px; text-wrap: balance; }
+  .hero h1 em { font-style: normal; color: var(--sc-accent); }
+  .hero p { font-size: clamp(1rem, 1.3vw, 1.18rem); line-height: 1.55; color: #c3ccd6; max-width: 44ch; margin: 0 0 30px; }
+  .hero__meta { display: flex; gap: 28px; margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line-2); }
+  .hero__meta div { font-size: .82rem; color: var(--sc-ink-soft); line-height: 1.4; }
+  .hero__meta b { display: block; color: var(--sc-ink); font-family: var(--mono); font-weight: 500; font-size: .95rem; }
+  .beat { position: absolute; max-width: 430px; }
+  .beat h2 { font-weight: 700; font-size: clamp(1.7rem, 3.2vw, 2.9rem); letter-spacing: -.035em; line-height: 1.04; margin: 12px 0 14px; }
+  .beat p { color: #c3ccd6; line-height: 1.55; margin: 0; }
+  .beat--door { right: var(--pad); top: 26vh; text-align: left; }
+  .beat--inside { left: var(--pad); bottom: 14vh; }
+  .beat--inside, .beat--door { padding: 26px 28px; border-radius: 16px; background: rgba(5,8,13,.55); backdrop-filter: blur(12px); border: 1px solid var(--line); }
+
+  /* ---------- A2 the cycle: the live validation surface (peak) ---------- */
+  .run { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.35fr); grid-template-rows: auto minmax(0,1fr) auto; gap: 14px;
+         padding: 86px var(--pad) 52px; height: 100vh; height: 100svh; box-sizing: border-box; overflow: hidden;
+         background: radial-gradient(1200px 600px at 70% 30%, rgba(255,106,43,.07), transparent 60%), var(--sc-canvas); }
+  .panel { background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015)); border: 1px solid var(--line); border-radius: 16px; }
+  .label { font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--sc-ink-soft); }
+  .run__head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+  .run__head h2 { font-size: 1.25rem; margin: 0; font-weight: 700; letter-spacing: -.02em; }
+  .phase { font-family: var(--mono); font-size: .76rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--sc-ink-soft); }
+  .phase.is-steril { background: var(--sc-accent); border-color: var(--sc-accent); color: var(--sc-accent-ink); }
+  .phase.is-done { background: var(--ok); border-color: var(--ok); color: #03140c; }
+  .readouts { display: flex; gap: 30px; margin-left: auto; }
+  .ro { display: flex; flex-direction: column; gap: 4px; }
+  .ro b { font-family: var(--mono); font-size: 1.6rem; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .ro--f0 b { color: var(--sc-accent); }
+
+  .chamber { padding: 18px; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 12px; }
+  .chamber svg { width: 100%; height: auto; display: block; }
+  .legend { display: flex; justify-content: space-between; font-family: var(--mono); font-size: .66rem; color: var(--sc-ink-soft); }
+  .legend i { flex: 1; height: 4px; margin: 5px 8px 0; border-radius: 2px; background: linear-gradient(90deg, #1428c8, #0096ff, #00dcc8, #50dc3c, #ffe100, #ff8200, #e61414); }
+  #chamber3d { width: 100%; flex: 1; min-height: 0; position: relative; }
+  #chamber3d canvas { display: block; width: 100% !important; height: 100% !important; }
+  .log { list-style: none; margin: 0; padding: 0; font-family: var(--mono); font-size: .7rem; line-height: 1.6; color: #6f7c8a; min-height: 0; flex: none; }
+  .log li { opacity: 0; transform: translateY(4px); transition: opacity .25s, transform .25s; }
+  .log li.on { opacity: 1; transform: none; }
+  .log li em { font-style: normal; color: var(--sc-ink); }
+
+  .chart { position: relative; min-height: 0; overflow: hidden; }
+  .chart svg { position: absolute; inset: 18px 18px 26px 12px; width: calc(100% - 30px); height: calc(100% - 44px); display: block; overflow: visible; }
+  .chart .grid line { stroke: rgba(255,255,255,.06); }
+  .chart .axis text { font-family: var(--mono); font-size: 10px; fill: #66737f; }
+  .chart .band { fill: rgba(255,106,43,.10); }
+  .chart .series polyline { fill: none; stroke-width: 1.4; stroke-linejoin: round; }
+  .chart .cursor { stroke: rgba(255,255,255,.5); stroke-dasharray: 2 4; stroke-width: 1; }
+  .stamp {
+    position: absolute; right: 6%; bottom: 20%;
+    border: 3px solid var(--ok); color: var(--ok); border-radius: 12px;
+    padding: 12px 22px 10px; font-family: var(--mono); text-align: center;
+    background: rgba(5,20,14,.82); backdrop-filter: blur(6px);
+    transform: rotate(-7deg) scale(1.6); opacity: 0;
+    transition: opacity .18s ease-out, transform .32s cubic-bezier(.2,1.5,.4,1);
+    pointer-events: none; box-shadow: 0 20px 50px -20px rgba(61,220,151,.45);
+  }
+  .stamp b { display: block; font-size: 2rem; letter-spacing: .16em; font-weight: 500; }
+  .stamp small { font-size: .74rem; letter-spacing: .04em; }
+  .stamp.on { opacity: 1; transform: rotate(-7deg) scale(1); }
+
+  .sensors { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; }
+  .sensors div { padding: 8px 8px 7px; border-radius: 10px; background: rgba(255,255,255,.025); border: 1px solid var(--line); font-family: var(--mono); font-size: .74rem; font-variant-numeric: tabular-nums; }
+  .sensors div span { display: block; color: var(--sc-ink-soft); font-size: .62rem; margin-bottom: 2px; }
+  .sensors div.lag { border-color: rgba(255,106,43,.6); }
+
+  .status {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 34px;
+    border-top: 1px solid var(--line); background: rgba(5,8,13,.9);
+    display: flex; align-items: center; gap: 22px; padding: 0 var(--pad);
+    font-family: var(--mono); font-size: .7rem; color: var(--sc-ink-soft);
+  }
+  .status .dot { width: 7px; height: 7px; border-radius: 50%; background: #3a4552; display: inline-block; margin-right: 8px; }
+  .status .dot.is-run { background: var(--sc-accent); box-shadow: 0 0 10px var(--sc-accent); }
+  .status .dot.is-ok { background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+  .status .demo { margin-left: auto; color: var(--sc-accent); }
+
+  /* ---------- A3 laudos: horizontal rail ---------- */
+  .rail { display: flex; gap: 28px; align-items: center; height: 100%; padding: 0 var(--pad); box-sizing: border-box; width: max-content; }
+  .rail__lead { width: 400px; flex: none; }
+  .rail__lead h2, .method h2, .close h2 { font-weight: 800; font-size: clamp(2rem, 3.6vw, 3.4rem); letter-spacing: -.04em; line-height: 1.02; margin: 14px 0 16px; }
+  .rail__lead p { color: var(--sc-ink-soft); line-height: 1.6; margin: 0; max-width: 38ch; }
+  .doc { width: 360px; flex: none; aspect-ratio: 1 / 1.32; padding: 28px; display: flex; flex-direction: column; gap: 14px;
+         background: #f3f1ec; color: #14202b; border-radius: 6px;
+         box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 40px 80px -30px rgba(0,0,0,.8), 0 10px 20px -10px rgba(0,0,0,.6); }
+  .doc header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #14202b; padding-bottom: 12px; }
+  .doc header b { font-size: 2.6rem; letter-spacing: -.04em; font-weight: 800; }
+  .doc header span { font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: #5b6670; }
+  .doc h3 { margin: 0; font-size: 1.08rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; }
+  .doc ul { margin: 0; padding: 0; list-style: none; font-size: .82rem; display: grid; gap: 8px; }
+  .doc li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dotted #c9c3b6; padding-bottom: 7px; }
+  .doc li span:last-child { font-family: var(--mono); color: #13804f; font-size: .76rem; }
+  .doc footer { margin-top: auto; font-family: var(--mono); font-size: .66rem; color: #6b757e; display: flex; justify-content: space-between; align-items: center; }
+  .doc .sig { font-family: "Brush Script MT", cursive; font-size: 1.3rem; color: #1f3d66; }
+
+  /* ---------- A4 método ---------- */
+  .method { padding: 160px var(--pad) 150px; display: grid; grid-template-columns: 1fr 1.05fr; gap: clamp(40px, 6vw, 96px); align-items: center; max-width: 1320px; margin: 0 auto; }
+  .method p { line-height: 1.7; color: var(--sc-ink-soft); max-width: 50ch; margin: 0 0 14px; font-size: 1.04rem; }
+  .norms { display: grid; margin-top: 30px; }
+  .norms div { display: grid; grid-template-columns: 190px 1fr; gap: 16px; font-size: .92rem; padding: 16px 0; border-top: 1px solid var(--line); }
+  .norms div b { font-family: var(--mono); font-weight: 500; font-size: .82rem; color: var(--sc-ink); }
+  .norms div span { color: var(--sc-ink-soft); }
+  .shot { margin: 0; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); position: relative; }
+  .shot img { display: block; width: 100%; height: auto; }
+  .shot figcaption { position: absolute; left: 16px; bottom: 14px; font-family: var(--mono); font-size: .7rem; color: #cfd6de; background: rgba(5,8,13,.6); padding: 6px 10px; border-radius: 8px; backdrop-filter: blur(6px); }
+
+  /* ---------- A5 close: a real input ---------- */
+  .close { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(30px, 6vw, 90px); align-items: center; padding: 90px var(--pad) 40px; box-sizing: border-box; height: 100vh; height: 100svh;
+           background: radial-gradient(900px 500px at 20% 60%, rgba(255,106,43,.09), transparent 60%); }
+  .close__lead p { color: var(--sc-ink-soft); line-height: 1.6; max-width: 40ch; margin: 0; font-size: 1.05rem; }
+  .form { padding: 30px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .field { min-width: 0; display: flex; flex-direction: column; gap: 8px; font-size: .8rem; color: var(--sc-ink-soft); }
+  .field input, .field select {
+    font: inherit; font-size: 1rem; color: var(--sc-ink); padding: 13px 14px; border-radius: 10px;
+    border: 1px solid var(--line-2); background: rgba(255,255,255,.03);
+  }
+  .field select option { background: #0b1119; }
+  .field input::placeholder { color: #56626e; }
+  .field input:focus-visible, .field select:focus-visible { outline: none; border-color: var(--sc-accent); box-shadow: 0 0 0 3px rgba(255,106,43,.2); }
+  .cmd { display: flex; gap: 16px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  .cmd output { font-family: var(--mono); font-size: .76rem; color: var(--sc-ink-soft); }
+  .foot { grid-column: 1 / -1; align-self: end; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .76rem; color: #5d6976; border-top: 1px solid var(--line); padding-top: 18px; }
+
+  /* ---------- mobile ---------- */
+  @media (max-width: 860px) {
+    .hero .eyebrow { display: none; }
+    .hero b { white-space: nowrap; }
+    .bar { height: 58px; gap: 12px; }
+    .bar nav, .mark small { display: none; }
+    .bar .btn { margin-left: auto; padding: 9px 14px; font-size: .82rem; }
+    .hero__scrim { background: linear-gradient(0deg, rgba(5,8,13,.95) 0%, rgba(5,8,13,.6) 45%, rgba(5,8,13,0) 70%); }
+    .hero__copy { right: var(--pad); bottom: 48px; }
+    .hero__meta { gap: 18px; }
+    .beat { left: var(--pad) !important; right: var(--pad) !important; top: auto !important; bottom: 40px !important; max-width: none; }
+    .run { grid-template-columns: 1fr; grid-template-rows: auto auto minmax(0,1fr) auto; padding: 70px 12px 46px; gap: 10px; }
+    .readouts { margin-left: 0; gap: 18px; }
+    .ro b { font-size: 1.1rem; }
+    .chamber { flex-direction: row; padding: 10px 12px; align-items: center; gap: 12px; }
+    #chamber3d { width: 190px; flex: none; aspect-ratio: 13 / 10; }
+    .chamber .legend, .log { display: none; }
+    .chart { min-height: 220px; }
+    .chart svg { inset: 8px 6px 20px 0; width: calc(100% - 6px); height: calc(100% - 28px); }
+    .sensors { grid-template-columns: repeat(6, 1fr); gap: 4px; }
+    .sensors div { padding: 5px; font-size: .62rem; }
+    .sensors div span { font-size: .56rem; white-space: nowrap; overflow: hidden; }
+    .stamp { right: 4%; bottom: 14%; padding: 8px 12px 6px; }
+    .stamp b { font-size: 1.3rem; }
+    .status .hide-m { display: none; }
+    .rail { padding: 70px 16px 40px; gap: 16px; }
+    .rail__lead { width: 280px; }
+    .doc { width: 280px; padding: 20px; }
+    .method { grid-template-columns: 1fr; padding: 100px 20px 100px; }
+    .norms div { grid-template-columns: 1fr; gap: 4px; }
+    .close { grid-template-columns: minmax(0,1fr); padding: 72px 16px 16px; gap: 16px; align-content: start; }
+    .close h2 { font-size: 1.7rem; margin: 8px 0 8px; }
+    .close__lead p { display: none; }
+    .close .row { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .close .field input, .close .field select { padding: 11px 10px; font-size: .95rem; }
+    .foot span:not(:nth-child(2)) { display: none; }
+    .form { padding: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stamp, .log li, .btn, .btn svg { transition: none; }
+  }
+  .mark img { display: block; height: 58px; width: auto; }
+  @media (max-width: 860px) { .mark img { height: 46px; } }
+</style>
+</head>
+<body>
+
+<span data-sc-progress></span>
+
+<header class="bar" id="bar">
+  <a class="mark" href="/" aria-label="LabQuali, início">
+    <img src="logo-dark.svg" alt="LabQuali · Qualificação térmica e calibração" width="145" height="54">
+  </a>
+  <nav aria-label="Seções">
+    <a href="#ciclo" data-nav="ciclo">O ciclo</a>
+    <a href="#metodo" data-nav="metodo">Método</a>
+    <a href="#laudos" data-nav="laudos">Relatório</a>
+  </nav>
+  <a class="btn" href="#cotacao">Pedir cotação <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+</header>
+
+<main id="top">
+
+  <!-- A1 · RECOGNITION → TURN: the machine, then inside it. Rendered 3D sequence scrubbed by scroll. -->
+  <section id="inicio" data-sc-act="scrub" data-sc-span="5.2">
+    <div data-sc-stage class="hero">
+      <img class="sc-stage__poster" src="seq/f_0001.webp" alt="" fetchpriority="high">
+      <canvas data-sc-sequence="seq/f_{iiii}.webp:150:1" role="img" aria-label="Lavadora termodesinfectora em aço inox com visor. A porta desce e a câmera entra na câmara, entre os cestos de instrumentos com doze sensores."></canvas>
+      <div class="hero__scrim" aria-hidden="true"></div>
+      <div class="hero__copy" data-sc-cue="0 0.30 0">
+        <span class="eyebrow">Qualificação de termodesinfectoras · CME</span>
+        <h1>Desinfecção térmica medida em <em>cada cesto da carga.</em></h1>
+        <p>Perfil de temperatura de todas as fases do ciclo com termopares rastreáveis à RBC, A0 calculado por sensor e relatório conforme ABNT NBR ISO 15883 e RDC 15/2012.</p>
+        <a class="btn" href="#cotacao">Pedir cotação <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <div class="hero__meta">
+          <div><b>ISO 15883</b>termodesinfecção</div>
+          <div><b>RDC 15/2012</b>Anvisa</div>
+          <div><b>RBC</b>termopares rastreáveis</div>
+        </div>
+      </div>
+      <div class="beat beat--door" data-sc-cue="0.36 0.58">
+        <h2>O controle da lavadora lê um ponto só.</h2>
+        <p>Ele não mostra se todos os cestos chegaram à temperatura de desinfecção, nem se ficaram na faixa especificada durante todo o tempo de manutenção. Só termopares distribuídos pelos níveis do rack mostram isso.</p>
+      </div>
+      <div class="beat beat--inside" data-sc-cue="0.72 0.97">
+        <h2>12 termopares nos cestos, do nível inferior ao superior.</h2>
+        <p>Role para rodar o ciclo: pré-lavagem, lavagem, enxágue, desinfecção térmica e o A0 de cada sensor.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- A2 · SUBSTANCE (PEAK): pin, the cycle runs under the scroll. Signature move. -->
+  <section id="ciclo" data-sc-act="pin" data-sc-span="6">
+    <div data-sc-stage class="run">
+      <div class="run__head">
+        <h2>QD · Perfil térmico da carga · Ciclo 0412</h2>
+        <span class="phase" id="phase">Aguardando</span>
+        <div class="readouts">
+          <div class="ro"><span class="label">Tempo</span><b id="r-t">00:00</b></div>
+          <div class="ro"><span class="label">T mín / máx °C</span><b id="r-tt">25,0 / 25,0</b></div>
+          <div class="ro ro--f0"><span class="label">A0 mínimo (s)</span><b id="r-f0">0</b></div>
+        </div>
+      </div>
+
+      <div class="panel chamber">
+        <span class="label">Câmara · posição dos sensores</span>
+        <div id="chamber3d" role="img" aria-label="Câmara cilíndrica translúcida girando, com os 12 sensores no espaço e mapa térmico interpolado das temperaturas atuais"></div>
+        <div class="legend"><span id="lg-lo">75 °C</span><i></i><span id="lg-hi">95 °C</span></div>
+        <ol class="log" id="log" aria-live="polite"></ol>
+      </div>
+
+      <div class="panel chart">
+        <svg id="chart" viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Curvas de temperatura dos 12 sensores ao longo do ciclo">
+          <g class="grid" id="grid"></g>
+          <rect class="band" id="band" x="0" y="0" width="0" height="0"/>
+          <g class="axis" id="axis"></g>
+          <g class="series" id="series"></g>
+          <line class="cursor" id="cursor" x1="0" x2="0" y1="0" y2="280"/>
+        </svg>
+        <div class="stamp" id="stamp" aria-hidden="true"><b>APROVADO</b><small id="stamp-sub">12/12 sensores</small></div>
+      </div>
+
+      <div class="sensors" id="sensors"></div>
+
+      <div class="status" role="status" aria-live="off">
+        <span><i class="dot" id="st-dot"></i><span id="st-text">Termodesinfectora 01 · aguardando</span></span>
+        <span class="hide-m" id="st-time">t = 00:00</span>
+        <span class="hide-m" id="st-f0">A0 mín = 0 s</span>
+        <span class="demo">ciclo simulado · dados de exemplo</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- A4 · SUBSTANCE: flow, the method in prose. -->
+  <section id="metodo" class="sc-section" data-sc-act="flow">
+    <div class="method">
+      <div data-sc-in data-sc-stagger="70">
+        <h2>Como definimos os pontos de medição.</h2>
+        <p>Os termopares são presos às superfícies da carga de referência, nos pontos mais difíceis de aquecer: cesto inferior, cantos do rack, perto da porta e longe dos braços de aspersão. Um deles fica junto ao sensor de controle da lavadora, para comparar a leitura do equipamento com a medição independente.</p>
+        <p>O A0 é o tempo equivalente, em segundos, a 80 °C (z = 10 °C), somado a partir de 65 °C. A ISO 15883 pede que a carga fique na faixa de desinfecção (temperatura ajustada a +5 °C) durante todo o tempo de manutenção. O critério vale para o A0 mínimo, ou seja, para o sensor mais frio: 3000 s para instrumentos críticos e semicríticos.</p>
+        <div class="norms">
+          <div><b>ABNT NBR ISO 15883-1 e -2</b><span>Requisitos e ensaios para lavadoras termodesinfectoras de instrumentos cirúrgicos</span></div>
+          <div><b>ISO/TS 15883-5</b><span>Sujidades-teste e métodos para comprovar a eficácia da limpeza</span></div>
+          <div><b>RDC 15/2012</b><span>Boas práticas no processamento de produtos para saúde</span></div>
+          <div><b>Rastreabilidade RBC</b><span>Termopares verificados antes e depois do estudo</span></div>
+        </div>
+      </div>
+      <figure class="shot" data-sc-reveal="left" data-sc-reveal-at="0.10 0.45">
+        <img src="seq/f_0127.webp" width="1920" height="1080" alt="Interior da câmara da lavadora com cestos de instrumentos e sensores de temperatura presos à carga" loading="lazy">
+        <figcaption>Render ilustrativo · carga com sensores</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- A3 · RANGE: pan across the three qualification reports. -->
+  <section id="laudos" data-sc-act="pan" data-sc-span="3">
+    <div data-sc-stage>
+      <div class="rail" data-sc-pan="0.04">
+        <div class="rail__lead">
+          <h2>QI, QO, QD</h2>
+          <p>O ciclo que você rodou é um ensaio de QD. Antes dele, a QI confirma instalação e utilidades, e a QO comprova o desempenho da câmara vazia. Os critérios de aceitação ficam definidos no protocolo antes do ensaio. No final, você recebe um relatório completo, assinado pelo responsável técnico, comprovando que o equipamento atende aos critérios preestabelecidos.</p>
+        </div>
+        <article class="doc">
+          <header><b>QI</b><span>Instalação</span></header>
+          <h3>A instalação atende à especificação?</h3>
+          <ul><li><span>Utilidades: água, energia, vapor, ar, drenagem</span><span>conforme</span></li><li><span>Qualidade da água de enxágue final</span><span>conforme</span></li><li><span>Instrumentação de controle calibrada</span><span>conforme</span></li></ul>
+          <footer><span>Termodesinfectora 01 · p. 1/12</span><span class="sig">Resp. técnico</span></footer>
+        </article>
+        <article class="doc">
+          <header><b>QO</b><span>Operação</span></header>
+          <h3>A lavadora cumpre o programa como especificado?</h3>
+          <ul><li><span>Temperatura de câmara e carga por fase</span><span>conforme</span></li><li><span>Dosagem de detergente e neutralizante</span><span>conforme</span></li><li><span>Pressão e cobertura dos braços de aspersão</span><span>conforme</span></li></ul>
+          <footer><span>Termodesinfectora 01 · p. 1/20</span><span class="sig">Resp. técnico</span></footer>
+        </article>
+        <article class="doc">
+          <header><b>QD</b><span>Desempenho</span></header>
+          <h3>A carga de referência sai limpa e desinfetada?</h3>
+          <ul><li><span>Eficácia de limpeza com sujidade-teste</span><span>conforme</span></li><li><span>Resíduo de proteína na carga</span><span>conforme</span></li><li><span>A0 mínimo por sensor ≥ 3000 s</span><span>conforme</span></li><li><span>Secagem da carga</span><span>conforme</span></li></ul>
+          <footer><span>Termodesinfectora 01 · p. 1/28</span><span class="sig">Resp. técnico</span></footer>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- A5 · COMMITMENT: pin, a real input. Last element on the page. -->
+  <section id="cotacao" data-sc-act="pin" data-sc-span="1.1">
+    <div data-sc-stage class="close">
+      <div class="close__lead">
+        <h2>Qual equipamento vamos qualificar?</h2>
+        <p>Informe tipo e quantidade de equipamentos. Respondemos com escopo (QI, QO, QD ou requalificação periódica), número de ciclos de ensaio, prazo e normas aplicáveis.</p>
+      </div>
+      <form class="panel form" id="quote" novalidate>
+        <div class="row">
+          <label class="field">Tipo de equipamento
+            <select name="tipo"><option>Lavadora termodesinfectora</option><option>Autoclave a vapor</option><option>Estufa / câmara climática</option><option>Seladora</option></select>
+          </label>
+          <label class="field">Quantidade
+            <input name="qtd" type="number" min="1" max="99" value="1" inputmode="numeric">
+          </label>
+        </div>
+        <div class="row">
+          <label class="field">Instituição
+            <input name="inst" type="text" placeholder="Hospital, clínica ou CME" autocomplete="organization">
+          </label>
+          <label class="field">Cidade
+            <input name="cidade" type="text" placeholder="ex: São Paulo" autocomplete="address-level2">
+          </label>
+        </div>
+        <div class="cmd">
+          <button class="btn" type="submit">Pedir cotação <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <output id="quote-out" aria-live="polite"></output>
+        </div>
+      </form>
+      <div class="foot"><span>LabQuali · Qualificação térmica e calibração</span><span>labquali@labquali.com.br</span><span>Demonstração · lavadora genérica renderizada, ciclo simulado</span></div>
+    </div>
+  </section>
+
+</main>
+
+<script src="scrollcraft.js"></script>
+<script>ScrollCraft.mount(document.body);</script>
+<script type="importmap">{ "imports": { "three": "/afr_labquali_website/static/demos/_vendor/three.module.js" } }</script>
+<script type="module">
+import * as THREE from 'three';
+const host = document.getElementById('chamber3d');
+const LQ = window.LQ, N = LQ.POS.length;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+host.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(32, 1.3, 0.1, 50);
+cam.position.set(0, 1.05, 3.5); cam.lookAt(0, -0.02, 0);
+
+// chamber: rounded-square ("cylindrical with rounded corners") cross-section extruded along depth
+const A = 0.62, B = 0.66, L = 1.5, NEXP = 9;            // half width, half height, length, superellipse exponent
+const RING = 72, SEG = 36;
+function section(t) {                                    // t in [0,1) around the perimeter
+  const th = t * Math.PI * 2, c = Math.cos(th), s = Math.sin(th);
+  return [A * Math.sign(c) * Math.pow(Math.abs(c), 2 / NEXP), B * Math.sign(s) * Math.pow(Math.abs(s), 2 / NEXP)];
+}
+// sensor world positions
+const SP = LQ.POS.map(p => new THREE.Vector3((p[0] - .5) * 2 * A * .82, (p[1] - .5) * 2 * B * .82, (p[2] - .5) * L * .9));
+
+// iron palette, like a thermal camera
+const IRON = [[20,40,200],[0,150,255],[0,220,200],[80,220,60],[255,225,0],[255,130,0],[230,20,20]];   // blue (cold) → red (hot)
+function iron(s, out) {
+  s = Math.max(0, Math.min(1, s)); const p = s * (IRON.length - 1), j = Math.min(IRON.length - 2, Math.floor(p)), f = p - j;
+  for (let c = 0; c < 3; c++) out[c] = (IRON[j][c] + (IRON[j + 1][c] - IRON[j][c]) * f) / 255;
+  return out;
+}
+// inverse-distance weights, precomputed per vertex
+function weights(pos) {
+  const n = pos.length / 3, W = new Float32Array(n * N), v = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    v.fromArray(pos, i * 3); let sum = 0;
+    for (let k = 0; k < N; k++) { const d2 = v.distanceToSquared(SP[k]) + 1e-4, w = 1 / Math.pow(d2, 3); W[i * N + k] = w; sum += w; }
+    for (let k = 0; k < N; k++) W[i * N + k] /= sum;
+  }
+  return W;
+}
+function thermalMesh(geo, opacity) {
+  const pos = geo.attributes.position.array;
+  geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(pos.length), 3));
+  const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false }));
+  m.userData.W = weights(pos); return m;
+}
+// shell
+const sp = [], idx = [];
+for (let j = 0; j <= SEG; j++) for (let i = 0; i < RING; i++) { const [x, y] = section(i / RING); sp.push(x, y, -L / 2 + L * j / SEG); }
+for (let j = 0; j < SEG; j++) for (let i = 0; i < RING; i++) {
+  const a = j * RING + i, b = j * RING + (i + 1) % RING, c = a + RING, d = b + RING; idx.push(a, b, c, b, d, c);
+}
+const shellGeo = new THREE.BufferGeometry(); shellGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); shellGeo.setIndex(idx);
+const shell = thermalMesh(shellGeo, 0.16);
+// interior: a cloud of particles filling the chamber volume, each coloured by the interpolated temperature
+const CLOUD = 5000, cp = [];
+while (cp.length < CLOUD * 3) {
+  const x = (Math.random() * 2 - 1) * A, y = (Math.random() * 2 - 1) * B;
+  if (Math.pow(Math.abs(x / A), NEXP) + Math.pow(Math.abs(y / B), NEXP) > 0.86) continue;
+  cp.push(x, y, (Math.random() - 0.5) * L * 0.97);
+}
+const cloudGeo = new THREE.BufferGeometry(); cloudGeo.setAttribute('position', new THREE.Float32BufferAttribute(cp, 3));
+cloudGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(cp.length), 3));
+const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.35, 'rgba(255,255,255,.4)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+const cloud = new THREE.Points(cloudGeo, new THREE.PointsMaterial({ size: 0.2, map: dotTex, vertexColors: true, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true }));
+cloud.userData.W = weights(cp);
+const grp = new THREE.Group(); grp.add(shell, cloud); scene.add(grp);
+
+// door flange and back ring
+function ring(z, op) {
+  const pts = []; for (let i = 0; i <= RING; i++) { const [x, y] = section(i / RING); pts.push(new THREE.Vector3(x, y, z)); }
+  return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: op }));
+}
+grp.add(ring(L / 2, 0.75), ring(L / 2 + 0.03, 0.35), ring(-L / 2, 0.3));
+// longitudinal edge lines on the rounded corners
+[0.125, 0.375, 0.625, 0.875].forEach(t => { const [x, y] = section(t);
+  grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, y, -L / 2), new THREE.Vector3(x, y, L / 2)]),
+    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18 }))); });
+
+// sensors: glowing beads with numbered labels
+function label(n, cold) {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  g.fillStyle = cold ? '#ff6a2b' : 'rgba(5,8,13,.85)'; g.beginPath(); g.arc(32, 32, 26, 0, 7); g.fill();
+  g.strokeStyle = cold ? '#fff' : 'rgba(255,255,255,.7)'; g.lineWidth = 3; g.stroke();
+  g.fillStyle = '#fff'; g.font = '600 26px IBM Plex Mono, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(n, 32, 34);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false, transparent: true }));
+  s.scale.setScalar(cold ? 0.17 : 0.13); return s;
+}
+const beads = SP.map((p, k) => {
+  const b = new THREE.Mesh(new THREE.SphereGeometry(k === LQ.cold ? 0.045 : 0.032, 20, 12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  b.position.copy(p); grp.add(b);
+  const l = label(k + 1, k === LQ.cold); l.position.copy(p).add(new THREE.Vector3(0, 0.1, 0)); grp.add(l);
+  return b;
+});
+
+// paint: auto-ranged like a thermal camera (min span 2 °C so plateau noise does not saturate)
+const tmp = [0, 0, 0], lo$ = document.getElementById('lg-lo'), hi$ = document.getElementById('lg-hi');
+const fmt = v => v.toFixed(1).replace('.', ',') + ' °C';
+let lastSig = '';
+const cards = document.querySelectorAll('#sensors > div');
+function paint() {
+  const T = LQ.temps, sig = T.map(v => v.toFixed(2)).join();
+  if (sig === lastSig) return; lastSig = sig;
+  const lo = 75, hi = 95;                                 // fixed scale: blue 75 °C → red 95 °C
+  for (const m of [shell, cloud]) {
+    const W = m.userData.W, col = m.geometry.attributes.color, n = col.count;
+    for (let i = 0; i < n; i++) { let v = 0; for (let k = 0; k < N; k++) v += W[i * N + k] * T[k]; iron((v - lo) / (hi - lo), tmp); col.setXYZ(i, tmp[0], tmp[1], tmp[2]); }
+    col.needsUpdate = true;
+  }
+  beads.forEach((b, k) => { iron((T[k] - lo) / (hi - lo), tmp); b.material.color.setRGB(tmp[0], tmp[1], tmp[2]);
+    const c = cards[k]; if (!c) return; const rgb = tmp.map(x => Math.round(x * 255)).join(',');
+    c.style.borderColor = 'rgb(' + rgb + ')'; c.style.background = 'linear-gradient(180deg, rgba(' + rgb + ',.28), rgba(' + rgb + ',.08))';
+    c.style.boxShadow = 'inset 0 3px 0 rgb(' + rgb + ')'; });
+}
+function size() {
+  const w = host.clientWidth, h = host.clientHeight; if (!w || !h) return;
+  renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
+}
+new ResizeObserver(size).observe(host); size();
+let visible = false;
+new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(host);
+const t0 = performance.now();
+function loop(now) {
+  requestAnimationFrame(loop); if (!visible) return;
+  grp.rotation.y = reduce ? -0.6 : -0.6 + ((now - t0) / 1000) * 0.35;
+  grp.rotation.x = reduce ? 0 : Math.sin((now - t0) / 4000) * 0.08;
+  paint(); renderer.render(scene, cam);
+}
+requestAnimationFrame(loop);
+</script>
+
+<script>
+(function () {
+  /* ---------------- the simulated cycle: real arithmetic on sample data ---------------- */
+  var N = 12, TMAX = 30, STEPS = 600, DT = TMAX / STEPS;         // minutes
+  var T_REF = 80, Z = 10, SET = 91, BAND_LO = 90, BAND_HI = 95, A0_MIN = 3000;
+  var PLATEAU = [17, 22];
+  // per-sensor personality: lag (min) and plateau offset (°C). Sensor 8 is the cold spot.
+  var LAG = [0.10, 0.20, 0.15, 0.30, 0.05, 0.25, 0.20, 0.95, 0.10, 0.35, 0.15, 0.20];
+  var OFF = [0.6, 0.4, 0.8, 2.75, 0.9, 0.5, 0.4, 0.25, 0.7, 0.3, 0.6, 0.5];
+
+  function base(t) {
+    if (t <= 0) return 24;
+    if (t < 3) return 24 + 6 * (t / 3);                                   // cold pre-wash (< 35 °C, no protein fixing)
+    if (t < 5) return 30 + 20 * ((t - 3) / 2);                            // heat to wash temperature
+    if (t < 10) return 50;                                               // enzymatic wash
+    if (t < 12) return 50 - 10 * ((t - 10) / 2);                          // neutralising rinse
+    if (t < 17) return 40 + (SET - 40) * Math.min(1, (t - 12) / 4.6);     // heat-up to disinfection
+    if (t < 22) return SET;                                              // holding time
+    if (t < 24) return SET - 16 * ((t - 22) / 2);                         // drain
+    return 75 + 9 * ((t - 24) / 6);                                      // hot-air drying
+  }
+  function temp(i, t) {
+    var v = base(t - LAG[i]);
+    var plateau = t > PLATEAU[0] + LAG[i] && t < PLATEAU[1];
+    if (plateau) v += OFF[i] + 0.12 * Math.sin(t * 3 + i);
+    return v;
+  }
+  // precompute every sample and the cumulative A0 (seconds) per sensor
+  var T = [], F = [];
+  for (var i = 0; i < N; i++) {
+    T[i] = new Float32Array(STEPS + 1); F[i] = new Float32Array(STEPS + 1);
+    var acc = 0;
+    for (var k = 0; k <= STEPS; k++) {
+      var tt = k * DT, v = temp(i, tt);
+      T[i][k] = v;
+      if (k > 0 && v >= 65) acc += Math.pow(10, (v - T_REF) / Z) * DT * 60;
+      F[i][k] = acc;
+    }
+  }
+  var plateauOK = true;
+  for (i = 0; i < N; i++) for (k = Math.ceil((PLATEAU[0] + 1.2) / DT); k <= Math.floor((PLATEAU[1] - 0.2) / DT); k++)
+    if (T[i][k] < BAND_LO || T[i][k] > BAND_HI) plateauOK = false;
+
+  /* ---------------- drawing ---------------- */
+  var W = 640, H = 280, Y0 = 15, Y1 = 100;
+  function x(t) { return 34 + (t / TMAX) * (W - 70); }
+  function y(v) { return H - ((v - Y0) / (Y1 - Y0)) * (H - 10); }
+  function colour(v) {                       // 25 → 137 across navy, sand, accent, deep red
+    var s = Math.max(0, Math.min(1, (v - 25) / 112));
+    var stops = [[44,93,138],[217,180,74],[255,106,43],[224,38,43]];
+    var p = s * 3, j = Math.min(2, Math.floor(p)), f = p - j, a = stops[j], b = stops[j + 1];
+    return 'rgb(' + [0,1,2].map(function (c) { return Math.round(a[c] + (b[c] - a[c]) * f); }).join(',') + ')';
+  }
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var a in attrs) e.setAttribute(a, attrs[a]); parent && parent.appendChild(e); return e; }
+
+  var grid = document.getElementById('grid'), axis = document.getElementById('axis');
+  [20, 35, 50, 65, 80, 90].forEach(function (v) {
+    el('line', { x1: 34, x2: W - 36, y1: y(v), y2: y(v) }, grid);
+    el('text', { x: 0, y: y(v) + 3 }, axis).textContent = v + '°';
+  });
+  [0, 5, 10, 15, 20, 25, 30].forEach(function (m) { el('text', { x: x(m) - 8, y: H + 16 }, axis).textContent = m + ' min'; });
+  var band = document.getElementById('band');
+  band.setAttribute('x', x(PLATEAU[0])); band.setAttribute('width', x(PLATEAU[1]) - x(PLATEAU[0]));
+  band.setAttribute('y', y(BAND_HI)); band.setAttribute('height', y(BAND_LO) - y(BAND_HI));
+
+  var series = document.getElementById('series'), lines = [];
+  for (i = 0; i < N; i++) lines.push(el('polyline', { stroke: i === 7 ? '#ff6a2b' : '#7fb0e0', 'stroke-opacity': i === 7 ? 1 : .5 }, series));
+
+  // sensor positions in the chamber (x width, y height, z depth: 0 door → 1 back). S8 = cold spot near the drain.
+  var POS = [[.5,.5,0],[.15,.82,.25],[.8,.18,.15],[.5,.85,.5],[.12,.45,.45],[.5,.5,.5],[.88,.5,.45],[.5,.12,.55],
+             [.55,.5,.85],[.4,.85,.85],[.88,.35,.85],[.8,.82,1]];
+  window.LQ = { POS: POS, temps: POS.map(function () { return 25; }), cold: 7 };
+  var sensorsBox = document.getElementById('sensors'), cells = [];
+  for (i = 0; i < N; i++) {
+    var d = document.createElement('div'); if (i === 7) d.className = 'lag';
+    d.innerHTML = '<span>S' + (i + 1) + (i === 7 ? ' · ponto frio' : '') + '</span><b>25,0 °C</b>';
+    sensorsBox.appendChild(d); cells.push(d.querySelector('b'));
+  }
+
+  var LOG = [
+    [0.2,  'Início do ciclo. <em>Pré-lavagem</em> com água fria (&lt; 35 °C)'],
+    [4,    '<em>Lavagem</em> com detergente enzimático a 50 °C'],
+    [10,   'Neutralização e enxágue intermediário'],
+    [12,   '<em>Aquecimento</em> para a desinfecção térmica'],
+    [16.3, 'Câmara em 91 °C. S8 (cesto inferior) ainda abaixo de 90 °C'],
+    [17.6, '12/12 sensores na faixa 90–95 °C. <em>Tempo de manutenção</em>'],
+    [22,   'Fim da desinfecção. Drenagem'],
+    [24,   '<em>Secagem</em> com ar quente. A0 mínimo calculado por sensor']
+  ];
+  var logEl = document.getElementById('log'), logLis = LOG.map(function (l) {
+    var li = document.createElement('li'); li.innerHTML = '<span>' + mmss(l[0]) + '</span> ' + l[1]; logEl.appendChild(li); return li;
+  });
+
+  function mmss(t) { var s = Math.round(t * 60); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+  function br(n, d) { return n.toFixed(d).replace('.', ','); }
+
+  var act = document.getElementById('ciclo');
+  var $ = function (id) { return document.getElementById(id); };
+  var phase = $('phase'), stamp = $('stamp'), cursor = $('cursor');
+  var lastK = -1;
+
+  function render(k) {
+    var t = k * DT, tmin = 999, tmax = -999, fmin = 1e9;
+    for (var i = 0; i < N; i++) {
+      var pts = [], step = 3;
+      for (var j = 0; j <= k; j += step) pts.push(x(j * DT).toFixed(1) + ',' + y(T[i][j]).toFixed(1));
+      pts.push(x(t).toFixed(1) + ',' + y(T[i][k]).toFixed(1));
+      lines[i].setAttribute('points', pts.join(' '));
+      var v = T[i][k]; tmin = Math.min(tmin, v); tmax = Math.max(tmax, v); fmin = Math.min(fmin, F[i][k]);
+      LQ.temps[i] = v;
+      cells[i].textContent = br(v, 1) + ' °C';
+    }
+    cursor.setAttribute('x1', x(t)); cursor.setAttribute('x2', x(t));
+    $('r-t').textContent = mmss(t);
+    $('r-tt').textContent = br(tmin, 1) + ' / ' + br(tmax, 1);
+    $('r-f0').textContent = Math.round(fmin).toLocaleString('pt-BR');
+    $('st-time').textContent = 't = ' + mmss(t);
+    $('st-f0').textContent = 'A0 mín = ' + Math.round(fmin).toLocaleString('pt-BR') + ' s';
+
+    var name, cls = '';
+    if (k === 0) name = 'Aguardando';
+    else if (t < 3) name = 'Pré-lavagem';
+    else if (t < 10) name = 'Lavagem · 50 °C';
+    else if (t < 12) name = 'Enxágue';
+    else if (t < PLATEAU[0] + 0.95) name = 'Aquecimento';
+    else if (t < PLATEAU[1]) { name = 'Desinfecção · 91 °C'; cls = 'is-steril'; }
+    else if (t < 24) name = 'Drenagem';
+    else name = 'Secagem';
+    var done = t >= PLATEAU[1] + 0.2 && plateauOK && fmin >= A0_MIN;
+    if (done) cls = 'is-done';
+    phase.textContent = done ? name + ' · aprovado' : name;
+    phase.className = 'phase ' + cls;
+    stamp.classList.toggle('on', done);
+    $('stamp-sub').textContent = '12/12 sensores · A0 mín ' + Math.round(fmin).toLocaleString('pt-BR') + ' s';
+    logLis.forEach(function (li, n) { li.classList.toggle('on', t >= LOG[n][0]); });
+
+    var dot = $('st-dot'), st = $('st-text');
+    dot.className = 'dot ' + (done ? 'is-ok' : k > 0 ? 'is-run' : '');
+    st.textContent = 'Termodesinfectora 01 · ' + (done ? 'ciclo aprovado' : k > 0 ? 'ciclo em andamento' : 'aguardando');
+  }
+
+  // read the act's progress straight off the engine's --sc-p; leave a little room at both ends
+  function tick() {
+    var p = parseFloat(getComputedStyle(act).getPropertyValue('--sc-p')) || 0;
+    var q = Math.max(0, Math.min(1, (p - 0.04) / 0.86));
+    var k = Math.round(q * STEPS);
+    if (k !== lastK) { lastK = k; render(k); }
+    requestAnimationFrame(tick);
+  }
+  render(0); requestAnimationFrame(tick);
+
+  /* ---------------- nav: the sidebar marks the current screen ---------------- */
+  var navs = document.querySelectorAll('[data-nav]');
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) navs.forEach(function (a) { a.classList.toggle('is-on', a.dataset.nav === e.target.id); }); });
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  ['ciclo', 'laudos', 'metodo'].forEach(function (id) { io.observe(document.getElementById(id)); });
+
+  var bar = document.getElementById('bar');
+  addEventListener('scroll', function () { bar.classList.toggle('is-solid', scrollY > innerHeight * 0.6); }, { passive: true });
+
+  /* ---------------- close: a real input that does something ---------------- */
+  $('quote').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, qtd = Math.max(1, parseInt(f.qtd.value, 10) || 1);
+    var body = 'Gostaria de uma cotação de qualificação térmica.\n\nEquipamento: ' + f.tipo.value + '\nQuantidade: ' + qtd +
+      '\nInstituição: ' + (f.inst.value || '(não informada)') + '\nCidade: ' + (f.cidade.value || '(não informada)');
+    $('quote-out').textContent = 'Abrindo seu e-mail com ' + qtd + ' × ' + f.tipo.value.toLowerCase() + '.';
+    window.location.href = 'mailto:labquali@labquali.com.br?subject=' + encodeURIComponent('Cotação · ' + f.tipo.value) + '&body=' + encodeURIComponent(body);
+  });
+})();
+</script>
+</body>
+</html>

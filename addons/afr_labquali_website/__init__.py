@@ -1,4 +1,5 @@
 # addons/afr_labquali_website/__init__.py
+from . import controllers
 from . import models
 
 # Chaves de views/páginas de CONTEÚDO que o módulo enviava em versões antigas

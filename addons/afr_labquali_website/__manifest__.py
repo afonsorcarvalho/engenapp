@@ -1,7 +1,7 @@
 # addons/afr_labquali_website/__manifest__.py
 {
     "name": "LabQuali Website",
-    "version": "16.0.1.4.1",
+    "version": "16.0.1.5.1",
     "category": "Website",
     "license": "LGPL-3",
     "author": "AFR Sistemas",
