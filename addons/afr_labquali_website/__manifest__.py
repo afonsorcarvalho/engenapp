@@ -1,7 +1,7 @@
 # addons/afr_labquali_website/__manifest__.py
 {
     "name": "LabQuali Website",
-    "version": "16.0.1.6.1",
+    "version": "16.0.1.7.0",
     "category": "Website",
     "license": "LGPL-3",
     "author": "AFR Sistemas",
@@ -18,6 +18,7 @@
         "web.assets_frontend": [
             "afr_labquali_website/static/src/scss/labquali_website.scss",
             "afr_labquali_website/static/src/scss/labquali_snippets.scss",
+            "afr_labquali_website/static/src/js/lq_hero_scene.js",
         ],
     },
     "installable": True,
