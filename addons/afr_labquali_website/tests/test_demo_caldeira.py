@@ -53,3 +53,30 @@ class TestDemoCaldeira(HttpCase):
         self.assertIn("window.LQ_UT", r.text)
         self.assertIn("0,16 mm/ano", r.text)
         self.assertIn("13.4.4.6", r.text)
+
+    def test_valve_frame(self):
+        r = self.url_open("/qualificacao/caldeira/seqv/v_0038.webp")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers.get("Content-Type"), "image/webp")
+
+    def test_safety_valve(self):
+        r = self.url_open("/qualificacao/caldeira")
+        self.assertIn('data-sc-sequence="', r.text)
+        self.assertIn('seqv/v_{iiii}.webp:80:1"', r.text)
+        self.assertIn('data-sc-clip-map="travel"', r.text)
+        m = re.search(
+            r'<script type="application/json" id="psv-data">(.*?)</script>', r.text, re.S
+        )
+        self.assertTrue(m, "psv-data JSON block missing")
+        d = json.loads(m.group(1))
+        self.assertEqual(d["pops"], [38, 54, 70])
+        self.assertEqual(d["pressures"], [10.42, 10.47, 10.45])
+        self.assertEqual(d["pmta"], 10.5)
+        self.assertEqual(d["cert"], "CV-2026-0187")
+        for p in d["pressures"]:
+            self.assertLessEqual(p, d["pmta"])
+            self.assertGreaterEqual(p, d["pmta"] * 0.97)
+        self.assertIn("window.LQ_PSV", r.text)
+        self.assertIn('id="psv-kgf"', r.text)
+        self.assertIn("13.4.4.7.1", r.text)
+        self.assertIn("13.4.1.2 'a'", r.text)
