@@ -1,3 +1,6 @@
+import json
+import re
+
 from odoo.tests import HttpCase, tagged
 
 
@@ -25,3 +28,28 @@ class TestDemoCaldeira(HttpCase):
         r = self.url_open("/qualificacao/caldeira/%2e%2e/autoclave/index.html")
         self.assertIn("/caldeira/../", r.request.url)
         self.assertEqual(r.status_code, 404)
+
+    def test_ultrasound_points(self):
+        r = self.url_open("/qualificacao/caldeira")
+        m = re.search(
+            r'<script type="application/json" id="ut-data">(.*?)</script>', r.text, re.S
+        )
+        self.assertTrue(m, "ut-data JSON block missing")
+        pts = json.loads(m.group(1))["points"]
+        self.assertEqual(len(pts), 12)
+        self.assertEqual(
+            [p["id"] for p in pts],
+            ["C1", "C2", "C3", "C4", "C5", "C6", "E1", "E2", "E3", "F1", "F2", "F3"],
+        )
+        self.assertEqual(
+            [p["read"] for p in pts],
+            [12.4, 12.5, 12.2, 12.6, 12.3, 12.1, 18.6, 18.4, 17.9, 12.0, 11.4, 10.8],
+        )
+        for p in pts:
+            self.assertGreater(p["read"], p["min"], p["id"])
+            self.assertTrue(0 <= p["x"] <= 100 and 0 <= p["y"] <= 100, p["id"])
+        warn = [p["id"] for p in pts if p["read"] - p["min"] < 1.5]
+        self.assertEqual(warn, ["F3"])
+        self.assertIn("window.LQ_UT", r.text)
+        self.assertIn("0,16 mm/ano", r.text)
+        self.assertIn("13.4.4.6", r.text)

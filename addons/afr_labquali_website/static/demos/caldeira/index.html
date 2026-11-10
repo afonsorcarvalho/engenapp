@@ -153,6 +153,87 @@
   .steps .ref { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: .72rem; color: #b5c0cb; }
   .steps .ref span { color: var(--sc-ink-soft); }
 
+  /* ---------- 4 ultrassom: thickness points stamped on the open boiler ---------- */
+  .ut { background: #070b12; --ok-c: var(--ok); --warn-c: var(--warn); --bad-c: #ff4d4f; }
+  /* the frame lives in a fixed 16:9 box sized like object-fit: cover, so points placed in %
+     of the box stay glued to the same spot of the render at any viewport */
+  .ut__box { position: absolute; left: 50%; top: 50%; width: max(100%, calc(100svh * 16 / 9)); aspect-ratio: 16 / 9; transform: translate(-50%, -50%); }
+  .ut__box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ut__scrim { position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(270deg, rgba(5,8,13,.9) 0%, rgba(5,8,13,.62) 30%, rgba(5,8,13,0) 50%),
+                linear-gradient(0deg, rgba(5,8,13,.6) 0%, rgba(5,8,13,0) 20%); }
+  .ut-pt { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; padding: 0; border: 0; background: none; cursor: pointer;
+           opacity: 0; transform: scale(.5); transition: opacity .3s, transform .35s cubic-bezier(.2,.8,.2,1); --c: var(--ok-c); }
+  .ut-pt::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px rgba(5,8,13,.85), 0 0 14px var(--c); }
+  .ut-pt::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--sc-accent); opacity: 0; }
+  .ut-pt.is-warn { --c: var(--warn-c); }
+  .ut-pt.is-bad { --c: var(--bad-c); }
+  .ut-pt.is-on, .ut-pt.is-done { opacity: 1; transform: none; }
+  .ut-pt.is-on::before { background: #fff; box-shadow: 0 0 0 2px rgba(5,8,13,.85), 0 0 18px var(--sc-accent); }
+  .ut-pt.is-on::after { opacity: 1; animation: ut-ping 1.1s ease-out infinite; }
+  .ut-pt.is-done.is-warn::after { border-color: var(--warn-c); opacity: 1; animation: ut-ping 1.4s ease-out infinite; }
+  .ut-pt:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 50%; }
+  .ut-pt span { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); white-space: nowrap; pointer-events: none;
+                font-family: var(--mono); font-size: .66rem; line-height: 1; padding: 4px 6px; border-radius: 5px;
+                background: rgba(5,8,13,.82); color: var(--sc-ink); border: 1px solid var(--line-2); }
+  .ut-pt span b { font-weight: 500; color: var(--c); margin-left: 4px; }
+  .ut-pt:not(.is-done) span b { display: none; }
+  @keyframes ut-ping { 0% { transform: scale(.55); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+  .ut__col { position: absolute; right: var(--pad); top: 50%; transform: translateY(-46%); width: min(390px, 30vw); display: grid; gap: 16px; }
+  .ut__lead h2 { font-weight: 800; font-size: clamp(1.6rem, 2.5vw, 2.4rem); letter-spacing: -.04em; line-height: 1.04; margin: 10px 0 8px; }
+  .ut__lead p { margin: 0; color: var(--sc-ink-soft); line-height: 1.5; font-size: .92rem; }
+  .ut__stack { display: grid; align-items: start; }
+  .ut__stack > * { grid-area: 1 / 1; transition: opacity .4s, transform .45s cubic-bezier(.2,.8,.2,1); }
+  .ut-dev { padding: 16px 18px 16px; background: rgba(8,13,20,.86); backdrop-filter: blur(10px); }
+  .ut-dev__head { display: flex; align-items: center; gap: 10px; }
+  .ut-dev__id { font-family: var(--mono); font-weight: 500; font-size: 1rem; color: var(--sc-ink); }
+  .ut-dev__n { margin-left: auto; }
+  .ut-region { font-family: var(--mono); font-size: .7rem; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line-2); color: #cfd7df; white-space: nowrap; }
+  .ut-scan { display: block; width: 100%; height: auto; margin: 12px 0 10px; border-radius: 8px; background: #03060a; border: 1px solid var(--line); }
+  .ut-scan .grid { stroke: rgba(61,220,151,.08); stroke-width: 1; }
+  .ut-scan .ax { fill: #5c6976; font-family: "IBM Plex Mono", monospace; font-size: 8px; }
+  .ut-scan .min { stroke: var(--warn-c); stroke-width: 1; stroke-dasharray: 3 3; opacity: .8; }
+  .ut-scan .minl { fill: var(--warn-c); font-family: "IBM Plex Mono", monospace; font-size: 8px; }
+  .ut-scan .trace { fill: none; stroke: #3ddc97; stroke-width: 1.4; stroke-linejoin: round; filter: drop-shadow(0 0 3px rgba(61,220,151,.55)); }
+  .ut-read { display: flex; align-items: baseline; gap: 8px; }
+  .ut-read b { font-family: var(--mono); font-weight: 500; font-size: clamp(2.4rem, 3.6vw, 3.3rem); line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .ut-read span { font-family: var(--mono); color: var(--sc-ink-soft); font-size: 1rem; }
+  .ut-ref { margin: 8px 0 0; font-family: var(--mono); font-size: .72rem; color: var(--sc-ink-soft); }
+  .ut-st { margin-top: 12px; display: flex; align-items: center; gap: 9px; padding-top: 11px; border-top: 1px solid var(--line); font-size: .86rem; font-weight: 600; }
+  .ut-st i { width: 10px; height: 10px; border-radius: 50%; background: var(--sc-ink-soft); flex: none; }
+  .ut-dev.is-ok .ut-st i { background: var(--ok-c); box-shadow: 0 0 10px var(--ok-c); }
+  .ut-dev.is-warn .ut-st i { background: var(--warn-c); box-shadow: 0 0 10px var(--warn-c); }
+  .ut-dev.is-bad .ut-st i { background: var(--bad-c); box-shadow: 0 0 10px var(--bad-c); }
+  .ut-dev.is-warn .ut-read b { color: var(--warn-c); }
+  .ut-dev.is-bad .ut-read b { color: var(--bad-c); }
+
+  .ut-card { padding: 20px 20px 18px; background: rgba(8,13,20,.92); backdrop-filter: blur(10px); border-color: rgba(255,176,32,.35); opacity: 0; transform: translateY(14px); pointer-events: none; }
+  .ut.is-card .ut-card { opacity: 1; transform: none; pointer-events: auto; }
+  .ut.is-card .ut-dev { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+  .ut-card h3 { margin: 8px 0 12px; font-size: 1.35rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+  .ut-f { margin: 0; display: grid; gap: 6px; font-family: var(--mono); font-size: .78rem; line-height: 1.45; color: #d5dce3; }
+  .ut-f div { padding: 7px 10px; border-radius: 8px; background: rgba(255,255,255,.03); border: 1px solid var(--line); }
+  .ut-f dt { color: var(--sc-ink-soft); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; }
+  .ut-f dd { margin: 2px 0 0; }
+  .ut-f dd b { color: var(--warn-c); font-weight: 500; }
+  .ut-tl { position: relative; list-style: none; margin: 14px 4px 4px; padding: 0; height: 96px; }
+  .ut-tl::before { content: ""; position: absolute; left: 0; right: 0; top: 29px; height: 3px; border-radius: 3px;
+                   background: linear-gradient(90deg, var(--ok-c) 0%, var(--ok-c) 48%, var(--warn-c) 48%, var(--warn-c) 80%, var(--bad-c) 80%, var(--bad-c) 100%); opacity: .75; }
+  .ut-tl li { position: absolute; top: 0; width: 0; height: 100%; }
+  .ut-tl li::before { content: ""; position: absolute; left: -6px; top: 24px; width: 12px; height: 12px; border-radius: 50%; background: #0b1119; border: 2px solid var(--sc-ink); }
+  .ut-tl b, .ut-tl span { position: absolute; left: 0; transform: translateX(-50%); }
+  .ut-tl b { top: 44px; font-family: var(--mono); font-weight: 500; font-size: .78rem; white-space: nowrap; }
+  .ut-tl span { top: 62px; width: 86px; font-size: .64rem; line-height: 1.3; color: var(--sc-ink-soft); text-align: center; }
+  .ut-tl li:first-child b, .ut-tl li:first-child span { transform: none; left: -6px; text-align: left; }
+  .ut-tl li:first-child span { width: 120px; }
+  .ut-tl li:last-child b { transform: none; left: auto; right: -6px; }
+  .ut-tl li:last-child span { top: 0; width: 240px; transform: none; left: auto; right: -6px; text-align: right; color: #cfd7df; white-space: nowrap; }
+  .ut-tl .now::before { border-color: var(--warn-c); background: var(--warn-c); }
+  .ut-tl .end::before { border-color: var(--bad-c); }
+  .ut-rec { margin: 14px 0 0; padding: 11px 13px; border-radius: 10px; background: rgba(255,106,43,.1); border: 1px solid rgba(255,106,43,.4); font-size: .88rem; font-weight: 600; line-height: 1.45; }
+  .ut-rec small { display: block; margin-top: 5px; font-weight: 400; font-size: .72rem; color: var(--sc-ink-soft); }
+
   /* ---------- mobile ---------- */
   @media (max-width: 860px) {
     .hero .eyebrow { display: none; }
@@ -185,12 +266,35 @@
     .method__lead { grid-template-columns: 1fr; gap: 16px; margin-bottom: 32px; }
     .steps { grid-template-columns: 1fr; gap: 10px; }
     .steps li { padding: 20px 18px 16px; }
+    .ut__box { left: 0; top: 58px; width: 160%; transform: none; }
+    .ut__scrim { background: linear-gradient(0deg, rgba(5,8,13,1) 0%, rgba(5,8,13,1) 50%, rgba(5,8,13,0) 58%); }
+    .ut-pt { width: 24px; height: 24px; margin: -12px 0 0 -12px; }
+    .ut-pt::before { inset: 7px; }
+    .ut-pt span { display: none; }
+    .ut-pt.is-on span, .ut-pt.is-done.is-warn span { display: block; left: 20px; }
+    .ut__col { left: 16px; right: 16px; width: auto; top: auto; bottom: 16px; transform: none; gap: 10px; }
+    .ut__lead p { display: none; }
+    .ut__lead h2 { font-size: 1.35rem; margin: 4px 0 0; }
+    .ut-dev { padding: 12px 14px; }
+    .ut-scan { margin: 8px 0 8px; }
+    .ut-read b { font-size: 2.2rem; }
+    .ut-st { margin-top: 8px; padding-top: 8px; font-size: .8rem; }
+    .ut-card { padding: 14px 14px 12px; }
+    .ut-card h3 { font-size: 1.1rem; margin: 4px 0 8px; }
+    .ut-f { font-size: .72rem; gap: 4px; }
+    .ut-f div { padding: 5px 8px; }
+    .ut-tl { margin: 10px 4px 2px; height: 88px; }
+    .ut-tl span { width: 74px; font-size: .6rem; }
+    .ut-tl li:first-child span { width: 110px; }
+    .ut-rec { margin-top: 8px; font-size: .8rem; padding: 9px 11px; }
   }
   @media (min-width: 861px) and (max-width: 1180px) {
     .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (prefers-reduced-motion: reduce) {
     .btn, .btn svg { transition: none; }
+    .ut-pt, .ut__stack > * { transition: none; }
+    .ut-pt::after { animation: none !important; }
   }
   .mark img { display: block; height: 58px; width: auto; }
   @media (max-width: 860px) { .mark img { height: 46px; } }
@@ -329,7 +433,81 @@
     </div>
   </section>
 
-  <section id="ultrassom"><!-- Task 5: clímax 1, ultrassom de espessura (pin longo) --></section>
+  <!-- 4 · CLÍMAX 1 · ULTRASSOM: twelve thickness points stamped one by one on the open boiler (fixed frame),
+       the gauge's A-scan beside them, then the remaining-life card for the furnace hot spot. -->
+  <section id="ultrassom" data-sc-act="pin" data-sc-span="6">
+    <div data-sc-stage class="ut" id="ut">
+      <div class="ut__box" id="ut-box">
+        <img src="seq/f_0150.webp" width="1920" height="1080" alt="Caldeira com a porta frontal aberta: costado, espelho com os tubos e a boca da fornalha, com os pontos de medição de espessura marcados" loading="lazy">
+      </div>
+      <div class="ut__scrim" aria-hidden="true"></div>
+      <div class="ut__col">
+        <div class="ut__lead">
+          <span class="eyebrow">Ensaio · ultrassom de espessura</span>
+          <h2>Doze pontos. Quanto de chapa ainda resta.</h2>
+          <p>Costado, espelho e fornalha, ponto a ponto. Cada leitura é comparada com a espessura mínima de cálculo da região.</p>
+        </div>
+        <div class="ut__stack">
+          <div class="ut-dev panel" id="ut-dev" aria-live="polite">
+            <div class="ut-dev__head">
+              <b class="ut-dev__id" id="ut-id">C1</b>
+              <span class="ut-region" id="ut-region">Costado</span>
+              <span class="label ut-dev__n" id="ut-n">ponto 1/12</span>
+            </div>
+            <svg class="ut-scan" viewBox="0 0 320 160" role="img" aria-label="A-scan: pulso inicial e eco de fundo; a posição do eco é proporcional à espessura">
+              <g class="grid">
+                <path d="M20 14V140M90 14V140M160 14V140M230 14V140M300 14V140M20 140H310M20 77H310"/>
+              </g>
+              <line class="min" id="ut-minline" x1="160" y1="14" x2="160" y2="140"/>
+              <text class="minl" id="ut-minlabel" x="163" y="22">mín.</text>
+              <path class="trace" id="ut-trace" d="M0 140H320"/>
+              <g class="ax">
+                <text x="20" y="153" text-anchor="middle">0</text>
+                <text x="90" y="153" text-anchor="middle">5</text>
+                <text x="160" y="153" text-anchor="middle">10</text>
+                <text x="230" y="153" text-anchor="middle">15</text>
+                <text x="300" y="153" text-anchor="middle">20 mm</text>
+              </g>
+            </svg>
+            <div class="ut-read"><b id="ut-mm">--,-</b><span>mm</span></div>
+            <p class="ut-ref" id="ut-ref">nominal 12,7 · mín. de cálculo 10,0</p>
+            <div class="ut-st"><i aria-hidden="true"></i><span id="ut-st">Acoplando o transdutor</span></div>
+          </div>
+          <article class="ut-card panel" id="ut-card" aria-label="Vida remanescente da fornalha, ponto F3">
+            <span class="eyebrow">Vida remanescente · fornalha F3</span>
+            <h3>10,8 mm hoje. Cerca de 8 anos pela taxa atual.</h3>
+            <dl class="ut-f">
+              <div><dt>Taxa de corrosão</dt><dd>(12,7 − 10,8) mm / 12 anos ≈ <b>0,16 mm/ano</b></dd></div>
+              <div><dt>Vida remanescente</dt><dd>(10,8 − 9,5) mm / 0,16 mm/ano ≈ <b>8 anos</b></dd></div>
+            </dl>
+            <ol class="ut-tl" aria-label="Linha do tempo da fornalha">
+              <li style="left:0%"><b>2014</b><span>fabricação · 12,7 mm</span></li>
+              <li class="now" style="left:48%"><b>2026</b><span>esta inspeção · 10,8 mm</span></li>
+              <li class="end" style="left:80%"><b>2034</b><span>fim da vida pela taxa atual</span></li>
+              <li style="left:100%"><b>2039</b><span>25 anos: avaliação de integridade — 13.4.4.6</span></li>
+            </ol>
+            <p class="ut-rec">Reinspecionar fornalha em 12 meses; próxima inspeção ≤ metade da vida remanescente.<small>Critério de prática de inspeção (API 510), adotado pelo PLH.</small></p>
+          </article>
+        </div>
+      </div>
+      <script type="application/json" id="ut-data">
+{"points": [
+  {"id": "C1", "region": "Costado", "x": 26.0, "y": 30.0, "nominal": 12.7, "min": 10.0, "read": 12.4},
+  {"id": "C2", "region": "Costado", "x": 29.0, "y": 56.0, "nominal": 12.7, "min": 10.0, "read": 12.5},
+  {"id": "C3", "region": "Costado", "x": 47.0, "y": 28.0, "nominal": 12.7, "min": 10.0, "read": 12.2},
+  {"id": "C4", "region": "Costado", "x": 50.0, "y": 47.0, "nominal": 12.7, "min": 10.0, "read": 12.6},
+  {"id": "C5", "region": "Costado", "x": 57.0, "y": 33.0, "nominal": 12.7, "min": 10.0, "read": 12.3},
+  {"id": "C6", "region": "Costado", "x": 59.0, "y": 54.0, "nominal": 12.7, "min": 10.0, "read": 12.1},
+  {"id": "E1", "region": "Espelho frontal", "x": 14.6, "y": 24.7, "nominal": 19.0, "min": 15.0, "read": 18.6},
+  {"id": "E2", "region": "Espelho frontal", "x": 7.0, "y": 35.5, "nominal": 19.0, "min": 15.0, "read": 18.4},
+  {"id": "E3", "region": "Espelho frontal", "x": 13.2, "y": 74.1, "nominal": 19.0, "min": 15.0, "read": 17.9},
+  {"id": "F1", "region": "Fornalha", "x": 12.2, "y": 43.1, "nominal": 12.7, "min": 9.5, "read": 12.0},
+  {"id": "F2", "region": "Fornalha", "x": 9.1, "y": 54.9, "nominal": 12.7, "min": 9.5, "read": 11.4},
+  {"id": "F3", "region": "Fornalha", "x": 13.2, "y": 60.5, "nominal": 12.7, "min": 9.5, "read": 10.8}
+]}
+      </script>
+    </div>
+  </section>
 
   <section id="valvula"><!-- Task 6: clímax 2, válvula de segurança em bancada (scrub seqv/) --></section>
 
@@ -339,6 +517,94 @@
 
 <script src="scrollcraft.js"></script>
 <script>ScrollCraft.mount(document.body);</script>
+<script>
+/* 4 · ultrassom: p of the pinned act → which of the 12 points is under the probe */
+(function () {
+  var act = document.getElementById('ultrassom'), ut = document.getElementById('ut');
+  if (!act || !ut) return;
+  var PTS = JSON.parse(document.getElementById('ut-data').textContent).points;
+  window.LQ_UT = { points: PTS };
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var P0 = 0.05, P1 = 0.75, PCARD = 0.78, SEG = (P1 - P0) / PTS.length;
+  function $(id) { return document.getElementById(id); }
+  function br(v) { return v.toFixed(1).replace('.', ','); }
+  function ex(mm) { return 20 + mm / 20 * 280; }               // echo x on the 0..20 mm screen
+  function status(p) {
+    var gap = Math.round((p.read - p.min) * 100) / 100;
+    return gap < 0 ? 'bad' : gap < 1.5 ? 'warn' : 'ok';
+  }
+  var ST_TXT = { ok: 'Folga de 1,5 mm ou mais sobre o mínimo', warn: 'Alerta: menos de 1,5 mm acima do mínimo', bad: 'Abaixo do mínimo de cálculo' };
+
+  /* points on the frame: buttons that jump the scroll to their own reading */
+  var box = $('ut-box'), btns = PTS.map(function (p, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ut-pt is-' + status(p);
+    b.style.left = p.x + '%'; b.style.top = p.y + '%';
+    b.setAttribute('aria-label', p.id + ', ' + p.region + ': ' + br(p.read) + ' mm');
+    b.innerHTML = '<span>' + p.id + '<b>' + br(p.read) + '</b></span>';
+    b.addEventListener('click', function () {
+      var r = act.getBoundingClientRect(), travel = act.offsetHeight - innerHeight;
+      scrollTo({ top: scrollY + r.top + (P0 + (i + 0.5) * SEG) * travel, behavior: reduce ? 'auto' : 'smooth' });
+    });
+    box.appendChild(b);
+    return b;
+  });
+
+  /* A-scan trace: rectified initial pulse at x=20 and back-wall echo at ex(read), fixed height */
+  function blip(x, c, h, w) { var d = (x - c) / w; return h * Math.exp(-d * d) * (0.55 + 0.45 * Math.abs(Math.cos(d * 2.6))); }
+  function trace(xe, gain) {
+    var d = 'M0 140';
+    for (var x = 0; x <= 320; x += 1.5) {
+      var n = 1.6 * Math.abs(Math.sin(x * 1.7) * Math.cos(x * 0.53));
+      var y = 140 - n - blip(x, 20, 118, 5) - (xe ? gain * blip(x, xe, 72, 3.2) : 0);
+      d += 'L' + x.toFixed(1) + ' ' + y.toFixed(1);
+    }
+    return d;
+  }
+  var dev = $('ut-dev'), mm = $('ut-mm'), tr = $('ut-trace'), minl = $('ut-minline'), minlab = $('ut-minlabel');
+  var shown = 0, anim = null, last = -2, lastCard = null;
+
+  function setDevice(i) {
+    var p = PTS[Math.max(0, i)], s = status(p);
+    $('ut-id').textContent = p.id;
+    $('ut-region').textContent = p.region;
+    $('ut-n').textContent = 'ponto ' + (Math.max(0, i) + 1) + '/' + PTS.length;
+    $('ut-ref').textContent = 'nominal ' + br(p.nominal) + ' · mín. de cálculo ' + br(p.min) + (i >= 0 ? ' · folga ' + br(p.read - p.min) : '');
+    var xm = ex(p.min); minl.setAttribute('x1', xm); minl.setAttribute('x2', xm); minlab.setAttribute('x', xm + 3);
+    dev.className = 'ut-dev panel' + (i >= 0 ? ' is-' + s : '');
+    $('ut-st').textContent = i >= 0 ? ST_TXT[s] : 'Acoplando o transdutor';
+    if (anim) cancelAnimationFrame(anim);
+    if (i < 0) { shown = 0; mm.textContent = '--,-'; tr.setAttribute('d', trace(0, 0)); return; }
+    var from = shown || p.read * 0.6, to = p.read, t0 = performance.now(), dur = reduce ? 0 : 420;
+    (function step(now) {
+      var k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3);
+      shown = from + (to - from) * e;
+      mm.textContent = br(k < 1 ? shown : to);
+      tr.setAttribute('d', trace(ex(shown), Math.min(1, 0.25 + e)));
+      anim = k < 1 ? requestAnimationFrame(step) : null;
+    })(t0);
+  }
+
+  function render(i, all, card) {
+    btns.forEach(function (b, n) {
+      b.classList.toggle('is-on', n === i && !all);
+      b.classList.toggle('is-done', reduce || all || n < i);
+    });
+    if (i !== last) { last = i; setDevice(i); }
+    if (card !== lastCard) { lastCard = card; ut.classList.toggle('is-card', card); }
+  }
+
+  // read the act's progress straight off the engine's --sc-p, like the autoclave's tick()
+  function tick() {
+    var p = parseFloat(getComputedStyle(act).getPropertyValue('--sc-p')) || 0;
+    var i = p < P0 ? -1 : Math.min(PTS.length - 1, Math.floor((p - P0) / SEG));
+    render(i, p >= P1, reduce || p >= PCARD);                  // past P1 all are stamped; the gauge holds F3
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
 <script>
 (function () {
   /* nav: mark the section on screen (only ids that exist on the page) */
