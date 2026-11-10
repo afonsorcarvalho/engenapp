@@ -19,7 +19,7 @@ from odoo.http import request
 from odoo.modules.module import get_module_resource
 
 MODULE = "afr_labquali_website"
-DEMOS = ("autoclave", "termodesinfectora", "estufa", "camara-fria")
+DEMOS = ("autoclave", "termodesinfectora", "estufa", "camara-fria", "caldeira")
 _REL_ATTR = re.compile(r'((?:src|href|data-sc-sequence)=")(?![#/]|https?:|mailto:|data:)')
 _STATIC_PREFIX = "/%s/static/demos/" % MODULE
 mimetypes.add_type("image/webp", ".webp")

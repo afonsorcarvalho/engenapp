@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LabQuali · Inspeção NR-13 de caldeiras</title>
+<meta name="description" content="Inspeção de segurança NR-13 em caldeiras: exame externo e interno, ultrassom de espessura, válvula de segurança testada em bancada e relatório assinado por PLH com ART.">
+<meta name="theme-color" content="#05080d">
+<link rel="icon" href="logo-dark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="preload" as="image" href="seq/f_0001.webp">
+<link rel="stylesheet" href="scrollcraft.css">
+<style>
+  :root {
+    --sc-canvas:     #05080d;
+    --sc-surface:    #0b1119;
+    --sc-ink:        #eef2f6;
+    --sc-ink-soft:   #8d9aa8;
+    --sc-accent:     #ff6a2b;
+    --sc-accent-ink: #120700;
+    --sc-font-display: "Manrope", system-ui, sans-serif;
+    --sc-font-text:    "Manrope", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --line: rgba(255,255,255,.08);
+    --line-2: rgba(255,255,255,.14);
+    --ok: #3ddc97;
+    --warn: #ffb020;
+    --navy: #0d2a4a;
+    --pad: clamp(20px, 4vw, 64px);
+  }
+  html { background: var(--sc-canvas); }
+  body { background: var(--sc-canvas); color: var(--sc-ink); font-family: var(--sc-font-text); -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--sc-accent); color: var(--sc-accent-ink); }
+  a { color: inherit; }
+
+  /* ---------- top bar ---------- */
+  .bar {
+    position: fixed; inset: 0 0 auto 0; z-index: 60; height: 68px;
+    display: flex; align-items: center; gap: 28px; padding: 0 var(--pad);
+    background: linear-gradient(to bottom, rgba(5,8,13,.78), rgba(5,8,13,0));
+    backdrop-filter: blur(0px);
+  }
+  .bar.is-solid { background: rgba(5,8,13,.82); backdrop-filter: blur(14px) saturate(1.2); border-bottom: 1px solid var(--line); }
+  .mark { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.08rem; letter-spacing: -.01em; text-decoration: none; }
+  .mark small { font-weight: 500; color: var(--sc-ink-soft); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; margin-left: 4px; }
+  .bar .back { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-size: .85rem; font-weight: 600; color: var(--sc-ink-soft); padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; transition: color .2s, border-color .2s; white-space: nowrap; }
+  .bar .back:hover { color: var(--sc-ink); border-color: var(--sc-accent); }
+  .bar .back:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; }
+  .bar .back .short { display: none; }
+  .bar nav { display: flex; gap: 4px; margin-left: auto; }
+  .bar nav a { text-decoration: none; font-size: .88rem; color: var(--sc-ink-soft); padding: 8px 12px; border-radius: 8px; transition: color .2s; }
+  .bar nav a:hover, .bar nav a.is-on { color: var(--sc-ink); }
+  .bar nav a:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+    font: inherit; font-weight: 700; font-size: .92rem; letter-spacing: .005em;
+    padding: 11px 18px; border-radius: 999px; border: 0; cursor: pointer;
+    background: var(--sc-accent); color: var(--sc-accent-ink);
+    transition: transform .2s cubic-bezier(.2,.8,.2,1), background .2s;
+  }
+  .btn:hover { transform: translateY(-1px); background: #ff7c45; }
+  .btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .btn svg { transition: transform .2s; }
+  .btn:hover svg { transform: translateX(3px); }
+
+  .eyebrow { font-family: var(--mono); font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--sc-accent); }
+  .mono { font-family: var(--mono); }
+  .label { font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--sc-ink-soft); }
+  .panel { background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015)); border: 1px solid var(--line); border-radius: 16px; }
+
+  /* ---------- 1 hero: rendered boiler sequence ---------- */
+  .hero { background: #070b12; }
+  .hero canvas, .hero .sc-stage__poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  @media (min-width: 861px) {
+    /* park the boiler right of the headline while the headline is up, then glide back to
+       full bleed by the first beat (p 0.30): the boiler house wall is lighter than the
+       autoclave studio, so a scaled, masked canvas would show its edges here. */
+    .hero { --hx: min(1, calc(var(--sc-p, 0) * 3.4)); }
+    .hero canvas, .hero .sc-stage__poster { transform: translateX(calc(16vw * (1 - var(--hx))));
+      -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,var(--hx)) 0%, #000 34%); mask-image: linear-gradient(90deg, rgba(0,0,0,var(--hx)) 0%, #000 34%); }
+  }
+  .hero__scrim { position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, rgba(5,8,13,.86) 0%, rgba(5,8,13,.55) 30%, rgba(5,8,13,0) 55%),
+                linear-gradient(0deg, rgba(5,8,13,.9) 0%, rgba(5,8,13,0) 22%); }
+  .hero__copy { position: absolute; left: var(--pad); bottom: clamp(56px, 12vh, 140px); max-width: 620px; }
+  .hero h1 { font-weight: 800; font-size: clamp(2.6rem, 6.2vw, 5.6rem); line-height: .98; letter-spacing: -.045em; margin: 18px 0 22px; text-wrap: balance; }
+  .hero p { font-size: clamp(1rem, 1.3vw, 1.18rem); line-height: 1.55; color: #c3ccd6; max-width: 44ch; margin: 0 0 30px; }
+  .hero__meta { display: flex; gap: 28px; margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line-2); }
+  .hero__meta div { font-size: .82rem; color: var(--sc-ink-soft); line-height: 1.4; }
+  .hero__meta b { display: block; color: var(--sc-ink); font-family: var(--mono); font-weight: 500; font-size: .95rem; }
+  .beat { position: absolute; max-width: 430px; padding: 26px 28px; border-radius: 16px; background: rgba(5,8,13,.55); backdrop-filter: blur(12px); border: 1px solid var(--line); }
+  .beat h2 { font-weight: 700; font-size: clamp(1.5rem, 2.7vw, 2.5rem); letter-spacing: -.035em; line-height: 1.06; margin: 12px 0 14px; }
+  .beat p { color: #c3ccd6; line-height: 1.55; margin: 0; }
+  .beat--valves { left: var(--pad); bottom: 14vh; }
+  .beat--shell  { right: var(--pad); top: 24vh; }
+  .beat--door   { right: var(--pad); bottom: 14vh; }
+
+  /* ---------- 2 enquadramento: the nameplate over the parked frame ---------- */
+  .frame { background: #070b12; }
+  .frame__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .frame__scrim { position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(270deg, rgba(5,8,13,.92) 0%, rgba(5,8,13,.7) 34%, rgba(5,8,13,0) 62%),
+                linear-gradient(0deg, rgba(5,8,13,.8) 0%, rgba(5,8,13,0) 26%); }
+  .frame__col { position: absolute; right: var(--pad); top: 50%; transform: translateY(-46%); width: min(500px, 40vw); display: grid; gap: 16px; }
+  .frame__lead h2 { font-weight: 800; font-size: clamp(1.8rem, 3vw, 2.8rem); letter-spacing: -.04em; line-height: 1.02; margin: 12px 0 10px; }
+  .frame__lead p { margin: 0; color: var(--sc-ink-soft); line-height: 1.55; max-width: 44ch; }
+  .plate {
+    position: relative; margin: 0; padding: 22px 24px 24px; border-radius: 10px;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.018) 0 1px, transparent 1px 3px),
+      linear-gradient(160deg, #2a323b 0%, #1a2028 46%, #232a33 100%);
+    border: 1px solid rgba(255,255,255,.16);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 5px rgba(5,8,13,.35), 0 40px 80px -30px rgba(0,0,0,.9);
+  }
+  .plate::before, .plate::after, .plate__rivets::before, .plate__rivets::after {
+    content: ""; position: absolute; width: 9px; height: 9px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #b9c2cb, #59626c 60%, #2a3038);
+    box-shadow: 0 1px 1px rgba(0,0,0,.6);
+  }
+  .plate::before { top: 9px; left: 9px; }
+  .plate::after { top: 9px; right: 9px; }
+  .plate__rivets::before { bottom: 9px; left: 9px; }
+  .plate__rivets::after { bottom: 9px; right: 9px; }
+  .plate__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 0 8px 12px; border-bottom: 1px solid rgba(255,255,255,.16); }
+  .plate__head b { font-family: var(--mono); font-weight: 500; font-size: .78rem; letter-spacing: .2em; text-transform: uppercase; color: #dfe5eb; }
+  .plate__head span { font-family: var(--mono); font-size: .66rem; color: var(--sc-ink-soft); }
+  .plate dl { margin: 6px 0 0; padding: 0 8px; display: grid; }
+  .plate dl > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,.1); }
+  .plate dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: #9aa6b2; }
+  .plate dd { margin: 0; font-family: var(--mono); font-size: .95rem; color: #f2f5f8; font-variant-numeric: tabular-nums; text-align: right; }
+  .plate dd small { color: var(--sc-ink-soft); font-size: .72rem; }
+  .plate .plate__op { margin-top: 10px; padding: 10px 8px 0; display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .plate .plate__op dd { color: var(--sc-accent); }
+  .chip { display: inline-flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: 12px; background: var(--sc-accent); color: var(--sc-accent-ink); font-weight: 700; font-size: .95rem; line-height: 1.35; }
+  .chip b { font-family: var(--mono); font-weight: 500; font-size: .74rem; padding: 3px 8px; border-radius: 6px; background: rgba(18,7,0,.14); white-space: nowrap; }
+  .frame__note { margin: 0; font-size: .84rem; color: var(--sc-ink-soft); line-height: 1.5; }
+  .frame__demo { position: absolute; left: var(--pad); bottom: 22px; font-family: var(--mono); font-size: .7rem; color: var(--sc-ink-soft); }
+
+  /* ---------- 3 etapas: the inspection, step by step ---------- */
+  .method { padding: 160px var(--pad) 150px; max-width: 1320px; margin: 0 auto; }
+  .method__lead { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(30px, 6vw, 96px); align-items: end; margin-bottom: 56px; }
+  .method h2 { font-weight: 800; font-size: clamp(2rem, 3.6vw, 3.4rem); letter-spacing: -.04em; line-height: 1.02; margin: 14px 0 0; }
+  .method__lead p { line-height: 1.7; color: var(--sc-ink-soft); max-width: 50ch; margin: 0; font-size: 1.04rem; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; counter-reset: step; }
+  .steps li { position: relative; padding: 26px 24px 22px; display: flex; flex-direction: column; gap: 10px; border-radius: 16px; border: 1px solid var(--line);
+              background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012)); }
+  .steps li::before { counter-increment: step; content: "0" counter(step); font-family: var(--mono); font-size: .8rem; color: var(--sc-accent); letter-spacing: .1em; }
+  .steps li:nth-child(5) { border-color: rgba(255,106,43,.45); background: linear-gradient(180deg, rgba(255,106,43,.08), rgba(255,255,255,.012)); }
+  .steps h3 { margin: 0; font-size: 1.12rem; font-weight: 700; letter-spacing: -.015em; line-height: 1.25; }
+  .steps p { margin: 0; color: var(--sc-ink-soft); line-height: 1.6; font-size: .93rem; }
+  .steps .ref { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: .72rem; color: #b5c0cb; }
+  .steps .ref span { color: var(--sc-ink-soft); }
+
+  /* ---------- mobile ---------- */
+  @media (max-width: 860px) {
+    .hero .eyebrow { display: none; }
+    .hero b { white-space: nowrap; }
+    .bar { height: 58px; gap: 12px; }
+    .bar nav, .mark small { display: none; }
+    .bar .back { padding: 6px 10px; font-size: .8rem; }
+    .bar .back .long { display: none; }
+    .bar .back .short { display: inline; }
+    .bar .btn { margin-left: auto; padding: 9px 14px; font-size: .82rem; white-space: nowrap; }
+    .hero__scrim { background: linear-gradient(0deg, rgba(5,8,13,.95) 0%, rgba(5,8,13,.6) 45%, rgba(5,8,13,0) 70%); }
+    .hero__copy { right: var(--pad); bottom: 48px; }
+    .hero__meta { gap: 18px; }
+    .beat { left: var(--pad) !important; right: var(--pad) !important; top: auto !important; bottom: 40px !important; max-width: none; padding: 20px; }
+    .frame__bg { height: 46%; object-position: 12% 50%; }
+    .frame__scrim { background: linear-gradient(0deg, rgba(5,8,13,1) 0%, rgba(5,8,13,1) 52%, rgba(5,8,13,0) 62%); }
+    .frame__col { left: 16px; right: 16px; width: auto; top: auto; bottom: 44px; transform: none; gap: 10px; }
+    .frame__lead p { display: none; }
+    .frame__lead h2 { font-size: 1.6rem; margin: 6px 0 0; }
+    .plate { padding: 14px 14px 16px; }
+    .plate__head { flex-wrap: wrap; gap: 2px 12px; }
+    .plate__head b { font-size: .7rem; letter-spacing: .14em; }
+    .plate .plate__op dd small { display: block; }
+    .plate dl > div { padding: 5px 0; }
+    .plate dd { font-size: .82rem; }
+    .chip { font-size: .82rem; padding: 9px 12px; }
+    .frame__note { font-size: .76rem; }
+    .frame__demo { left: 16px; bottom: 14px; font-size: .62rem; }
+    .method { padding: 100px 20px 100px; }
+    .method__lead { grid-template-columns: 1fr; gap: 16px; margin-bottom: 32px; }
+    .steps { grid-template-columns: 1fr; gap: 10px; }
+    .steps li { padding: 20px 18px 16px; }
+  }
+  @media (min-width: 861px) and (max-width: 1180px) {
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn, .btn svg { transition: none; }
+  }
+  .mark img { display: block; height: 58px; width: auto; }
+  @media (max-width: 860px) { .mark img { height: 46px; } }
+</style>
+</head>
+<body>
+
+<span data-sc-progress></span>
+
+<header class="bar" id="bar">
+  <a class="mark" href="/" aria-label="LabQuali, início">
+    <img src="logo-dark.svg" alt="LabQuali · Qualificação térmica e calibração" width="145" height="54">
+  </a>
+  <a class="back" href="/"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M12 7H3M6.5 3.5 3 7l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="long">Voltar ao site</span><span class="short">Site</span></a>
+  <nav aria-label="Seções">
+    <a href="#placa" data-nav="placa">A placa</a>
+    <a href="#etapas" data-nav="etapas">Etapas</a>
+    <a href="#ultrassom" data-nav="ultrassom">Ultrassom</a>
+    <a href="#valvula" data-nav="valvula">Válvula</a>
+    <a href="#relatorio" data-nav="relatorio">Relatório</a>
+  </nav>
+  <a class="btn" href="#relatorio">Pedir orçamento <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+</header>
+
+<main id="top">
+
+  <!-- 1 · HERO: the boiler in its boiler house, scrubbed by scroll. Valves on top → shell → front door opens. -->
+  <section id="inicio" data-sc-act="scrub" data-sc-span="5.2">
+    <div data-sc-stage class="hero">
+      <img class="sc-stage__poster" src="seq/f_0001.webp" alt="" fetchpriority="high">
+      <canvas data-sc-sequence="seq/f_{iiii}.webp:150:1" role="img" aria-label="Caldeira flamotubular horizontal numa casa de caldeiras. A câmera passa pelas duas válvulas de segurança no topo, aproxima do costado e a porta frontal abre, mostrando o espelho com os tubos e a boca da fornalha."></canvas>
+      <div class="hero__scrim" aria-hidden="true"></div>
+      <div class="hero__copy" data-sc-cue="0 0.28 0">
+        <span class="eyebrow">Caldeiras a vapor · inspeção periódica</span>
+        <h1>Inspeção de segurança NR-13</h1>
+        <p>Feita por engenheiro legalmente habilitado (PLH), com ART. Relatório em até 60 dias.</p>
+        <a class="btn" href="#relatorio">Pedir orçamento <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <div class="hero__meta">
+          <div><b>NR-13</b>Portaria MTP 1.846/2022</div>
+          <div><b>PLH + ART</b>responsável técnico</div>
+          <div><b>60 dias</b>prazo do relatório (13.3.8)</div>
+        </div>
+      </div>
+      <div class="beat beat--valves" data-sc-cue="0.30 0.50">
+        <span class="eyebrow">Dispositivos de segurança</span>
+        <h2>Duas válvulas de segurança, abertura ≤ PMTA — 13.4.1.2</h2>
+        <p>Ajustadas em 10,0 e 10,5 kgf/cm², nenhuma acima da PMTA de 10,5. Na inspeção elas saem da caldeira e são desmontadas e testadas em bancada (13.4.4.7).</p>
+      </div>
+      <div class="beat beat--shell" data-sc-cue="0.55 0.75">
+        <span class="eyebrow">Casco</span>
+        <h2>Costado: onde a espessura conta</h2>
+        <p>Corrosão e incrustação comem a chapa por dentro, onde ninguém vê. A espessura é medida por ultrassom, ponto a ponto, e comparada com o mínimo de cálculo.</p>
+      </div>
+      <div class="beat beat--door" data-sc-cue="0.82 0.98">
+        <span class="eyebrow">Exame interno</span>
+        <h2>Porta aberta: espelho e fornalha, o lado fogo</h2>
+        <p>Tubos, solda tubo-espelho e a boca da fornalha, examinados e fotografados. As fotos do exame interno são item obrigatório do relatório (13.4.4.12).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · ENQUADRAMENTO: the nameplate (HTML, not 3D) over the parked last frame; fields land one by one. -->
+  <section id="placa" data-sc-act="pin" data-sc-span="2">
+    <div data-sc-stage class="frame">
+      <img class="frame__bg" src="seq/f_0150.webp" width="1920" height="1080" alt="Caldeira com a porta frontal aberta: espelho com os tubos de fumaça e a boca da fornalha à vista" loading="lazy">
+      <div class="frame__scrim" aria-hidden="true"></div>
+      <div class="frame__col">
+        <div class="frame__lead" data-sc-cue="0.02">
+          <span class="eyebrow">Enquadramento</span>
+          <h2>Primeiro, a placa.</h2>
+          <p>A categoria da caldeira sai da pressão de operação, não da PMTA. É ela que fixa o prazo das inspeções.</p>
+        </div>
+        <figure class="plate" aria-label="Placa de identificação da caldeira (13.4.1.3)">
+          <span class="plate__rivets" aria-hidden="true"></span>
+          <div class="plate__head"><b>Placa de identificação</b><span>NR-13 · 13.4.1.3</span></div>
+          <dl>
+            <div data-sc-cue="0.10"><dt>Fabricante</dt><dd>genérico</dd></div>
+            <div data-sc-cue="0.16"><dt>Nº de ordem</dt><dd>2014-0471</dd></div>
+            <div data-sc-cue="0.22"><dt>Ano de fabricação</dt><dd>2014</dd></div>
+            <div data-sc-cue="0.28"><dt>PMTA</dt><dd>10,5 kgf/cm² <small>(1,03 MPa)</small></dd></div>
+            <div data-sc-cue="0.34"><dt>Capacidade de vapor</dt><dd>2.000 kg/h</dd></div>
+            <div data-sc-cue="0.40"><dt>Superfície de aquecimento</dt><dd>55 m²</dd></div>
+            <div data-sc-cue="0.46"><dt>Código de projeto</dt><dd>ASME I, ed. 2010</dd></div>
+          </dl>
+          <dl class="plate__op" data-sc-cue="0.56"><dt>Pressão de operação</dt><dd>7,0 kgf/cm² <small>(686 kPa)</small></dd></dl>
+        </figure>
+        <div data-sc-cue="0.66"><span class="chip">Categoria B — inspeção interna e externa a cada 12 meses (13.4.4.4)</span></div>
+        <p class="frame__note" data-sc-cue="0.74">Categoria A a partir de 1.960 kPa de pressão de operação (13.4.1.1)</p>
+      </div>
+      <span class="frame__demo">Dados ilustrativos de uma caldeira fictícia</span>
+    </div>
+  </section>
+
+  <!-- 3 · ETAPAS: the six steps of a periodic inspection, each with its subitem. -->
+  <section id="etapas" class="sc-section" data-sc-act="flow">
+    <div class="method">
+      <div class="method__lead" data-sc-in data-sc-stagger="70">
+        <div>
+          <span class="eyebrow">Como é a inspeção</span>
+          <h2>Seis etapas, da papelada ao Registro de Segurança.</h2>
+        </div>
+        <p>Quem conduz e assina é o PLH, Profissional Legalmente Habilitado, com ART. A inspeção periódica tem exame externo e interno. Os ensaios dizem quanto de chapa ainda resta e se a válvula abre onde deve.</p>
+      </div>
+      <ol class="steps" data-sc-in data-sc-stagger="70">
+        <li>
+          <h3>Documentos e Registro de Segurança</h3>
+          <p>Prontuário, projeto de instalação, relatórios anteriores e certificados das válvulas. O Registro de Segurança leva a assinatura do PLH e do operador presente.</p>
+          <div class="ref">13.4.1.5 · 13.4.1.8</div>
+        </li>
+        <li>
+          <h3>Parada, resfriamento e bloqueio</h3>
+          <p>A caldeira para, esfria, é drenada e isolada antes de abrir. A data é combinada com a operação para a parada caber na rotina do serviço.</p>
+          <div class="ref"><span>Preparação para o exame interno</span></div>
+        </li>
+        <li>
+          <h3>Exame externo</h3>
+          <p>Casco, isolamento, suportes e conexões, e os dispositivos obrigatórios: válvula de segurança, indicador de pressão e controle de nível com intertravamento.</p>
+          <div class="ref">13.4.1.2 · 13.4.4.4</div>
+        </li>
+        <li>
+          <h3>Exame interno: lado água e lado fogo</h3>
+          <p>Incrustação e corrosão do lado água; fornalha, espelhos, tubos e solda tubo-espelho do lado fogo. Tudo fotografado para o relatório.</p>
+          <div class="ref">13.4.4.4 · 13.4.4.12</div>
+        </li>
+        <li>
+          <h3>Ensaios: ultrassom e válvula de segurança</h3>
+          <p>Espessura medida por ultrassom nos pontos críticos. A válvula sai da caldeira, é desmontada, inspecionada e testada em bancada.</p>
+          <div class="ref">Válvula 13.4.4.7 · <span>ultrassom: método do PLH</span></div>
+        </li>
+        <li>
+          <h3>Relatório e anotação no Registro</h3>
+          <p>A condição da caldeira é anotada no Registro de Segurança logo após a inspeção. O relatório, com os itens mínimos da norma, sai em até 60 dias.</p>
+          <div class="ref">13.3.8 · 13.3.8.1 · 13.4.4.12</div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="ultrassom"><!-- Task 5: clímax 1, ultrassom de espessura (pin longo) --></section>
+
+  <section id="valvula"><!-- Task 6: clímax 2, válvula de segurança em bancada (scrub seqv/) --></section>
+
+  <section id="relatorio"><!-- Task 7: relatório (pan) e CTA (pin) --></section>
+
+</main>
+
+<script src="scrollcraft.js"></script>
+<script>ScrollCraft.mount(document.body);</script>
+<script>
+(function () {
+  /* nav: mark the section on screen (only ids that exist on the page) */
+  var navs = document.querySelectorAll('[data-nav]');
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) navs.forEach(function (a) { a.classList.toggle('is-on', a.dataset.nav === e.target.id); }); });
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  ['inicio'].concat([].map.call(navs, function (a) { return a.dataset.nav; })).forEach(function (id) {
+    var s = document.getElementById(id); if (s) io.observe(s);          // #inicio clears the mark on the way back up
+  });
+
+  var bar = document.getElementById('bar');
+  addEventListener('scroll', function () { bar.classList.toggle('is-solid', scrollY > innerHeight * 0.6); }, { passive: true });
+})();
+</script>
+</body>
+</html>
