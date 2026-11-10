@@ -67,16 +67,18 @@
 
   .eyebrow { font-family: var(--mono); font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--sc-accent); }
   .mono { font-family: var(--mono); }
+  .nw { white-space: nowrap; }
   .label { font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--sc-ink-soft); }
   .panel { background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015)); border: 1px solid var(--line); border-radius: 16px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
   /* ---------- 1 hero: rendered boiler sequence ---------- */
   .hero { background: #070b12; }
   .hero canvas, .hero .sc-stage__poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   @media (min-width: 861px) {
     /* park the boiler right of the headline while the headline is up, then glide back to
-       full bleed by the first beat (p 0.30): the boiler house wall is lighter than the
-       autoclave studio, so a scaled, masked canvas would show its edges here. */
+       full bleed by the first beat (p 0.30): the boiler house wall is light, so a scaled,
+       masked canvas would show its edges here; slide it instead of scaling it. */
     .hero { --hx: min(1, calc(var(--sc-p, 0) * 3.4)); }
     .hero canvas, .hero .sc-stage__poster { transform: translateX(calc(16vw * (1 - var(--hx))));
       -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,var(--hx)) 0%, #000 34%); mask-image: linear-gradient(90deg, rgba(0,0,0,var(--hx)) 0%, #000 34%); }
@@ -163,12 +165,13 @@
     background: linear-gradient(270deg, rgba(5,8,13,.9) 0%, rgba(5,8,13,.62) 30%, rgba(5,8,13,0) 50%),
                 linear-gradient(0deg, rgba(5,8,13,.6) 0%, rgba(5,8,13,0) 20%); }
   .ut-pt { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; padding: 0; border: 0; background: none; cursor: pointer;
-           opacity: 0; transform: scale(.5); transition: opacity .3s, transform .35s cubic-bezier(.2,.8,.2,1); --c: var(--ok-c); }
+           opacity: 0; transform: scale(.5); visibility: hidden; --c: var(--ok-c);
+           transition: opacity .3s, transform .35s cubic-bezier(.2,.8,.2,1), visibility 0s linear .35s; }
   .ut-pt::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px rgba(5,8,13,.85), 0 0 14px var(--c); }
   .ut-pt::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--sc-accent); opacity: 0; }
   .ut-pt.is-warn { --c: var(--warn-c); }
   .ut-pt.is-bad { --c: var(--bad-c); }
-  .ut-pt.is-on, .ut-pt.is-done { opacity: 1; transform: none; }
+  .ut-pt.is-on, .ut-pt.is-done { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
   .ut-pt.is-on::before { background: #fff; box-shadow: 0 0 0 2px rgba(5,8,13,.85), 0 0 18px var(--sc-accent); }
   .ut-pt.is-on::after { opacity: 1; animation: ut-ping 1.1s ease-out infinite; }
   .ut-pt.is-done.is-warn::after { border-color: var(--warn-c); opacity: 1; animation: ut-ping 1.4s ease-out infinite; }
@@ -184,7 +187,7 @@
   .ut__lead h2 { font-weight: 800; font-size: clamp(1.6rem, 2.5vw, 2.4rem); letter-spacing: -.04em; line-height: 1.04; margin: 10px 0 8px; }
   .ut__lead p { margin: 0; color: var(--sc-ink-soft); line-height: 1.5; font-size: .92rem; }
   .ut__stack { display: grid; align-items: start; }
-  .ut__stack > * { grid-area: 1 / 1; transition: opacity .4s, transform .45s cubic-bezier(.2,.8,.2,1); }
+  .ut__stack > * { grid-area: 1 / 1; transition: opacity .4s, transform .45s cubic-bezier(.2,.8,.2,1), visibility 0s linear .45s; }
   .ut-dev { padding: 16px 18px 16px; background: rgba(8,13,20,.86); backdrop-filter: blur(10px); }
   .ut-dev__head { display: flex; align-items: center; gap: 10px; }
   .ut-dev__id { font-family: var(--mono); font-weight: 500; font-size: 1rem; color: var(--sc-ink); }
@@ -208,9 +211,10 @@
   .ut-dev.is-warn .ut-read b { color: var(--warn-c); }
   .ut-dev.is-bad .ut-read b { color: var(--bad-c); }
 
-  .ut-card { padding: 20px 20px 18px; background: rgba(8,13,20,.92); backdrop-filter: blur(10px); border-color: rgba(255,176,32,.35); opacity: 0; transform: translateY(14px); pointer-events: none; }
-  .ut.is-card .ut-card { opacity: 1; transform: none; pointer-events: auto; }
-  .ut.is-card .ut-dev { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+  .ut-card { padding: 20px 20px 18px; background: rgba(8,13,20,.92); backdrop-filter: blur(10px); border-color: rgba(255,176,32,.35); opacity: 0; transform: translateY(14px); pointer-events: none; visibility: hidden; }
+  .ut.is-card .ut-card { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition-delay: 0s; }
+  .ut.is-card .ut-dev { opacity: 0; transform: translateY(-10px); pointer-events: none; visibility: hidden; }
+  .ut:not(.is-card) .ut-dev { transition-delay: 0s; }          /* visible again at once on the way back up */
   .ut-card h3 { margin: 8px 0 12px; font-size: 1.35rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
   .ut-f { margin: 0; display: grid; gap: 6px; font-family: var(--mono); font-size: .78rem; line-height: 1.45; color: #d5dce3; }
   .ut-f div { padding: 7px 10px; border-radius: 8px; background: rgba(255,255,255,.03); border: 1px solid var(--line); }
@@ -276,6 +280,77 @@
   .psv-stamp span { display: block; margin-top: 3px; font-family: var(--mono); font-size: .7rem; color: #cfe9dc; }
   .psv-chart.is-done .psv-stamp { opacity: 1; transform: rotate(-4deg); }
 
+  /* ---------- 6 relatório: horizontal rail of A4 report pages ---------- */
+  .rep { background: radial-gradient(1100px 600px at 30% 55%, rgba(13,42,74,.35), transparent 65%), var(--sc-canvas); }
+  .rail { display: flex; gap: 28px; align-items: center; height: 100%; padding: 68px var(--pad) 0; box-sizing: border-box; width: max-content; }
+  .rail__lead { width: 380px; flex: none; }
+  .rail__lead h2, .close h2 { font-weight: 800; font-size: clamp(2rem, 3.6vw, 3.4rem); letter-spacing: -.04em; line-height: 1.02; margin: 14px 0 16px; }
+  .rail__lead p { color: var(--sc-ink-soft); line-height: 1.6; margin: 0; max-width: 38ch; }
+  .doc { --h: min(560px, calc(100svh - 150px)); height: var(--h); width: calc(var(--h) / 1.414); flex: none; box-sizing: border-box;
+         padding: 24px 24px 18px; display: flex; flex-direction: column; gap: 10px; overflow: hidden;
+         background: #f3f1ec; color: #14202b; border-radius: 6px; font-size: .78rem; line-height: 1.4;
+         box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 40px 80px -30px rgba(0,0,0,.8), 0 10px 20px -10px rgba(0,0,0,.6); }
+  .doc header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; border-bottom: 2px solid #14202b; padding-bottom: 9px; }
+  .doc header b { font-size: 1.7rem; letter-spacing: -.04em; font-weight: 800; line-height: 1; }
+  .doc header span { font-family: var(--mono); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: #5b6670; text-align: right; }
+  .doc h3 { margin: 0; font-size: .98rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; }
+  .doc p { margin: 0; color: #3b4651; }
+  .doc .k { font-family: var(--mono); font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: #6b757e; }
+  .doc dl { margin: 0; display: grid; }
+  .doc dl > div { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; border-bottom: 1px dotted #c9c3b6; }
+  .doc dt { color: #4b5661; }
+  .doc dd { margin: 0; font-family: var(--mono); font-size: .72rem; text-align: right; font-variant-numeric: tabular-nums; }
+  .doc dd small { color: #6b757e; font-size: .62rem; }
+  .doc table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: .66rem; font-variant-numeric: tabular-nums; }
+  .doc th { text-align: right; font-weight: 500; color: #6b757e; font-size: .56rem; letter-spacing: .08em; text-transform: uppercase; padding: 0 0 4px; border-bottom: 1px solid #14202b; }
+  .doc td { text-align: right; padding: 3px 0; border-bottom: 1px dotted #c9c3b6; }
+  .doc th:first-child, .doc td:first-child, .doc th:nth-child(2), .doc td:nth-child(2) { text-align: left; }
+  .doc tbody th { text-align: left; font-weight: 500; color: inherit; font-size: inherit; letter-spacing: 0; text-transform: none; padding: 3px 0; border-bottom: 1px dotted #c9c3b6; }
+  .doc tr.is-warn td, .doc tr.is-warn th { color: #8a4b00; background: rgba(255,176,32,.16); font-weight: 500; }
+  .doc .ok { color: #13804f; }
+  .doc .wa { color: #a35a00; }
+  .doc figure { margin: 0; flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }     /* the two photos share what the page has left */
+  .doc figure img { display: block; flex: 1 1 0; min-height: 0; width: 100%; height: auto; object-fit: cover; border-radius: 3px; background: #c9c3b6; }
+  .doc figcaption { margin-top: 4px; font-size: .66rem; line-height: 1.35; color: #4b5661; }
+  .doc ol, .doc ul { margin: 0; padding-left: 1.2em; display: grid; gap: 5px; }
+  .doc .box { padding: 9px 11px; border-radius: 4px; border: 1px solid #c9c3b6; background: rgba(255,255,255,.45); }
+  .doc .box.is-verdict { border-color: #13804f; background: rgba(19,128,79,.07); }
+  .doc .next { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 0; border-top: 2px solid #14202b; border-bottom: 1px solid #c9c3b6; }
+  .doc .next b { font-family: var(--mono); font-weight: 500; font-size: 1.15rem; }
+  .doc .sigblock { margin-top: auto; padding-top: 6px; }
+  .doc .sig { display: block; font-family: "Brush Script MT", "Segoe Script", cursive; font-size: 1.55rem; color: #1f3d66; line-height: 1; border-bottom: 1px solid #14202b; padding-bottom: 4px; }
+  .doc footer { margin-top: auto; font-family: var(--mono); font-size: .58rem; color: #6b757e; display: flex; justify-content: space-between; gap: 8px; padding-top: 6px; border-top: 1px solid #d9d3c6; }
+  .doc .sigblock + footer { margin-top: 8px; }
+  .toc { width: 330px; flex: none; padding: 22px 22px 18px; box-sizing: border-box; }
+  .toc h3 { margin: 10px 0 12px; font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em; }
+  .toc ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; counter-reset: it; }
+  .toc li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line); font-size: .78rem; color: #c3ccd6; }
+  .toc li::before { counter-increment: it; content: counter(it, decimal-leading-zero); font-family: var(--mono); font-size: .66rem; color: var(--sc-accent); width: 22px; flex: none; padding-top: 1px; }
+  .toc li span { flex: 1; }
+  .toc li i { font-style: normal; font-family: var(--mono); font-size: .66rem; color: var(--sc-ink-soft); white-space: nowrap; }
+
+  /* ---------- 7 contato: a real input, last element on the page ---------- */
+  .close { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(30px, 6vw, 90px); align-items: center; padding: 90px var(--pad) 40px; box-sizing: border-box; height: 100vh; height: 100svh;
+           background: radial-gradient(900px 500px at 20% 60%, rgba(255,106,43,.09), transparent 60%); }
+  .close__lead p { color: var(--sc-ink-soft); line-height: 1.6; max-width: 40ch; margin: 0; font-size: 1.05rem; }
+  .more { display: inline-flex; align-items: center; gap: 8px; margin-top: 22px; font-weight: 600; font-size: .95rem; text-decoration: none; color: var(--sc-ink);
+          border-bottom: 1px solid rgba(255,106,43,.55); padding-bottom: 3px; transition: border-color .2s, color .2s; }
+  .more:hover { color: #fff; border-color: var(--sc-accent); }
+  .more:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 3px; border-radius: 2px; }
+  .form { padding: 30px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .field { min-width: 0; display: flex; flex-direction: column; gap: 8px; font-size: .8rem; color: var(--sc-ink-soft); }
+  .field input, .field select {
+    font: inherit; font-size: 1rem; color: var(--sc-ink); padding: 13px 14px; border-radius: 10px;
+    border: 1px solid var(--line-2); background: rgba(255,255,255,.03);
+  }
+  .field select option { background: #0b1119; }
+  .field input::placeholder { color: #56626e; }
+  .field input:focus-visible, .field select:focus-visible { outline: none; border-color: var(--sc-accent); box-shadow: 0 0 0 3px rgba(255,106,43,.2); }
+  .cmd { display: flex; gap: 16px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  .cmd output { font-family: var(--mono); font-size: .76rem; color: var(--sc-ink-soft); }
+  .foot { grid-column: 1 / -1; align-self: end; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .76rem; color: #5d6976; border-top: 1px solid var(--line); padding-top: 18px; }
+
   /* ---------- mobile ---------- */
   @media (max-width: 860px) {
     .hero .eyebrow { display: none; }
@@ -340,6 +415,29 @@
     .psv-chart { left: 16px; right: 16px; bottom: 16px; width: auto; padding: 10px 12px 8px; }
     .psv-read b { font-size: 1.5rem; }
     .psv-stamp { right: 4px; bottom: calc(100% + 8px); padding: 7px 10px; }
+    .frame__col { bottom: 58px; }                     /* room for the illustrative-data note below */
+    .rail { padding: 70px 16px 24px; gap: 16px; }
+    .rail__lead { width: 270px; }
+    .rail__lead h2 { font-size: 1.9rem; }
+    .rail__lead p { font-size: .9rem; }
+    .doc { --h: min(470px, calc(100svh - 110px)); padding: 16px 16px 12px; gap: 7px; font-size: .7rem; }
+    .doc header b { font-size: 1.35rem; }
+    .doc h3 { font-size: .86rem; }
+    .doc dd { font-size: .64rem; }
+    .doc table { font-size: .6rem; }
+    .doc td { padding: 2px 0; }
+    .doc figcaption { font-size: .6rem; }
+    .doc .sig { font-size: 1.3rem; }
+    .toc { width: 280px; padding: 16px; }
+    .toc li { font-size: .72rem; padding: 4px 0; }
+    .close { grid-template-columns: minmax(0,1fr); padding: 72px 16px 16px; gap: 16px; align-content: start; }
+    .close h2 { font-size: 1.7rem; margin: 8px 0 8px; }
+    .close__lead p { display: none; }
+    .more { margin-top: 4px; font-size: .88rem; }
+    .close .row { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .close .field input, .close .field select { padding: 11px 10px; font-size: .95rem; }
+    .foot span:not(:nth-child(2)) { display: none; }
+    .form { padding: 20px; }
   }
   @media (min-width: 861px) and (max-width: 1180px) {
     .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -348,8 +446,10 @@
     .btn, .btn svg { transition: none; }
     .ut-pt, .ut__stack > * { transition: none; }
     .ut-pt::after { animation: none !important; }
-    #valvula .psv canvas { display: none; }
+    #inicio .hero canvas, #valvula .psv canvas { display: none; }     /* no scrubbed film: the posters hold */
+    .hero .sc-stage__poster { transform: none !important; -webkit-mask-image: none !important; mask-image: none !important; }
     .psv-svg .pop, .psv-stamp { transition: none; }
+    .more { transition: none; }
   }
   .mark img { display: block; height: 58px; width: auto; }
   @media (max-width: 860px) { .mark img { height: 46px; } }
@@ -371,7 +471,7 @@
     <a href="#valvula" data-nav="valvula">Válvula</a>
     <a href="#relatorio" data-nav="relatorio">Relatório</a>
   </nav>
-  <a class="btn" href="#relatorio">Pedir orçamento <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  <a class="btn" href="#contato">Pedir orçamento <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
 </header>
 
 <main id="top">
@@ -386,7 +486,7 @@
         <span class="eyebrow">Caldeiras a vapor · inspeção periódica</span>
         <h1>Inspeção de segurança NR-13</h1>
         <p>Feita por engenheiro legalmente habilitado (PLH), com ART. Relatório em até 60 dias.</p>
-        <a class="btn" href="#relatorio">Pedir orçamento <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="btn" href="#contato">Pedir orçamento <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
         <div class="hero__meta">
           <div><b>NR-13</b>Portaria MTP 1.846/2022</div>
           <div><b>PLH + ART</b>responsável técnico</div>
@@ -503,7 +603,8 @@
           <p>Costado, espelho e fornalha, ponto a ponto. Cada leitura é comparada com a espessura mínima de cálculo da região.</p>
         </div>
         <div class="ut__stack">
-          <div class="ut-dev panel" id="ut-dev" aria-live="polite">
+          <p class="sr-only" id="ut-live" aria-live="polite"></p>
+          <div class="ut-dev panel" id="ut-dev">
             <div class="ut-dev__head">
               <b class="ut-dev__id" id="ut-id">C1</b>
               <span class="ut-region" id="ut-region">Costado</span>
@@ -524,11 +625,11 @@
                 <text x="300" y="153" text-anchor="middle">20 mm</text>
               </g>
             </svg>
-            <div class="ut-read"><b id="ut-mm">--,-</b><span>mm</span></div>
+            <div class="ut-read" aria-hidden="true"><b id="ut-mm">--,-</b><span>mm</span></div>
             <p class="ut-ref" id="ut-ref">nominal 12,7 · mín. de cálculo 10,0</p>
             <div class="ut-st"><i aria-hidden="true"></i><span id="ut-st">Acoplando o transdutor</span></div>
           </div>
-          <article class="ut-card panel" id="ut-card" aria-label="Vida remanescente da fornalha, ponto F3">
+          <article class="ut-card panel" id="ut-card" aria-hidden="true" aria-label="Vida remanescente da fornalha, ponto F3">
             <span class="eyebrow">Vida remanescente · fornalha F3</span>
             <h3>10,8 mm hoje. Cerca de 8 anos pela taxa atual.</h3>
             <dl class="ut-f">
@@ -539,7 +640,7 @@
               <li style="left:0%"><b>2014</b><span>fabricação · 12,7 mm</span></li>
               <li class="now" style="left:48%"><b>2026</b><span>esta inspeção · 10,8 mm</span></li>
               <li class="end" style="left:80%"><b>2034</b><span>fim da vida pela taxa atual</span></li>
-              <li style="left:100%"><b>2039</b><span>25 anos: avaliação de integridade — 13.4.4.6</span></li>
+              <li style="left:100%"><b>2039</b><span>25 anos: avaliação de integridade (13.4.4.6)</span></li>
             </ol>
             <p class="ut-rec">Reinspecionar fornalha em 12 meses; próxima inspeção ≤ metade da vida remanescente.<small>Critério de prática de inspeção (API 510), adotado pelo PLH.</small></p>
           </article>
@@ -602,7 +703,7 @@
       <figure class="psv-chart panel" id="psv-chart" aria-label="Pressão na bancada ao longo do ensaio">
         <div class="psv-chart__head">
           <span class="label">Pressão na bancada</span>
-          <div class="psv-read" aria-live="polite"><b id="psv-kgf">--,--</b><span>kgf/cm²</span></div>
+          <div class="psv-read"><b id="psv-kgf">--,--</b><span>kgf/cm²</span></div>
         </div>
         <p class="psv-st" id="psv-st">Pressurizando a bancada</p>
         <svg class="psv-svg" id="psv-svg" viewBox="0 0 640 260" role="img" aria-label="Gráfico pressão × tempo: três aberturas abaixo da PMTA, dentro da faixa de 3 %">
@@ -618,7 +719,7 @@
           <line class="cur" id="psv-cur" x1="0" y1="0" x2="0" y2="0"/>
           <circle class="dot" id="psv-dot" r="6" cx="0" cy="0"/>
         </svg>
-        <div class="psv-stamp" id="psv-stamp"><b>APROVADA — abertura ≤ PMTA (13.4.1.2 'a')</b><span id="psv-cert">Certificado</span></div>
+        <div class="psv-stamp" id="psv-stamp" aria-hidden="true"><b>APROVADA — abertura ≤ PMTA (13.4.1.2 'a')</b><span id="psv-cert">Certificado</span></div>
       </figure>
       <script type="application/json" id="psv-data">
 {"pops": [38, 54, 70], "pressures": [10.42, 10.47, 10.45], "pmta": 10.5, "cert": "CV-2026-0187"}
@@ -626,23 +727,170 @@
     </div>
   </section>
 
-  <section id="relatorio"><!-- Task 7: relatório (pan) e CTA (pin) --></section>
+  <!-- 6 · RELATÓRIO: pan across the six report pages. Plate, thickness map and valve certificate are
+       filled at runtime from the sections above (#placa, LQ_UT.points, LQ_PSV), never copied by hand. -->
+  <section id="relatorio" data-sc-act="pan" data-sc-span="3">
+    <div data-sc-stage class="rep">
+      <div class="rail" data-sc-pan="0.04">
+        <div class="rail__lead">
+          <span class="eyebrow">Relatório de inspeção</span>
+          <h2>Tudo isso vira relatório.</h2>
+          <p>A placa, as fotos do exame interno, as doze espessuras e o certificado da válvula, num relatório assinado pelo PLH com ART e entregue em até 60 dias (13.3.8). A condição da caldeira vai para o Registro de Segurança no ato (13.3.8.1).</p>
+        </div>
+
+        <article class="doc" aria-label="Página 1: capa do relatório">
+          <header><b>NR-13</b><span>Relatório de inspeção<br>de segurança</span></header>
+          <h3>Caldeira flamotubular horizontal · Categoria B</h3>
+          <dl>
+            <div><dt>Tipo de inspeção</dt><dd>periódica · externa e interna</dd></div>
+            <div><dt>Início · término</dt><dd>03/11/2026 · 04/11/2026</dd></div>
+          </dl>
+          <span class="k">Dados da placa (13.4.1.3)</span>
+          <dl id="rep-plate"></dl>
+          <footer><span>Caldeira 2014-0471</span><span>p. 1/6</span></footer>
+        </article>
+
+        <article class="doc" aria-label="Página 2: exame interno">
+          <header><b>Exame interno</b><span>Lado fogo</span></header>
+          <p>Exame externo e interno (lado água e lado fogo), ultrassom de espessura e válvula de segurança em bancada. Registro fotográfico do exame interno:</p>
+          <figure>
+            <img src="still/interno_1.webp" width="1280" height="720" alt="Espelho frontal da caldeira com a malha de tubos de fumaça" loading="lazy">
+            <figcaption>Foto 1 · Espelho frontal: tubos e solda tubo-espelho sem trinca nem vazamento aparente.</figcaption>
+          </figure>
+          <figure>
+            <img src="still/interno_2.webp" width="1280" height="720" alt="Boca da fornalha vista pela porta frontal aberta" loading="lazy">
+            <figcaption>Foto 2 · Boca da fornalha: sem deformação; região do ponto F3 medida por ultrassom.</figcaption>
+          </figure>
+          <footer><span>Caldeira 2014-0471</span><span>p. 2/6</span></footer>
+        </article>
+
+        <article class="doc" aria-label="Página 3: mapa de espessura por ultrassom">
+          <header><b>Espessura</b><span>Ultrassom · mm</span></header>
+          <table>
+            <thead><tr><th scope="col">Ponto</th><th scope="col">Região</th><th scope="col">Nom.</th><th scope="col">Mín.</th><th scope="col">Lido</th><th scope="col">Folga</th></tr></thead>
+            <tbody id="rep-ut"></tbody>
+          </table>
+          <p id="rep-ut-note"></p>
+          <footer><span>Caldeira 2014-0471</span><span>p. 3/6</span></footer>
+        </article>
+
+        <article class="doc" aria-label="Página 4: certificado da válvula de segurança">
+          <header><b>Válvula</b><span id="rep-cert">Certificado</span></header>
+          <h3>Válvula de segurança testada em bancada (13.4.4.7)</h3>
+          <dl id="rep-psv-head"></dl>
+          <table>
+            <thead><tr><th scope="col">Ensaio</th><th scope="col">Critério</th><th scope="col">Abertura</th><th scope="col">Result.</th></tr></thead>
+            <tbody id="rep-psv"></tbody>
+          </table>
+          <p class="box is-verdict"><b>Aprovada.</b> Três aberturas com pressão ≤ PMTA (13.4.1.2 'a') e reassentamento sem vazamento.</p>
+          <footer><span>Caldeira 2014-0471</span><span>p. 4/6</span></footer>
+        </article>
+
+        <article class="doc" aria-label="Página 5: itens não atendidos e recomendações">
+          <header><b>Pendências</b><span>Itens e recomendações</span></header>
+          <span class="k">Itens da NR-13 não atendidos</span>
+          <ol>
+            <li>Casa de caldeiras sem sensor de gás instalado (13.4.2.4).</li>
+          </ol>
+          <span class="k">Recomendações e providências</span>
+          <ol id="rep-rec">
+            <li>Instalar sensor de gás na casa de caldeiras antes da próxima inspeção.</li>
+          </ol>
+          <span class="k">Resultados</span>
+          <p id="rep-res"></p>
+          <footer><span>Caldeira 2014-0471</span><span>p. 5/6</span></footer>
+        </article>
+
+        <article class="doc" aria-label="Página 6: parecer conclusivo e assinatura">
+          <header><b>Parecer</b><span>Conclusivo</span></header>
+          <p class="box is-verdict">A caldeira tem condições de operar com segurança até a próxima inspeção, cumpridas as recomendações da p. 5.</p>
+          <div class="next"><span class="k">Próxima inspeção</span><b>11/2027</b></div>
+          <p>Prazo de 12 meses para categoria B (13.4.4.4). Condição anotada no Registro de Segurança (13.3.8.1).</p>
+          <div class="sigblock">
+            <span class="sig">Resp. técnico</span>
+            <p><b>Engenheiro mecânico · PLH</b><br><span class="mono">CREA-MA 000000-0 · ART nº 0000000</span></p>
+            <p>Técnico de ensaios: medição por ultrassom e bancada de válvulas.</p>
+          </div>
+          <footer><span>Caldeira 2014-0471</span><span>p. 6/6</span></footer>
+        </article>
+
+        <aside class="toc panel" aria-labelledby="toc-h">
+          <span class="eyebrow">Checklist da norma</span>
+          <h3 id="toc-h">Conteúdo mínimo conforme 13.4.4.12</h3>
+          <ol>
+            <li><span>Dados da placa</span><i>p. 1</i></li>
+            <li><span>Categoria da caldeira</span><i>p. 1</i></li>
+            <li><span>Tipo da caldeira</span><i>p. 1</i></li>
+            <li><span>Tipo de inspeção</span><i>p. 1</i></li>
+            <li><span>Datas de início e término</span><i>p. 1</i></li>
+            <li><span>Descrição dos exames e testes</span><i>p. 2</i></li>
+            <li><span>Fotos do exame interno</span><i>p. 2</i></li>
+            <li><span>Resultados</span><i>p. 3–5</i></li>
+            <li><span>Itens da NR-13 não atendidos</span><i>p. 5</i></li>
+            <li><span>Recomendações e providências</span><i>p. 5</i></li>
+            <li><span>Parecer conclusivo</span><i>p. 6</i></li>
+            <li><span>Data da próxima inspeção</span><i>p. 6</i></li>
+            <li><span>PLH e técnicos: nome, assinatura, registro</span><i>p. 6</i></li>
+            <li><span>Nº do certificado da válvula</span><i>p. 4</i></li>
+          </ol>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · CONTATO: pin, a real input. Last element on the page. -->
+  <section id="contato" data-sc-act="pin" data-sc-span="1.1">
+    <div data-sc-stage class="close">
+      <div class="close__lead">
+        <span class="eyebrow">Orçamento</span>
+        <h2>Solicite sua inspeção <span class="nw">NR-13.</span></h2>
+        <p>Informe tipo, quantidade e cidade. Respondemos com o escopo (exame externo e interno, ultrassom de espessura, válvulas em bancada), o prazo do relatório e a data de parada que cabe na sua operação.</p>
+        <a class="more" href="/qualificacao/autoclave">Também inspecionamos autoclaves e vasos de pressão <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+      <form class="panel form" id="quote" novalidate>
+        <div class="row">
+          <label class="field">Equipamento
+            <select name="tipo"><option>Caldeira flamotubular</option><option>Caldeira aquatubular</option><option>Vaso de pressão</option><option>Autoclave</option></select>
+          </label>
+          <label class="field">Quantidade
+            <input name="qtd" type="number" min="1" max="99" value="1" inputmode="numeric">
+          </label>
+        </div>
+        <div class="row">
+          <label class="field">Empresa
+            <input name="inst" type="text" placeholder="Hospital, indústria ou lavanderia" autocomplete="organization">
+          </label>
+          <label class="field">Cidade
+            <input name="cidade" type="text" placeholder="ex: São Luís" autocomplete="address-level2">
+          </label>
+        </div>
+        <div class="cmd">
+          <button class="btn" type="submit">Pedir orçamento <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <output id="quote-out" aria-live="polite"></output>
+        </div>
+      </form>
+      <div class="foot"><span>LabQuali · Qualificação térmica e calibração</span><span>labquali@labquali.com.br</span><span>Demonstração · caldeira genérica renderizada, ensaios simulados</span></div>
+    </div>
+  </section>
 
 </main>
 
 <script src="scrollcraft.js"></script>
 <script>ScrollCraft.mount(document.body);</script>
 <script>
+/* shared by the page scripts below */
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function $(id) { return document.getElementById(id); }
+function br(v, n) { return v.toFixed(n == null ? 1 : n).replace('.', ','); }   // 12.4 → "12,4"
+</script>
+<script>
 /* 4 · ultrassom: p of the pinned act → which of the 12 points is under the probe */
 (function () {
   var act = document.getElementById('ultrassom'), ut = document.getElementById('ut');
   if (!act || !ut) return;
   var PTS = JSON.parse(document.getElementById('ut-data').textContent).points;
-  window.LQ_UT = { points: PTS };
-  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.LQ_UT = { points: PTS, status: status };
   var P0 = 0.05, P1 = 0.75, PCARD = 0.78, SEG = (P1 - P0) / PTS.length;
-  function $(id) { return document.getElementById(id); }
-  function br(v) { return v.toFixed(1).replace('.', ','); }
   function ex(mm) { return 20 + mm / 20 * 280; }               // echo x on the 0..20 mm screen
   function status(p) {
     var gap = Math.round((p.read - p.min) * 100) / 100;
@@ -689,6 +937,8 @@
     var xm = ex(p.min); minl.setAttribute('x1', xm); minl.setAttribute('x2', xm); minlab.setAttribute('x', xm + 3);
     dev.className = 'ut-dev panel' + (i >= 0 ? ' is-' + s : '');
     $('ut-st').textContent = i >= 0 ? ST_TXT[s] : 'Acoplando o transdutor';
+    // the tweened number is aria-hidden; screen readers get the final reading once per point
+    $('ut-live').textContent = i >= 0 ? p.id + ', ' + p.region + ': ' + br(p.read) + ' mm. ' + ST_TXT[s] + '.' : '';
     if (anim) cancelAnimationFrame(anim);
     if (i < 0) { shown = 0; mm.textContent = '--,-'; tr.setAttribute('d', trace(0, 0)); return; }
     var from = shown || p.read * 0.6, to = p.read, t0 = performance.now(), dur = reduce ? 0 : 420;
@@ -707,7 +957,11 @@
       b.classList.toggle('is-done', reduce || all || n < i);
     });
     if (i !== last) { last = i; setDevice(i); }
-    if (card !== lastCard) { lastCard = card; ut.classList.toggle('is-card', card); }
+    if (card !== lastCard) {
+      lastCard = card; ut.classList.toggle('is-card', card);
+      $('ut-card').setAttribute('aria-hidden', String(!card));
+      dev.setAttribute('aria-hidden', String(card));
+    }
   }
 
   // read the act's progress straight off the engine's --sc-p, like the autoclave's tick()
@@ -727,14 +981,11 @@
   if (!act || !chart) return;
   var D = JSON.parse(document.getElementById('psv-data').textContent);
   window.LQ_PSV = { cert: D.cert, pops: D.pressures.slice(), frames: D.pops.slice(), pmta: D.pmta };
-  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   var NF = 80, CUT = 28, P_DONE = 0.92;                 // sequence length, first cutaway frame, stamp threshold
   var RAMP0 = 7.0, RAMP1 = 9.6, REST = 9.7;             // bench pressure before the test and after the last reseat
   var BLOW = 0.07, DROP = 4;                            // blowdown fraction and how many frames the drop takes
   var TOL = 0.03, Y0 = 6, Y1 = 11;                      // ASME ±3 % (only the side below PMTA matters), chart range
   var POP = D.pops, PR = D.pressures, PMTA = D.pmta;
-  function $(id) { return document.getElementById(id); }
-  function br(v, n) { return v.toFixed(n).replace('.', ','); }
   function lerp(a, b, t) { return a + (b - a) * t; }
 
   /* bench pressure at frame f (1..NF): ramp to the cutaway, then rise → pop → 7 % drop, three times, then rest */
@@ -783,7 +1034,7 @@
   $('psv-cert').textContent = 'Certificado ' + D.cert;
   [].forEach.call(act.querySelectorAll('[data-psv-pop]'), function (b) { b.textContent = br(PR[+b.getAttribute('data-psv-pop')], 2); });
 
-  var kgf = $('psv-kgf'), st = $('psv-st'), curve = $('psv-curve'), cur = $('psv-cur'), dot = $('psv-dot');
+  var kgf = $('psv-kgf'), st = $('psv-st'), stamp = $('psv-stamp'), curve = $('psv-curve'), cur = $('psv-cur'), dot = $('psv-dot');
   function status(f) {
     for (var i = 0; i < POP.length; i++) {
       if (f >= POP[i] && f < POP[i] + DROP) return { t: 'Pop ' + (i + 1) + ': abriu em ' + br(PR[i], 2) + ' — abaixo da PMTA', pop: true };
@@ -805,7 +1056,7 @@
       chart.classList.toggle('is-pop', s.pop);
       pops.forEach(function (g, i) { g.classList.toggle('is-on', f >= POP[i]); });
     }
-    if (done !== lastDone) { lastDone = done; chart.classList.toggle('is-done', done); }
+    if (done !== lastDone) { lastDone = done; chart.classList.toggle('is-done', done); stamp.setAttribute('aria-hidden', String(!done)); }
   }
 
   if (reduce) {
@@ -829,18 +1080,84 @@
 })();
 </script>
 <script>
+/* 6 · relatório: the pages are filled from the page's own data, so the report and the sections above can't drift */
+(function () {
+  if (!window.LQ_UT || !window.LQ_PSV) return;              // both sections set these before this script runs
+  function cell(tag, txt, cls) { var c = document.createElement(tag); c.textContent = txt; if (cls) c.className = cls; return c; }
+  function row(dl, k, v) { var d = document.createElement('div'); d.appendChild(cell('dt', k)); d.appendChild(v); dl.appendChild(d); }
+
+  // p. 1: the plate fields, read off the nameplate in #placa
+  var plate = $('rep-plate');
+  [].forEach.call(document.querySelectorAll('#placa .plate dl > div, #placa .plate__op'), function (d) {
+    var dt = d.querySelector('dt'), dd = d.querySelector('dd');
+    if (dt && dd) row(plate, dt.textContent, dd.cloneNode(true));
+  });
+
+  // p. 3 and p. 5: thickness map from LQ_UT.points
+  {
+    var tb = $('rep-ut'), warn = [];
+    LQ_UT.points.forEach(function (p) {
+      var s = LQ_UT.status(p), tr = document.createElement('tr');
+      if (s !== 'ok') { tr.className = 'is-warn'; warn.push(p); }
+      [p.id, p.region.replace(' frontal', ''), br(p.nominal), br(p.min), br(p.read), br(p.read - p.min)].forEach(function (v, i) {
+        tr.appendChild(cell(i === 0 ? 'th' : 'td', v));
+      });
+      tr.firstChild.setAttribute('scope', 'row');
+      tb.appendChild(tr);
+    });
+    var lo = LQ_UT.points.reduce(function (a, p) { return p.read - p.min < a.read - a.min ? p : a; });
+    var above = LQ_UT.points.every(function (p) { return p.read > p.min; });
+    $('rep-ut-note').textContent = LQ_UT.points.length + ' pontos, ' + (above ? 'todos acima' : 'nem todos acima') + ' do mínimo de cálculo. Menor folga: ' + lo.id +
+      ' (' + lo.region.toLowerCase() + '), ' + br(lo.read - lo.min) + ' mm. Em destaque, folga abaixo de 1,5 mm.';
+    var rec = $('rep-rec');
+    warn.forEach(function (p) {
+      rec.appendChild(cell('li', 'Reinspecionar ' + p.region.toLowerCase() + ' (ponto ' + p.id + ', ' + br(p.read) + ' mm) em 12 meses e acompanhar a taxa de corrosão.'));
+    });
+    $('rep-res').textContent = (above ? 'Espessuras acima do mínimo de cálculo nos ' : 'Espessuras medidas em ') + LQ_UT.points.length + ' pontos (p. 3); ' +
+      'válvula aprovada em bancada, certificado ' + LQ_PSV.cert + ' (p. 4).';
+  }
+
+  // p. 4: valve certificate from LQ_PSV.cert / LQ_PSV.pops / LQ_PSV.pmta
+  {
+    $('rep-cert').textContent = 'Certificado ' + LQ_PSV.cert;
+    var hd = $('rep-psv-head');
+    row(hd, 'Certificado nº', cell('dd', LQ_PSV.cert));
+    row(hd, 'PMTA da caldeira', cell('dd', br(LQ_PSV.pmta) + ' kgf/cm²'));
+    var tbv = $('rep-psv');
+    LQ_PSV.pops.forEach(function (v, i) {
+      var tr = document.createElement('tr'), ok = v <= LQ_PSV.pmta;
+      tr.appendChild(cell('th', 'Pop ' + (i + 1))); tr.firstChild.setAttribute('scope', 'row');
+      tr.appendChild(cell('td', '≤ ' + br(LQ_PSV.pmta)));
+      tr.appendChild(cell('td', br(v, 2)));
+      tr.appendChild(cell('td', ok ? 'aprovado' : 'reprovado', ok ? 'ok' : 'wa'));
+      tbv.appendChild(tr);
+    });
+  }
+})();
+</script>
+<script>
 (function () {
   /* nav: mark the section on screen (only ids that exist on the page) */
   var navs = document.querySelectorAll('[data-nav]');
   var io = new IntersectionObserver(function (es) {
     es.forEach(function (e) { if (e.isIntersecting) navs.forEach(function (a) { a.classList.toggle('is-on', a.dataset.nav === e.target.id); }); });
   }, { rootMargin: '-45% 0px -50% 0px' });
-  ['inicio'].concat([].map.call(navs, function (a) { return a.dataset.nav; })).forEach(function (id) {
-    var s = document.getElementById(id); if (s) io.observe(s);          // #inicio clears the mark on the way back up
+  ['inicio', 'contato'].concat([].map.call(navs, function (a) { return a.dataset.nav; })).forEach(function (id) {
+    var s = document.getElementById(id); if (s) io.observe(s);          // #inicio / #contato clear the mark past either end
   });
 
   var bar = document.getElementById('bar');
   addEventListener('scroll', function () { bar.classList.toggle('is-solid', scrollY > innerHeight * 0.6); }, { passive: true });
+
+  /* contato: a real input that does something */
+  $('quote').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, qtd = Math.max(1, parseInt(f.qtd.value, 10) || 1);
+    var body = 'Gostaria de um orçamento de inspeção de segurança NR-13.\n\nEquipamento: ' + f.tipo.value + '\nQuantidade: ' + qtd +
+      '\nEmpresa: ' + (f.inst.value || '(não informada)') + '\nCidade: ' + (f.cidade.value || '(não informada)');
+    $('quote-out').textContent = 'Abrindo seu e-mail com ' + qtd + ' × ' + f.tipo.value.toLowerCase() + '.';
+    window.location.href = 'mailto:labquali@labquali.com.br?subject=' + encodeURIComponent('Inspeção NR-13 · ' + f.tipo.value) + '&body=' + encodeURIComponent(body);
+  });
 })();
 </script>
 </body>
