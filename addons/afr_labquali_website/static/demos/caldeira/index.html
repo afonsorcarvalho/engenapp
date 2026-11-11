@@ -49,6 +49,7 @@
   .bar .back:hover { color: var(--sc-ink); border-color: var(--sc-accent); }
   .bar .back:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; }
   .bar .back .short { display: none; }
+  .bar .btn { white-space: nowrap; flex: none; }
   .bar nav { display: flex; gap: 4px; margin-left: auto; }
   .bar nav a { text-decoration: none; font-size: .88rem; color: var(--sc-ink-soft); padding: 8px 12px; border-radius: 8px; transition: color .2s; }
   .bar nav a:hover, .bar nav a.is-on { color: var(--sc-ink); }
@@ -184,6 +185,38 @@
   @keyframes ut-ping { 0% { transform: scale(.55); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 
   .ut__col { position: absolute; right: var(--pad); top: 50%; transform: translateY(-46%); width: min(390px, 30vw); display: grid; gap: 16px; }
+  @media (min-width: 861px) {
+    /* the 12 points span x 7–59 % of the frame (+ ~80px of label right of C5/C6). Cover sizing
+       pushes them off-screen or under the column on viewports narrower than 16:9, so the box
+       is capped to the width where the whole span fits left of the column (--ut-fit), and
+       placed as close to centred as that span allows (E2 ≥ 28px in, C6's label ≥ 28px clear
+       of the column). At 16:9 and wider the box is the plain 100 % cover it always was. */
+    .ut { --ut-colw: min(390px, 30vw); }
+    .ut__box {
+      --ut-fit: calc((100% - var(--pad) - var(--ut-colw) - 136px) / 0.52);
+      --ut-w: min(max(100%, calc(100svh * 16 / 9)), var(--ut-fit));
+      width: var(--ut-w); top: 50%; transform: translateY(-50%);
+      left: clamp(calc(28px - var(--ut-w) * 0.07), calc((100% - var(--ut-w)) / 2),
+                  calc(100% - var(--pad) - var(--ut-colw) - 108px - var(--ut-w) * 0.59));
+    }
+    /* a capped box is shorter than the viewport: fade its top and bottom edges into the
+       section background instead of showing a seam (0 fade when it still covers) */
+    .ut__box img {
+      --ut-h: calc(min(max(100vw, calc(100svh * 16 / 9)), calc((100vw - var(--pad) - var(--ut-colw) - 136px) / 0.52)) * 9 / 16);
+      --ut-fade: clamp(0px, calc((100svh - var(--ut-h)) * 0.6), 110px);
+      -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 var(--ut-fade), #000 calc(100% - var(--ut-fade)), transparent 100%);
+              mask-image: linear-gradient(180deg, transparent 0, #000 var(--ut-fade), #000 calc(100% - var(--ut-fade)), transparent 100%);
+    }
+    .ut__col { width: var(--ut-colw); }
+  }
+  @media (min-width: 861px) and (max-aspect-ratio: 1 / 1) {
+    /* portrait tablets: frame on top, column under it (as on phones, but capped in width) */
+    .ut__box { top: 68px; transform: none; --ut-w: calc((100% - 124px) / 0.52); left: calc(28px - var(--ut-w) * 0.07); }
+    .ut__box img { -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent 100%); mask-image: linear-gradient(180deg, #000 78%, transparent 100%); }
+    .ut__scrim { background: linear-gradient(0deg, rgba(5,8,13,1) 0%, rgba(5,8,13,1) 30%, rgba(5,8,13,0) 45%); }
+    .ut__col { top: auto; bottom: 28px; transform: none; width: min(440px, calc(100% - 2 * var(--pad))); }
+    .ut__lead p { display: none; }
+  }
   .ut__lead h2 { font-weight: 800; font-size: clamp(1.6rem, 2.5vw, 2.4rem); letter-spacing: -.04em; line-height: 1.04; margin: 10px 0 8px; }
   .ut__lead p { margin: 0; color: var(--sc-ink-soft); line-height: 1.5; font-size: .92rem; }
   .ut__stack { display: grid; align-items: start; }
@@ -442,6 +475,36 @@
   @media (min-width: 861px) and (max-width: 1180px) {
     .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
+  @media (min-width: 861px) and (max-width: 1080px) {
+    /* below ~1040px the five section links + CTA wrap to two lines: keep the CTA, drop the links */
+    .bar nav { display: none; }
+    .bar .btn { margin-left: auto; }
+  }
+  @media (min-width: 861px) and (max-height: 820px) {
+    /* short desktops (1366×657 / 768, 1280×800): the pinned columns lose their lead paragraphs, get
+       compacted and are centred in the space under the 68px bar, so the plate chip / note
+       and the ultrasound card stay on screen (overflow is only a safety net) */
+    .frame__col, .ut__col { top: calc(68px + (100svh - 68px) / 2); transform: translateY(-50%); max-height: calc(100svh - 84px); overflow: auto; gap: 10px; }
+    .frame__lead p, .ut__lead p { display: none; }
+    .frame__lead h2 { margin: 6px 0 0; }
+    .ut__lead h2 { margin: 4px 0 0; }
+    .plate { padding: 14px 18px 16px; }
+    .plate__head { padding-bottom: 8px; }
+    .plate dl { margin-top: 2px; }
+    .plate dl > div { padding: 5px 0; }
+    .plate .plate__op { margin-top: 6px; padding-top: 6px; }
+    .chip { padding: 9px 14px; font-size: .88rem; }
+    .ut-dev { padding: 12px 14px; }
+    .ut-scan { margin: 8px 0; max-height: 130px; }
+    .ut-read b { font-size: 2.3rem; }
+    .ut-st { margin-top: 8px; padding-top: 8px; }
+    .ut-card { padding: 14px 16px 12px; transform: translateY(-8px); }   /* hidden card waits above, not 14px below: no false overflow */
+    .ut-card h3 { font-size: 1.15rem; margin: 4px 0 8px; }
+    .ut-f { gap: 4px; }
+    .ut-f div { padding: 5px 8px; }
+    .ut-tl { margin: 10px 4px 2px; height: 86px; }
+    .ut-rec { margin-top: 8px; padding: 9px 11px; font-size: .82rem; }
+  }
   @media (prefers-reduced-motion: reduce) {
     .btn, .btn svg { transition: none; }
     .ut-pt, .ut__stack > * { transition: none; }
@@ -673,14 +736,14 @@
       <img class="sc-stage__poster" id="psv-poster" src="seqv/v_0001.webp" alt="" loading="lazy">
       <canvas data-sc-sequence="seqv/v_{iiii}.webp:80:1" role="img" aria-label="A válvula de segurança sai da caldeira para uma bancada de teste, presa a um cabeçote com manômetro e mangueira de pressão. O corpo da válvula passa a corte, mostrando mola, haste, disco e sede; a pressão sobe, o disco levanta e a válvula descarrega três vezes, reassentando depois de cada abertura."></canvas>
       <div class="psv__scrim" aria-hidden="true"></div>
-      <!-- cue windows in p = (frame − 1) / 79: glide 1–27 → 0..0.33; cutaway 28–36 → 0.34..0.44 (beat once it is open);
+      <!-- cue windows in p = (frame − 1) / 79: glide 1–27 → 0..0.33; cutaway 28–36 → 0.34..0.44 (beat 0.36–0.43, ends as Pop 1 starts);
            pops 38 / 54 / 70 → 0.468 / 0.671 / 0.873; stamp at p ≥ 0.92 (set in the script below) -->
       <div class="psv__lead" data-sc-cue="0 0.31 0">
         <span class="eyebrow">Ensaio · válvula de segurança</span>
         <h2>Fora da caldeira, na bancada.</h2>
         <p>Válvula desmontada, inspecionada e testada em bancada no prazo da inspeção periódica (13.4.4.7). Teste em campo só em caráter excepcional (13.4.4.7.1).</p>
       </div>
-      <div class="beat psv-beat" data-sc-cue="0.36 0.44">
+      <div class="beat psv-beat" data-sc-cue="0.36 0.43">
         <span class="eyebrow">Em corte</span>
         <h2>Mola, disco e sede</h2>
         <p>A mola aperta o disco contra a sede e segura a pressão. Quando a força da pressão sob o disco vence a mola, ele levanta e a válvula descarrega; com a queda de pressão, a mola o reassenta.</p>
@@ -882,6 +945,19 @@
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function $(id) { return document.getElementById(id); }
 function br(v, n) { return v.toFixed(n == null ? 1 : n).replace('.', ','); }   // 12.4 → "12,4"
+// the engine writes the act's progress inline (act.style --sc-p), so read it there: no style recalc per frame
+function actP(act) { return parseFloat(act.style.getPropertyValue('--sc-p') || getComputedStyle(act).getPropertyValue('--sc-p')) || 0; }
+// run tick() every frame only while the act is on screen; one last tick on the way out settles its end state
+function whileVisible(act, tick) {
+  var raf = 0, on = false;
+  function loop() { tick(); raf = on ? requestAnimationFrame(loop) : 0; }
+  if (!('IntersectionObserver' in window)) { on = true; raf = requestAnimationFrame(loop); return; }
+  new IntersectionObserver(function (es) {
+    on = es[es.length - 1].isIntersecting;
+    if (on && !raf) raf = requestAnimationFrame(loop);
+    if (!on) { if (raf) cancelAnimationFrame(raf); raf = 0; tick(); }
+  }).observe(act);
+}
 </script>
 <script>
 /* 4 · ultrassom: p of the pinned act → which of the 12 points is under the probe */
@@ -938,7 +1014,8 @@ function br(v, n) { return v.toFixed(n == null ? 1 : n).replace('.', ','); }   /
     dev.className = 'ut-dev panel' + (i >= 0 ? ' is-' + s : '');
     $('ut-st').textContent = i >= 0 ? ST_TXT[s] : 'Acoplando o transdutor';
     // the tweened number is aria-hidden; screen readers get the final reading once per point
-    $('ut-live').textContent = i >= 0 ? p.id + ', ' + p.region + ': ' + br(p.read) + ' mm. ' + ST_TXT[s] + '.' : '';
+    // (not under reduced motion: the device panel is hidden then and the card holds the result)
+    if (!reduce) $('ut-live').textContent = i >= 0 ? p.id + ', ' + p.region + ': ' + br(p.read) + ' mm. ' + ST_TXT[s] + '.' : '';
     if (anim) cancelAnimationFrame(anim);
     if (i < 0) { shown = 0; mm.textContent = '--,-'; tr.setAttribute('d', trace(0, 0)); return; }
     var from = shown || p.read * 0.6, to = p.read, t0 = performance.now(), dur = reduce ? 0 : 420;
@@ -966,12 +1043,11 @@ function br(v, n) { return v.toFixed(n == null ? 1 : n).replace('.', ','); }   /
 
   // read the act's progress straight off the engine's --sc-p, like the autoclave's tick()
   function tick() {
-    var p = parseFloat(getComputedStyle(act).getPropertyValue('--sc-p')) || 0;
+    var p = actP(act);
     var i = p < P0 ? -1 : Math.min(PTS.length - 1, Math.floor((p - P0) / SEG));
     render(i, p >= P1, reduce || p >= PCARD);                  // past P1 all are stamped; the gauge holds F3
-    requestAnimationFrame(tick);
   }
-  requestAnimationFrame(tick);
+  whileVisible(act, tick);
 })();
 </script>
 <script>
@@ -1072,26 +1148,26 @@ function br(v, n) { return v.toFixed(n == null ? 1 : n).replace('.', ','); }   /
   }
   // read the act's progress straight off the engine's --sc-p, like the ultrassom tick()
   function tick() {
-    var p = parseFloat(getComputedStyle(act).getPropertyValue('--sc-p')) || 0;
+    var p = actP(act);
     render(Math.min(NF, Math.max(1, Math.round(p * (NF - 1)) + 1)), p >= P_DONE);
-    requestAnimationFrame(tick);
   }
-  requestAnimationFrame(tick);
+  whileVisible(act, tick);
 })();
 </script>
 <script>
 /* 6 · relatório: the pages are filled from the page's own data, so the report and the sections above can't drift */
 (function () {
-  if (!window.LQ_UT || !window.LQ_PSV) return;              // both sections set these before this script runs
   function cell(tag, txt, cls) { var c = document.createElement(tag); c.textContent = txt; if (cls) c.className = cls; return c; }
   function row(dl, k, v) { var d = document.createElement('div'); d.appendChild(cell('dt', k)); d.appendChild(v); dl.appendChild(d); }
 
-  // p. 1: the plate fields, read off the nameplate in #placa
+  // p. 1: the plate fields, read off the nameplate in #placa (needs neither LQ_UT nor LQ_PSV, so the cover always renders)
   var plate = $('rep-plate');
   [].forEach.call(document.querySelectorAll('#placa .plate dl > div, #placa .plate__op'), function (d) {
     var dt = d.querySelector('dt'), dd = d.querySelector('dd');
     if (dt && dd) row(plate, dt.textContent, dd.cloneNode(true));
   });
+
+  if (!window.LQ_UT || !window.LQ_PSV) return;              // both sections set these before this script runs
 
   // p. 3 and p. 5: thickness map from LQ_UT.points
   {

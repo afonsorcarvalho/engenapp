@@ -64,6 +64,9 @@ class TestDemoCaldeira(HttpCase):
         r = self.url_open("/qualificacao/caldeira")
         self.assertIn('data-sc-sequence="', r.text)
         self.assertIn('seqv/v_{iiii}.webp:80:1"', r.text)
+        # data-sc-clip-map="travel" only changes the clip progress (a.vp) used by video
+        # scrubs; canvas sequences are drawn by drawSeq() from the act's p, which is
+        # already the pinned travel. So this assertion documents intent, nothing more.
         self.assertIn('data-sc-clip-map="travel"', r.text)
         m = re.search(
             r'<script type="application/json" id="psv-data">(.*?)</script>', r.text, re.S
