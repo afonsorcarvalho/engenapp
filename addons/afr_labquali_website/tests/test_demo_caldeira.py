@@ -82,7 +82,7 @@ class TestDemoCaldeira(HttpCase):
             self.assertGreaterEqual(p, d["pmta"] * 0.97)
         self.assertIn("window.LQ_PSV", r.text)
         self.assertIn('id="psv-kgf"', r.text)
-        self.assertIn("Teste em campo só em caráter excepcional", r.text)
+        self.assertIn("O teste em campo só acontece em caráter excepcional", r.text)
         self.assertIn("APROVADA — abertura ≤ PMTA", r.text)
 
     def test_ultrasound_coverage(self):
@@ -98,7 +98,7 @@ class TestDemoCaldeira(HttpCase):
         for year in ("2014", "2026", "2034", "2039"):
             self.assertIn("<b>%s</b>" % year, r.text)
         self.assertIn("avaliação de integridade", r.text)
-        self.assertIn("Reinspecionar fornalha em 12 meses", r.text)
+        self.assertIn("A fornalha deve ser reinspecionada em 12 meses", r.text)
         self.assertIn("metade da vida remanescente", r.text)
 
     def test_internal_stills(self):
@@ -136,7 +136,7 @@ class TestDemoCaldeira(HttpCase):
             self.assertIn(good, html)
         # no bare NR-13 item numbers in the copy (reads heavy); the example disclaimer appears in hero + plate
         self.assertIsNone(re.search(r"\b13\.\d+\.\d+", html), "no NR-13 item numbers in copy")
-        self.assertEqual(html.count("Exemplo ilustrativo"), 2)
+        self.assertEqual(html.lower().count("exemplo ilustrativo"), 2)
 
     def test_accessibility(self):
         html = self.url_open("/inspecao/caldeira").text
