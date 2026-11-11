@@ -1,8 +1,10 @@
 """Scroll-driven explainer pages, one per equipment type.
 
 Each page is a self-contained static build under static/demos/<slug>/ (HTML,
-scroll engine, 3D render frames). The page is served at /qualificacao/<slug>
-and its assets at /qualificacao/<slug>/<file>.
+scroll engine, 3D render frames). The page is served at /<prefix>/<slug>
+and its assets at /<prefix>/<slug>/<file>, where prefix is "qualificacao"
+(autoclave, termodesinfectora, estufa, camara-fria) or "inspecao" (caldeira).
+The legacy /qualificacao/caldeira page redirects (301) to /inspecao/caldeira.
 
 Assets go through this controller instead of /afr_labquali_website/static/:
 Odoo 16 maps a module's static dir to the LAST copy of the module found in
@@ -19,7 +21,10 @@ from odoo.http import request
 from odoo.modules.module import get_module_resource
 
 MODULE = "afr_labquali_website"
-DEMOS = ("autoclave", "termodesinfectora", "estufa", "camara-fria", "caldeira")
+QUALIFICACAO = ("autoclave", "termodesinfectora", "estufa", "camara-fria")
+INSPECAO = ("caldeira",)
+DEMOS = QUALIFICACAO + INSPECAO
+PREFIXES = {"qualificacao": QUALIFICACAO, "inspecao": INSPECAO}
 _REL_ATTR = re.compile(r'((?:src|href|data-sc-sequence)=")(?![#/]|https?:|mailto:|data:)')
 _STATIC_PREFIX = "/%s/static/demos/" % MODULE
 mimetypes.add_type("image/webp", ".webp")
@@ -34,35 +39,47 @@ def _static_dir_is_ours():
     return bool(ours and served and os.path.realpath(ours) == os.path.realpath(served))
 
 
-def _page_html(slug):
-    if slug not in _html_cache:
+def _page_html(slug, prefix):
+    key = (prefix, slug)
+    if key not in _html_cache:
         path = get_module_resource(MODULE, "static", "demos", slug, "index.html")
         with open(path, encoding="utf-8") as fh:
             html = fh.read()
         if _static_dir_is_ours():
             base = _STATIC_PREFIX                      # plain static route: no DB needed, cached by Odoo
         else:
-            base = "/qualificacao/"                    # shadowed static dir: serve through this controller
+            base = "/%s/" % prefix                     # shadowed static dir: serve through this controller
             html = html.replace(_STATIC_PREFIX, base)
-        prefix = base + slug + "/"
-        _html_cache[slug] = _REL_ATTR.sub(lambda m: m.group(1) + prefix, html)
-    return _html_cache[slug]
+        rel = base + slug + "/"
+        _html_cache[key] = _REL_ATTR.sub(lambda m: m.group(1) + rel, html)
+    return _html_cache[key]
+
+
+def _prefix():
+    return request.httprequest.path.split("/")[1]
 
 
 class LabqualiDemos(http.Controller):
 
-    @http.route("/qualificacao/<string:slug>", type="http", auth="public", website=False)
-    def qualificacao_demo(self, slug, **kw):
-        if slug not in DEMOS:
+    @http.route(["/qualificacao/<string:slug>", "/inspecao/<string:slug>"],
+                type="http", auth="public", website=False)
+    def demo(self, slug, **kw):
+        prefix = _prefix()
+        if slug not in PREFIXES.get(prefix, ()):
+            if prefix == "qualificacao" and slug == "caldeira":
+                qs = request.httprequest.query_string.decode("utf-8", "replace")
+                url = "/inspecao/caldeira" + ("?" + qs if qs else "")
+                return request.redirect(url, code=301, local=True)
             raise request.not_found()
-        return request.make_response(_page_html(slug), headers=[
+        return request.make_response(_page_html(slug, prefix), headers=[
             ("Content-Type", "text/html; charset=utf-8"),
             ("Cache-Control", "public, max-age=600"),
         ])
 
-    @http.route("/qualificacao/<string:slug>/<path:fname>", type="http", auth="public", website=False)
-    def qualificacao_demo_asset(self, slug, fname, **kw):
-        if slug not in DEMOS + ("_vendor",):
+    @http.route(["/qualificacao/<string:slug>/<path:fname>", "/inspecao/<string:slug>/<path:fname>"],
+                type="http", auth="public", website=False)
+    def demo_asset(self, slug, fname, **kw):
+        if slug not in PREFIXES.get(_prefix(), ()) + ("_vendor",):
             raise request.not_found()
         parts = [p for p in fname.split("/") if p]
         if not parts or any(p in (".", "..") or p.startswith(".") for p in parts):

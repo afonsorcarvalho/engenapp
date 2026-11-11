@@ -10,7 +10,7 @@ class TestDemoCaldeira(HttpCase):
     """The NR-13 boiler demo is served by controllers/demos.py like its siblings."""
 
     def test_page(self):
-        r = self.url_open("/qualificacao/caldeira")
+        r = self.url_open("/inspecao/caldeira")
         self.assertEqual(r.status_code, 200)
         self.assertIn("Inspeção de segurança NR-13", r.text)
         self.assertIn("Categoria B", r.text)
@@ -18,20 +18,20 @@ class TestDemoCaldeira(HttpCase):
             self.assertIn('id="%s"' % sid, r.text)
 
     def test_hero_frame(self):
-        r = self.url_open("/qualificacao/caldeira/seq/f_0001.webp")
+        r = self.url_open("/inspecao/caldeira/seq/f_0001.webp")
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.headers.get("Content-Type"), "image/webp")
 
     def test_traversal_rejected(self):
         # A literal "/../" is collapsed by requests before sending (the request
-        # would hit /qualificacao/autoclave/index.html). Percent-encoded dots
+        # would hit /inspecao/autoclave/index.html). Percent-encoded dots
         # survive that step and go out on the wire as "/caldeira/../".
-        r = self.url_open("/qualificacao/caldeira/%2e%2e/autoclave/index.html")
+        r = self.url_open("/inspecao/caldeira/%2e%2e/autoclave/index.html")
         self.assertIn("/caldeira/../", r.request.url)
         self.assertEqual(r.status_code, 404)
 
     def test_ultrasound_points(self):
-        r = self.url_open("/qualificacao/caldeira")
+        r = self.url_open("/inspecao/caldeira")
         m = re.search(
             r'<script type="application/json" id="ut-data">(.*?)</script>', r.text, re.S
         )
@@ -56,12 +56,12 @@ class TestDemoCaldeira(HttpCase):
         self.assertIn("13.4.4.6", r.text)
 
     def test_valve_frame(self):
-        r = self.url_open("/qualificacao/caldeira/seqv/v_0038.webp")
+        r = self.url_open("/inspecao/caldeira/seqv/v_0038.webp")
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.headers.get("Content-Type"), "image/webp")
 
     def test_safety_valve(self):
-        r = self.url_open("/qualificacao/caldeira")
+        r = self.url_open("/inspecao/caldeira")
         self.assertIn('data-sc-sequence="', r.text)
         self.assertIn('seqv/v_{iiii}.webp:80:1"', r.text)
         # data-sc-clip-map="travel" only changes the clip progress (a.vp) used by video
@@ -87,7 +87,7 @@ class TestDemoCaldeira(HttpCase):
 
     def test_ultrasound_coverage(self):
         # nominal / minimum per region, the furnace timeline and the PLH recommendation
-        r = self.url_open("/qualificacao/caldeira")
+        r = self.url_open("/inspecao/caldeira")
         m = re.search(
             r'<script type="application/json" id="ut-data">(.*?)</script>', r.text, re.S
         )
@@ -103,12 +103,12 @@ class TestDemoCaldeira(HttpCase):
 
     def test_internal_stills(self):
         for n in (1, 2):
-            r = self.url_open("/qualificacao/caldeira/still/interno_%d.webp" % n)
+            r = self.url_open("/inspecao/caldeira/still/interno_%d.webp" % n)
             self.assertEqual(r.status_code, 200)
             self.assertEqual(r.headers.get("Content-Type"), "image/webp")
 
     def test_report_and_cta(self):
-        r = self.url_open("/qualificacao/caldeira")
+        r = self.url_open("/inspecao/caldeira")
         html = r.text
         self.assertIn('id="relatorio" data-sc-act="pan"', html)
         self.assertIn("data-sc-pan=", html)
@@ -127,7 +127,7 @@ class TestDemoCaldeira(HttpCase):
         self.assertIn("LQ_PSV.cert", html)
 
     def test_copy_rigor(self):
-        html = self.url_open("/qualificacao/caldeira").text
+        html = self.url_open("/inspecao/caldeira").text
         self.assertIsNone(re.search(r"\bPH\b", html, re.I), "use PLH, never PH")
         low = html.lower()
         for bad in ("teste hidrostático periódico", "aposentad", "categoria por pmta"):
@@ -138,7 +138,7 @@ class TestDemoCaldeira(HttpCase):
         self.assertEqual(html.count("Dados ilustrativos de uma caldeira fictícia"), 1)
 
     def test_accessibility(self):
-        html = self.url_open("/qualificacao/caldeira").text
+        html = self.url_open("/inspecao/caldeira").text
         # numbers rewritten every frame must not sit in a live region
         self.assertNotRegex(html, r'aria-live="[^"]+"[^>]*>\s*<b id="psv-kgf"')
         self.assertNotIn('class="psv-read" aria-live', html)
@@ -154,3 +154,22 @@ class TestDemoCaldeira(HttpCase):
             total += sum(os.path.getsize(os.path.join(d, f)) for f in files)
         self.assertGreater(total, 0)
         self.assertLessEqual(total, 12 * 1024 * 1024, "caldeira demo is %.2f MB" % (total / 1048576.0))
+
+    def test_legacy_redirect(self):
+        r = self.url_open("/qualificacao/caldeira", allow_redirects=False)
+        self.assertEqual(r.status_code, 301)
+        self.assertTrue(r.headers["Location"].endswith("/inspecao/caldeira"), r.headers["Location"])
+
+    def test_legacy_redirect_keeps_query(self):
+        r = self.url_open("/qualificacao/caldeira?db=x", allow_redirects=False)
+        self.assertEqual(r.status_code, 301)
+        self.assertIn("?db=x", r.headers["Location"])
+
+    def test_wrong_prefix_404(self):
+        self.assertEqual(self.url_open("/inspecao/autoclave").status_code, 404)
+        self.assertEqual(self.url_open("/qualificacao/caldeira/seq/f_0001.webp").status_code, 404)
+
+    def test_autoclave_cross_link(self):
+        r = self.url_open("/qualificacao/autoclave")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('href="/inspecao/caldeira"', r.text)
