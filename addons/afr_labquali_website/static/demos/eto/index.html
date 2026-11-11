@@ -106,9 +106,128 @@
   .down > span { font-family: var(--mono); font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--sc-ink-soft); }
   .pain__demo { position: absolute; left: var(--pad); bottom: 22px; font-family: var(--mono); font-size: .7rem; color: var(--sc-ink-soft); }
 
-  /* ---------- 3..6 placeholders (Tasks 6-7) ---------- */
-  .paineis { background: #070b12; }
-  .paineis canvas, .paineis .sc-stage__poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* ---------- frame boxes: the render lives in a 16:9 box, so overlays placed in % of the box stay glued
+     to the same spot of the frame at any viewport. .fr is the window, .box the full frame inside it. ---------- */
+  .fr { position: absolute; inset: 0; overflow: clip; }
+  .box { position: absolute; left: 50%; top: 50%; width: max(100%, calc(100svh * 16 / 9)); aspect-ratio: 16 / 9; transform: translate(-50%, -50%); container-type: inline-size; }
+
+  /* ---------- 3 painel: old panel out, new panel in, exploded in layers with numbered callouts ---------- */
+  .pnl { background: #070b12; }
+  .pnl__scrim { position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, rgba(5,8,13,.9) 0%, rgba(5,8,13,.66) 24%, rgba(5,8,13,0) 38%); }
+  .pnl__col { position: absolute; left: var(--pad); top: 50%; transform: translateY(-50%); width: min(380px, 30vw); display: grid; gap: 18px; }
+  .pnl h2 { font-weight: 800; font-size: clamp(1.8rem, 3vw, 2.8rem); letter-spacing: -.04em; line-height: 1.02; margin: 10px 0 0; text-wrap: balance; }
+  .ft { margin: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
+  .ft > div { display: grid; grid-template-columns: 64px 1fr; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); line-height: 1.45; }
+  .ft dt { font-family: var(--mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; padding-top: 2px; }
+  .ft dd { margin: 0; color: #c3ccd6; }
+  .ft .keep dt { color: var(--ok); }
+  .ft .swap dt { color: var(--sc-accent); }
+  .spec { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: none; }
+  .spec li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; line-height: 1.45; font-size: .95rem; color: #dfe5ec; }
+  .spec li b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--sc-accent); color: var(--sc-accent-ink); font-family: var(--mono); font-size: .76rem; font-weight: 500; }
+  /* desktop: items 1-4 are read on the frame itself, so the list only shows item 5; the list stays the
+     semantic version for screen readers (the frame callouts are aria-hidden) */
+  .spec li.on-frame { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .spec li.extra { opacity: 0; transform: translateY(8px); transition: opacity .45s, transform .45s cubic-bezier(.2,.8,.2,1); }
+  .pnl.is-exploded .spec li.extra { opacity: 1; transform: none; }
+  /* callouts: dot on the layer, leader to a label in free space; all in % of the 16:9 box */
+  .co-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .co-lines line { stroke: rgba(255,255,255,.7); stroke-width: 1.2; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity .4s; }
+  .co-lines .cable { stroke: var(--sc-accent); stroke-width: 2; stroke-dasharray: 5 4; }
+  .co-dot { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; display: grid; place-items: center;
+            background: var(--sc-accent); color: var(--sc-accent-ink); font-family: var(--mono); font-size: .78rem; font-weight: 500;
+            box-shadow: 0 0 0 3px rgba(5,8,13,.75), 0 0 18px rgba(255,106,43,.6);
+            opacity: 0; transform: scale(.4); transition: opacity .35s, transform .45s cubic-bezier(.2,.8,.2,1); }
+  .co-lbl { position: absolute; transform: translate(0, -50%); max-width: 15.5cqw; padding: 7px 11px; border-radius: 8px; font-size: max(.78rem, .92cqw); font-weight: 600; line-height: 1.3;
+            background: rgba(5,8,13,.78); backdrop-filter: blur(8px); border: 1px solid var(--line-2); opacity: 0; transition: opacity .4s; }
+  .co-lbl.l { transform: translate(-100%, -50%); }
+  .co-lbl small { display: block; font-family: var(--mono); font-weight: 500; font-size: .68rem; letter-spacing: .1em; color: var(--sc-accent); margin-bottom: 2px; }
+  .pnl.is-exploded .co-dot { opacity: 1; transform: none; }
+  .pnl.is-exploded .co-lines line, .pnl.is-exploded .co-lbl { opacity: 1; }
+  .pnl.is-exploded .co-dot:nth-of-type(2), .pnl.is-exploded .co-lbl:nth-of-type(2) { transition-delay: .12s; }
+  .pnl.is-exploded .co-dot:nth-of-type(3), .pnl.is-exploded .co-lbl:nth-of-type(3) { transition-delay: .24s; }
+  .pnl.is-exploded .co-dot:nth-of-type(4), .pnl.is-exploded .co-lbl:nth-of-type(4) { transition-delay: .36s; }
+
+  /* ---------- 3b fases: the 9-phase strip; sticky inside #fases, which also wraps #injecao ---------- */
+  .phx { position: relative; }                                       /* no overflow here: it would kill the sticky strip */
+  .phx__head { padding: 120px var(--pad) 28px; max-width: 760px; }
+  .phx__head h2 { font-weight: 800; font-size: clamp(1.7rem, 2.8vw, 2.6rem); letter-spacing: -.04em; line-height: 1.04; margin: 10px 0 10px; }
+  .phx__head p { margin: 0; color: var(--sc-ink-soft); line-height: 1.55; max-width: 56ch; }
+  .ph { position: sticky; top: 68px; z-index: 30; padding: 0 var(--pad); background: rgba(5,8,13,.86); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .ph__in { position: relative; max-width: 1400px; margin: 0 auto; }
+  .ph__list { list-style: none; margin: 0; padding: 0; display: flex; justify-content: space-between; gap: 6px; }
+  .ph__list li { display: flex; align-items: center; gap: 8px; padding: 13px 4px 15px; font-size: .78rem; font-weight: 600; color: #5d6976; white-space: nowrap; transition: color .3s; min-width: 0; }
+  
+  .ph__list svg { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .ph__list li.is-done { color: var(--sc-ink-soft); }
+  .ph__list li.is-now { color: var(--sc-ink); }
+  .ph__list li.is-now svg { color: var(--sc-accent); }
+  .ph__mark { position: absolute; left: 0; bottom: -1px; height: 3px; background: var(--sc-accent); border-radius: 2px; box-shadow: 0 0 12px rgba(255,106,43,.7);
+              width: var(--ph-w, 0); transform: translateX(var(--ph-x, 0)); }
+  .ph__now { display: none; }
+  .phx__run { height: 75vh; height: 75svh; display: grid; place-items: center; padding: 0 var(--pad); }
+  .phx__run p { position: sticky; top: 45vh; margin: 0; max-width: 34ch; text-align: center; font-weight: 700; font-size: clamp(1.2rem, 2vw, 1.7rem); letter-spacing: -.02em; line-height: 1.25; color: #c3ccd6; }
+  .phx__run p b { color: var(--sc-accent); font-weight: 800; }
+
+  /* ---------- 4 injeção: cylinder on the scale, HMI on the panel; numbers are HTML, synced to the frame ---------- */
+  .inj { background: #070b12; }
+  .inj .fr { top: 120px; }                                           /* below the bar (68) and the phase strip (52) */
+  .inj .box { width: max(100%, calc((100svh - 120px) * 16 / 9)); }
+  .inj__scrim { position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, rgba(5,8,13,.92) 0%, rgba(5,8,13,.78) 27%, rgba(5,8,13,0) 35%),
+                linear-gradient(270deg, rgba(5,8,13,.85) 0%, rgba(5,8,13,.55) 22%, rgba(5,8,13,0) 30%); }
+  .ov { position: absolute; display: flex; align-items: center; justify-content: center; gap: .3em; font-family: var(--mono); font-variant-numeric: tabular-nums; line-height: 1;
+        opacity: 0; transition: opacity .35s; }
+  .inj.is-fixed .ov { opacity: 1; }
+  /* scale display, frame 21-60: x 46.7-54.9 %, y 67.5-73.4 % (glass inset a little inside the bezel) */
+  .ov--lcd { left: 47.6%; top: 68.1%; width: 6.6%; height: 4.7%; border-radius: 2px; background: #0f4a41; color: #c8ffe9; text-shadow: 0 0 6px rgba(150,255,210,.55); font-size: 1.95cqw; }
+  .ov--lcd small { font-size: .5em; opacity: .8; align-self: flex-end; margin-bottom: .25em; }
+  /* HMI screen, frame 21-60: x 59.6-71.7 %, y 6.2-18.3 %; the compact value sits in its lower half */
+  .ov--hmi { left: 60.1%; top: 6.9%; width: 11.1%; height: 10.7%; border-radius: 3px; background: #0b2238; flex-direction: column; gap: .35em; color: #eef2f6; font-size: 2.1cqw; }
+  .ov--hmi small { font-size: .38em; letter-spacing: .12em; color: #ffb27d; }
+  .ov--hmi b { font-weight: 500; }
+  .ov--hmi b em { font-style: normal; font-size: .5em; opacity: .75; margin-left: .2em; }
+  .inj__lead { position: absolute; left: var(--pad); top: 150px; width: min(370px, 27vw); }
+  .inj__lead h2 { font-weight: 800; font-size: clamp(1.7rem, 2.7vw, 2.6rem); letter-spacing: -.04em; line-height: 1.04; margin: 10px 0 12px; text-wrap: balance; }
+  .inj__lead p { margin: 0; color: #c3ccd6; line-height: 1.55; font-size: .95rem; }
+  .inj__mode { display: inline-block; margin-top: 14px; font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ok); border: 1px solid rgba(61,220,151,.4); border-radius: 999px; padding: 5px 10px; }
+  .inj__side { position: absolute; right: var(--pad); top: 140px; width: min(310px, 22vw); display: grid; gap: 12px; opacity: 0; transition: opacity .35s; }
+  .inj.is-fixed .inj__side { opacity: 1; }      /* frames 1-20 are the close-up: the 3D HMI shows its own screen */
+  .hmi { padding: 14px 16px; background: rgba(8,20,34,.92); border-color: rgba(120,170,220,.22); transition: opacity .35s; }
+  .hmi__top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .hmi__phase { margin: 8px 0 2px; font-family: var(--mono); font-weight: 500; font-size: 1.12rem; letter-spacing: .04em; color: var(--warn); }
+  .hmi__step { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-family: var(--mono); font-size: .86rem; color: var(--sc-ink); }
+  .pips { display: flex; gap: 4px; }
+  .pips i { width: 18px; height: 6px; border-radius: 2px; background: rgba(255,255,255,.12); transition: background .2s; }
+  .pips i.on { background: var(--sc-accent); }
+  .hmi__grid { margin: 12px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+  .hmi__grid div { min-width: 0; }
+  .hmi__grid dt { font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--sc-ink-soft); }
+  .hmi__grid dd { margin: 3px 0 0; font-family: var(--mono); font-size: 1.35rem; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .hmi__grid dd small { font-size: .62em; color: var(--sc-ink-soft); margin-left: 3px; }
+  .hmi__grid .tgt { font-size: .7rem; color: var(--sc-ink-soft); }
+  .chart { margin: 0; padding: 12px 14px 8px; background: rgba(5,8,13,.84); backdrop-filter: blur(10px); transition: opacity .35s; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart .grid { stroke: rgba(255,255,255,.06); stroke-width: 1; }
+  .chart .sep { stroke: rgba(255,255,255,.12); stroke-width: 1; stroke-dasharray: 3 5; }
+  .chart .ax { fill: #7d8996; font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+  .chart .ttl { fill: #aab5c1; font-family: "IBM Plex Mono", monospace; font-size: 12.5px; letter-spacing: .06em; }
+  .chart .stp { fill: #6b7885; font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+  .chart .stp.on { fill: var(--sc-accent); }
+  .chart .ghost { fill: none; stroke: rgba(255,255,255,.13); stroke-width: 1.5; stroke-dasharray: 3 4; }
+  .chart .cm { fill: none; stroke: var(--sc-accent); stroke-width: 2.6; stroke-linejoin: round; }
+  .chart .cp { fill: none; stroke: #eef2f6; stroke-width: 2.2; stroke-linejoin: round; }
+  .chart .cur { stroke: rgba(255,255,255,.3); stroke-width: 1; }
+  .chart .dm { fill: var(--sc-accent); stroke: #05080d; stroke-width: 2; }
+  .chart .dp { fill: #eef2f6; stroke: #05080d; stroke-width: 2; }
+  .chart figcaption { margin-top: 4px; font-size: .7rem; color: var(--sc-ink-soft); }
+  .inj__close { position: absolute; left: var(--pad); bottom: 34px; width: min(420px, 30vw); display: grid; gap: 10px; opacity: 0; transform: translateY(10px); transition: opacity .45s, transform .45s cubic-bezier(.2,.8,.2,1); }
+  .inj.is-end .inj__close { opacity: 1; transform: none; }
+  .inj__close p { margin: 0; font-weight: 700; font-size: clamp(1.1rem, 1.6vw, 1.4rem); letter-spacing: -.02em; line-height: 1.25; }
+  .chip { justify-self: start; padding: 9px 13px; border-radius: 10px; font-size: .86rem; line-height: 1.4; background: rgba(255,176,32,.1); border: 1px solid rgba(255,176,32,.45); color: #ffe3ad; }
+  .chip b { color: var(--warn); }
+  .inj__demo { position: absolute; right: var(--pad); bottom: 12px; font-family: var(--mono); font-size: .66rem; color: var(--sc-ink-soft); }
   /* ---------- contato: placeholder (Task 7) ---------- */
   .close { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(30px, 6vw, 90px); align-items: center; padding: 90px var(--pad) 40px; box-sizing: border-box; height: 100vh; height: 100svh;
            background: radial-gradient(900px 500px at 20% 60%, rgba(255,106,43,.09), transparent 60%); }
@@ -156,6 +275,58 @@
     .down { right: 16px; top: 72px; bottom: auto; padding: 10px 16px; }
     .down b { font-size: 2.2rem; }
     .pain__demo { display: none; }
+    /* painel: the frame on top, cropped around the panel (x 24-86 %), copy below; on the frame only the numbered dots */
+    .pnl .fr { top: 58px; bottom: auto; height: 90vw; }
+    .pnl .box { left: -38vw; top: 0; width: 160vw; transform: none; }
+    .pnl__scrim { display: none; }
+    .pnl__col { left: 16px; right: 16px; top: calc(58px + 90vw + 14px); transform: none; width: auto; gap: 10px; }
+    .pnl h2 { font-size: 1.4rem; margin: 4px 0 0; }
+    .ft > div { grid-template-columns: 52px 1fr; padding: 7px 0; font-size: .86rem; }
+    .spec { gap: 5px; }
+    .spec li { font-size: .82rem; grid-template-columns: 22px 1fr; gap: 8px; }
+    .spec li b { width: 20px; height: 20px; font-size: .68rem; }
+    .spec li.on-frame { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; }
+    .co-lbl, .co-lines line:not(.cable) { display: none; }
+    .co-dot { width: 22px; height: 22px; margin: -11px 0 0 -11px; font-size: .7rem; }
+    /* fases: icons only, the current phase is named under the row */
+    .phx__head { padding: 84px 16px 18px; }
+    .phx__head h2 { font-size: 1.45rem; }
+    .phx__head p { font-size: .9rem; }
+    .ph { top: 58px; padding: 0 6px; }
+    .ph__list li { justify-content: center; padding: 9px 0 7px; }
+    .ph__list li span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .ph__mark { bottom: auto; top: 37px; height: 2px; }
+    .ph__now { display: block; margin: 0; padding: 2px 0 7px; text-align: center; font-family: var(--mono); font-size: .7rem; letter-spacing: .08em; color: var(--sc-ink); }
+    .phx__run { height: 70svh; }
+    .phx__run p { font-size: 1.1rem; }
+    /* injeção: frame on top, cropped around cylinder, scale and HMI (x 25-81 %, centred on 53 %); HMI mirror and chart below */
+    .inj .fr { top: 116px; bottom: auto; height: 101.25vw; }
+    .inj .box { left: -45.4vw; top: 0; width: 180vw; transform: none; }
+    .inj__scrim, .inj__demo { display: none; }
+    .inj__lead, .inj__side, .inj__close { left: 16px; right: 16px; width: auto; }
+    .inj__lead, .inj__side { top: calc(116px + 101.25vw + 10px); }
+    .inj__lead { transition: opacity .35s; }
+    .inj.is-fixed .inj__lead { opacity: 0; pointer-events: none; }
+    .inj__lead h2 { font-size: 1.35rem; margin: 4px 0 6px; }
+    .inj__lead p { font-size: .84rem; line-height: 1.45; }
+    .inj__mode { margin-top: 8px; }
+    .inj__side { gap: 8px; }
+    .hmi { padding: 9px 12px; }
+    .hmi__top { display: none; }
+    .hmi__phase { margin: 4px 0 2px; font-size: .92rem; }
+    .hmi__step { font-size: .76rem; }
+    .pips i { width: 14px; height: 5px; }
+    .hmi__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; margin-top: 7px; }
+    .hmi__grid dt { font-size: .58rem; }
+    .hmi__grid dd { font-size: .98rem; }
+    .hmi__grid .tgt { display: none; }
+    .chart { padding: 6px 8px 2px; }
+    .chart svg { height: min(150px, calc(100svh - 116px - 101.25vw - 160px)); }
+    .chart figcaption { display: none; }
+    .inj.is-end .chart { opacity: 0; }
+    .inj__close { bottom: 14px; gap: 8px; }
+    .inj__close p { font-size: 1rem; }
+    .chip { font-size: .78rem; padding: 7px 10px; }
     .close { grid-template-columns: minmax(0,1fr); padding: 72px 16px 16px; }
     .foot span:not(:nth-child(2)) { display: none; }
   }
@@ -170,7 +341,8 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .btn, .btn svg { transition: none; }
-    #inicio .hero canvas, #painel canvas { display: none; }     /* no scrubbed film: the posters hold */
+    #inicio .hero canvas, #painel canvas, #injecao canvas { display: none; }     /* no scrubbed film: the posters hold */
+    .co-dot, .co-lbl, .co-lines line, .spec li.extra, .ov, .inj__close, .inj__lead, .inj__side, .hmi, .chart, .ph__list li { transition: none; }
   }
   .mark img { display: block; height: 58px; width: auto; }
   @media (max-width: 860px) { .mark img { height: 46px; } }
@@ -233,19 +405,127 @@
     </div>
   </section>
 
-  <!-- 3 · PAINEL: placeholder, filled by Task 6 (old panel to new panel, exploded in layers). -->
-  <section id="painel" data-sc-act="scrub" data-sc-span="4">
-    <div data-sc-stage class="paineis">
-      <img class="sc-stage__poster" src="seqp/p_0001.webp" alt="" loading="lazy">
-      <canvas data-sc-sequence="seqp/p_{iiii}.webp:70:1" role="img" aria-label="O painel de comando antigo dá lugar ao painel novo, que se abre em camadas."></canvas>
+  <!-- 3 · PAINEL: seqp/, 70 frames. Old panel open 1–22, swap 23–36, explode 37–60, hold 61–70 (identical).
+       Frame = round(p·69)+1 (the engine draws sequences from the pinned p). Callouts switch on at frame 60,
+       placed in % of the 16:9 box measured on frame 70 (frames 60 and 70 differ only below y 66 %). -->
+  <section id="painel" data-sc-act="scrub" data-sc-span="4.5" data-sc-clip-map="travel">
+    <div data-sc-stage class="pnl" id="pnl">
+      <div class="fr">
+        <div class="box">
+          <img class="sc-stage__poster" id="pnl-poster" src="seqp/p_0001.webp" alt="" loading="lazy">
+          <canvas data-sc-sequence="seqp/p_{iiii}.webp:70:1" role="img" aria-label="O painel de comando antigo, de porta aberta e fiação desorganizada, dá lugar ao painel novo. A placa de montagem, o trilho do CLP e a IHM se separam em camadas diante do armário."></canvas>
+          <svg class="co-lines" viewBox="0 0 100 56.25" preserveAspectRatio="none" aria-hidden="true" id="co-lines"></svg>
+          <div id="co-layer" aria-hidden="true"></div>
+        </div>
+      </div>
+      <div class="pnl__scrim" aria-hidden="true"></div>
+      <div class="pnl__col">
+        <div>
+          <span class="eyebrow">O retrofit</span>
+          <h2>Por dentro da nova automação</h2>
+        </div>
+        <dl class="ft">
+          <div class="keep"><dt>Fica</dt><dd>vaso, portas, bombas e camisa</dd></div>
+          <div class="swap"><dt>Troca</dt><dd>automação e instrumentação</dd></div>
+        </dl>
+        <ol class="spec" id="spec">
+          <li class="on-frame"><b>1</b><span>IHM Delta DOP-107 7"</span></li>
+          <li class="on-frame"><b>2</b><span>CLP Delta DVP-SE com módulos PT100 e analógicos</span></li>
+          <li class="on-frame"><b>3</b><span>Fonte, bornes e relés de interface</span></li>
+          <li class="on-frame"><b>4</b><span>Comunicação Modbus TCP entre o CLP e a IHM</span></li>
+          <li class="extra"><b>5</b><span>Instrumentação nova: PT100, transdutor de pressão, umidade e balança do cilindro</span></li>
+        </ol>
+      </div>
     </div>
   </section>
 
-  <!-- 3b · FASES: placeholder (Task 6) -->
-  <section id="fases" class="sc-section"></section>
+  <!-- 3b · FASES: a wrapper, not an act. The strip is sticky inside it, and #injecao is nested so the strip
+       stays on screen for the whole injection. The marker slides from Aquecimento to Injeção de ETO across
+       .phx__run (script below), then holds. -->
+  <section id="fases" class="phx" aria-labelledby="fases-h">
+    <div class="phx__head">
+      <span class="eyebrow">O ciclo</span>
+      <h2 id="fases-h">Nove fases, um ciclo inteiro rastreado</h2>
+      <p>Do aquecimento à hiperventilação, o CLP conduz cada fase e a IHM mostra em qual delas a carga está. A próxima cena para na quinta: a injeção de ETO.</p>
+    </div>
+    <div class="ph" id="ph">
+      <div class="ph__in">
+      <ol class="ph__list" id="ph-list">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4.5a2 2 0 0 1 4 0v9a4 4 0 1 1-4 0z"/><path d="M12 9.5v6"/></svg><span>Aquecimento</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 13l3.5-3.5M12 3v2"/></svg><span>Leak test</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h3.5v8H10V8h4v8h3.5V8H21"/></svg><span>Acondicionamento</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5s6 6.4 6 10.6a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z"/></svg><span>Umidificação</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="8" height="13" rx="3"/><path d="M10.5 8V5h3v3M9 3.5h6"/></svg><span>Injeção de ETO</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></svg><span>Exposição</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 0 1 13-5.1M19.5 12a7.5 7.5 0 0 1-13 5.1"/><path d="M18 3.5v3.8h-3.8M6 20.5v-3.8h3.8"/></svg><span>Lavagens N2</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h10.5a3 3 0 1 0-3-3M3 15h14a3 3 0 1 1-3 3M3 12h6"/></svg><span>Aeração</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1.6"/><path d="M12 10.4C11 6 12.5 3 15.5 3.6c2.2.5 1.6 4.1-3.5 6.8M13.6 12.2c4.3 1.3 6.2 4.2 4.2 6.4-1.5 1.7-4.4-.6-4.4-6.4M10.6 13c-3.3 3.1-6.8 3.3-7.7.4-.7-2.2 2.8-3.5 7.7-.4"/></svg><span>Hiperventilação</span></li>
+      </ol>
+      <span class="ph__mark" id="ph-mark" aria-hidden="true"></span>
+      </div>
+      <p class="ph__now" id="ph-now" aria-hidden="true">Fase 1 de 9 · Aquecimento</p>
+    </div>
+    <div class="phx__run" id="ph-run">
+      <p>Na quinta fase, quem decide quanto ETO entra é <b>a balança</b>.</p>
+    </div>
 
-  <!-- 4 · INJEÇÃO: placeholder (Task 6) -->
-  <section id="injecao" class="sc-section"></section>
+  <!-- 4 · INJEÇÃO: seqe/, 60 frames. Valve turn 1–10 (close-up), pull-back 8–20, fixed shot 21–60 (identical).
+       Frame f = round(p·59)+1; overlays and chart follow that same f, all values from #eto-data. -->
+  <section id="injecao" data-sc-act="scrub" data-sc-span="5" data-sc-clip-map="travel">
+    <div data-sc-stage class="inj" id="inj">
+      <div class="fr">
+        <div class="box">
+          <img class="sc-stage__poster" id="inj-poster" src="seqe/e_0001.webp" alt="" loading="lazy">
+          <canvas data-sc-sequence="seqe/e_{iiii}.webp:60:1" role="img" aria-label="A válvula do cilindro de ETO se abre. A câmera recua e mostra o cilindro sobre a balança com visor digital, a mangueira até a câmara e a IHM no painel da máquina."></canvas>
+          <div class="ov ov--lcd" aria-hidden="true"><span id="eto-cyl">45,00</span><small>kg</small></div>
+          <div class="ov ov--hmi" aria-hidden="true"><small>ETO INJETADO</small><b><span id="eto-inj3">0,00</span><em>kg</em></b></div>
+        </div>
+      </div>
+      <div class="inj__scrim" aria-hidden="true"></div>
+      <div class="inj__lead">
+        <span class="eyebrow">Injeção de ETO</span>
+        <h2>ETO dosado por peso, não por estimativa</h2>
+        <p>O cilindro fica sobre a balança. A injeção acontece em cinco degraus: a cada um, a válvula abre até a massa programada sair do cilindro, e a pressão da câmara sobe junto.</p>
+        <span class="inj__mode">Modo massa · com balança</span>
+      </div>
+      <div class="inj__side" aria-hidden="true">
+        <div class="hmi panel">
+          <div class="hmi__top"><span class="label">IHM · injeção</span><span class="label">modo massa</span></div>
+          <p class="hmi__phase">INJEÇÃO DE ETO</p>
+          <div class="hmi__step"><span id="eto-step">DEGRAU 1 DE 5</span><span class="pips" id="eto-pips"><i></i><i></i><i></i><i></i><i></i></span></div>
+          <dl class="hmi__grid">
+            <div><dt>Injetado</dt><dd><span id="eto-inj">0,00</span><small>kg</small></dd><span class="tgt" id="eto-tgt">alvo 0,90 kg</span></div>
+            <div><dt>Pressão</dt><dd><span id="eto-p">−0,480</span><small>bar</small></dd></div>
+            <div><dt>Cilindro</dt><dd><span id="eto-cyl2">45,00</span><small>kg</small></dd></div>
+          </dl>
+        </div>
+        <figure class="chart panel">
+          <svg id="eto-svg" viewBox="0 0 400 236">
+            <g class="grid" id="eto-grid"></g>
+            <g id="eto-ax"></g>
+            <path class="ghost" id="eto-gm" d="M0 0"/>
+            <path class="ghost" id="eto-gp" d="M0 0"/>
+            <path class="cm" id="eto-cm" d="M0 0"/>
+            <path class="cp" id="eto-cp" d="M0 0"/>
+            <line class="cur" id="eto-cur" x1="0" y1="0" x2="0" y2="0"/>
+            <circle class="dm" id="eto-dm" r="6" cx="0" cy="0"/>
+            <circle class="dp" id="eto-dp" r="5" cx="0" cy="0"/>
+          </svg>
+          <figcaption>Visualização dos dados registrados no ciclo, degrau a degrau.</figcaption>
+        </figure>
+      </div>
+      <div class="inj__close">
+        <p>O relatório registra a massa exata injetada.</p>
+        <span class="chip"><b>Vazamento?</b> A balança detecta queda de massa com a válvula fechada.</span>
+      </div>
+      <p class="sr-only" id="eto-sum">Injeção em 5 degraus de 0,18 kg: 0,90 kg de ETO injetados. A balança mostra o cilindro passando de 45,00 kg para 44,10 kg, e a pressão da câmara sobe de −0,480 bar para −0,330 bar.</p>
+      <span class="inj__demo">Valores ilustrativos de um ciclo de demonstração</span>
+      <script type="application/json" id="eto-data">
+{"steps": 5, "step_kg": 0.18, "total_kg": 0.90, "cyl_start": 45.00, "cyl_end": 44.10, "p_start": -0.480, "p_end": -0.330, "p_min": -0.900, "p_max": -0.300}
+      </script>
+    </div>
+  </section>
+  </section>
 
   <!-- 5 · SEGURANÇA: placeholder (Task 7) -->
   <section id="seguranca" class="sc-section"></section>
@@ -261,9 +541,206 @@
 <script src="scrollcraft.js"></script>
 <script>ScrollCraft.mount(document.body);</script>
 <script>
+/* shared by the page scripts below */
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function $(id) { return document.getElementById(id); }
+// pt-BR number: comma decimal and a real minus sign (U+2212), e.g. −0,480
+function br(v, n) { var s = Math.abs(v).toFixed(n == null ? 1 : n).replace('.', ','); return (v < 0 && /[1-9]/.test(s) ? '−' : '') + s; }
+// the engine writes the act's progress inline (act.style --sc-p), so read it there: no style recalc per frame
+function actP(act) { return parseFloat(act.style.getPropertyValue('--sc-p') || getComputedStyle(act).getPropertyValue('--sc-p')) || 0; }
+// run tick() every frame only while the element is on screen; one last tick on the way out settles its end state
+function whileVisible(el, tick) {
+  var raf = 0, on = false;
+  function loop() { tick(); raf = on ? requestAnimationFrame(loop) : 0; }
+  if (!('IntersectionObserver' in window)) { on = true; raf = requestAnimationFrame(loop); return; }
+  new IntersectionObserver(function (es) {
+    on = es[es.length - 1].isIntersecting;
+    if (on && !raf) raf = requestAnimationFrame(loop);
+    if (!on) { if (raf) cancelAnimationFrame(raf); raf = 0; tick(); }
+  }).observe(el);
+}
 (function () {
   var bar = document.getElementById('bar');
   addEventListener('scroll', function () { bar.classList.toggle('is-solid', scrollY > innerHeight * 0.6); }, { passive: true });
+})();
+</script>
+<script>
+/* 3 · painel: numbered callouts on the exploded layers. Same frame as the canvas: round(p·69)+1.
+   Positions in % of the 16:9 box, measured on frame 70 (layers: cabos x32–47; fonte/bornes slab x42–53;
+   CLP rail x52–63 y40–51; HMI x66–77 y36–58). Free space for labels: right of the HMI, above the CLP
+   rail, the floor. Callout 4 (Modbus TCP) has no object of its own (the network cable is hidden in the
+   render), so it is drawn: a dashed cable from the CLP rail to the HMI, numbered at its middle. */
+(function () {
+  var act = $('painel'), stage = $('pnl');
+  if (!act || !stage) return;
+  var NF = 70, EXPLODE_END = 60;
+  var CO = [
+    { n: 1, dot: [71.6, 46.5], lbl: [80.5, 38.0], t: 'IHM Delta DOP-107 7"', k: 'tela de toque' },
+    { n: 2, dot: [55.6, 45.0], lbl: [64.5, 22.5], t: 'CLP Delta DVP-SE com módulos PT100 e analógicos', k: 'controle' },
+    { n: 3, dot: [45.2, 57.5], lbl: [56.5, 82.0], t: 'Fonte, bornes e relés de interface', k: 'placa de montagem' },
+    { n: 4, dot: [64.6, 46.0], lbl: [67.0, 67.0], t: 'Comunicação Modbus TCP', k: 'rede CLP ↔ IHM', cable: [[60.6, 44.5], [66.6, 46.8]] }
+  ];
+  var NS = 'http://www.w3.org/2000/svg', svg = $('co-lines'), layer = $('co-layer');
+  function y9(v) { return v * 0.5625; }   // % of height → viewBox units (viewBox is 100 × 56.25)
+  function line(a, b, cls) {
+    var l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', a[0]); l.setAttribute('y1', y9(a[1])); l.setAttribute('x2', b[0]); l.setAttribute('y2', y9(b[1]));
+    if (cls) l.setAttribute('class', cls);
+    svg.appendChild(l);
+  }
+  CO.forEach(function (c) {
+    if (c.cable) line(c.cable[0], c.cable[1], 'cable');
+    line(c.dot, c.lbl);
+  });
+  CO.forEach(function (c) {
+    var d = document.createElement('span');
+    d.className = 'co-dot'; d.textContent = c.n;
+    d.style.left = c.dot[0] + '%'; d.style.top = c.dot[1] + '%';
+    layer.appendChild(d);
+  });
+  CO.forEach(function (c) {
+    var l = document.createElement('span');
+    l.className = 'co-lbl'; l.style.left = c.lbl[0] + '%'; l.style.top = c.lbl[1] + '%';
+    l.innerHTML = '<small>' + c.n + ' · ' + c.k + '</small>';
+    l.appendChild(document.createTextNode(c.t));
+    layer.appendChild(l);
+  });
+  var last = null;
+  function set(on) { if (on !== last) { last = on; stage.classList.toggle('is-exploded', on); } }
+  if (reduce) {
+    // no scrub: the poster holds the exploded view and the callouts are on
+    var poster = $('pnl-poster');
+    poster.src = poster.src.replace(/p_\d{4}\.webp$/, 'p_' + String(NF).padStart(4, '0') + '.webp');
+    set(true);
+    return;
+  }
+  whileVisible(act, function () {
+    var f = Math.min(NF, Math.max(1, Math.round(actP(act) * (NF - 1)) + 1));
+    set(f >= EXPLODE_END);
+  });
+})();
+</script>
+<script>
+/* 3b · fases: the marker slides from phase 1 to phase 5 across .phx__run, then holds through #injecao */
+(function () {
+  var run = $('ph-run'), list = $('ph-list'), mark = $('ph-mark'), now = $('ph-now');
+  if (!run) return;
+  var items = [].slice.call(list.children), TARGET = 4, last = -1;
+  function paint(pos) {                       // pos: 0..TARGET, continuous
+    var i0 = Math.floor(pos), i1 = Math.min(TARGET, i0 + 1), t = pos - i0, o = list.getBoundingClientRect().left;
+    var a = items[i0].getBoundingClientRect(), b = items[i1].getBoundingClientRect();
+    mark.style.setProperty('--ph-x', (a.left - o + (b.left - a.left) * t).toFixed(1) + 'px');
+    mark.style.setProperty('--ph-w', (a.width + (b.width - a.width) * t).toFixed(1) + 'px');
+    var k = Math.round(pos);
+    if (k === last) return;
+    last = k;
+    items.forEach(function (li, i) {
+      li.classList.toggle('is-done', i < k);
+      li.classList.toggle('is-now', i === k);
+      if (i === k) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+    });
+    now.textContent = 'Fase ' + (k + 1) + ' de ' + items.length + ' · ' + items[k].textContent;
+  }
+  if (reduce) { paint(TARGET); return; }
+  function tick() {
+    // starts when the run's top passes 85 % of the viewport, ends as #injecao enters at the bottom edge
+    var r = run.getBoundingClientRect(), a = innerHeight * 0.85;
+    var q = Math.min(1, Math.max(0, (a - r.top) / Math.max(r.height - (innerHeight - a), 1)));
+    paint(q * TARGET);
+  }
+  whileVisible($('fases'), tick);
+})();
+</script>
+<script>
+/* 4 · injeção: frame f = round(p·59)+1, same as the canvas. Frames 1–20 move (valve, pull-back): initial
+   values, overlays hidden. Frames 21–60 are one fixed shot: q = (f−21)/39, step n = min(5, ⌊q·5⌋+1);
+   inside each step the mass ramps over the first 60 % and then holds. Pressure is linear in the mass,
+   cylinder = start − mass. Every number comes from #eto-data (also window.LQ_ETO for the report). */
+(function () {
+  var act = $('injecao'), stage = $('inj');
+  if (!act || !stage) return;
+  var D = JSON.parse($('eto-data').textContent);
+  window.LQ_ETO = D;
+  var NF = 60, INJ_FIXED = 21, RAMP = 0.6, P_END = 0.9;
+  var N = D.steps, SK = D.step_kg, TOT = D.total_kg;
+  function mass(q) {
+    if (q <= 0) return 0;
+    if (q >= 1) return TOT;
+    var n = Math.min(N, Math.floor(q * N) + 1), t = q * N - (n - 1);
+    return (n - 1) * SK + SK * Math.min(1, t / RAMP);
+  }
+  function stepOf(q) { return Math.min(N, Math.floor(Math.max(0, q) * N) + 1); }
+  function pres(m) { return D.p_start + (D.p_end - D.p_start) * (m / TOT); }
+
+  /* chart, viewBox 400 × 236: mass band on top, pressure band below, x = injection progress (no clock) */
+  var X0 = 50, X1 = 392, MT = 24, MB = 92, PT = 150, PB = 218;
+  var PLO = D.p_start - 0.03, PHI = D.p_max;
+  function xOf(q) { return X0 + q * (X1 - X0); }
+  function yM(m) { return MB - m / TOT * (MB - MT); }
+  function yP(p) { return PB - (p - PLO) / (PHI - PLO) * (PB - PT); }
+  function yPm(m) { return yP(pres(m)); }       // pressure curve, plotted from the mass
+  var NS = 'http://www.w3.org/2000/svg';
+  function mk(tag, o, txt) { var e = document.createElementNS(NS, tag); for (var k in o) e.setAttribute(k, o[k]); if (txt != null) e.textContent = txt; return e; }
+  function path(q1, f) {
+    var d = '', K = 240;
+    for (var i = 0; i <= K; i++) { var q = q1 * i / K; d += (i ? 'L' : 'M') + xOf(q).toFixed(1) + ' ' + f(mass(q)).toFixed(1); }
+    return d;
+  }
+  var grid = $('eto-grid'), ax = $('eto-ax'), gd = '';
+  gd += 'M' + X0 + ' ' + yM(0) + 'H' + X1 + 'M' + X0 + ' ' + yM(TOT) + 'H' + X1;
+  gd += 'M' + X0 + ' ' + yP(D.p_start) + 'H' + X1 + 'M' + X0 + ' ' + yP(D.p_end) + 'H' + X1;
+  grid.appendChild(mk('path', { d: gd }));
+  ax.appendChild(mk('text', { 'class': 'ttl', x: X0, y: MT - 11 }, 'MASSA INJETADA · kg'));
+  ax.appendChild(mk('text', { 'class': 'ttl', x: X0, y: PT - 11 }, 'PRESSÃO DA CÂMARA · bar'));
+  ax.appendChild(mk('text', { 'class': 'ax', x: X0 - 8, y: yM(0) + 5, 'text-anchor': 'end' }, br(0, 2)));
+  ax.appendChild(mk('text', { 'class': 'ax', x: X0 - 8, y: yM(TOT) + 5, 'text-anchor': 'end' }, br(TOT, 2)));
+  ax.appendChild(mk('text', { 'class': 'ax', x: X0 - 8, y: yP(D.p_start) + 5, 'text-anchor': 'end' }, br(D.p_start, 2)));
+  ax.appendChild(mk('text', { 'class': 'ax', x: X0 - 8, y: yP(D.p_end) + 5, 'text-anchor': 'end' }, br(D.p_end, 2)));
+  var sep = '', stl = [];
+  for (var i = 0; i < N; i++) {
+    if (i) sep += 'M' + xOf(i / N) + ' ' + (MT - 2) + 'V' + PB;
+    stl.push(mk('text', { 'class': 'stp', x: xOf((i + 0.5) / N), y: (MB + PT) / 2 + 4, 'text-anchor': 'middle' }, String(i + 1)));
+    ax.appendChild(stl[i]);
+  }
+  ax.appendChild(mk('path', { 'class': 'sep', d: sep }));
+  $('eto-gm').setAttribute('d', path(1, yM));
+  $('eto-gp').setAttribute('d', path(1, yPm));
+  $('eto-tgt').textContent = 'alvo ' + br(TOT, 2) + ' kg';
+
+  var cyl = $('eto-cyl'), cyl2 = $('eto-cyl2'), inj = $('eto-inj'), inj3 = $('eto-inj3'), pp = $('eto-p'), step = $('eto-step');
+  var pips = [].slice.call($('eto-pips').children), cm = $('eto-cm'), cp = $('eto-cp'), cur = $('eto-cur'), dm = $('eto-dm'), dp = $('eto-dp');
+  var last = -1, lastFixed = null, lastEnd = null;
+  function render(f, end) {
+    if (f !== last) {
+      last = f;
+      var fixed = f >= INJ_FIXED, q = fixed ? (f - INJ_FIXED) / (NF - INJ_FIXED) : 0;
+      var m = mass(q), n = stepOf(q), p = pres(m), x = xOf(q);
+      cyl.textContent = cyl2.textContent = br(D.cyl_start - m, 2);
+      inj.textContent = inj3.textContent = br(m, 2);
+      pp.textContent = br(p, 3);
+      step.textContent = 'DEGRAU ' + n + ' DE ' + N;
+      pips.forEach(function (el, i) { el.classList.toggle('on', i < n); });
+      stl.forEach(function (el, i) { el.classList.toggle('on', i === n - 1 && fixed); });
+      cm.setAttribute('d', path(q, yM));
+      cp.setAttribute('d', path(q, yPm));
+      cur.setAttribute('x1', x); cur.setAttribute('x2', x); cur.setAttribute('y1', MT - 2); cur.setAttribute('y2', PB);
+      dm.setAttribute('cx', x); dm.setAttribute('cy', yM(m));
+      dp.setAttribute('cx', x); dp.setAttribute('cy', yP(p));
+      if (fixed !== lastFixed) { lastFixed = fixed; stage.classList.toggle('is-fixed', fixed); }
+    }
+    if (end !== lastEnd) { lastEnd = end; stage.classList.toggle('is-end', end); }
+  }
+  if (reduce) {
+    // no scrub: the poster holds the fixed shot with the injection done
+    var poster = $('inj-poster');
+    poster.src = poster.src.replace(/e_\d{4}\.webp$/, 'e_' + String(NF).padStart(4, '0') + '.webp');
+    render(NF, true);
+    return;
+  }
+  whileVisible(act, function () {
+    var p = actP(act);
+    render(Math.min(NF, Math.max(1, Math.round(p * (NF - 1)) + 1)), p >= P_END);
+  });
 })();
 </script>
 </body>
