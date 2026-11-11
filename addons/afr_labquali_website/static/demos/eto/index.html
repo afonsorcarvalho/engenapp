@@ -228,10 +228,91 @@
   .chip { justify-self: start; padding: 9px 13px; border-radius: 10px; font-size: .86rem; line-height: 1.4; background: rgba(255,176,32,.1); border: 1px solid rgba(255,176,32,.45); color: #ffe3ad; }
   .chip b { color: var(--warn); }
   .inj__demo { position: absolute; right: var(--pad); bottom: 12px; font-family: var(--mono); font-size: .66rem; color: var(--sc-ink-soft); }
-  /* ---------- contato: placeholder (Task 7) ---------- */
+  /* ---------- 5 segurança: the IHM alarm screen, rebuilt in HTML in the scene-4 HMI colours ---------- */
+  .saf { display: grid; grid-template-columns: minmax(0, 430px) minmax(0, 660px); justify-content: center; align-items: center; gap: clamp(36px, 5vw, 84px);
+         padding: 84px var(--pad) 36px; box-sizing: border-box;
+         background: radial-gradient(800px 560px at 70% 50%, rgba(255,176,32,.07), transparent 62%), #070b12; }
+  .saf__col { display: grid; gap: 16px; }
+  .saf h2, .rec h2, .close h2 { font-weight: 800; font-size: clamp(1.8rem, 3vw, 2.8rem); letter-spacing: -.04em; line-height: 1.02; margin: 10px 0 0; text-wrap: balance; }
+  .saf__body { margin: 0; color: #c3ccd6; line-height: 1.55; }
+  .saf__next { margin: 0; padding: 12px 16px; border-left: 3px solid var(--warn); background: rgba(255,176,32,.08); border-radius: 0 12px 12px 0; line-height: 1.5; color: var(--sc-ink); }
+  .saf__rules { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--line); }
+  .saf__rules li { display: grid; grid-template-columns: 74px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); line-height: 1.45; font-size: .95rem; color: #dfe5ec; }
+  .saf__rules b { font-family: var(--mono); font-weight: 500; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--sc-accent); padding-top: 3px; }
+  .saf__fig { margin: 0; display: grid; gap: 12px; }
+  /* 800 × 480 screen: sizes in cqw of the screen width (1 px of the IHM = .125cqw) */
+  .ihm { container-type: inline-size; aspect-ratio: 5 / 3; display: grid; grid-template-rows: auto auto 1fr auto; border-radius: 14px; overflow: hidden;
+         background: #0b1d30; border: 10px solid #1a2129; box-shadow: 0 30px 80px rgba(0,0,0,.5), inset 0 0 0 1px rgba(120,170,220,.22); font-family: var(--mono); color: #eef2f6; }
+  .ihm__hd { display: flex; justify-content: space-between; align-items: center; gap: 2cqw; padding: 1.6cqw 2.2cqw; background: #0d2a4a; font-size: max(.62rem, 2cqw); letter-spacing: .08em; border-bottom: 1px solid rgba(120,170,220,.22); }
+  .ihm__ph { color: var(--warn); }
+  .ihm__clk { color: #9fb2c6; }
+  .ihm__ban { display: grid; grid-template-columns: 1fr 1fr; }
+  .ihm__ban > div { display: grid; gap: .5cqw; padding: 1.6cqw 2.2cqw; font-size: max(.66rem, 2.25cqw); line-height: 1.2; }
+  .ihm__ban small { font-size: .62em; letter-spacing: .14em; opacity: .8; }
+  .ihm__pend { background: var(--warn); color: #1d1300; font-weight: 500; animation: pend 1.6s steps(2, jump-none) infinite; }
+  .ihm__next { background: #123a5e; color: #eef2f6; }
+  @keyframes pend { 50% { background: #c98a14; } }
+  .ihm__list { list-style: none; margin: 0; padding: 1.2cqw 2.2cqw; display: grid; align-content: start; }
+  .ihm__list li { display: grid; grid-template-columns: auto 1fr auto; gap: 2cqw; align-items: center; padding: 1.3cqw 0; border-bottom: 1px solid rgba(120,170,220,.14);
+                  font-size: max(.6rem, 1.9cqw); color: #7f93a8; }
+  .ihm__list time { color: #5f7286; }
+  .ihm__list em { font-style: normal; font-size: .8em; letter-spacing: .1em; }
+  .ihm__list li.is-pend { color: var(--warn); }
+  .ihm__list li.is-pend em { padding: .3em .6em; border-radius: 3px; background: rgba(255,176,32,.16); }
+  .ihm__ft { display: flex; justify-content: flex-end; gap: 1.6cqw; padding: 1.6cqw 2.2cqw; background: #0d2338; border-top: 1px solid rgba(120,170,220,.22); }
+  .ihm__btn { padding: 1.3cqw 2.4cqw; border-radius: 4px; font-size: max(.6rem, 1.8cqw); letter-spacing: .08em; background: #1d3a57; color: #c9d6e3; }
+  .ihm__btn.is-go { background: var(--warn); color: #1d1300; box-shadow: 0 0 0 2px rgba(255,176,32,.35); }
+  .saf__key { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: .8rem; color: var(--sc-ink-soft); }
+  .saf__key span { display: inline-flex; align-items: center; gap: 8px; }
+  .saf__key i { width: 10px; height: 10px; border-radius: 2px; }
+  .k-crit { background: #ff4d4d; }
+  .k-pend { background: var(--warn); }
+
+  /* ---------- 6 registro: the A4 report builds line by line; the validation block closes the scene ---------- */
+  .rec { display: grid; grid-template-columns: auto minmax(0, 470px); justify-content: center; align-items: center; gap: clamp(36px, 5vw, 88px);
+         padding: 84px var(--pad) 28px; box-sizing: border-box;
+         background: radial-gradient(900px 600px at 30% 55%, rgba(255,255,255,.04), transparent 60%), #070b12; }
+  /* the paper is the container, sized from the viewport height (A4: w = h × 210/297); the sheet's type follows its width */
+  .rec__paper { container-type: inline-size; width: min(calc((100svh - 120px) * 210 / 297), 608px); aspect-ratio: 210 / 297; }
+  .sheet { height: 100%; box-sizing: border-box; padding: 6.5cqw 7cqw; display: flex; flex-direction: column; gap: 3cqw;
+           background: #f4f1ea; color: #1a1f26; border-radius: 3px; box-shadow: 0 40px 90px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06);
+           font-family: var(--mono); font-size: 2.45cqw; line-height: 1.35; }
+  .sheet__hd { display: flex; justify-content: space-between; align-items: baseline; gap: 3cqw; padding-bottom: 2cqw; border-bottom: 2px solid #1a1f26; }
+  .sheet__hd b { font-size: 1.3em; font-weight: 500; letter-spacing: .06em; }
+  .sheet__hd span { color: #5d6670; font-size: .9em; }
+  .sheet__kv { margin: 0; display: grid; }
+  .sheet__kv > div { display: grid; grid-template-columns: 34% 1fr; gap: 2cqw; padding: .9cqw 0; border-bottom: 1px dotted #c3bdb0; }
+  .sheet__kv dt { color: #5d6670; }
+  .sheet__kv dd { margin: 0; }
+  .sheet__kv b { font-weight: 500; }
+  .sheet__kv .ok { padding: .1em .5em; border: 1.5px solid #17804f; color: #17804f; border-radius: 3px; letter-spacing: .08em; }
+  #rep-mass { color: #b8410e; }
+  #rep-cyl { color: #5d6670; }
+  .sheet__ph b { display: block; font-weight: 500; margin-bottom: 1.2cqw; }
+  .sheet__ph ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 6cqw; }
+  .sheet__ph li { display: flex; justify-content: space-between; gap: 1cqw; padding: .7cqw 0; border-bottom: 1px dotted #c3bdb0; font-size: .9em; }
+  .sheet__ph li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sheet__ph time { color: #5d6670; }
+  .sheet__sig { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8cqw; padding-top: 4cqw; }
+  .sig i { display: block; height: 7cqw; border-bottom: 1.5px solid #1a1f26; }
+  .sig span { display: block; margin-top: 1cqw; color: #5d6670; font-size: .92em; }
+  .rec__col { display: grid; gap: 26px; }
+  .rec__lead p { margin: 14px 0 0; color: #c3ccd6; line-height: 1.55; }
+  .rec__facts { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+  .rec__facts li { position: relative; padding-left: 18px; color: var(--sc-ink-soft); font-size: .92rem; line-height: 1.45; }
+  .rec__facts li::before { content: ""; position: absolute; left: 0; top: .62em; width: 8px; height: 2px; background: var(--sc-accent); }
+  .val { padding: 22px 24px; border-radius: 16px; border: 1px solid rgba(255,106,43,.4); background: linear-gradient(180deg, rgba(255,106,43,.09), rgba(255,106,43,.03)); }
+  .val h3 { margin: 8px 0 8px; font-weight: 800; font-size: clamp(1.35rem, 2vw, 1.75rem); letter-spacing: -.03em; line-height: 1.1; }
+  .val p { margin: 0; color: #c3ccd6; line-height: 1.55; font-size: .95rem; }
+  .val__steps { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .val__steps li { display: grid; gap: 2px; padding: 9px 10px; border-radius: 10px; background: rgba(5,8,13,.5); border: 1px solid var(--line-2); }
+  .val__steps b { font-family: var(--mono); font-weight: 500; font-size: 1.05rem; color: var(--sc-accent); }
+  .val__steps span { font-size: .72rem; line-height: 1.3; color: var(--sc-ink-soft); }
+
+  /* ---------- 7 contato ---------- */
   .close { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(30px, 6vw, 90px); align-items: center; padding: 90px var(--pad) 40px; box-sizing: border-box; height: 100vh; height: 100svh;
            background: radial-gradient(900px 500px at 20% 60%, rgba(255,106,43,.09), transparent 60%); }
-  .close__lead p { color: var(--sc-ink-soft); line-height: 1.6; max-width: 40ch; margin: 0; font-size: 1.05rem; }
+  .close__lead p { color: var(--sc-ink-soft); line-height: 1.6; max-width: 40ch; margin: 18px 0 0; font-size: 1.05rem; }
   .more { display: inline-flex; align-items: center; gap: 8px; margin-top: 22px; font-weight: 600; font-size: .95rem; text-decoration: none; color: var(--sc-ink);
           border-bottom: 1px solid rgba(255,106,43,.55); padding-bottom: 3px; transition: border-color .2s, color .2s; }
   .more:hover { color: #fff; border-color: var(--sc-accent); }
@@ -248,6 +329,9 @@
   .field input:focus-visible, .field select:focus-visible { outline: none; border-color: var(--sc-accent); box-shadow: 0 0 0 3px rgba(255,106,43,.2); }
   .cmd { display: flex; gap: 16px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
   .cmd output { font-family: var(--mono); font-size: .76rem; color: var(--sc-ink-soft); }
+  .form__alt { margin: 18px 0 0; font-size: .84rem; color: var(--sc-ink-soft); }
+  .form__alt a { color: var(--sc-ink); text-decoration-color: rgba(255,106,43,.55); text-underline-offset: 3px; }
+  .form__alt a:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; border-radius: 2px; }
   .foot { grid-column: 1 / -1; align-self: end; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .76rem; color: #5d6976; border-top: 1px solid var(--line); padding-top: 18px; }
 
   /* ---------- mobile ---------- */
@@ -327,7 +411,33 @@
     .inj__close { bottom: 14px; gap: 8px; }
     .inj__close p { font-size: 1rem; }
     .chip { font-size: .78rem; padding: 7px 10px; }
+    /* segurança: copy, then the screen; the colour key is dropped (the copy says it) */
+    .saf { grid-template-columns: minmax(0, 1fr); align-content: start; gap: 12px; padding: 68px 16px 14px; }
+    .saf__col { gap: 9px; }
+    .saf h2, .rec h2, .close h2 { font-size: 1.4rem; margin: 4px 0 0; }
+    .saf__body, .saf__next { font-size: .82rem; line-height: 1.42; }
+    .saf__next { padding: 8px 12px; }
+    .saf__rules li { grid-template-columns: 58px 1fr; gap: 8px; padding: 6px 0; font-size: .8rem; line-height: 1.38; }
+    .saf__rules b { font-size: .62rem; padding-top: 2px; }
+    .saf__key { display: none; }
+    .ihm { border-width: 6px; border-radius: 10px; }
+    .ihm__list li:nth-child(3) { display: none; }
+    /* registro: heading on top; the sheet, then the validation block in the same cell (cross-fade on --sc-p) */
+    .rec { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; align-content: start; align-items: start; gap: 12px; padding: 68px 16px 14px; }
+    .rec__col { display: contents; }
+    .rec__lead { grid-row: 1; }
+    .rec__lead p { margin-top: 8px; font-size: .82rem; line-height: 1.42; }
+    .rec__facts { margin-top: 8px; gap: 3px; }
+    .rec__facts li { font-size: .78rem; }
+    .rec__paper { grid-row: 2; grid-column: 1; width: auto; aspect-ratio: auto; opacity: clamp(0, calc((0.72 - var(--sc-p, 0)) * 12), 1); }
+    .sheet { height: auto; padding: 5cqw 5.5cqw; gap: 2.6cqw; font-size: 3cqw; }
+    .sheet__ph li { padding: .4cqw 0; }
+    .val { grid-row: 2; grid-column: 1; padding: 16px; }
+    .val p { font-size: .86rem; }
+    .val__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .close { grid-template-columns: minmax(0,1fr); padding: 72px 16px 16px; }
+    .form { padding: 18px; }
+    .form__alt { margin-top: 12px; }
     .foot span:not(:nth-child(2)) { display: none; }
   }
   @media (min-width: 861px) and (max-width: 1080px) {
@@ -336,13 +446,29 @@
   }
   @media (min-width: 861px) and (max-height: 820px) {
     .hero__copy { bottom: clamp(40px, 8vh, 90px); }
-    .pain__list li:nth-child(n+3) { display: none; }
     .pain__col { gap: 12px; }
+    .pain h2 { font-size: clamp(1.7rem, 2.8vw, 2.6rem); }
+    .pain__list li { padding: 7px 0 7px 22px; font-size: .93rem; line-height: 1.4; }
+    .pain__list li::before { top: 14px; }
+    .pain__lost { font-size: .95rem; line-height: 1.45; }
+    .pain__audit { padding: 10px 14px; font-size: .95rem; line-height: 1.42; }
+    .saf { padding-top: 76px; }
+    .saf__col { gap: 12px; }
+    .saf h2, .rec h2 { font-size: clamp(1.6rem, 2.6vw, 2.3rem); }
+    .saf__body, .saf__next { font-size: .93rem; line-height: 1.45; }
+    .saf__rules li { padding: 7px 0; font-size: .9rem; }
+    .rec { padding-top: 80px; }
+    .rec__col { gap: 18px; }
+    .rec__lead p { font-size: .93rem; line-height: 1.45; }
+    .val { padding: 16px 20px; }
+    .val p { font-size: .9rem; line-height: 1.45; }
   }
   @media (prefers-reduced-motion: reduce) {
     .btn, .btn svg { transition: none; }
     #inicio .hero canvas, #painel canvas, #injecao canvas { display: none; }     /* no scrubbed film: the posters hold */
     .co-dot, .co-lbl, .co-lines line, .spec li.extra, .ov, .inj__close, .inj__lead, .inj__side, .hmi, .chart, .ph__list li { transition: none; }
+    .ihm__pend { animation: none; }
+    .more, .form__alt a { transition: none; }
   }
   .mark img { display: block; height: 58px; width: auto; }
   @media (max-width: 860px) { .mark img { height: 46px; } }
@@ -446,7 +572,7 @@
     <div class="phx__head">
       <span class="eyebrow">O ciclo</span>
       <h2 id="fases-h">Nove fases, um ciclo inteiro rastreado</h2>
-      <p>Do aquecimento à hiperventilação, o CLP conduz cada fase e a IHM mostra em qual delas a carga está. A próxima cena para na quinta: a injeção de ETO.</p>
+      <p>Do aquecimento à hiperventilação, o CLP conduz cada fase e a IHM mostra em qual delas a carga está.</p>
     </div>
     <div class="ph" id="ph">
       <div class="ph__in">
@@ -527,14 +653,147 @@
   </section>
   </section>
 
-  <!-- 5 · SEGURANÇA: placeholder (Task 7) -->
-  <section id="seguranca" class="sc-section"></section>
+  <!-- 5 · SEGURANÇA: the alarm screen rebuilt in HTML (the real screenshot carries site and equipment ids).
+       Texts are the IHM's own: pendência ETO_CILINDRO and the action of the cylinder swap. -->
+  <section id="seguranca" data-sc-act="pin" data-sc-span="2.4">
+    <div data-sc-stage class="saf">
+      <div class="saf__col">
+        <div data-sc-cue="0.02">
+          <span class="eyebrow">Segurança</span>
+          <h2>Alarme que diz o que fazer</h2>
+        </div>
+        <p class="saf__body" data-sc-cue="0.06">São cerca de 45 alarmes, priorizados pela ISA-18.2. O que não é segurança vira uma pendência: a IHM diz qual é a próxima ação do operador e o ciclo não se perde. O que é segurança aborta o ciclo.</p>
+        <p class="saf__next" data-sc-cue="0.16">No meio da injeção, o cilindro esvaziou. A tela acende uma pendência amarela e indica a próxima ação: trocar o cilindro e confirmar na IHM. Depois disso, a injeção segue de onde parou.</p>
+        <ul class="saf__rules">
+          <li data-sc-cue="0.36"><b>Energia</b><span>Se a energia volta com ETO na câmara, a máquina trava até que a rotina de segurança seja executada.</span></li>
+          <li data-sc-cue="0.48"><b>Aborto</b><span>Um aborto depois da injeção de ETO força lavagens N2 e aeração antes de liberar a porta.</span></li>
+          <li data-sc-cue="0.60"><b>Porta</b><span>A porta só abre na pressão atmosférica.</span></li>
+        </ul>
+      </div>
+      <figure class="saf__fig">
+        <div class="ihm" role="img" aria-label="Tela de alarmes da IHM. Pendência amarela: TROCAR CILINDRO DE ETO. Próxima ação: TROQUE O CILINDRO E TOQUE CILINDRO TROCADO.">
+          <div class="ihm__hd"><span>ALARMES</span><span class="ihm__ph">INJEÇÃO DE ETO</span><span class="ihm__clk">10:14:06</span></div>
+          <div class="ihm__ban" data-sc-cue="0.12">
+            <div class="ihm__pend"><small>PENDÊNCIA</small><span>TROCAR CILINDRO DE ETO</span></div>
+            <div class="ihm__next"><small>PRÓXIMA AÇÃO</small><span>TROQUE O CILINDRO E TOQUE CILINDRO TROCADO</span></div>
+          </div>
+          <ol class="ihm__list">
+            <li class="is-pend" data-sc-cue="0.12"><time>10:14:06</time><span>TROCAR CILINDRO DE ETO</span><em>ATIVA</em></li>
+            <li><time>09:21:48</time><span>VÁCUO INSUFICIENTE</span><em>RESOLVIDA</em></li>
+            <li><time>08:05:12</time><span>AQUECIMENTO LENTO</span><em>RESOLVIDA</em></li>
+          </ol>
+          <div class="ihm__ft"><span class="ihm__btn">RECONHECER</span><span class="ihm__btn is-go" data-sc-cue="0.12">CILINDRO TROCADO</span></div>
+        </div>
+        <figcaption class="saf__key">
+          <span><i class="k-crit"></i>Crítico: aborta o ciclo</span>
+          <span><i class="k-pend"></i>Pendência: o ciclo espera a próxima ação</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
 
-  <!-- 6 · REGISTRO: placeholder (Task 7) -->
-  <section id="registro" class="sc-section"></section>
+  <!-- 6 · REGISTRO: the cycle report builds line by line (single-value cues: rows stay once in). The mass and
+       the cylinder come from #eto-data (LQ_ETO), the same numbers as scene 4. Mobile cross-fades the sheet
+       out and the validation block in, inside the pin. -->
+  <section id="registro" data-sc-act="pin" data-sc-span="3">
+    <div data-sc-stage class="rec">
+      <div class="rec__paper">
+        <article class="sheet" aria-label="Exemplo de relatório do ciclo">
+          <header class="sheet__hd" data-sc-cue="0.02 1 .05 0"><b>RELATÓRIO DO CICLO</b><span>Esterilização por ETO · PDF A4</span></header>
+          <dl class="sheet__kv">
+            <div data-sc-cue="0.05 1 .05 0"><dt>Empresa</dt><dd>Indústria Exemplo Ltda.</dd></div>
+            <div data-sc-cue="0.08 1 .05 0"><dt>Equipamento</dt><dd>Esterilizador ETO 1500 L</dd></div>
+            <div data-sc-cue="0.11 1 .05 0"><dt>Data</dt><dd>11/11/2026 · 07:42 a 16:22</dd></div>
+            <div data-sc-cue="0.14 1 .05 0"><dt>Operador</dt><dd>M. Andrade</dd></div>
+            <div data-sc-cue="0.17 1 .05 0"><dt>Código da carga</dt><dd>L-2026-1111-01</dd></div>
+            <div data-sc-cue="0.20 1 .05 0"><dt>Lote do cilindro</dt><dd>ETO-2611-07</dd></div>
+            <div data-sc-cue="0.23 1 .05 0"><dt>Receita</dt><dd>R5 · ETO 180 min · modo massa</dd></div>
+          </dl>
+          <div class="sheet__ph" data-sc-cue="0.28 1 .05 0">
+            <b>Tempos de cada fase</b>
+            <ol>
+              <li><span>Aquecimento</span><time>00:42</time></li>
+              <li><span>Leak test</span><time>00:35</time></li>
+              <li><span>Acondicionamento</span><time>00:55</time></li>
+              <li><span>Umidificação</span><time>00:40</time></li>
+              <li><span>Injeção de ETO</span><time>00:18</time></li>
+              <li><span>Exposição</span><time>03:00</time></li>
+              <li><span>Lavagens N2</span><time>00:50</time></li>
+              <li><span>Aeração</span><time>01:10</time></li>
+              <li><span>Hiperventilação</span><time>00:30</time></li>
+            </ol>
+          </div>
+          <dl class="sheet__kv">
+            <div data-sc-cue="0.34 1 .05 0"><dt>Leak test</dt><dd><b class="ok">APROVADO</b></dd></div>
+            <div data-sc-cue="0.38 1 .05 0"><dt>Massa de ETO</dt><dd><b id="rep-mass">0,90 kg</b> <span id="rep-cyl">cilindro 45,00 → 44,10 kg</span></dd></div>
+            <div data-sc-cue="0.42 1 .05 0"><dt>Alarmes e pendências</dt><dd>09:12 N2 INSUFICIENTE · resolvida 09:15</dd></div>
+          </dl>
+          <div class="sheet__sig" data-sc-cue="0.48 1 .05 0">
+            <div class="sig"><i></i><span>Operador</span></div>
+            <div class="sig"><i></i><span>Responsável</span></div>
+          </div>
+        </article>
+      </div>
+      <div class="rec__col">
+        <div class="rec__lead" data-sc-cue="0.02">
+          <span class="eyebrow">Registro</span>
+          <h2>Cada ciclo deixa um registro completo</h2>
+          <p>O relatório mostra quem operou, qual carga e qual cilindro, quanto ETO entrou, quanto durou cada fase, que alarmes ocorreram e o resultado do leak test. Ele sai em PDF A4, com campos para as assinaturas do operador e do responsável.</p>
+          <ul class="rec__facts">
+            <li>Usuários com níveis de acesso: operador, supervisor, calibração e manutenção.</li>
+            <li>CSV do ciclo com uma amostra por segundo.</li>
+          </ul>
+        </div>
+        <div class="val" data-sc-cue="0.66">
+          <span class="eyebrow">Validação</span>
+          <h3>Quem instala é quem valida</h3>
+          <p>A Labquali faz a qualificação QI, QO e QD do equipamento e a validação do software que instalou. A documentação fica pronta para a próxima inspeção.</p>
+          <ul class="val__steps">
+            <li><b>QI</b><span>instalação</span></li>
+            <li><b>QO</b><span>operação</span></li>
+            <li><b>QD</b><span>desempenho</span></li>
+            <li><b>SW</b><span>validação do software</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <!-- 7 · CONTATO: placeholder (Task 7). Last element on the page. -->
-  <section id="contato" class="sc-section"></section>
+  <!-- 7 · CONTATO: same component and destination as the caldeira page. Last element on the page. -->
+  <section id="contato" data-sc-act="pin" data-sc-span="1.1">
+    <div data-sc-stage class="close">
+      <div class="close__lead">
+        <span class="eyebrow">Avaliação técnica</span>
+        <h2>Agende uma avaliação técnica</h2>
+        <p>Vamos até a sua planta para levantar o painel, a instrumentação e as utilidades do esterilizador. Com isso, montamos a proposta de retrofit.</p>
+        <a class="more" href="/qualificacao/autoclave">Veja também a qualificação de autoclaves <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+      <form class="panel form" id="quote" novalidate>
+        <div class="row">
+          <label class="field">Empresa
+            <input name="empresa" type="text" placeholder="Razão social" autocomplete="organization">
+          </label>
+          <label class="field">Volume da câmara
+            <input name="volume" type="text" placeholder="ex: 1500 L" inputmode="decimal">
+          </label>
+        </div>
+        <div class="row">
+          <label class="field">CLP atual
+            <input name="clp" type="text" placeholder="Marca e modelo">
+          </label>
+          <label class="field">Prazo
+            <select name="prazo"><option>Até 3 meses</option><option>De 3 a 6 meses</option><option>Mais de 6 meses</option><option>Ainda sem prazo</option></select>
+          </label>
+        </div>
+        <div class="cmd">
+          <button class="btn" type="submit">Pedir avaliação <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <output id="quote-out" aria-live="polite"></output>
+        </div>
+        <p class="form__alt">Prefere escrever? <a href="mailto:labquali@labquali.com.br?subject=Retrofit%20ETO%20%C2%B7%20avalia%C3%A7%C3%A3o%20t%C3%A9cnica">labquali@labquali.com.br</a></p>
+      </form>
+      <div class="foot"><span>LabQuali · Qualificação térmica e calibração</span><span>Dados ilustrativos de um ciclo de demonstração</span><span>Máquina genérica renderizada, sem marca de fabricante</span></div>
+    </div>
+  </section>
 
 </main>
 
@@ -699,7 +958,7 @@ function whileVisible(el, tick) {
   var sep = '', stl = [];
   for (var i = 0; i < N; i++) {
     if (i) sep += 'M' + xOf(i / N) + ' ' + (MT - 2) + 'V' + PB;
-    stl.push(mk('text', { 'class': 'stp', x: xOf((i + 0.5) / N), y: (MB + PT) / 2 + 4, 'text-anchor': 'middle' }, String(i + 1)));
+    stl.push(mk('text', { 'class': 'stp', x: xOf((i + 0.5) / N), y: MB + 20, 'text-anchor': 'middle' }, String(i + 1)));
     ax.appendChild(stl[i]);
   }
   ax.appendChild(mk('path', { 'class': 'sep', d: sep }));
@@ -740,6 +999,27 @@ function whileVisible(el, tick) {
   whileVisible(act, function () {
     var p = actP(act);
     render(Math.min(NF, Math.max(1, Math.round(p * (NF - 1)) + 1)), p >= P_END);
+  });
+})();
+</script>
+<script>
+/* 6 · registro: the report reads the same injection data as scene 4 */
+(function () {
+  var D = window.LQ_ETO || JSON.parse($('eto-data').textContent);
+  window.LQ_ETO = D;
+  $('rep-mass').textContent = br(LQ_ETO.total_kg, 2) + ' kg';
+  $('rep-cyl').textContent = 'cilindro ' + br(D.cyl_start, 2) + ' → ' + br(D.cyl_end, 2) + ' kg';
+})();
+/* 7 · contato: a real form that opens the visitor's e-mail */
+(function () {
+  $('quote').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, emp = f.empresa.value.trim();
+    var body = 'Gostaria de agendar uma avaliação técnica para retrofit de automação ETO.\n\nEmpresa: ' + (emp || '(não informada)') +
+      '\nVolume da câmara: ' + (f.volume.value.trim() || '(não informado)') + '\nCLP atual: ' + (f.clp.value.trim() || '(não informado)') +
+      '\nPrazo: ' + f.prazo.value;
+    $('quote-out').textContent = 'Abrindo seu e-mail com o pedido de avaliação.';
+    window.location.href = 'mailto:labquali@labquali.com.br?subject=' + encodeURIComponent('Retrofit ETO · ' + (emp || 'avaliação técnica')) + '&body=' + encodeURIComponent(body);
   });
 })();
 </script>

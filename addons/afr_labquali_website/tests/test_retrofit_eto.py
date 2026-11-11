@@ -109,3 +109,83 @@ class TestRetrofitEto(HttpCase):
             r = self.url_open(url)
             self.assertEqual(r.status_code, 200, url)
             self.assertEqual(r.headers.get("Content-Type"), "image/webp", url)
+
+    # ---- Task 7: segurança, registro, contato, rigor do copy, orçamento ----
+
+    FORBIDDEN = ("part 11", "criptograf", "assinatura eletrônica", "supervisório", "detector de eto",
+                 "marsp", "montroiz")
+    FORBIDDEN_WORDS = ("hash", "ntp", "nuvem")
+
+    def _section(self, html, sid):
+        start = html.index('id="%s"' % sid)
+        end = html.find("<section", start + 1)
+        return html[start:end if end > 0 else len(html)]
+
+    def test_safety_scene(self):
+        sec = self._section(self._html(), "seguranca")
+        for s in (
+            "Alarme que diz o que fazer",
+            "ISA-18.2",
+            "próxima ação",
+            "próxima ação: trocar o cilindro e confirmar na IHM",
+            "TROCAR CILINDRO DE ETO",
+            "pressão atmosférica",
+            "lavagens N2",
+            "rotina de segurança",
+        ):
+            self.assertIn(s, sec)
+
+    def test_record_scene(self):
+        import json
+        import re
+        html = self._html()
+        sec = self._section(html, "registro")
+        for s in (
+            "Cada ciclo deixa um registro completo",
+            "Quem instala é quem valida",
+            "QI", "QO", "QD",
+            "validação do software",
+            "APROVADO",
+            "CSV",
+        ):
+            self.assertIn(s, sec)
+        # the report reads the injected mass from the injection data, and its static fallback agrees
+        self.assertIn("LQ_ETO.total_kg", html)
+        d = json.loads(re.search(r'id="eto-data">(.*?)</script>', html, re.S).group(1))
+        m = re.search(r'id="rep-mass">([^<]*)<', sec)
+        self.assertTrue(m, "report mass field missing")
+        self.assertEqual(m.group(1).strip(), ("%.2f" % d["total_kg"]).replace(".", ",") + " kg")
+        # blank signature lines for the operator and the person in charge
+        for who in ("Operador", "Responsável"):
+            self.assertRegex(sec, r'<div class="sig">\s*<i></i>\s*<span>%s</span>' % who)
+
+    def test_cta(self):
+        html = self._html()
+        sec = self._section(html, "contato")
+        for s in ('id="quote"', "Agende uma avaliação técnica", "mailto:labquali@labquali.com.br", "Retrofit ETO · "):
+            self.assertIn(s, html)
+        self.assertIn('id="quote"', sec)
+        self.assertGreaterEqual(html.count('href="#contato"'), 2)
+
+    def test_copy_rigor(self):
+        import re
+        html = self._html()
+        text = re.sub(r"<script\b.*?</script>|<style\b.*?</style>", " ", html, flags=re.S | re.I)
+        low = text.lower()
+        for bad in self.FORBIDDEN:
+            self.assertNotIn(bad, low)
+        for bad in self.FORBIDDEN_WORDS:
+            self.assertIsNone(re.search(r"\b%s\b" % bad, low), bad)
+        self.assertNotIn("11135", low)
+        self.assertNotIn("rdc", low)
+        self.assertIn("óxido de etileno (ETO)", text)
+        self.assertIn("Dados ilustrativos de um ciclo de demonstração", text)
+
+    def test_size_budget(self):
+        import os
+        root = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "demos", "eto")
+        total = 0
+        for d, _dirs, files in os.walk(root):
+            total += sum(os.path.getsize(os.path.join(d, f)) for f in files)
+        self.assertGreater(total, 0)
+        self.assertLessEqual(total, 12 * 1024 * 1024, "eto demo is %.2f MB" % (total / 1048576.0))
