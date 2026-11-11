@@ -53,7 +53,7 @@ class TestDemoCaldeira(HttpCase):
         self.assertEqual(warn, ["F3"])
         self.assertIn("window.LQ_UT", r.text)
         self.assertIn("0,16 mm/ano", r.text)
-        self.assertIn("13.4.4.6", r.text)
+        self.assertIn("25 anos: avaliação de integridade", r.text)
 
     def test_valve_frame(self):
         r = self.url_open("/inspecao/caldeira/seqv/v_0038.webp")
@@ -82,8 +82,8 @@ class TestDemoCaldeira(HttpCase):
             self.assertGreaterEqual(p, d["pmta"] * 0.97)
         self.assertIn("window.LQ_PSV", r.text)
         self.assertIn('id="psv-kgf"', r.text)
-        self.assertIn("13.4.4.7.1", r.text)
-        self.assertIn("13.4.1.2 'a'", r.text)
+        self.assertIn("Teste em campo só em caráter excepcional", r.text)
+        self.assertIn("APROVADA — abertura ≤ PMTA", r.text)
 
     def test_ultrasound_coverage(self):
         # nominal / minimum per region, the furnace timeline and the PLH recommendation
@@ -97,7 +97,7 @@ class TestDemoCaldeira(HttpCase):
             self.assertEqual((p["nominal"], p["min"]), expect[p["id"][0]], p["id"])
         for year in ("2014", "2026", "2034", "2039"):
             self.assertIn("<b>%s</b>" % year, r.text)
-        self.assertIn("(13.4.4.6)", r.text)
+        self.assertIn("avaliação de integridade", r.text)
         self.assertIn("Reinspecionar fornalha em 12 meses", r.text)
         self.assertIn("metade da vida remanescente", r.text)
 
@@ -117,7 +117,7 @@ class TestDemoCaldeira(HttpCase):
         self.assertIn('id="quote"', html)
         self.assertIn('href="/qualificacao/autoclave"', html)
         self.assertIn("Também inspecionamos autoclaves e vasos de pressão", html)
-        self.assertIn("Conteúdo mínimo conforme 13.4.4.12", html)
+        self.assertIn("Conteúdo mínimo exigido pela NR-13", html)
         self.assertIn("CREA-MA 000000-0 · ART nº 0000000", html)
         self.assertIn("11/2027", html)
         self.assertIn("still/interno_1.webp", html)
@@ -132,10 +132,11 @@ class TestDemoCaldeira(HttpCase):
         low = html.lower()
         for bad in ("teste hidrostático periódico", "aposentad", "categoria por pmta"):
             self.assertNotIn(bad, low)
-        for good in ("PLH", "Profissional Legalmente Habilitado", "13.4.4.12"):
+        for good in ("PLH", "Profissional Legalmente Habilitado", "NR-13"):
             self.assertIn(good, html)
-        # one illustrative-data disclaimer for the whole page
-        self.assertEqual(html.count("Dados ilustrativos de uma caldeira fictícia"), 1)
+        # no bare NR-13 item numbers in the copy (reads heavy); the example disclaimer appears in hero + plate
+        self.assertIsNone(re.search(r"\b13\.\d+\.\d+", html), "no NR-13 item numbers in copy")
+        self.assertEqual(html.count("Exemplo ilustrativo"), 2)
 
     def test_accessibility(self):
         html = self.url_open("/inspecao/caldeira").text

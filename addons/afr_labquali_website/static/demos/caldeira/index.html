@@ -90,6 +90,7 @@
   .hero__copy { position: absolute; left: var(--pad); bottom: clamp(56px, 12vh, 140px); max-width: 620px; }
   .hero h1 { font-weight: 800; font-size: clamp(2.6rem, 6.2vw, 5.6rem); line-height: .98; letter-spacing: -.045em; margin: 18px 0 22px; text-wrap: balance; }
   .hero p { font-size: clamp(1rem, 1.3vw, 1.18rem); line-height: 1.55; color: #c3ccd6; max-width: 44ch; margin: 0 0 30px; }
+  .hero__note { font-size: .86rem; color: #8d99a6; max-width: 48ch; margin: -14px 0 26px; }
   .hero__meta { display: flex; gap: 28px; margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line-2); }
   .hero__meta div { font-size: .82rem; color: var(--sc-ink-soft); line-height: 1.4; }
   .hero__meta b { display: block; color: var(--sc-ink); font-family: var(--mono); font-weight: 500; font-size: .95rem; }
@@ -549,17 +550,18 @@
         <span class="eyebrow">Caldeiras a vapor · inspeção periódica</span>
         <h1>Inspeção de segurança NR-13</h1>
         <p>Feita por engenheiro legalmente habilitado (PLH), com ART. Relatório em até 60 dias.</p>
+        <p class="hero__note">Exemplo ilustrativo com uma caldeira fictícia. O escopo real segue o equipamento, o projeto e o histórico de cada cliente.</p>
         <a class="btn" href="#contato">Pedir orçamento <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
         <div class="hero__meta">
           <div><b>NR-13</b>Portaria MTP 1.846/2022</div>
           <div><b>PLH + ART</b>responsável técnico</div>
-          <div><b>60 dias</b>prazo do relatório (13.3.8)</div>
+          <div><b>60 dias</b>prazo do relatório</div>
         </div>
       </div>
       <div class="beat beat--valves" data-sc-cue="0.30 0.50">
         <span class="eyebrow">Dispositivos de segurança</span>
-        <h2>Duas válvulas de segurança, abertura ≤ PMTA — 13.4.1.2</h2>
-        <p>Ajustadas em 10,0 e 10,5 kgf/cm², nenhuma acima da PMTA de 10,5. Na inspeção elas saem da caldeira e são desmontadas e testadas em bancada (13.4.4.7).</p>
+        <h2>Duas válvulas de segurança, nenhuma abre acima da PMTA</h2>
+        <p>Ajustadas em 10,0 e 10,5 kgf/cm², nenhuma acima da PMTA de 10,5. Na inspeção elas saem da caldeira e são desmontadas e testadas em bancada.</p>
       </div>
       <div class="beat beat--shell" data-sc-cue="0.55 0.75">
         <span class="eyebrow">Casco</span>
@@ -569,7 +571,7 @@
       <div class="beat beat--door" data-sc-cue="0.82 0.98">
         <span class="eyebrow">Exame interno</span>
         <h2>Porta aberta: espelho e fornalha, o lado fogo</h2>
-        <p>Tubos, solda tubo-espelho e a boca da fornalha, examinados e fotografados. As fotos do exame interno são item obrigatório do relatório (13.4.4.12).</p>
+        <p>Tubos, solda tubo-espelho e a boca da fornalha, examinados e fotografados. As fotos do exame interno são item obrigatório do relatório.</p>
       </div>
     </div>
   </section>
@@ -585,9 +587,9 @@
           <h2>Primeiro, a placa.</h2>
           <p>A categoria da caldeira sai da pressão de operação, não da PMTA. É ela que fixa o prazo das inspeções.</p>
         </div>
-        <figure class="plate" aria-label="Placa de identificação da caldeira (13.4.1.3)">
+        <figure class="plate" aria-label="Placa de identificação da caldeira">
           <span class="plate__rivets" aria-hidden="true"></span>
-          <div class="plate__head"><b>Placa de identificação</b><span>NR-13 · 13.4.1.3</span></div>
+          <div class="plate__head"><b>Placa de identificação</b><span>NR-13</span></div>
           <dl>
             <div data-sc-cue="0.10"><dt>Fabricante</dt><dd>genérico</dd></div>
             <div data-sc-cue="0.16"><dt>Nº de ordem</dt><dd>2014-0471</dd></div>
@@ -599,10 +601,10 @@
           </dl>
           <dl class="plate__op" data-sc-cue="0.56"><dt>Pressão de operação</dt><dd>7,0 kgf/cm² <small>(686 kPa)</small></dd></dl>
         </figure>
-        <div data-sc-cue="0.66"><span class="chip">Categoria B — inspeção interna e externa a cada 12 meses (13.4.4.4)</span></div>
-        <p class="frame__note" data-sc-cue="0.74">Categoria A a partir de 1.960 kPa de pressão de operação (13.4.1.1)</p>
+        <div data-sc-cue="0.66"><span class="chip">Categoria B — inspeção interna e externa a cada 12 meses</span></div>
+        <p class="frame__note" data-sc-cue="0.74">Categoria A a partir de 1.960 kPa de pressão de operação</p>
       </div>
-      <span class="frame__demo">Dados ilustrativos de uma caldeira fictícia</span>
+      <span class="frame__demo">Exemplo ilustrativo · caldeira fictícia, dados simulados</span>
     </div>
   </section>
 
@@ -620,7 +622,7 @@
         <li>
           <h3>Documentos e Registro de Segurança</h3>
           <p>Prontuário, projeto de instalação, relatórios anteriores e certificados das válvulas. O Registro de Segurança leva a assinatura do PLH e do operador presente.</p>
-          <div class="ref">13.4.1.5 · 13.4.1.8</div>
+          <div class="ref">Prontuário · projeto de instalação · certificados</div>
         </li>
         <li>
           <h3>Parada, resfriamento e bloqueio</h3>
@@ -630,22 +632,22 @@
         <li>
           <h3>Exame externo</h3>
           <p>Casco, isolamento, suportes e conexões, e os dispositivos obrigatórios: válvula de segurança, indicador de pressão e controle de nível com intertravamento.</p>
-          <div class="ref">13.4.1.2 · 13.4.4.4</div>
+          <div class="ref">Dispositivos de segurança · casa de caldeiras</div>
         </li>
         <li>
           <h3>Exame interno: lado água e lado fogo</h3>
           <p>Incrustação e corrosão do lado água; fornalha, espelhos, tubos e solda tubo-espelho do lado fogo. Tudo fotografado para o relatório.</p>
-          <div class="ref">13.4.4.4 · 13.4.4.12</div>
+          <div class="ref">Exame visual e registro fotográfico</div>
         </li>
         <li>
           <h3>Ensaios: ultrassom e válvula de segurança</h3>
           <p>Espessura medida por ultrassom nos pontos críticos. A válvula sai da caldeira, é desmontada, inspecionada e testada em bancada.</p>
-          <div class="ref">Válvula 13.4.4.7 · <span>ultrassom: método do PLH</span></div>
+          <div class="ref">Válvula em bancada · <span>ultrassom: método definido pelo PLH</span></div>
         </li>
         <li>
           <h3>Relatório e anotação no Registro</h3>
           <p>A condição da caldeira é anotada no Registro de Segurança logo após a inspeção. O relatório, com os itens mínimos da norma, sai em até 60 dias.</p>
-          <div class="ref">13.3.8 · 13.3.8.1 · 13.4.4.12</div>
+          <div class="ref">Relatório em até 60 dias · Registro de Segurança</div>
         </li>
       </ol>
     </div>
@@ -703,7 +705,7 @@
               <li style="left:0%"><b>2014</b><span>fabricação · 12,7 mm</span></li>
               <li class="now" style="left:48%"><b>2026</b><span>esta inspeção · 10,8 mm</span></li>
               <li class="end" style="left:80%"><b>2034</b><span>fim da vida pela taxa atual</span></li>
-              <li style="left:100%"><b>2039</b><span>25 anos: avaliação de integridade (13.4.4.6)</span></li>
+              <li style="left:100%"><b>2039</b><span>25 anos: avaliação de integridade</span></li>
             </ol>
             <p class="ut-rec">Reinspecionar fornalha em 12 meses; próxima inspeção ≤ metade da vida remanescente.<small>Critério de prática de inspeção (API 510), adotado pelo PLH.</small></p>
           </article>
@@ -741,7 +743,7 @@
       <div class="psv__lead" data-sc-cue="0 0.31 0">
         <span class="eyebrow">Ensaio · válvula de segurança</span>
         <h2>Fora da caldeira, na bancada.</h2>
-        <p>Válvula desmontada, inspecionada e testada em bancada no prazo da inspeção periódica (13.4.4.7). Teste em campo só em caráter excepcional (13.4.4.7.1).</p>
+        <p>Válvula desmontada, inspecionada e testada em bancada no prazo da inspeção periódica. Teste em campo só em caráter excepcional, justificado pelo PLH.</p>
       </div>
       <div class="beat psv-beat" data-sc-cue="0.36 0.43">
         <span class="eyebrow">Em corte</span>
@@ -782,7 +784,7 @@
           <line class="cur" id="psv-cur" x1="0" y1="0" x2="0" y2="0"/>
           <circle class="dot" id="psv-dot" r="6" cx="0" cy="0"/>
         </svg>
-        <div class="psv-stamp" id="psv-stamp" aria-hidden="true"><b>APROVADA — abertura ≤ PMTA (13.4.1.2 'a')</b><span id="psv-cert">Certificado</span></div>
+        <div class="psv-stamp" id="psv-stamp" aria-hidden="true"><b>APROVADA — abertura ≤ PMTA</b><span id="psv-cert">Certificado</span></div>
       </figure>
       <script type="application/json" id="psv-data">
 {"pops": [38, 54, 70], "pressures": [10.42, 10.47, 10.45], "pmta": 10.5, "cert": "CV-2026-0187"}
@@ -798,7 +800,7 @@
         <div class="rail__lead">
           <span class="eyebrow">Relatório de inspeção</span>
           <h2>Tudo isso vira relatório.</h2>
-          <p>A placa, as fotos do exame interno, as doze espessuras e o certificado da válvula, num relatório assinado pelo PLH com ART e entregue em até 60 dias (13.3.8). A condição da caldeira vai para o Registro de Segurança no ato (13.3.8.1).</p>
+          <p>A placa, as fotos do exame interno, as doze espessuras e o certificado da válvula, num relatório assinado pelo PLH com ART e entregue em até 60 dias. A condição da caldeira vai para o Registro de Segurança no ato. Neste exemplo, o conteúdo segue uma caldeira fictícia; o relatório real reflete o equipamento inspecionado.</p>
         </div>
 
         <article class="doc" aria-label="Página 1: capa do relatório">
@@ -808,7 +810,7 @@
             <div><dt>Tipo de inspeção</dt><dd>periódica · externa e interna</dd></div>
             <div><dt>Início · término</dt><dd>03/11/2026 · 04/11/2026</dd></div>
           </dl>
-          <span class="k">Dados da placa (13.4.1.3)</span>
+          <span class="k">Dados da placa</span>
           <dl id="rep-plate"></dl>
           <footer><span>Caldeira 2014-0471</span><span>p. 1/6</span></footer>
         </article>
@@ -839,13 +841,13 @@
 
         <article class="doc" aria-label="Página 4: certificado da válvula de segurança">
           <header><b>Válvula</b><span id="rep-cert">Certificado</span></header>
-          <h3>Válvula de segurança testada em bancada (13.4.4.7)</h3>
+          <h3>Válvula de segurança testada em bancada</h3>
           <dl id="rep-psv-head"></dl>
           <table>
             <thead><tr><th scope="col">Ensaio</th><th scope="col">Critério</th><th scope="col">Abertura</th><th scope="col">Result.</th></tr></thead>
             <tbody id="rep-psv"></tbody>
           </table>
-          <p class="box is-verdict"><b>Aprovada.</b> Três aberturas com pressão ≤ PMTA (13.4.1.2 'a') e reassentamento sem vazamento.</p>
+          <p class="box is-verdict"><b>Aprovada.</b> Três aberturas com pressão ≤ PMTA e reassentamento sem vazamento.</p>
           <footer><span>Caldeira 2014-0471</span><span>p. 4/6</span></footer>
         </article>
 
@@ -853,7 +855,7 @@
           <header><b>Pendências</b><span>Itens e recomendações</span></header>
           <span class="k">Itens da NR-13 não atendidos</span>
           <ol>
-            <li>Casa de caldeiras sem sensor de gás instalado (13.4.2.4).</li>
+            <li>Casa de caldeiras sem sensor de gás instalado.</li>
           </ol>
           <span class="k">Recomendações e providências</span>
           <ol id="rep-rec">
@@ -868,7 +870,7 @@
           <header><b>Parecer</b><span>Conclusivo</span></header>
           <p class="box is-verdict">A caldeira tem condições de operar com segurança até a próxima inspeção, cumpridas as recomendações da p. 5.</p>
           <div class="next"><span class="k">Próxima inspeção</span><b>11/2027</b></div>
-          <p>Prazo de 12 meses para categoria B (13.4.4.4). Condição anotada no Registro de Segurança (13.3.8.1).</p>
+          <p>Prazo de 12 meses para categoria B. Condição anotada no Registro de Segurança.</p>
           <div class="sigblock">
             <span class="sig">Resp. técnico</span>
             <p><b>Engenheiro mecânico · PLH</b><br><span class="mono">CREA-MA 000000-0 · ART nº 0000000</span></p>
@@ -879,7 +881,7 @@
 
         <aside class="toc panel" aria-labelledby="toc-h">
           <span class="eyebrow">Checklist da norma</span>
-          <h3 id="toc-h">Conteúdo mínimo conforme 13.4.4.12</h3>
+          <h3 id="toc-h">Conteúdo mínimo exigido pela NR-13</h3>
           <ol>
             <li><span>Dados da placa</span><i>p. 1</i></li>
             <li><span>Categoria da caldeira</span><i>p. 1</i></li>
