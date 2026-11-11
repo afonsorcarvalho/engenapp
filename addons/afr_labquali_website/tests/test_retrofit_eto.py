@@ -134,6 +134,9 @@ class TestRetrofitEto(HttpCase):
             "rotina de segurança",
         ):
             self.assertIn(s, sec)
+        # scene 4 ends with 44,10 kg left in the cylinder: the empty-cylinder case is a hypothesis, not an event
+        self.assertIn("Se o cilindro esvaziar", sec)
+        self.assertNotIn("o cilindro esvaziou", sec)
 
     def test_record_scene(self):
         import json

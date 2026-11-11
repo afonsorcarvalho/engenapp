@@ -104,7 +104,6 @@
   .down { position: absolute; right: var(--pad); bottom: clamp(48px, 10vh, 110px); padding: 20px 26px; border-radius: 16px; background: rgba(5,8,13,.66); backdrop-filter: blur(12px); border: 1px solid rgba(255,106,43,.45); text-align: right; }
   .down b { display: block; font-family: var(--mono); font-weight: 500; font-size: clamp(3rem, 6vw, 5.4rem); line-height: 1; color: var(--sc-accent); font-variant-numeric: tabular-nums; }
   .down > span { font-family: var(--mono); font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--sc-ink-soft); }
-  .pain__demo { position: absolute; left: var(--pad); bottom: 22px; font-family: var(--mono); font-size: .7rem; color: var(--sc-ink-soft); }
 
   /* ---------- frame boxes: the render lives in a 16:9 box, so overlays placed in % of the box stay glued
      to the same spot of the frame at any viewport. .fr is the window, .box the full frame inside it. ---------- */
@@ -336,7 +335,7 @@
 
   /* ---------- mobile ---------- */
   @media (max-width: 860px) {
-    .hero .eyebrow { display: none; }
+    .hero .eyebrow { display: block; margin-bottom: 8px; font-size: .62rem; letter-spacing: .12em; line-height: 1.5; }
     .bar { height: 58px; gap: 12px; }
     .bar nav, .mark small { display: none; }
     .bar .back { padding: 6px 10px; font-size: .8rem; }
@@ -358,7 +357,6 @@
     .pain__audit { padding: 10px 14px; font-size: .88rem; }
     .down { right: 16px; top: 72px; bottom: auto; padding: 10px 16px; }
     .down b { font-size: 2.2rem; }
-    .pain__demo { display: none; }
     /* painel: the frame on top, cropped around the panel (x 24-86 %), copy below; on the frame only the numbered dots */
     .pnl .fr { top: 58px; bottom: auto; height: 90vw; }
     .pnl .box { left: -38vw; top: 0; width: 160vw; transform: none; }
@@ -384,11 +382,12 @@
     .phx__run { height: 70svh; }
     .phx__run p { font-size: 1.1rem; }
     /* injeção: frame on top, cropped around cylinder, scale and HMI (x 25-81 %, centred on 53 %); HMI mirror and chart below */
-    .inj .fr { top: 116px; bottom: auto; height: 101.25vw; }
+    .inj { --frh: 101.25vw; }
+    .inj .fr { top: 116px; bottom: auto; height: var(--frh); }
     .inj .box { left: -45.4vw; top: 0; width: 180vw; transform: none; }
     .inj__scrim, .inj__demo { display: none; }
     .inj__lead, .inj__side, .inj__close { left: 16px; right: 16px; width: auto; }
-    .inj__lead, .inj__side { top: calc(116px + 101.25vw + 10px); }
+    .inj__lead, .inj__side { top: calc(116px + var(--frh) + 10px); }
     .inj__lead { transition: opacity .35s; }
     .inj.is-fixed .inj__lead { opacity: 0; pointer-events: none; }
     .inj__lead h2 { font-size: 1.35rem; margin: 4px 0 6px; }
@@ -405,8 +404,8 @@
     .hmi__grid dd { font-size: .98rem; }
     .hmi__grid .tgt { display: none; }
     .chart { padding: 6px 8px 2px; }
-    .chart svg { height: min(150px, calc(100svh - 116px - 101.25vw - 160px)); }
-    .chart figcaption { display: none; }
+    .chart svg { height: max(96px, min(150px, calc(100svh - 116px - var(--frh) - 190px))); }
+    .chart figcaption { margin-top: 2px; font-size: .64rem; }   /* keeps the chart from reading as an IHM screen */
     .inj.is-end .chart { opacity: 0; }
     .inj__close { bottom: 14px; gap: 8px; }
     .inj__close p { font-size: 1rem; }
@@ -440,6 +439,26 @@
     .form__alt { margin-top: 12px; }
     .foot span:not(:nth-child(2)) { display: none; }
   }
+  /* low phones (375 × 667): crop the injection frame's floor so the HMI mirror and the chart keep room */
+  @media (max-width: 860px) and (max-height: 740px) {
+    .inj { --frh: 78vw; }
+    .inj__lead p { font-size: .8rem; line-height: 1.4; }
+    /* segurança: the banner carries the pendência and its action; the history list and buttons go */
+    .ihm__list, .ihm__ft { display: none; }
+    .ihm { aspect-ratio: auto; }
+    .saf { padding-top: 64px; gap: 10px; }
+    .saf__body, .saf__next { font-size: .78rem; line-height: 1.38; }
+    .saf__rules li { padding: 5px 0; font-size: .76rem; }
+    /* registro: the lead already names the phase times; the sheet keeps ids, verdict, mass and signatures */
+    .sheet__ph { display: none; }
+    .sheet { padding: 4cqw 5cqw; gap: 2cqw; }
+    .sheet__hd span { display: none; }
+    .sheet__sig { padding-top: 1cqw; }
+    .sig i { height: 5cqw; }
+    .rec__facts { margin-top: 6px; }
+    .rec { padding-top: 64px; gap: 10px; }
+    .rec__lead p { font-size: .78rem; line-height: 1.38; }
+  }
   @media (min-width: 861px) and (max-width: 1080px) {
     .bar nav { display: none; }
     .bar .btn { margin-left: auto; }
@@ -468,6 +487,7 @@
     #inicio .hero canvas, #painel canvas, #injecao canvas { display: none; }     /* no scrubbed film: the posters hold */
     .co-dot, .co-lbl, .co-lines line, .spec li.extra, .ov, .inj__close, .inj__lead, .inj__side, .hmi, .chart, .ph__list li { transition: none; }
     .ihm__pend { animation: none; }
+    .inj .ov { opacity: 1; }
     .more, .form__alt a { transition: none; }
   }
   .mark img { display: block; height: 58px; width: auto; }
@@ -527,7 +547,6 @@
         <b><span data-sc-count="0 7" data-sc-count-at="0.20 0.80">0</span></b>
         <span>dias parado</span>
       </div>
-      <span class="pain__demo">Dados ilustrativos de um ciclo de demonstração</span>
     </div>
   </section>
 
@@ -571,7 +590,7 @@
   <section id="fases" class="phx" aria-labelledby="fases-h">
     <div class="phx__head">
       <span class="eyebrow">O ciclo</span>
-      <h2 id="fases-h">Nove fases, um ciclo inteiro rastreado</h2>
+      <h2 id="fases-h">As fases do ciclo, uma a uma</h2>
       <p>Do aquecimento à hiperventilação, o CLP conduz cada fase e a IHM mostra em qual delas a carga está.</p>
     </div>
     <div class="ph" id="ph">
@@ -589,7 +608,7 @@
       </ol>
       <span class="ph__mark" id="ph-mark" aria-hidden="true"></span>
       </div>
-      <p class="ph__now" id="ph-now" aria-hidden="true">Fase 1 de 9 · Aquecimento</p>
+      <p class="ph__now" id="ph-now" aria-hidden="true">Fase 1 · Aquecimento</p>
     </div>
     <div class="phx__run" id="ph-run">
       <p>Na quinta fase, quem decide quanto ETO entra é <b>a balança</b>.</p>
@@ -663,7 +682,7 @@
           <h2>Alarme que diz o que fazer</h2>
         </div>
         <p class="saf__body" data-sc-cue="0.06">São cerca de 45 alarmes, priorizados pela ISA-18.2. O que não é segurança vira uma pendência: a IHM diz qual é a próxima ação do operador e o ciclo não se perde. O que é segurança aborta o ciclo.</p>
-        <p class="saf__next" data-sc-cue="0.16">No meio da injeção, o cilindro esvaziou. A tela acende uma pendência amarela e indica a próxima ação: trocar o cilindro e confirmar na IHM. Depois disso, a injeção segue de onde parou.</p>
+        <p class="saf__next" data-sc-cue="0.16">Se o cilindro esvaziar no meio da injeção, a tela acende uma pendência amarela e indica a próxima ação: trocar o cilindro e confirmar na IHM. Feito isso, a injeção segue de onde parou.</p>
         <ul class="saf__rules">
           <li data-sc-cue="0.36"><b>Energia</b><span>Se a energia volta com ETO na câmara, a máquina trava até que a rotina de segurança seja executada.</span></li>
           <li data-sc-cue="0.48"><b>Aborto</b><span>Um aborto depois da injeção de ETO força lavagens N2 e aeração antes de liberar a porta.</span></li>
@@ -672,13 +691,13 @@
       </div>
       <figure class="saf__fig">
         <div class="ihm" role="img" aria-label="Tela de alarmes da IHM. Pendência amarela: TROCAR CILINDRO DE ETO. Próxima ação: TROQUE O CILINDRO E TOQUE CILINDRO TROCADO.">
-          <div class="ihm__hd"><span>ALARMES</span><span class="ihm__ph">INJEÇÃO DE ETO</span><span class="ihm__clk">10:14:06</span></div>
+          <div class="ihm__hd"><span>ALARMES</span><span class="ihm__ph">INJEÇÃO DE ETO</span><span class="ihm__clk">10:41:06</span></div>
           <div class="ihm__ban" data-sc-cue="0.12">
             <div class="ihm__pend"><small>PENDÊNCIA</small><span>TROCAR CILINDRO DE ETO</span></div>
             <div class="ihm__next"><small>PRÓXIMA AÇÃO</small><span>TROQUE O CILINDRO E TOQUE CILINDRO TROCADO</span></div>
           </div>
           <ol class="ihm__list">
-            <li class="is-pend" data-sc-cue="0.12"><time>10:14:06</time><span>TROCAR CILINDRO DE ETO</span><em>ATIVA</em></li>
+            <li class="is-pend" data-sc-cue="0.12"><time>10:41:06</time><span>TROCAR CILINDRO DE ETO</span><em>ATIVA</em></li>
             <li><time>09:21:48</time><span>VÁCUO INSUFICIENTE</span><em>RESOLVIDA</em></li>
             <li><time>08:05:12</time><span>AQUECIMENTO LENTO</span><em>RESOLVIDA</em></li>
           </ol>
@@ -898,7 +917,7 @@ function whileVisible(el, tick) {
       li.classList.toggle('is-now', i === k);
       if (i === k) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
     });
-    now.textContent = 'Fase ' + (k + 1) + ' de ' + items.length + ' · ' + items[k].textContent;
+    now.textContent = 'Fase ' + (k + 1) + ' · ' + items[k].textContent;
   }
   if (reduce) { paint(TARGET); return; }
   function tick() {
@@ -994,6 +1013,14 @@ function whileVisible(el, tick) {
     var poster = $('inj-poster');
     poster.src = poster.src.replace(/e_\d{4}\.webp$/, 'e_' + String(NF).padStart(4, '0') + '.webp');
     render(NF, true);
+    // Mobile stacks lead, HMI mirror + chart and the close in one cell below the frame, so pinning all of them
+    // at once would hide the lead and the chart for good. Values stay final; only which block shows follows p.
+    var small = matchMedia('(max-width: 860px)');
+    whileVisible(act, function () {
+      var p = actP(act), m = small.matches;
+      stage.classList.toggle('is-fixed', !m || p >= 0.34);
+      stage.classList.toggle('is-end', !m || p >= P_END);
+    });
     return;
   }
   whileVisible(act, function () {
