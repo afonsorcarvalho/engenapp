@@ -3,7 +3,8 @@
 Each page is a self-contained static build under static/demos/<slug>/ (HTML,
 scroll engine, 3D render frames). The page is served at /<prefix>/<slug>
 and its assets at /<prefix>/<slug>/<file>, where prefix is "qualificacao"
-(autoclave, termodesinfectora, estufa, camara-fria) or "inspecao" (caldeira).
+(autoclave, termodesinfectora, estufa, camara-fria), "inspecao" (caldeira) or
+"retrofit" (eto).
 The legacy /qualificacao/caldeira page redirects (301) to /inspecao/caldeira.
 
 Assets go through this controller instead of /afr_labquali_website/static/:
@@ -23,8 +24,9 @@ from odoo.modules.module import get_module_resource
 MODULE = "afr_labquali_website"
 QUALIFICACAO = ("autoclave", "termodesinfectora", "estufa", "camara-fria")
 INSPECAO = ("caldeira",)
-DEMOS = QUALIFICACAO + INSPECAO
-PREFIXES = {"qualificacao": QUALIFICACAO, "inspecao": INSPECAO}
+RETROFIT = ("eto",)
+DEMOS = QUALIFICACAO + INSPECAO + RETROFIT
+PREFIXES = {"qualificacao": QUALIFICACAO, "inspecao": INSPECAO, "retrofit": RETROFIT}
 _REL_ATTR = re.compile(r'((?:src|href|data-sc-sequence)=")(?![#/]|https?:|mailto:|data:)')
 _STATIC_PREFIX = "/%s/static/demos/" % MODULE
 mimetypes.add_type("image/webp", ".webp")
@@ -61,7 +63,8 @@ def _prefix():
 
 class LabqualiDemos(http.Controller):
 
-    @http.route(["/qualificacao/<string:slug>", "/inspecao/<string:slug>"],
+    @http.route(["/qualificacao/<string:slug>", "/inspecao/<string:slug>",
+                  "/retrofit/<string:slug>"],
                 type="http", auth="public", website=False)
     def demo(self, slug, **kw):
         prefix = _prefix()
@@ -76,7 +79,8 @@ class LabqualiDemos(http.Controller):
             ("Cache-Control", "public, max-age=600"),
         ])
 
-    @http.route(["/qualificacao/<string:slug>/<path:fname>", "/inspecao/<string:slug>/<path:fname>"],
+    @http.route(["/qualificacao/<string:slug>/<path:fname>", "/inspecao/<string:slug>/<path:fname>",
+                  "/retrofit/<string:slug>/<path:fname>"],
                 type="http", auth="public", website=False)
     def demo_asset(self, slug, fname, **kw):
         if slug not in PREFIXES.get(_prefix(), ()) + ("_vendor",):

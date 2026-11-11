@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 145 54" width="580" height="216">
+  <defs>
+    <linearGradient id="ringGradLogo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#dfeaf4"/>
+      <stop offset="100%" stop-color="#9cc3e4"/>
+    </linearGradient>
+    <linearGradient id="needleGradLogo" x1="23.7" y1="23.7" x2="73.3" y2="73.3" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FF8855"/>
+      <stop offset="50%" stop-color="#FF6B35"/>
+      <stop offset="100%" stop-color="#D9482A"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(-30, -38)">
+    <text x="32.37" y="76.71" textLength="51.65" lengthAdjust="spacingAndGlyphs" font-family="'Helvetica Neue', Arial, sans-serif" font-size="30.61" font-weight="800" fill="#eef2f6" letter-spacing="-1">Lab</text>
+    <path d="M 112.16 65.45 A 12.48 12.48 0 0 1 99.68 77.93 12.48 12.48 0 0 1 87.20 65.45 12.48 12.48 0 0 1 99.68 52.98 12.48 12.48 0 0 1 112.16 65.45 Z" fill="none" stroke="url(#ringGradLogo)" stroke-width="3.33"/>
+    <path d="M 106.41 72.09 L 111.93 77.80" stroke="#05080d" stroke-width="4.57" stroke-linecap="round"/>
+    <g stroke="#eef2f6" stroke-width="0.75" stroke-linecap="round" opacity="0.6">
+      <line x1="99.68" y1="55.47" x2="99.68" y2="57.55"/>
+      <line x1="89.70" y1="65.45" x2="91.78" y2="65.45"/>
+      <line x1="107.58" y1="65.45" x2="109.66" y2="65.45"/>
+      <line x1="93.44" y1="59.22" x2="94.69" y2="60.46"/>
+      <line x1="105.92" y1="59.22" x2="104.67" y2="60.46"/>
+      <line x1="93.44" y1="71.69" x2="94.69" y2="70.44"/>
+      <line x1="99.76" y1="73.29" x2="99.76" y2="75.37"/>
+    </g>
+    <polygon points="39,31 73,73 31,39 24,24" fill="#eef2f6" opacity="0.18" transform="matrix(0.4159,0,0,0.4159,85.54,51.31)"/>
+    <polygon points="39,31 73,73 31,39 24,24" fill="url(#needleGradLogo)" stroke="#B83A1F" stroke-width="0.6" stroke-linejoin="round" transform="matrix(0.4159,0,0,0.4159,85.12,50.90)"/>
+    <circle cx="99.68" cy="65.45" r="1.87" fill="#eef2f6"/>
+    <circle cx="99.68" cy="65.45" r="0.75" fill="#FF6B35"/>
+    <text x="113.91" y="76.35" textLength="48.6" lengthAdjust="spacingAndGlyphs" font-family="'Helvetica Neue', Arial, sans-serif" font-size="30.65" font-weight="800" fill="#eef2f6" letter-spacing="-1">uali</text>
+    <line x1="33.91" y1="82.35" x2="162.51" y2="82.35" stroke="#FF6B35" stroke-width="0.52"/>
+    <text x="33.90" y="88.9" textLength="128.6" lengthAdjust="spacing" font-family="'Helvetica Neue', Arial, sans-serif" font-size="4.6" font-weight="600" fill="#8fa0b2" letter-spacing="1.52">QUALIFICAÇÃO TÉRMICA · CALIBRAÇÃO</text>
+  </g>
+</svg>
