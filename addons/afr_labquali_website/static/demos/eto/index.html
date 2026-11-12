@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="preload" as="image" href="seq/f_0001.webp">
+<link rel="preload" as="image" href="seq/f_0001.webp?v=2">
 <link rel="stylesheet" href="scrollcraft.css">
 <style>
   :root {
@@ -122,6 +122,7 @@
   .ft dd { margin: 0; color: #c3ccd6; }
   .ft .keep dt { color: var(--ok); }
   .ft .swap dt { color: var(--sc-accent); }
+  .ft .give dt { color: #8fb8ff; }
   .spec { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: none; }
   .spec li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; line-height: 1.45; font-size: .95rem; color: #dfe5ec; }
   .spec li b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--sc-accent); color: var(--sc-accent-ink); font-family: var(--mono); font-size: .76rem; font-weight: 500; }
@@ -141,6 +142,8 @@
   .co-lbl { position: absolute; transform: translate(0, -50%); max-width: 15.5cqw; padding: 7px 11px; border-radius: 8px; font-size: max(.78rem, .92cqw); font-weight: 600; line-height: 1.3;
             background: rgba(5,8,13,.78); backdrop-filter: blur(8px); border: 1px solid var(--line-2); opacity: 0; transition: opacity .4s; }
   .co-lbl.l { transform: translate(-100%, -50%); }
+  .co-lbl.has-img { width: 13cqw; max-width: 13cqw; }
+  .co-lbl img { display: block; width: 100%; height: auto; margin-top: 7px; border-radius: 4px; border: 1px solid var(--line-2); }
   .co-lbl small { display: block; font-family: var(--mono); font-weight: 500; font-size: .68rem; letter-spacing: .1em; color: var(--sc-accent); margin-bottom: 2px; }
   .pnl.is-exploded .co-dot { opacity: 1; transform: none; }
   .pnl.is-exploded .co-lines line, .pnl.is-exploded .co-lbl { opacity: 1; }
@@ -179,20 +182,16 @@
   .ov { position: absolute; display: flex; align-items: center; justify-content: center; gap: .3em; font-family: var(--mono); font-variant-numeric: tabular-nums; line-height: 1;
         opacity: 0; transition: opacity .35s; }
   .inj.is-fixed .ov { opacity: 1; }
-  /* scale display, frame 21-60: x 46.7-54.9 %, y 67.5-73.4 % (glass inset a little inside the bezel) */
+  /* scale display, fixed shot (frames 71-112): x 46.7-54.9 %, y 67.5-73.4 % (glass inset a little inside the bezel).
+     The 3D HMI shows the real AFR-ETO screen rendered frame by frame, so it has no HTML overlay. */
   .ov--lcd { left: 47.6%; top: 68.1%; width: 6.6%; height: 4.7%; border-radius: 2px; background: #0f4a41; color: #c8ffe9; text-shadow: 0 0 6px rgba(150,255,210,.55); font-size: 1.95cqw; }
   .ov--lcd small { font-size: .5em; opacity: .8; align-self: flex-end; margin-bottom: .25em; }
-  /* HMI screen, frame 21-60: x 59.6-71.7 %, y 6.2-18.3 %; the compact value sits in its lower half */
-  .ov--hmi { left: 60.1%; top: 6.9%; width: 11.1%; height: 10.7%; border-radius: 3px; background: #0b2238; flex-direction: column; gap: .35em; color: #eef2f6; font-size: 2.1cqw; }
-  .ov--hmi small { font-size: .38em; letter-spacing: .12em; color: #ffb27d; }
-  .ov--hmi b { font-weight: 500; }
-  .ov--hmi b em { font-style: normal; font-size: .5em; opacity: .75; margin-left: .2em; }
   .inj__lead { position: absolute; left: var(--pad); top: 150px; width: min(370px, 27vw); }
   .inj__lead h2 { font-weight: 800; font-size: clamp(1.7rem, 2.7vw, 2.6rem); letter-spacing: -.04em; line-height: 1.04; margin: 10px 0 12px; text-wrap: balance; }
   .inj__lead p { margin: 0; color: #c3ccd6; line-height: 1.55; font-size: .95rem; }
   .inj__mode { display: inline-block; margin-top: 14px; font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ok); border: 1px solid rgba(61,220,151,.4); border-radius: 999px; padding: 5px 10px; }
   .inj__side { position: absolute; right: var(--pad); top: 140px; width: min(310px, 22vw); display: grid; gap: 12px; opacity: 0; transition: opacity .35s; }
-  .inj.is-fixed .inj__side { opacity: 1; }      /* frames 1-20 are the close-up: the 3D HMI shows its own screen */
+  .inj.is-fixed .inj__side { opacity: 1; }      /* frames 1-70 are the valve close-ups and the pull-back */
   .hmi { padding: 14px 16px; background: rgba(8,20,34,.92); border-color: rgba(120,170,220,.22); transition: opacity .35s; }
   .hmi__top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
   .hmi__phase { margin: 8px 0 2px; font-family: var(--mono); font-weight: 500; font-size: 1.12rem; letter-spacing: .04em; color: var(--warn); }
@@ -226,6 +225,7 @@
   .inj__close p { margin: 0; font-weight: 700; font-size: clamp(1.1rem, 1.6vw, 1.4rem); letter-spacing: -.02em; line-height: 1.25; }
   .chip { justify-self: start; padding: 9px 13px; border-radius: 10px; font-size: .86rem; line-height: 1.4; background: rgba(255,176,32,.1); border: 1px solid rgba(255,176,32,.45); color: #ffe3ad; }
   .chip b { color: var(--warn); }
+  .hero__note { display: block; margin-top: 14px; font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; color: var(--sc-ink-soft); }
   .inj__demo { position: absolute; right: var(--pad); bottom: 12px; font-family: var(--mono); font-size: .66rem; color: var(--sc-ink-soft); }
   /* ---------- 5 segurança: the IHM alarm screen, rebuilt in HTML in the scene-4 HMI colours ---------- */
   .saf { display: grid; grid-template-columns: minmax(0, 430px) minmax(0, 660px); justify-content: center; align-items: center; gap: clamp(36px, 5vw, 84px);
@@ -239,28 +239,14 @@
   .saf__rules li { display: grid; grid-template-columns: 74px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); line-height: 1.45; font-size: .95rem; color: #dfe5ec; }
   .saf__rules b { font-family: var(--mono); font-weight: 500; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--sc-accent); padding-top: 3px; }
   .saf__fig { margin: 0; display: grid; gap: 12px; }
-  /* 800 × 480 screen: sizes in cqw of the screen width (1 px of the IHM = .125cqw) */
-  .ihm { container-type: inline-size; aspect-ratio: 5 / 3; display: grid; grid-template-rows: auto auto 1fr auto; border-radius: 14px; overflow: hidden;
-         background: #0b1d30; border: 10px solid #1a2129; box-shadow: 0 30px 80px rgba(0,0,0,.5), inset 0 0 0 1px rgba(120,170,220,.22); font-family: var(--mono); color: #eef2f6; }
-  .ihm__hd { display: flex; justify-content: space-between; align-items: center; gap: 2cqw; padding: 1.6cqw 2.2cqw; background: #0d2a4a; font-size: max(.62rem, 2cqw); letter-spacing: .08em; border-bottom: 1px solid rgba(120,170,220,.22); }
-  .ihm__ph { color: var(--warn); }
-  .ihm__clk { color: #9fb2c6; }
-  .ihm__ban { display: grid; grid-template-columns: 1fr 1fr; }
-  .ihm__ban > div { display: grid; gap: .5cqw; padding: 1.6cqw 2.2cqw; font-size: max(.66rem, 2.25cqw); line-height: 1.2; }
-  .ihm__ban small { font-size: .62em; letter-spacing: .14em; opacity: .8; }
-  .ihm__pend { background: var(--warn); color: #1d1300; font-weight: 500; animation: pend 1.6s steps(2, jump-none) infinite; }
-  .ihm__next { background: #123a5e; color: #eef2f6; }
-  @keyframes pend { 50% { background: #c98a14; } }
-  .ihm__list { list-style: none; margin: 0; padding: 1.2cqw 2.2cqw; display: grid; align-content: start; }
-  .ihm__list li { display: grid; grid-template-columns: auto 1fr auto; gap: 2cqw; align-items: center; padding: 1.3cqw 0; border-bottom: 1px solid rgba(120,170,220,.14);
-                  font-size: max(.6rem, 1.9cqw); color: #7f93a8; }
-  .ihm__list time { color: #5f7286; }
-  .ihm__list em { font-style: normal; font-size: .8em; letter-spacing: .1em; }
-  .ihm__list li.is-pend { color: var(--warn); }
-  .ihm__list li.is-pend em { padding: .3em .6em; border-radius: 3px; background: rgba(255,176,32,.16); }
-  .ihm__ft { display: flex; justify-content: flex-end; gap: 1.6cqw; padding: 1.6cqw 2.2cqw; background: #0d2338; border-top: 1px solid rgba(120,170,220,.22); }
-  .ihm__btn { padding: 1.3cqw 2.4cqw; border-radius: 4px; font-size: max(.6rem, 1.8cqw); letter-spacing: .08em; background: #1d3a57; color: #c9d6e3; }
-  .ihm__btn.is-go { background: var(--warn); color: #1d1300; box-shadow: 0 0 0 2px rgba(255,176,32,.35); }
+  /* giroflex: rendered 24-frame loop (one turn), time-driven, not scroll-driven; beacon sits top-right */
+  .saf__bg { position: absolute; inset: 68px 0 0; z-index: 0; pointer-events: none; }   /* below the fixed bar */
+  .saf__bg canvas { width: 100%; height: 100%; object-fit: cover; object-position: 75% 20%; display: block; }
+  .saf__bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5,8,13,.82) 0%, rgba(5,8,13,.55) 45%, rgba(5,8,13,.15) 100%); }
+  .saf__col, .saf__fig { position: relative; z-index: 1; }
+  /* real AFR-ETO alarm screen (tela 54, 800 × 480) in a panel bezel */
+  .ihm { display: block; width: 100%; height: auto; border-radius: 14px; border: 10px solid #1a2129; background: #1a2129;
+         box-shadow: 0 30px 80px rgba(0,0,0,.5), inset 0 0 0 1px rgba(120,170,220,.22); }
   .saf__key { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: .8rem; color: var(--sc-ink-soft); }
   .saf__key span { display: inline-flex; align-items: center; gap: 8px; }
   .saf__key i { width: 10px; height: 10px; border-radius: 2px; }
@@ -276,6 +262,7 @@
   .sheet { height: 100%; box-sizing: border-box; padding: 6.5cqw 7cqw; display: flex; flex-direction: column; gap: 3cqw;
            background: #f4f1ea; color: #1a1f26; border-radius: 3px; box-shadow: 0 40px 90px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06);
            font-family: var(--mono); font-size: 2.45cqw; line-height: 1.35; }
+  .sheet__demo { margin: auto 0 0; padding-top: 1.6cqw; border-top: 1px dashed #c9ced6; font-family: var(--mono); font-size: max(.6rem, 1.9cqw); letter-spacing: .06em; text-transform: uppercase; color: #6b7480; text-align: center; }
   .sheet__hd { display: flex; justify-content: space-between; align-items: baseline; gap: 3cqw; padding-bottom: 2cqw; border-bottom: 2px solid #1a1f26; }
   .sheet__hd b { font-size: 1.3em; font-weight: 500; letter-spacing: .06em; }
   .sheet__hd span { color: #5d6670; font-size: .9em; }
@@ -412,6 +399,7 @@
     .chip { font-size: .78rem; padding: 7px 10px; }
     /* segurança: copy, then the screen; the colour key is dropped (the copy says it) */
     .saf { grid-template-columns: minmax(0, 1fr); align-content: start; gap: 12px; padding: 68px 16px 14px; }
+    .saf__bg::after { background: rgba(5,8,13,.7); }
     .saf__col { gap: 9px; }
     .saf h2, .rec h2, .close h2 { font-size: 1.4rem; margin: 4px 0 0; }
     .saf__body, .saf__next { font-size: .82rem; line-height: 1.42; }
@@ -420,7 +408,6 @@
     .saf__rules b { font-size: .62rem; padding-top: 2px; }
     .saf__key { display: none; }
     .ihm { border-width: 6px; border-radius: 10px; }
-    .ihm__list li:nth-child(3) { display: none; }
     /* registro: heading on top; the sheet, then the validation block in the same cell (cross-fade on --sc-p) */
     .rec { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; align-content: start; align-items: start; gap: 12px; padding: 68px 16px 14px; }
     .rec__col { display: contents; }
@@ -443,9 +430,6 @@
   @media (max-width: 860px) and (max-height: 740px) {
     .inj { --frh: 78vw; }
     .inj__lead p { font-size: .8rem; line-height: 1.4; }
-    /* segurança: the banner carries the pendência and its action; the history list and buttons go */
-    .ihm__list, .ihm__ft { display: none; }
-    .ihm { aspect-ratio: auto; }
     .saf { padding-top: 64px; gap: 10px; }
     .saf__body, .saf__next { font-size: .78rem; line-height: 1.38; }
     .saf__rules li { padding: 5px 0; font-size: .76rem; }
@@ -486,7 +470,6 @@
     .btn, .btn svg { transition: none; }
     #inicio .hero canvas, #painel canvas, #injecao canvas { display: none; }     /* no scrubbed film: the posters hold */
     .co-dot, .co-lbl, .co-lines line, .spec li.extra, .ov, .inj__close, .inj__lead, .inj__side, .hmi, .chart, .ph__list li { transition: none; }
-    .ihm__pend { animation: none; }
     .inj .ov { opacity: 1; }
     .more, .form__alt a { transition: none; }
   }
@@ -511,13 +494,14 @@
   <!-- 1 · HERO: the sterilizer orbits, then the camera descends to the closed old control panel. -->
   <section id="inicio" data-sc-act="scrub" data-sc-span="4.5">
     <div data-sc-stage class="hero">
-      <img class="sc-stage__poster" src="seq/f_0001.webp" alt="" fetchpriority="high">
-      <canvas data-sc-sequence="seq/f_{iiii}.webp:150:1" role="img" aria-label="Esterilizador a óxido de etileno numa sala industrial. A câmera dá uma volta lenta em torno da máquina e desce até o painel de comando antigo, de porta fechada."></canvas>
+      <img class="sc-stage__poster" src="seq/f_0001.webp?v=2" alt="" fetchpriority="high">
+      <canvas data-sc-sequence="seq/f_{iiii}.webp?v=2:150:1" role="img" aria-label="Esterilizador a óxido de etileno numa sala industrial. A câmera dá uma volta lenta em torno da máquina e desce até o painel de comando antigo, de porta fechada."></canvas>
       <div class="hero__scrim" aria-hidden="true"></div>
       <div class="hero__copy" data-sc-cue="0 0.24 0">
         <span class="eyebrow">Esterilização por óxido de etileno (ETO) · retrofit</span>
         <h1>Retrofit de automação ETO: vida nova ao equipamento, conformidade ao processo</h1>
         <p>CLP e IHM novos, ciclo totalmente rastreável e validação do software pela Labquali.</p>
+        <small class="hero__note">Imagens, telas e valores meramente ilustrativos.</small>
         <a class="btn" href="#contato">Agendar avaliação <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h9M7.5 3.5 11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
       <div class="beat beat--stay" data-sc-cue="0.35 0.62"><p>O vaso, as portas e as bombas continuam bons.</p></div>
@@ -528,7 +512,7 @@
   <!-- 2 · A DOR: the old panel with the failure lamp lit (seqp frame 12), plus a downtime counter. -->
   <section id="dor" data-sc-act="pin" data-sc-span="2.6">
     <div data-sc-stage class="pain">
-      <img class="pain__bg" src="seqp/p_0012.webp" width="1280" height="720" alt="Painel de comando antigo do esterilizador, com a lâmpada de falha acesa" loading="lazy">
+      <img class="pain__bg" src="seqp/p_0012.webp?v=2" width="1280" height="720" alt="Painel de comando antigo do esterilizador, com a lâmpada de falha acesa" loading="lazy">
       <div class="pain__scrim" aria-hidden="true"></div>
       <div class="pain__col">
         <div data-sc-cue="0.02">
@@ -536,12 +520,13 @@
           <h2>Quando o CLP para, a produção para</h2>
         </div>
         <ul class="pain__list">
-          <li data-sc-cue="0.14">O CLP foi descontinuado e a peça de reposição não existe mais.</li>
-          <li data-sc-cue="0.26">O programa está sem backup: se a memória falha, a lógica se perde.</li>
-          <li data-sc-cue="0.38">Ninguém na planta conhece a lógica do painel.</li>
+          <li data-sc-cue="0.12">O CLP foi descontinuado e a peça de reposição não existe mais.</li>
+          <li data-sc-cue="0.22">O programa está desatualizado: não é validável e não atende às regras atuais.</li>
+          <li data-sc-cue="0.32">Não há mais suporte técnico para a automação.</li>
+          <li data-sc-cue="0.42">Ninguém na planta conhece a lógica do painel.</li>
         </ul>
-        <p class="pain__lost" data-sc-cue="0.50">Cada parada é um lote retido, esperando liberação.</p>
-        <p class="pain__audit" data-sc-cue="0.64">E na auditoria, a pergunta que o painel antigo não responde: cadê o registro deste ciclo?</p>
+        <p class="pain__lost" data-sc-cue="0.52">Cada parada é um lote retido, esperando liberação.</p>
+        <p class="pain__audit" data-sc-cue="0.64">E o registro do ciclo ainda sai numa impressora matricial antiga?</p>
       </div>
       <div class="down" data-sc-cue="0.20">
         <b><span data-sc-count="0 7" data-sc-count-at="0.20 0.80">0</span></b>
@@ -557,8 +542,8 @@
     <div data-sc-stage class="pnl" id="pnl">
       <div class="fr">
         <div class="box">
-          <img class="sc-stage__poster" id="pnl-poster" src="seqp/p_0001.webp" alt="" loading="lazy">
-          <canvas data-sc-sequence="seqp/p_{iiii}.webp:70:1" role="img" aria-label="O painel de comando antigo, de porta aberta e fiação desorganizada, dá lugar ao painel novo. A placa de montagem, o trilho do CLP e a IHM se separam em camadas diante do armário."></canvas>
+          <img class="sc-stage__poster" id="pnl-poster" src="seqp/p_0001.webp?v=2" alt="" loading="lazy">
+          <canvas data-sc-sequence="seqp/p_{iiii}.webp?v=2:70:1" role="img" aria-label="O painel de comando antigo, de porta aberta e fiação desorganizada, dá lugar ao painel novo. A placa de montagem, o trilho do CLP e a IHM se separam em camadas diante do armário."></canvas>
           <svg class="co-lines" viewBox="0 0 100 56.25" preserveAspectRatio="none" aria-hidden="true" id="co-lines"></svg>
           <div id="co-layer" aria-hidden="true"></div>
         </div>
@@ -571,10 +556,11 @@
         </div>
         <dl class="ft">
           <div class="keep"><dt>Fica</dt><dd>vaso, portas, bombas e camisa</dd></div>
-          <div class="swap"><dt>Troca</dt><dd>automação e instrumentação</dd></div>
+          <div class="swap"><dt>Troca</dt><dd>automação e quadro elétrico</dd></div>
+          <div class="give"><dt>Entrega</dt><dd>esquema elétrico do painel novo, para facilitar a manutenção</dd></div>
         </dl>
         <ol class="spec" id="spec">
-          <li class="on-frame"><b>1</b><span>IHM Delta DOP-107 7"</span></li>
+          <li class="on-frame"><b>1</b><span>IHM Delta DOP-107 7" com as telas do software AFR-ETO</span></li>
           <li class="on-frame"><b>2</b><span>CLP Delta DVP-SE com módulos PT100 e analógicos</span></li>
           <li class="on-frame"><b>3</b><span>Fonte, bornes e relés de interface</span></li>
           <li class="on-frame"><b>4</b><span>Comunicação Modbus TCP entre o CLP e a IHM</span></li>
@@ -611,26 +597,28 @@
       <p class="ph__now" id="ph-now" aria-hidden="true">Fase 1 · Aquecimento</p>
     </div>
     <div class="phx__run" id="ph-run">
-      <p>Na quinta fase, quem decide quanto ETO entra é <b>a balança</b>.</p>
+      <p>Fase 5 · Injeção de ETO: dosagem gravimétrica, pela <b>balança do cilindro</b>.</p>
     </div>
 
-  <!-- 4 · INJEÇÃO: seqe/, 60 frames. Valve turn 1–10 (close-up), pull-back 8–20, fixed shot 21–60 (identical).
-       Frame f = round(p·59)+1; overlays and chart follow that same f, all values from #eto-data. -->
-  <section id="injecao" data-sc-act="scrub" data-sc-span="5" data-sc-clip-map="travel">
+  <!-- 4 · INJEÇÃO: seqe/, 112 frames (Blender: anim_eto_injecao.py + eto_valvulas.py). Cylinder valve opens 1–14,
+       camera to the pneumatic admission valve 10–28, front half slides off 30–36, cutaway opening 36–54 (air under the
+       piston, plug leaves the seat, ETO flows), pull-back 54–70, fixed shot 71–112 (same camera as before; the 3D HMI
+       screen and the valve indicator change per frame). Frame f = round(p·111)+1; overlays and chart follow that same f,
+       all values from #eto-data. ?v=3 busts the 1-day browser cache: v2 used the same e_NNNN names. -->
+  <section id="injecao" data-sc-act="scrub" data-sc-span="7" data-sc-clip-map="travel">
     <div data-sc-stage class="inj" id="inj">
       <div class="fr">
         <div class="box">
-          <img class="sc-stage__poster" id="inj-poster" src="seqe/e_0001.webp" alt="" loading="lazy">
-          <canvas data-sc-sequence="seqe/e_{iiii}.webp:60:1" role="img" aria-label="A válvula do cilindro de ETO se abre. A câmera recua e mostra o cilindro sobre a balança com visor digital, a mangueira até a câmara e a IHM no painel da máquina."></canvas>
+          <img class="sc-stage__poster" id="inj-poster" src="seqe/e_0001.webp?v=3" alt="" loading="lazy">
+          <canvas data-sc-sequence="seqe/e_{iiii}.webp?v=3:112:1" role="img" aria-label="A válvula do cilindro de ETO se abre. A câmera passa para a válvula pneumática de admissão, mostrada em corte: o ar entra sob o pistão, a mola é comprimida, o obturador sai da sede e o ETO atravessa a válvula. A câmera recua e mostra o cilindro sobre a balança com visor digital e a IHM do AFR-ETO no painel da máquina."></canvas>
           <div class="ov ov--lcd" aria-hidden="true"><span id="eto-cyl">45,00</span><small>kg</small></div>
-          <div class="ov ov--hmi" aria-hidden="true"><small>ETO INJETADO</small><b><span id="eto-inj3">0,00</span><em>kg</em></b></div>
         </div>
       </div>
       <div class="inj__scrim" aria-hidden="true"></div>
       <div class="inj__lead">
         <span class="eyebrow">Injeção de ETO</span>
-        <h2>ETO dosado por peso, não por estimativa</h2>
-        <p>O cilindro fica sobre a balança. A injeção acontece em cinco degraus: a cada um, a válvula abre até a massa programada sair do cilindro, e a pressão da câmara sobe junto.</p>
+        <h2>ETO dosado por massa, não estimado por gradiente de pressão</h2>
+        <p>O cilindro fica sobre a balança. A válvula pneumática de admissão abre a cada degrau e fecha quando a balança registra a massa programada. São cinco degraus, e a pressão da câmara sobe junto.</p>
         <span class="inj__mode">Modo massa · com balança</span>
       </div>
       <div class="inj__side" aria-hidden="true">
@@ -664,7 +652,7 @@
         <span class="chip"><b>Vazamento?</b> A balança detecta queda de massa com a válvula fechada.</span>
       </div>
       <p class="sr-only" id="eto-sum">Injeção em 5 degraus de 0,18 kg: 0,90 kg de ETO injetados. A balança mostra o cilindro passando de 45,00 kg para 44,10 kg, e a pressão da câmara sobe de −0,480 bar para −0,330 bar.</p>
-      <span class="inj__demo">Valores ilustrativos de um ciclo de demonstração</span>
+      <span class="inj__demo">Valores meramente ilustrativos</span>
       <script type="application/json" id="eto-data">
 {"steps": 5, "step_kg": 0.18, "total_kg": 0.90, "cyl_start": 45.00, "cyl_end": 44.10, "p_start": -0.480, "p_end": -0.330, "p_min": -0.900, "p_max": -0.300}
       </script>
@@ -672,10 +660,11 @@
   </section>
   </section>
 
-  <!-- 5 · SEGURANÇA: the alarm screen rebuilt in HTML (the real screenshot carries site and equipment ids).
-       Texts are the IHM's own: pendência ETO_CILINDRO and the action of the cylinder swap. -->
+  <!-- 5 · SEGURANÇA: the real AFR-ETO alarm screen (tela 54, built by patch_alarmes.py from the IHM generator's
+       layout; site and equipment ids replaced). Pendência ETO_CILINDRO, priority 3 (yellow). -->
   <section id="seguranca" data-sc-act="pin" data-sc-span="2.4">
     <div data-sc-stage class="saf">
+      <div class="saf__bg" aria-hidden="true"><canvas id="saf-gfx" width="1280" height="720"></canvas></div>
       <div class="saf__col">
         <div data-sc-cue="0.02">
           <span class="eyebrow">Segurança</span>
@@ -690,19 +679,8 @@
         </ul>
       </div>
       <figure class="saf__fig">
-        <div class="ihm" role="img" aria-label="Tela de alarmes da IHM. Pendência amarela: TROCAR CILINDRO DE ETO. Próxima ação: TROQUE O CILINDRO E TOQUE CILINDRO TROCADO.">
-          <div class="ihm__hd"><span>ALARMES</span><span class="ihm__ph">INJEÇÃO DE ETO</span><span class="ihm__clk">10:41:06</span></div>
-          <div class="ihm__ban" data-sc-cue="0.12">
-            <div class="ihm__pend"><small>PENDÊNCIA</small><span>TROCAR CILINDRO DE ETO</span></div>
-            <div class="ihm__next"><small>PRÓXIMA AÇÃO</small><span>TROQUE O CILINDRO E TOQUE CILINDRO TROCADO</span></div>
-          </div>
-          <ol class="ihm__list">
-            <li class="is-pend" data-sc-cue="0.12"><time>10:41:06</time><span>TROCAR CILINDRO DE ETO</span><em>ATIVA</em></li>
-            <li><time>09:21:48</time><span>VÁCUO INSUFICIENTE</span><em>RESOLVIDA</em></li>
-            <li><time>08:05:12</time><span>AQUECIMENTO LENTO</span><em>RESOLVIDA</em></li>
-          </ol>
-          <div class="ihm__ft"><span class="ihm__btn">RECONHECER</span><span class="ihm__btn is-go" data-sc-cue="0.12">CILINDRO TROCADO</span></div>
-        </div>
+        <img class="ihm" src="tela-alarmes.webp" width="800" height="480" loading="lazy" decoding="async"
+             alt="Tela de alarmes do software AFR-ETO. Lista de alarmes ativos com a pendência amarela 3 PENDÊNCIA: TROCAR CILINDRO DE ETO, disparada às 10:41:06; botões SOBE, DESCE, RECONHECER e RECONHECER FALHAS DE PORTA.">
         <figcaption class="saf__key">
           <span><i class="k-crit"></i>Crítico: aborta o ciclo</span>
           <span><i class="k-pend"></i>Pendência: o ciclo espera a próxima ação</span>
@@ -751,13 +729,14 @@
             <div class="sig"><i></i><span>Operador</span></div>
             <div class="sig"><i></i><span>Responsável</span></div>
           </div>
+          <p class="sheet__demo">Relatório meramente ilustrativo</p>
         </article>
       </div>
       <div class="rec__col">
         <div class="rec__lead" data-sc-cue="0.02">
           <span class="eyebrow">Registro</span>
           <h2>Cada ciclo deixa um registro completo</h2>
-          <p>O relatório mostra quem operou, qual carga e qual cilindro, quanto ETO entrou, quanto durou cada fase, que alarmes ocorreram e o resultado do leak test. Ele sai em PDF A4, com campos para as assinaturas do operador e do responsável.</p>
+          <p>O registro é gravado em arquivo digital, no lugar da fita de papel da impressora. O relatório mostra quem operou, qual carga e qual cilindro, quanto ETO entrou, quanto durou cada fase, que alarmes ocorreram e o resultado do leak test. Ele sai em PDF A4, com campos para as assinaturas do operador e do responsável.</p>
           <ul class="rec__facts">
             <li>Usuários com níveis de acesso: operador, supervisor, calibração e manutenção.</li>
             <li>CSV do ciclo com uma amostra por segundo.</li>
@@ -765,7 +744,7 @@
         </div>
         <div class="val" data-sc-cue="0.66">
           <span class="eyebrow">Validação</span>
-          <h3>Quem instala é quem valida</h3>
+          <h3>A Labquali faz a validação</h3>
           <p>A Labquali faz a qualificação QI, QO e QD do equipamento e a validação do software que instalou. A documentação fica pronta para a próxima inspeção.</p>
           <ul class="val__steps">
             <li><b>QI</b><span>instalação</span></li>
@@ -810,7 +789,7 @@
         </div>
         <p class="form__alt">Prefere escrever? <a href="mailto:labquali@labquali.com.br?subject=Retrofit%20ETO%20%C2%B7%20avalia%C3%A7%C3%A3o%20t%C3%A9cnica">labquali@labquali.com.br</a></p>
       </form>
-      <div class="foot"><span>LabQuali · Qualificação térmica e calibração</span><span>Dados ilustrativos de um ciclo de demonstração</span><span>Máquina genérica renderizada, sem marca de fabricante</span></div>
+      <div class="foot"><span>LabQuali · Qualificação térmica e calibração</span><span>Imagens, telas e valores meramente ilustrativos</span><span>Máquina genérica renderizada, sem marca de fabricante</span></div>
     </div>
   </section>
 
@@ -822,6 +801,10 @@
 /* shared by the page scripts below */
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function $(id) { return document.getElementById(id); }
+// asset URL for paths built in JS: the server rewrites src/href attributes to wherever the demo is served
+// from, so take that base from the hero preload link instead of resolving against the page URL
+var ASSET_BASE = (function () { var l = document.querySelector('link[rel="preload"][as="image"]'); return l ? l.href.replace(/seq\/f_0001\.webp.*$/, '') : ''; })();
+function asset(rel) { return ASSET_BASE + rel; }
 // pt-BR number: comma decimal and a real minus sign (U+2212), e.g. −0,480
 function br(v, n) { var s = Math.abs(v).toFixed(n == null ? 1 : n).replace('.', ','); return (v < 0 && /[1-9]/.test(s) ? '−' : '') + s; }
 // the engine writes the act's progress inline (act.style --sc-p), so read it there: no style recalc per frame
@@ -838,6 +821,21 @@ function whileVisible(el, tick) {
   }).observe(el);
 }
 (function () {
+  /* 5 · segurança: giroflex loop, 24 frames = one turn, ~16 fps while on screen; reduced motion = one still */
+  var cv = $('saf-gfx'); if (!cv) return;
+  var ctx = cv.getContext('2d'), N = 24, FPS = 16, imgs = [], t0 = 0, last = -1;
+  function src(i) { return asset('seqg/g_' + String(i + 1).padStart(4, '0') + '.webp'); }
+  function draw(i) { var im = imgs[i]; if (im && im.complete && im.naturalWidth) { ctx.drawImage(im, 0, 0, cv.width, cv.height); last = i; } }
+  if (reduce) { var still = new Image(); imgs[9] = still; still.onload = function () { draw(9); }; still.src = src(9); return; }
+  for (var i = 0; i < N; i++) { var im = new Image(); im.decoding = 'async'; im.src = src(i); imgs.push(im); }
+  imgs[0].onload = function () { if (last < 0) draw(0); };
+  whileVisible($('seguranca'), function () {
+    var now = performance.now(); if (!t0) t0 = now;
+    var i = Math.floor((now - t0) / 1000 * FPS) % N;
+    if (i !== last) draw(i);
+  });
+})();
+(function () {
   var bar = document.getElementById('bar');
   addEventListener('scroll', function () { bar.classList.toggle('is-solid', scrollY > innerHeight * 0.6); }, { passive: true });
 })();
@@ -853,7 +851,7 @@ function whileVisible(el, tick) {
   if (!act || !stage) return;
   var NF = 70, EXPLODE_END = 60;
   var CO = [
-    { n: 1, dot: [71.6, 46.5], lbl: [80.5, 38.0], t: 'IHM Delta DOP-107 7"', k: 'tela de toque' },
+    { n: 1, dot: [71.6, 46.5], lbl: [78.8, 40.0], t: 'IHM Delta DOP-107 7"', k: 'software AFR-ETO', img: 'tela-ihm.webp' },
     { n: 2, dot: [55.6, 45.0], lbl: [64.5, 22.5], t: 'CLP Delta DVP-SE com módulos PT100 e analógicos', k: 'controle' },
     { n: 3, dot: [45.2, 57.5], lbl: [56.5, 82.0], t: 'Fonte, bornes e relés de interface', k: 'placa de montagem' },
     { n: 4, dot: [64.6, 46.0], lbl: [67.0, 67.0], t: 'Comunicação Modbus TCP', k: 'rede CLP ↔ IHM', cable: [[60.6, 44.5], [66.6, 46.8]] }
@@ -881,6 +879,11 @@ function whileVisible(el, tick) {
     l.className = 'co-lbl'; l.style.left = c.lbl[0] + '%'; l.style.top = c.lbl[1] + '%';
     l.innerHTML = '<small>' + c.n + ' · ' + c.k + '</small>';
     l.appendChild(document.createTextNode(c.t));
+    if (c.img) {
+      var im = document.createElement('img');
+      im.src = asset(c.img); im.alt = ''; im.width = 800; im.height = 480; im.loading = 'lazy';
+      l.classList.add('has-img'); l.appendChild(im);
+    }
     layer.appendChild(l);
   });
   var last = null;
@@ -888,7 +891,7 @@ function whileVisible(el, tick) {
   if (reduce) {
     // no scrub: the poster holds the exploded view and the callouts are on
     var poster = $('pnl-poster');
-    poster.src = poster.src.replace(/p_\d{4}\.webp$/, 'p_' + String(NF).padStart(4, '0') + '.webp');
+    poster.src = poster.src.replace(/p_\d{4}\.webp/, 'p_' + String(NF).padStart(4, '0') + '.webp');
     set(true);
     return;
   }
@@ -930,8 +933,9 @@ function whileVisible(el, tick) {
 })();
 </script>
 <script>
-/* 4 · injeção: frame f = round(p·59)+1, same as the canvas. Frames 1–20 move (valve, pull-back): initial
-   values, overlays hidden. Frames 21–60 are one fixed shot: q = (f−21)/39, step n = min(5, ⌊q·5⌋+1);
+/* 4 · injeção: frame f = round(p·111)+1, same as the canvas. Frames 1–70 move (cylinder valve, pneumatic valve
+   cutaway, pull-back): initial values, overlays hidden. Frames 71–112 are one fixed shot: q = (f−71)/41,
+   step n = min(5, ⌊q·5⌋+1);
    inside each step the mass ramps over the first 60 % and then holds. Pressure is linear in the mass,
    cylinder = start − mass. Every number comes from #eto-data (also window.LQ_ETO for the report). */
 (function () {
@@ -939,7 +943,7 @@ function whileVisible(el, tick) {
   if (!act || !stage) return;
   var D = JSON.parse($('eto-data').textContent);
   window.LQ_ETO = D;
-  var NF = 60, INJ_FIXED = 21, RAMP = 0.6, P_END = 0.9;
+  var NF = 112, INJ_FIXED = 71, RAMP = 0.6, P_END = 0.94;     // closing note from step 5 on (same point as the 60-frame cut)
   var N = D.steps, SK = D.step_kg, TOT = D.total_kg;
   function mass(q) {
     if (q <= 0) return 0;
@@ -985,7 +989,7 @@ function whileVisible(el, tick) {
   $('eto-gp').setAttribute('d', path(1, yPm));
   $('eto-tgt').textContent = 'alvo ' + br(TOT, 2) + ' kg';
 
-  var cyl = $('eto-cyl'), cyl2 = $('eto-cyl2'), inj = $('eto-inj'), inj3 = $('eto-inj3'), pp = $('eto-p'), step = $('eto-step');
+  var cyl = $('eto-cyl'), cyl2 = $('eto-cyl2'), inj = $('eto-inj'), pp = $('eto-p'), step = $('eto-step');
   var pips = [].slice.call($('eto-pips').children), cm = $('eto-cm'), cp = $('eto-cp'), cur = $('eto-cur'), dm = $('eto-dm'), dp = $('eto-dp');
   var last = -1, lastFixed = null, lastEnd = null;
   function render(f, end) {
@@ -994,7 +998,7 @@ function whileVisible(el, tick) {
       var fixed = f >= INJ_FIXED, q = fixed ? (f - INJ_FIXED) / (NF - INJ_FIXED) : 0;
       var m = mass(q), n = stepOf(q), p = pres(m), x = xOf(q);
       cyl.textContent = cyl2.textContent = br(D.cyl_start - m, 2);
-      inj.textContent = inj3.textContent = br(m, 2);
+      inj.textContent = br(m, 2);
       pp.textContent = br(p, 3);
       step.textContent = 'DEGRAU ' + n + ' DE ' + N;
       pips.forEach(function (el, i) { el.classList.toggle('on', i < n); });
@@ -1011,14 +1015,14 @@ function whileVisible(el, tick) {
   if (reduce) {
     // no scrub: the poster holds the fixed shot with the injection done
     var poster = $('inj-poster');
-    poster.src = poster.src.replace(/e_\d{4}\.webp$/, 'e_' + String(NF).padStart(4, '0') + '.webp');
+    poster.src = poster.src.replace(/e_\d{4}\.webp/, 'e_' + String(NF).padStart(4, '0') + '.webp');
     render(NF, true);
     // Mobile stacks lead, HMI mirror + chart and the close in one cell below the frame, so pinning all of them
     // at once would hide the lead and the chart for good. Values stay final; only which block shows follows p.
     var small = matchMedia('(max-width: 860px)');
     whileVisible(act, function () {
       var p = actP(act), m = small.matches;
-      stage.classList.toggle('is-fixed', !m || p >= 0.34);
+      stage.classList.toggle('is-fixed', !m || p >= (INJ_FIXED - 1) / (NF - 1));
       stage.classList.toggle('is-end', !m || p >= P_END);
     });
     return;

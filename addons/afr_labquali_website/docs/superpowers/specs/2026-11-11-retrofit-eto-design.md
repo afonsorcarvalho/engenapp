@@ -86,28 +86,34 @@ Os títulos são do user. Corpo e movimento são o ponto de partida; o builder p
 
 ### 2. A dor · "Quando o CLP para, a produção para"
 
-- **Corpo:** peça descontinuada, programa sem backup, ninguém que conheça a lógica. Cada parada é um lote retido esperando liberação. Uma linha cita o segundo gatilho: "e na auditoria, a pergunta que o painel antigo não responde: cadê o registro deste ciclo?"
-- **Visual:** close do painel em versão "antiga", com porta aberta, relés, CLP genérico fora de linha (sem marca real), fiação desorganizada, registrador de papel e uma lâmpada de falha piscando. Contador "dias parado" em HTML.
+- **Corpo:** peça descontinuada, programa desatualizado (não validável, fora das regras atuais), sem suporte técnico, ninguém que conheça a lógica. Cada parada é um lote retido esperando liberação. Fecha com o registro: "E o registro do ciclo ainda sai numa impressora matricial antiga?" (revisão do user, 2026-11-11; a cena 6 responde com "gravado em arquivo digital").
+- **Visual:** close do painel em versão "antiga", com porta aberta, relés, CLP genérico fora de linha (sem marca real), fiação desorganizada, impressora matricial de painel com fita de papel (o registrador circular saiu: máquinas ETO não usam) e uma lâmpada de falha piscando. Contador "dias parado" em HTML.
 - **3D:** sequência curta ou estado alternativo do painel. O builder escolhe entre sequência ou still + overlay, dependendo do peso.
 
 ### 3. Por dentro da nova automação
 
 - **Visual:** painel novo "explode" em camadas no 3D: IHM 7", CLP com módulos de temperatura e analógicos, fonte, bornes, relés de interface e cabo de rede até a IHM. Chamadas numeradas em HTML, no estilo da ficha técnica da proposta.
 - **Texto das chamadas:** CLP Delta DVP-SE · IHM Delta DOP-107 7" · módulos PT100 e analógicos · comunicação Modbus TCP · instrumentação nova (PT100, transdutor de pressão, umidade, balança).
-- Uma frase deixa claro o que **fica** (vaso, portas, bombas, camisa) e o que **troca** (automação e instrumentação).
+- Uma frase deixa claro o que **fica** (vaso, portas, bombas, camisa) e o que **troca** (automação e quadro elétrico) e o que se **entrega** (esquema elétrico do painel novo, para a manutenção). Revisão do user, 2026-11-11.
 
 ### Faixa de fases (antes da cena 4)
 
 Faixa curta com as fases do ciclo em ordem (ícones como os da barra da IHM). Ao rolar, o marcador anda até "Injeção de ETO" e a faixa fica fixa durante a cena 4. Objetivo: mostrar o ciclo completo sem tirar o foco da injeção. Aprovado pelo user.
 
-### 4. Clímax · "ETO dosado por peso, não por estimativa"
+### 4. Clímax · "ETO dosado por massa, não estimado por gradiente de pressão"
 
 - **3D (pedido do user):** cilindro de ETO sobre a **balança com visor** digital, mangueira até a máquina e a **IHM mostrando a tela de injeção**.
+- **Roteiro 3D v3 (revisão do user, 2026-11-11), `seqe/` com 112 frames** (`anim_eto_injecao.py` + `eto_valvulas.py`):
+  - **1–14 · válvula do cilindro:** close na válvula nova (foto01 do user): corpo forjado em T de **inox**, rosca cônica no gargalo, saída lateral com rosca fêmea larga, ressalto de segurança oposto, castelo sextavado e volante de 6 lóbulos em alumínio escovado com tampa azul. O volante gira 150° no sentido de abrir (2–12).
+  - **10–36 · válvula pneumática de admissão:** a câmera vai até a válvula de assento angular NF (foto02), instalada na linha entre a mangueira trançada do cilindro e a máquina (corpo em Y inox com flanges e seta de fluxo, atuador inox com indicador de posição e tomada de ar). Em 30–36 a meia-casca da frente sai de cena e fica o **corte** (foto03).
+  - **36–54 · abertura em corte:** o ar entra sob o pistão laranja, a mola é comprimida, a haste recua e o obturador sai da sede; o ETO (volume azul translúcido com setas) atravessa o corpo. Faces de corte em bege.
+  - **54–70 · recuo:** a meia-casca volta e a câmera recua para o plano fixo (mesma câmera de antes, então o `.ov--lcd` não mudou).
+  - **71–112 · plano fixo:** os cinco degraus. A IHM 3D mostra a **tela real do AFR-ETO renderizada frame a frame** (`patch_tela.py --injecao`, mesmas fórmulas do JS: degrau, injetada, cilindro, valor, alvo do degrau, tempos). O indicador da válvula sobe enquanto a massa do degrau rampa e desce na espera. O overlay HTML `.ov--hmi` (tela inventada) foi removido; o visor da balança continua em overlay HTML.
 - **Ao rolar:**
   - O visor da balança conta a massa do cilindro descendo.
   - A IHM mostra degrau N de 5 e a massa injetada subindo.
   - Pressão interna sobe em degraus até o alvo.
-- **Sincronismo:** os números ficam em overlay HTML sincronizado ao `p` (`data-sc-count`), e não renderizados no 3D. Assim os frames não precisam conter dígitos e os valores casam com o gráfico.
+- **Sincronismo:** o visor da balança, o espelho da IHM e o gráfico ficam em HTML sincronizado ao frame `f = round(p·111)+1`. A tela da IHM 3D é renderizada com os mesmos valores, frame a frame, a partir das mesmas fórmulas.
 - **Gráfico (HTML/SVG ao lado):** massa injetada × pressão interna, com os degraus marcados.
 - **Fecho da cena:** "O relatório registra a massa exata injetada." Chip: "Vazamento? A balança detecta queda de massa com a válvula fechada."
 - **Modo massa (decisão do user):** o retrofit mostrado **inclui a balança como item padrão** e a cena mostra a injeção no **modo massa** (`RC_ETO_MODO = 1`, exige `M_USA_BALANCA`). Atenção: a receita padrão R3 e a tela `05_eto.png` estão em modo **pressão**. Não usar os números da `05_eto` nem dizer que o ciclo padrão é por massa. Degraus em **kg**, com a pressão acompanhando. O builder calcula valores coerentes com a câmara de 1500 L (alvo de massa, 5 degraus, pressão final dentro de −0,900 a −0,300 bar). A layout da tela de injeção da IHM pode seguir a `05_eto` com os campos do modo massa. Os valores são ilustrativos, com a mesma nota dos outros demos.
@@ -116,14 +122,14 @@ Faixa curta com as fases do ciclo em ordem (ícones como os da barra da IHM). Ao
 ### 5. Segurança · "Alarme que diz o que fazer"
 
 - **Corpo:** cerca de 45 alarmes por prioridade (ISA-18.2). O que não é segurança vira pendência com a próxima ação do operador, sem perder o ciclo. O que é segurança aborta e, depois do ETO, força a purga antes de liberar a porta.
-- **Visual:** tela de alarmes da IHM (`07_alarmes.png` ou uma reconstruída em HTML) com uma pendência amarela, por exemplo "trocar cilindro", e o texto da ação.
+- **Visual:** a **tela real de alarmes do AFR-ETO** (tela 54, `tela-alarmes.webp`, revisão do user 2026-11-12), montada por `patch_alarmes.py` (Blender dir) com a geometria e as cores do gerador da IHM (`ETO/ihm/gera_ihm_eto.py`, `alarmes()`: lista de ativos DISPARO/ALARME, botões SOBE/DESCE/RECONHECER/RECONHECER FALHAS DE PORTA, sem banner) sobre o cabeçalho e o rodapé da captura limpa. Linha ativa: "3 PENDÊNCIA: TROCAR CILINDRO DE ETO (ciclo 00412)" em amarelo (prioridade 3); botão de alarmes do rodapé amarelo até reconhecer. A tela em HTML reconstruída saiu. Fundo (revisão do user, 2026-11-12): giroflex vermelho renderizado (`seqg/g_0001..0024.webp`, uma volta em 24 frames), num suporte de parede no alto à direita, com os feixes varrendo a parede; loop por tempo (~16 fps, só com a cena visível), um frame parado em reduced motion.
 - **Exemplos de 2–3 linhas:** queda de energia com ETO na câmara trava a máquina; a porta só abre na pressão atmosférica.
 
 ### 6. Registro · "Cada ciclo deixa um registro completo"
 
 - **Corpo:** quem operou, qual carga, qual cilindro, quanto ETO, quanto durou cada fase, que alarmes ocorreram, resultado do leak test. Também os usuários com níveis de acesso e o CSV a cada segundo.
 - **Visual:** relatório A4 que se monta linha por linha conforme rola. O conteúdo é coerente com as cenas anteriores (mesma massa injetada, mesmo lote) e tem campos de assinatura de operador e responsável.
-- **Fecho:** a validação Labquali, "Quem instala é quem valida": QI, QO, QD e validação do software, com a documentação pronta para a próxima inspeção.
+- **Fecho:** a validação Labquali, "A Labquali faz a validação" (revisão do user, 2026-11-12): QI, QO, QD e validação do software, com a documentação pronta para a próxima inspeção.
 
 ### 7. CTA · "Agende uma avaliação técnica"
 
@@ -136,9 +142,9 @@ Faixa curta com as fases do ciclo em ordem (ícones como os da barra da IHM). Ao
 |---|---|---|
 | `seq/` hero | Órbita da máquina genérica → aproximação do painel | ~150 · 1920×1080 |
 | `seqp/` painel | Painel antigo → painel novo, explodindo em camadas | ~90 · 1920×1080 ou 1280×720 |
-| `seqe/` injeção | Cilindro na balança + IHM; câmera desliza do cilindro até a IHM | ~80 · 1280×720 |
+| `seqe/` injeção | Válvula do cilindro → válvula pneumática em corte → recuo para balança + IHM (roteiro v3 na cena 4) | 112 · 1280×720 |
 
-- Telas da IHM e o visor da balança no 3D recebem textura **neutra ou de layout sem números**. Os números entram por overlay HTML posicionado sobre o frame fixo.
+- A tela da IHM no 3D é a **tela real do AFR-ETO** (Injeção de ETO, captura de bancada `vivo/ciclo/182812_f06.png`), limpa de "modo simulação", usuário convidado e nome VAPOR01, com valores coerentes com a página (degrau 5 de 5, 0,90 kg). Revisão do user, 2026-11-11: "a tela tem que ser a do software AFR-ETO e não uma inventada". Na cena 3, a chamada da IHM mostra a mesma tela em recorte legível (`tela-ihm.webp`). O visor da balança segue neutro, com os números em overlay HTML.
 - Painel antigo, painel novo, cilindro, balança e IHM ainda não existem no `cena.blend` e precisam ser modelados.
 - Peso: a caldeira tem 10 MB com 230 quadros, e aqui são cerca de 320. Para caber em ≤ 12 MB, o builder reduz quadros e/ou resolução de `seqp/` e `seqe/` (minha call: priorizar a qualidade do hero e da injeção).
 - Prévia em 960×540 antes do render final; mesmos samples e denoise dos demos anteriores.
@@ -146,7 +152,7 @@ Faixa curta com as fases do ciclo em ordem (ícones como os da barra da IHM). Ao
 ## Copy e rigor
 
 - pt-BR. "Óxido de etileno (ETO)" por extenso na primeira menção.
-- Valores numéricos são ilustrativos. Nota única: "Dados ilustrativos de um ciclo de demonstração", como nos outros demos.
+- Tudo é ilustrativo (revisão do user, 2026-11-12): "Imagens, telas e valores meramente ilustrativos" sob o texto do hero e no rodapé; na injeção, "Valores meramente ilustrativos". A ponte entre a faixa de fases e a injeção diz "Fase 5 · Injeção de ETO: dosagem gravimétrica, pela balança do cilindro."
 - Fazer o mesmo passe de humanizer usado na caldeira.
 
 ## Entrega e verificação

@@ -47,7 +47,7 @@ class TestRetrofitEto(HttpCase):
     def test_panel_scene(self):
         html = self._html()
         for s in (
-            'seqp/p_{iiii}.webp:70:1"',
+            'seqp/p_{iiii}.webp?v=2:70:1"',
             "CLP Delta DVP-SE",
             "IHM Delta DOP-107",
             "Modbus TCP",
@@ -56,7 +56,9 @@ class TestRetrofitEto(HttpCase):
             "Fica",
             "vaso, portas, bombas e camisa",
             "Troca",
-            "automação e instrumentação",
+            "automação e quadro elétrico",
+            "esquema elétrico",
+            "tela-ihm.webp",
             "PT100, transdutor de pressão, umidade e balança do cilindro",
         ):
             self.assertIn(s, html)
@@ -88,12 +90,19 @@ class TestRetrofitEto(HttpCase):
         self.assertEqual(round(d["cyl_start"] - d["cyl_end"], 2), d["total_kg"])
         self.assertTrue(d["p_min"] <= d["p_start"] < d["p_end"] <= d["p_max"])
         for s in (
-            "ETO dosado por peso, não por estimativa",
+            "ETO dosado por massa, não estimado por gradiente de pressão",
             "O relatório registra a massa exata injetada.",
             "window.LQ_ETO",
-            'seqe/e_{iiii}.webp:60:1"',
+            'seqe/e_{iiii}.webp?v=3:112:1"',
+            "var NF = 112, INJ_FIXED = 71",
+            "A válvula pneumática de admissão abre a cada degrau e fecha quando a balança registra a massa "
+            "programada. São cinco degraus, e a pressão da câmara sobe junto.",
         ):
             self.assertIn(s, html)
+        # the 3D HMI shows the real AFR-ETO screen per frame: no invented HTML screen on top of it
+        self.assertNotIn("ov--hmi", html)
+        self.assertNotIn("eto-inj3", html)
+        self.assertIn("ov--lcd", html)
 
         # the static screen-reader summary must agree with the data block
         def br(v, n):
@@ -105,10 +114,15 @@ class TestRetrofitEto(HttpCase):
             self.assertIn(s, sm.group(1))
 
     def test_injection_frame(self):
-        for url in ("/retrofit/eto/seqe/e_0060.webp", "/retrofit/eto/seqp/p_0070.webp"):
+        for url in ("/retrofit/eto/seqe/e_0112.webp", "/retrofit/eto/seqp/p_0070.webp"):
             r = self.url_open(url)
             self.assertEqual(r.status_code, 200, url)
             self.assertEqual(r.headers.get("Content-Type"), "image/webp", url)
+        # exactly the 112 frames the canvas asks for (no leftovers from the 60-frame cut)
+        import os
+        seqe = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "demos", "eto", "seqe")
+        names = sorted(f for f in os.listdir(seqe) if f.endswith(".webp"))
+        self.assertEqual(names, ["e_%04d.webp" % i for i in range(1, 113)])
 
     # ---- Task 7: segurança, registro, contato, rigor do copy, orçamento ----
 
@@ -134,6 +148,18 @@ class TestRetrofitEto(HttpCase):
             "rotina de segurança",
         ):
             self.assertIn(s, sec)
+        # the alarm screen is the real AFR-ETO tela 54 (image), not one rebuilt in HTML
+        self.assertRegex(sec, r'src="[^"]*tela-alarmes\.webp"')
+        self.assertNotIn("ihm__", sec)
+        r = self.url_open("/retrofit/eto/tela-alarmes.webp")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers.get("Content-Type"), "image/webp")
+        # giroflex: rendered 24-frame loop behind the scene
+        self.assertIn('id="saf-gfx"', sec)
+        for n in (1, 24):
+            r = self.url_open("/retrofit/eto/seqg/g_%04d.webp" % n)
+            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r.headers.get("Content-Type"), "image/webp")
         # scene 4 ends with 44,10 kg left in the cylinder: the empty-cylinder case is a hypothesis, not an event
         self.assertIn("Se o cilindro esvaziar", sec)
         self.assertNotIn("o cilindro esvaziou", sec)
@@ -145,11 +171,12 @@ class TestRetrofitEto(HttpCase):
         sec = self._section(html, "registro")
         for s in (
             "Cada ciclo deixa um registro completo",
-            "Quem instala é quem valida",
+            "A Labquali faz a validação",
             "QI", "QO", "QD",
             "validação do software",
             "APROVADO",
             "CSV",
+            "Relatório meramente ilustrativo",
         ):
             self.assertIn(s, sec)
         # the report reads the injected mass from the injection data, and its static fallback agrees
@@ -182,7 +209,7 @@ class TestRetrofitEto(HttpCase):
         self.assertNotIn("11135", low)
         self.assertNotIn("rdc", low)
         self.assertIn("óxido de etileno (ETO)", text)
-        self.assertIn("Dados ilustrativos de um ciclo de demonstração", text)
+        self.assertIn("Imagens, telas e valores meramente ilustrativos", text)
 
     def test_size_budget(self):
         import os
