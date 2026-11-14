@@ -116,6 +116,54 @@ class TestMarspRoutes(HttpCase):
         self.assertNotIn("/afr_labquali_website/static/demos/", html)
         self.assertIn("/marsp/_marsp/marsp.css", html)
 
+    def _crawl(self, shadowed):
+        from unittest import mock
+        from odoo.addons.afr_labquali_website.controllers import demos
+
+        page_links = ("/marsp", "/marsp/autoclave-eto")
+        failures = []
+        checked = 0
+        demos._html_cache.clear()
+        try:
+            patcher = mock.patch.object(demos, "_static_dir_is_ours", return_value=False) if shadowed else None
+            if patcher:
+                patcher.start()
+            try:
+                for page in page_links:
+                    html = self.url_open(page).text
+                    urls = set()
+                    for attr in re.findall(r'\b(?:src|href)="([^"]*)"', html):
+                        urls.add(attr)
+                    for tag in re.findall(r"<meta\b[^>]*>", html):
+                        m = re.search(r'\bcontent="([^"]*)"', tag)
+                        if m:
+                            urls.add(m.group(1))
+                    urls = {u for u in urls if u.startswith("/") and not u.startswith("//") and u not in page_links}
+                    for seq in re.findall(r'data-sc-sequence="([^"]*)"', html):
+                        base = re.sub(r":\d+:\d+$", "", seq.split("?")[0]).replace("{iiii}", "0001")
+                        urls.add(base)
+                        urls.add(base.replace("/seq/", "/seq-m/").replace("/seqa/", "/seqa-m/"))
+                    for url in sorted(urls):
+                        checked += 1
+                        r = self.url_open(url)
+                        ctype = r.headers.get("Content-Type", "")
+                        if r.status_code != 200 or ctype.startswith("text/html"):
+                            failures.append("%s -> %s %s (from %s, shadowed=%s)" % (
+                                url, r.status_code, ctype, page, shadowed))
+            finally:
+                if patcher:
+                    patcher.stop()
+        finally:
+            demos._html_cache.clear()
+        self.assertGreater(checked, 10)
+        self.assertFalse(failures, "\n".join(failures))
+
+    def test_crawl_every_reference(self):
+        self._crawl(shadowed=False)
+
+    def test_crawl_every_reference_shadowed_static(self):
+        self._crawl(shadowed=True)
+
 
 @tagged("post_install", "-at_install")
 class TestMarspVitrine(HttpCase):
@@ -244,8 +292,10 @@ class TestMarspGuards(HttpCase):
     FOLDERS = ("marsp-vitrine", "marsp-autoclave-eto", "_marsp")
     BLACKLIST = (
         r"montroiz", r"\bamed\b", r"point suture", r"medplast", r"oximed",
-        r"\bsteriliza\b", r"vap-eto", r"R\$",
+        r"\bsteriliza\b", r"vap-eto", r"R\$", r"\bmogi\b",
     )
+    # Project tags such as ABC-xy-123 are case-sensitive: MSP 1500-E must not match.
+    TAG_PATTERN = r"\b[A-Z]{2,4}-[A-Za-z]{2,4}-\d{3}\b"
 
     def _root(self, folder):
         path = get_module_resource("afr_labquali_website", "static", "demos", folder)
@@ -264,6 +314,8 @@ class TestMarspGuards(HttpCase):
                     scanned += 1
                     for pat in self.BLACKLIST:
                         self.assertFalse(re.search(pat, text, re.I), "%s in %s/%s" % (pat, folder, name))
+                    self.assertFalse(
+                        re.search(self.TAG_PATTERN, text), "project tag in %s/%s" % (folder, name))
         self.assertGreater(scanned, 10)
 
     def test_weight_budgets(self):
