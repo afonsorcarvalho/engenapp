@@ -10,6 +10,8 @@ body {
 img, svg { display: block; max-width: 100%; }
 h1, h2, h3, p { margin: 0; }
 a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
+/* On ink, the mid-blue ring falls under 3:1; use white (also beats .m-btn:focus-visible). */
+.v-top a:focus-visible, .v-hero a:focus-visible, .v-line a:focus-visible { outline-color: #fff; }
 
 .v-wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 32px; }
 
