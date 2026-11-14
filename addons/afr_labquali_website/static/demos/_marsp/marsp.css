@@ -1,0 +1,100 @@
+/* MARSP brand tokens and components. Shared by every MARSP page. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Michroma&display=swap");
+
+:root {
+  --m-ink: #071E32;
+  --m-navy: #0A3D62;
+  --m-mid: #1E6091;
+  --m-orange: #FF6B35;
+  --m-orange-deep: #C2410C;
+  --m-slate: #5A7184;
+  --m-steel: #C6CDD4;
+  --m-hair: #E0E8F0;
+  --m-pale: #EEF2F5;
+  --m-fog: #F4F7FA;
+
+  --m-r-sm: 6px;
+  --m-r-md: 10px;
+  --m-r-lg: 14px;
+  --m-r-pill: 20px;
+
+  --m-font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --m-font-brand: "Michroma", "Inter", system-ui, sans-serif;
+}
+
+/* Michroma only for the brand name and model codes. */
+.m-wordmark {
+  font-family: var(--m-font-brand);
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* Buttons: 6 px corners. Orange is reserved for the action. */
+.m-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: 2px solid transparent;
+  border-radius: var(--m-r-sm);
+  font: 600 16px/1.2 var(--m-font);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+.m-btn:focus-visible, .m-link:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 2px; }
+.m-btn--primary { background: var(--m-orange); border-color: var(--m-orange); color: var(--m-ink); }
+.m-btn--primary:hover { background: #ff7f50; border-color: #ff7f50; }
+.m-btn--ghost { background: transparent; border-color: var(--m-navy); color: var(--m-navy); }
+.m-btn--ghost:hover { background: var(--m-navy); color: #fff; }
+.m-btn--ghost-dark { background: transparent; border-color: #fff; color: #fff; }
+.m-btn--ghost-dark:hover { background: #fff; color: var(--m-ink); }
+
+/* Link with arrow. */
+.m-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 16px/1.4 var(--m-font);
+  color: var(--m-navy);
+  text-decoration: none;
+}
+.m-link::after { content: "\2192"; transition: transform .15s; }
+.m-link:hover::after { transform: translateX(4px); }
+
+/* Pill tag. */
+.m-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: var(--m-r-pill);
+  background: var(--m-pale);
+  color: var(--m-navy);
+  font: 600 14px/1.5 var(--m-font);
+}
+
+/* Spec sheet table. */
+.m-spec {
+  width: 100%;
+  border-collapse: collapse;
+  font: 400 17px/1.6 var(--m-font);
+  color: var(--m-ink);
+}
+.m-spec th, .m-spec td { padding: 12px 16px; border-bottom: 1px solid var(--m-hair); text-align: left; vertical-align: top; }
+.m-spec th { font-weight: 400; color: var(--m-slate); width: 40%; }
+.m-spec td { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Partnership signature strip. */
+.m-sign {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 24px 0;
+  border-top: 1px solid var(--m-hair);
+  font: 400 14px/1.5 var(--m-font);
+  color: var(--m-slate);
+}
+.m-sign strong { color: var(--m-ink); font-weight: 700; }
