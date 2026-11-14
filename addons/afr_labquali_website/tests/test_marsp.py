@@ -165,3 +165,72 @@ class TestMarspVitrine(HttpCase):
         for bad in ("amed", "point suture", "medplast", "oximed", "steriliza", "montroiz", "vap-eto"):
             self.assertFalse(re.search(r"\b%s\b" % re.escape(bad), self.html, re.I), bad)
         self.assertNotIn("R$", self.html)
+
+
+@tagged("post_install", "-at_install")
+class TestMarspAutoclave(HttpCase):
+    """/marsp/autoclave-eto: the model page (3D opening, highlights, gallery, spec sheet, proposal)."""
+
+    BASE = "/marsp/marsp-autoclave-eto/"
+    MAILTO = "mailto:labquali@labquali.com.br?subject=Proposta%20MARSP%20-%20Autoclave%20ETO%20MSP%201500-E"
+
+    def setUp(self):
+        super().setUp()
+        r = self.url_open("/marsp/autoclave-eto")
+        self.assertEqual(r.status_code, 200)
+        self.html = r.text
+        path = get_module_resource("afr_labquali_website", "static", "demos", "marsp-autoclave-eto", "index.html")
+        with open(path, encoding="utf-8") as fh:
+            self.source = fh.read()
+
+    def test_names_and_data(self):
+        for text in ("MSP 1500-E", "Autoclave ETO", "1000 × 1000 × 1500 mm", "316L"):
+            self.assertIn(text, self.html, text)
+
+    def test_sections(self):
+        for sid in ("inicio", "destaques", "galeria", "ficha", "linha", "proposta"):
+            self.assertRegex(self.html, r'<section[^>]*\bid="%s"' % sid, sid)
+
+    def test_sequences(self):
+        # Source keeps the relative template; the controller prefixes it when serving.
+        self.assertIn('data-sc-sequence="seq/f_{iiii}.webp', self.source)
+        self.assertIn('data-sc-sequence="seqa/a_{iiii}.webp', self.source)
+        self.assertRegex(self.html, r'data-sc-sequence="[^"]*/marsp-autoclave-eto/seq/f_\{iiii\}\.webp:150:1"')
+        self.assertRegex(self.html, r'data-sc-sequence="[^"]*/marsp-autoclave-eto/seqa/a_\{iiii\}\.webp:70:1"')
+
+    def test_frames_served(self):
+        for name in ("seq/f_0001.webp", "seqa/a_0070.webp", "seq-m/f_0150.webp", "seqa-m/a_0001.webp"):
+            r = self.url_open(self.BASE + name)
+            self.assertEqual(r.status_code, 200, name)
+            self.assertEqual(r.headers.get("Content-Type"), "image/webp", name)
+
+    def test_proposal_mailto(self):
+        m = re.search(r'<section[^>]*\bid="proposta".*?</section>', self.html, re.S)
+        self.assertTrue(m)
+        self.assertIn('href="%s"' % self.MAILTO, m.group(0))
+
+    def test_static_fallback(self):
+        r = self.url_open(self.BASE + "page.css")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers.get("Content-Type"), "text/css")
+        self.assertIn("prefers-reduced-motion", r.text)
+        self.assertRegex(self.html, r'<img[^>]*still-capa\.webp')
+        for name in ("scrollcraft.js", "scrollcraft.css"):
+            self.assertEqual(self.url_open(self.BASE + name).status_code, 200, name)
+
+    def test_back_to_line(self):
+        self.assertGreaterEqual(self.html.count('href="/marsp"'), 2)
+
+    def test_other_models_not_linked(self):
+        self.assertNotIn('href="/marsp/gerador-de-vapor"', self.html)
+        for slug in ("/marsp/aquecedor-eto", "/marsp/psicrometro"):
+            self.assertNotIn(slug, self.html, slug)
+        m = re.search(r'<section[^>]*\bid="linha".*?</section>', self.html, re.S)
+        self.assertTrue(m)
+        self.assertEqual(len(re.findall(r"em breve", m.group(0), re.I)), 3)
+
+    def test_no_forbidden_content(self):
+        for bad in ("amed", "point suture", "medplast", "oximed", "steriliza", "montroiz", "vap-eto", "mogi"):
+            self.assertFalse(re.search(r"\b%s\b" % re.escape(bad), self.html, re.I), bad)
+        self.assertNotIn("R$", self.html)
+        self.assertNotIn("CNPJ", self.html)

@@ -3,10 +3,235 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MARSP Autoclave ETO</title>
+<title>Autoclave ETO MSP 1500-E · MARSP</title>
+<meta name="description" content="Autoclave MARSP MSP 1500-E para esterilização por óxido de etileno: câmara de 1500 litros em aço inox 316L, dupla porta guilhotina vertical, automação AFR e qualificação LabQuali.">
+<meta property="og:image" content="/afr_labquali_website/static/demos/marsp-autoclave-eto/still-capa.webp">
+<link rel="icon" type="image/svg+xml" href="/afr_labquali_website/static/demos/_marsp/favicon.svg">
+<script>
+  /* Motion is an enhancement: without JS, or with reduced motion, the acts stay static blocks. */
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('m-live');
+</script>
+<link rel="stylesheet" href="scrollcraft.css">
 <link rel="stylesheet" href="/afr_labquali_website/static/demos/_marsp/marsp.css">
+<link rel="stylesheet" href="page.css?v=5">
 </head>
 <body>
-<h1>MARSP Autoclave ETO</h1>
+<header class="p-top">
+  <div class="p-top__bar">
+    <a class="p-top__brand" href="/marsp"><img src="/afr_labquali_website/static/demos/_marsp/logo-dark.svg" width="140" height="28" alt="MARSP, ver a linha"></a>
+    <nav class="p-top__nav" aria-label="Página">
+      <a href="/marsp">Linha MARSP</a>
+      <a class="p-top__in" href="#ficha">Ficha técnica</a>
+      <a class="m-btn m-btn--primary p-top__cta" href="#proposta">Pedir proposta</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<!-- 1 · Abertura: órbita em volta da autoclave, close no painel MARSP, recuo até a vista frontal. -->
+<section id="inicio" class="p-act" data-sc-act="scrub" data-sc-span="4.5" aria-labelledby="inicio-titulo">
+  <div class="p-stage p-stage--hero" data-sc-stage>
+    <div class="p-film">
+      <img class="sc-stage__poster" src="still-capa.webp" width="1600" height="900" alt="Autoclave ETO MSP 1500-E vista de três quartos pela frente, com a porta guilhotina fechada e a plataforma de utilidades ao lado" fetchpriority="high">
+      <canvas data-sc-sequence="seq/f_{iiii}.webp:150:1" role="img" aria-label="A câmera dá a volta na autoclave fechada, passa perto do painel com a marca MARSP na coluna da porta e recua até a vista frontal, com a plataforma de utilidades à direita."></canvas>
+    </div>
+    <div class="p-scrim" aria-hidden="true"></div>
+    <div class="p-copy">
+      <div class="p-hero" data-sc-cue="-0.1 0.22 0.1 0.3">
+        <p class="p-hero__code m-wordmark">MSP 1500-E</p>
+        <h1 id="inicio-titulo">Autoclave ETO</h1>
+        <p class="p-hero__lede">Esterilização por óxido de etileno em câmara de 1500 litros, entregue instalada, qualificada e liberada para uso.</p>
+      </div>
+      <p class="p-beat p-beat--a" data-sc-cue="0.25 0.44">Carenagem em aço inox 430 escovado sobre isolamento de lã de rocha.</p>
+      <p class="p-beat p-beat--b" data-sc-cue="0.64 0.8">Bomba de vácuo de 5 cv, gerador de vapor e painel de comando vêm numa plataforma ao lado.</p>
+      <p class="p-beat p-beat--c" data-sc-cue="0.84 1.02">A segunda porta fica do outro lado da câmara.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · Destaques: a carenagem some, a porta guilhotina sobe e a câmera entra na câmara. -->
+<section id="destaques" class="p-act" data-sc-act="scrub" data-sc-span="6" aria-labelledby="destaques-titulo">
+  <div class="p-stage p-stage--hl" data-sc-stage>
+    <div class="p-film">
+      <img class="sc-stage__poster" src="seqa/a_0001.webp" width="1600" height="900" alt="" loading="lazy">
+      <img class="p-static-img" src="seqa/a_0070.webp" width="1600" height="900" alt="Autoclave sem a carenagem, com a porta guilhotina aberta e a câmara interna à mostra" loading="lazy">
+      <canvas data-sc-sequence="seqa/a_{iiii}.webp:70:1" role="img" aria-label="Os painéis da carenagem se afastam e mostram o vaso com a camisa em gomos. Depois a porta guilhotina sobe e a câmera se aproxima da câmara interna aberta."></canvas>
+    </div>
+    <div class="p-scrim" aria-hidden="true"></div>
+    <div class="p-copy p-copy--hl">
+      <h2 id="destaques-titulo" class="p-hl-title">Destaques</h2>
+      <article class="p-hl" data-sc-cue="-0.1 0.17 0.1 0.3">
+        <p class="p-hl__n">1 de 4</p>
+        <h3>Automação AFR com ciclo rastreável</h3>
+        <p>CLP, IHM e software de controle validável, com dados criptografados e auditoria de logs. Cada carga recebe um código para rastrear o lote, e o supervisório guarda os ciclos em nuvem, com backup.</p>
+      </article>
+      <article class="p-hl" data-sc-cue="0.17 0.46">
+        <p class="p-hl__n">2 de 4</p>
+        <h3>Qualificação LabQuali no mesmo fornecimento</h3>
+        <p>O vaso passa por ensaio de líquidos penetrantes nas soldas e teste hidrostático. A LabQuali faz QI, QO e QD e valida o software. Equipamento, automação e documentação de qualificação chegam num fornecimento só.</p>
+      </article>
+      <article class="p-hl" data-sc-cue="0.46 0.74">
+        <p class="p-hl__n">3 de 4</p>
+        <h3>Dupla porta guilhotina vertical</h3>
+        <p>Duas portas em inox 316L de 8 mm, uma em cada lado da câmara de <span class="p-nw">1000 × 1000 × 1500 mm</span>. Sobem por pistões pneumáticos, com contrapesos de segurança, e vedam por guarnição pressurizada.</p>
+      </article>
+      <article class="p-hl" data-sc-cue="0.74 1.02">
+        <p class="p-hl__n">4 de 4</p>
+        <h3>Câmara de 1500 L em inox 316L</h3>
+        <p>Chapa de 6 mm com polimento sanitário espelhado. Por fora, uma camisa em gomos de inox 304, com bomba própria para circular água.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · Galeria -->
+<section id="galeria" class="p-gal" aria-labelledby="galeria-titulo">
+  <div class="p-wrap">
+    <h2 id="galeria-titulo">Galeria</h2>
+    <div class="p-gal__grid">
+      <figure class="p-gal__a">
+        <img src="g1.webp" width="1600" height="900" alt="Porta guilhotina aberta, com a câmara interna em inox à mostra" loading="lazy" decoding="async">
+        <figcaption>Porta de carga aberta: câmara interna em inox 316L com polimento sanitário espelhado.</figcaption>
+      </figure>
+      <figure class="p-gal__b">
+        <img src="g3.webp" width="1600" height="900" alt="Armário de comando com sinaleiros, botão de emergência e IHM" loading="lazy" decoding="async">
+        <figcaption>Armário de comando: sinaleiros, botão de emergência e IHM.</figcaption>
+      </figure>
+      <figure class="p-gal__c">
+        <img src="g2.webp" width="1600" height="900" alt="Plataforma de utilidades com bombas, motor e reservatório vertical" loading="lazy" decoding="async">
+        <figcaption>Plataforma de utilidades, ligada à autoclave por mangueiras flexíveis de inox.</figcaption>
+      </figure>
+      <figure class="p-gal__d">
+        <img src="g4.webp" width="1600" height="900" alt="Vista traseira da autoclave com a segunda porta guilhotina" loading="lazy" decoding="async">
+        <figcaption>Vista traseira, com a segunda porta guilhotina.</figcaption>
+      </figure>
+    </div>
+    <p class="p-note">Imagens ilustrativas. Dimensões, acabamentos e disposição dos componentes do equipamento fornecido podem diferir.</p>
+  </div>
+</section>
+
+<!-- 4 · Ficha técnica -->
+<section id="ficha" class="p-spec" aria-labelledby="ficha-titulo">
+  <div class="p-wrap">
+    <div class="p-spec__head">
+      <h2 id="ficha-titulo">Ficha técnica</h2>
+      <p class="p-spec__code"><span class="m-wordmark">MSP 1500-E</span></p>
+    </div>
+    <div class="p-spec__cols">
+      <table class="m-spec">
+        <caption>Vaso de pressão e portas</caption>
+        <tbody>
+          <tr><th scope="row">Modelo</th><td>MSP 1500-E, dupla porta guilhotina vertical</td></tr>
+          <tr><th scope="row">Volume da câmara</th><td>1500 litros</td></tr>
+          <tr><th scope="row">Dimensões internas (L × A × P)</th><td class="p-nw">1000 × 1000 × 1500 mm</td></tr>
+          <tr><th scope="row">Câmara interna</th><td>Inox 316L de 6 mm, polimento sanitário espelhado</td></tr>
+          <tr><th scope="row">Câmara externa (camisa)</th><td>Gomos de inox 304 de 4 mm</td></tr>
+          <tr><th scope="row">Portas</th><td>Duas, em inox 316L de 8 mm, guilhotina com abertura para cima, pistões pneumáticos e contrapesos de segurança</td></tr>
+          <tr><th scope="row">Vedação das portas</th><td>Guarnição cilíndrica oca, pressurizada</td></tr>
+          <tr><th scope="row">Pressão máxima de trabalho admissível (PMTA)</th><td>1,2 kgf/cm²</td></tr>
+          <tr><th scope="row">Pressão de teste hidrostático</th><td>1,56 kgf/cm²</td></tr>
+          <tr><th scope="row">Pressão de trabalho</th><td>0 a −0,90 kgf/cm²</td></tr>
+          <tr><th scope="row">Eficiência de solda</th><td>Costado 0,70 · tampos 1,0</td></tr>
+          <tr><th scope="row">Sobre-espessura para corrosão</th><td>2,0 mm (costado e tampos)</td></tr>
+          <tr><th scope="row">Conexões</th><td>Tri-clamp para ETO, N2, vapor, ar filtrado, validação, sensor de umidade e transmissor de pressão</td></tr>
+          <tr><th scope="row">Isolamento térmico</th><td>Lã de rocha, acabamento em alumínio</td></tr>
+          <tr><th scope="row">Carenagem</th><td>Inox 430 escovado</td></tr>
+          <tr><th scope="row">Normas de projeto</th><td>ASME Seção VIII, Divisão 1 · NR-13</td></tr>
+        </tbody>
+      </table>
+      <div>
+        <table class="m-spec">
+          <caption>Plataforma de utilidades</caption>
+          <tbody>
+            <tr><th scope="row">Bomba de vácuo</th><td>5 cv, com reservatório vertical de água em inox 316L de 4 mm</td></tr>
+            <tr><th scope="row">Gerador de vapor</th><td>Boiler em inox 304 de 4 mm, Ø 300 × 600 mm, 45 litros; bomba d'água de 0,5 cv</td></tr>
+            <tr><th scope="row">Circulação da camisa</th><td>Bomba d'água de 1 cv</td></tr>
+            <tr><th scope="row">Gás</th><td>Aquecedor de gás</td></tr>
+            <tr><th scope="row">Aeração mecânica</th><td>Filtragem de ar com filtro HEPA</td></tr>
+            <tr><th scope="row">Ligações</th><td>Mangueiras flexíveis em aço inox</td></tr>
+          </tbody>
+        </table>
+        <table class="m-spec">
+          <caption>Automação e qualificação</caption>
+          <tbody>
+            <tr><th scope="row">Controle</th><td>CLP e IHM, válvulas com atuadores pneumáticos, válvulas de segurança</td></tr>
+            <tr><th scope="row">Instrumentação</th><td>Pt-100, transdutor de pressão, medição de umidade</td></tr>
+            <tr><th scope="row">Admissão do ETO</th><td>Por pesagem</td></tr>
+            <tr><th scope="row">Software</th><td>Validável, com dados criptografados e auditoria de logs</td></tr>
+            <tr><th scope="row">Supervisório</th><td>Gestão dos ciclos em nuvem, backup e impressão digital</td></tr>
+            <tr><th scope="row">Ensaios</th><td>Líquidos penetrantes nas soldas, teste hidrostático</td></tr>
+            <tr><th scope="row">Qualificação</th><td>QI, QO e QD, validação do software, inspeção de segurança NR-13</td></tr>
+            <tr><th scope="row">Data book</th><td>Prontuário do vaso, certificados de calibração, relatórios de QI, QO e QD, rastreabilidade da matéria-prima, ART</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · A linha -->
+<section id="linha" class="p-line" aria-labelledby="linha-titulo">
+  <div class="p-wrap">
+    <div class="p-line__head">
+      <h2 id="linha-titulo">O resto da linha</h2>
+      <p>A autoclave trabalha com outros três equipamentos MARSP. Cada um ganha página própria quando o modelo estiver pronto.</p>
+    </div>
+    <ul class="p-line__row">
+      <li>
+        <img src="/afr_labquali_website/static/demos/marsp-vitrine/sil-gerador.svg" width="296" height="320" alt="" loading="lazy">
+        <span class="p-soon">Em breve</span>
+        <h3>Gerador de vapor</h3>
+      </li>
+      <li>
+        <img src="/afr_labquali_website/static/demos/marsp-vitrine/sil-aquecedor.svg" width="352" height="320" alt="" loading="lazy">
+        <span class="p-soon">Em breve</span>
+        <h3>Aquecedor de gás ETO</h3>
+      </li>
+      <li>
+        <img class="p-line__small" src="/afr_labquali_website/static/demos/marsp-vitrine/sil-psicrometro.svg" width="170" height="320" alt="" loading="lazy">
+        <span class="p-soon">Em breve</span>
+        <h3>Psicrômetro 4–20 mA</h3>
+      </li>
+    </ul>
+    <a class="m-link" href="/marsp">Ver a linha MARSP</a>
+  </div>
+</section>
+
+<!-- 6 · Pedido de proposta -->
+<section id="proposta" class="p-ask" aria-labelledby="proposta-titulo">
+  <div class="p-wrap">
+    <div class="p-ask__row">
+      <div>
+        <h2 id="proposta-titulo">Pedir proposta</h2>
+        <p>Diga onde a autoclave vai operar e quais redes já existem no local (ETO, N2, ar comprimido e água).</p>
+      </div>
+      <div class="p-ask__act">
+        <a class="m-btn m-btn--primary" href="mailto:labquali@labquali.com.br?subject=Proposta%20MARSP%20-%20Autoclave%20ETO%20MSP%201500-E">Pedir proposta por e-mail</a>
+        <span class="p-ask__mail">labquali@labquali.com.br</span>
+      </div>
+    </div>
+    <div class="m-sign">
+      <img src="/afr_labquali_website/static/demos/_marsp/logo-dark.svg" width="120" height="24" alt="MARSP">
+      <span>Uma parceria <strong>AFR · LabQuali</strong></span>
+      <span>São Luís · MA &nbsp;|&nbsp; São Paulo · SP</span>
+    </div>
+  </div>
+</section>
+</main>
+
+<script src="scrollcraft.js"></script>
+<script>
+(function () {
+  if (!document.documentElement.classList.contains('m-live')) return;
+  /* Phones get the 960×540 frames: same names and counts, in seq-m/ and seqa-m/. */
+  if (matchMedia('(max-width: 760px)').matches) {
+    Array.prototype.forEach.call(document.querySelectorAll('canvas[data-sc-sequence]'), function (cv) {
+      cv.setAttribute('data-sc-sequence', cv.getAttribute('data-sc-sequence')
+        .replace('/seq/f_', '/seq-m/f_').replace('/seqa/a_', '/seqa-m/a_'));
+    });
+  }
+  ScrollCraft.mount(document.body);
+})();
+</script>
 </body>
 </html>
