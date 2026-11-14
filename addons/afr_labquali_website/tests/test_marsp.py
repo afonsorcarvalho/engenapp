@@ -223,12 +223,14 @@ class TestMarspVitrine(HttpCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.headers.get("Content-Type"), "image/webp")
 
-    def test_top_bar_logo_is_engraved_mono(self):
+    def test_top_bar_logo_is_inverted_lockup(self):
         m = re.search(r'<a class="v-top__brand"[^>]*>(.*?)</a>', self.html, re.S)
         self.assertTrue(m, "brand link missing")
-        self.assertIn('aria-label="MARSP"', m.group(0))
-        self.assertIn('fill="currentColor"', m.group(1))
-        self.assertNotIn("logo-dark.svg", m.group(1))
+        self.assertIn("logo-dark.svg", m.group(1))
+        self.assertIn('alt="MARSP"', m.group(1))
+        self.assertNotIn("<svg", m.group(1))
+        self.assertNotIn("v-top__logo", self.html)
+        self.assertNotIn('fill="currentColor"', self.html)
 
 
 @tagged("post_install", "-at_install")

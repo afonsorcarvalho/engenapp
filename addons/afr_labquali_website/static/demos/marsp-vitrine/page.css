@@ -21,21 +21,20 @@ body {
 img, svg { display: block; max-width: 100%; }
 h1, h2, h3, p { margin: 0; }
 a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
-/* On steel the ring is ink; on the ink line-up the mid-blue ring falls under 3:1, so it is white.
-   Both selectors also beat .m-btn:focus-visible from marsp.css. */
-.v-top a:focus-visible, .v-hero a:focus-visible { outline-color: var(--m-ink); }
-.v-line a:focus-visible { outline-color: #fff; }
+/* On ink (top bar, line-up) the mid-blue ring falls under 3:1, so it is white; on steel it is ink.
+   These selectors also beat .m-btn:focus-visible from marsp.css. */
+.v-top a:focus-visible, .v-line a:focus-visible { outline-color: #fff; }
+.v-hero a:focus-visible { outline-color: var(--m-ink); }
 
 .v-wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 32px; }
 
-/* Top bar: sits on the hero, same steel. */
-.v-top { position: absolute; inset: 0 0 auto 0; z-index: 2; }
-.v-top__bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 80px; border-bottom: 1px solid rgba(51, 61, 71, .2); box-shadow: 0 1px 0 rgba(255, 255, 255, .55); }
-.v-top__brand { display: block; color: var(--v-engrave); }
-.v-top__logo { width: 160px; height: auto; filter: drop-shadow(0 1.5px 0 rgba(255, 255, 255, .8)) drop-shadow(0 -1px 1px rgba(0, 0, 0, .35)); }
+/* Top bar: its own ink band above the steel opening; scrolls away with the page. */
+.v-top { background: var(--m-ink); }
+.v-top__bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 80px; }
+.v-top__brand img { width: 160px; height: auto; }
 .v-top__nav { display: flex; align-items: center; gap: 32px; }
-.v-top__nav a:not(.m-btn) { color: var(--v-engrave); text-decoration: none; font: 500 15px/1 var(--m-font); text-shadow: var(--v-engrave-shadow); }
-.v-top__nav a:not(.m-btn):hover { text-decoration: underline; text-underline-offset: 4px; }
+.v-top__nav a:not(.m-btn) { color: #fff; text-decoration: none; font: 500 15px/1 var(--m-font); opacity: .85; }
+.v-top__nav a:not(.m-btn):hover { opacity: 1; }
 .v-top__cta { padding: 10px 18px; font-size: 15px; }
 
 /* Opening. */
@@ -44,11 +43,12 @@ a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
     repeating-linear-gradient(0deg, rgba(255, 255, 255, .10) 0 1px, rgba(0, 0, 0, .035) 1px 3px),
     linear-gradient(100deg, var(--v-steel-1) 0%, var(--v-steel-2) 26%, var(--v-steel-3) 50%, var(--v-steel-4) 72%, var(--v-steel-5) 100%);
   color: var(--v-engrave);
-  padding: 176px 0 96px;
+  padding: 64px 0 96px;
   overflow: hidden;
   /* Bevel where the steel meets the ink line-up: light line above a dark one. */
   border-bottom: 1px solid #4a535c;
-  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .85);
+  /* Top: a light lip under the ink band, so the change of material reads as an edge. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -1px 0 rgba(255, 255, 255, .85);
 }
 .v-hero__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: center; gap: 32px; }
 .v-hero h1 { font: 800 56px/1.06 var(--m-font); letter-spacing: -.02em; max-width: 13em; color: var(--v-engrave); text-shadow: var(--v-engrave-shadow); }
@@ -146,12 +146,12 @@ a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
 @media (max-width: 760px) {
   .v-wrap { padding: 0 16px; }
   .v-top__bar { height: 64px; }
-  .v-top__logo { width: 120px; }
+  .v-top__brand img { width: 120px; }
   .v-top__nav { gap: 16px; }
   .v-top__nav a:not(.m-btn) { display: none; }
   .v-top__cta { padding: 8px 14px; font-size: 14px; }
 
-  .v-hero { padding: 112px 0 56px; }
+  .v-hero { padding: 48px 0 56px; }
   .v-hero__grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .v-hero h1 { font-size: 34px; line-height: 1.1; }
   .v-hero p { font-size: 16px; }
