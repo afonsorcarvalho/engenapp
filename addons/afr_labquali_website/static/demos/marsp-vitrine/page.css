@@ -83,6 +83,21 @@ a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
 .v-model + .v-model { border-left: 1px solid rgba(255, 255, 255, .08); }
 .v-model:first-child { padding-left: 0; }
 .v-model:last-child { padding-right: 0; }
+/* Desktop/tablet: two big cards on the first row, the three teasers below. */
+@media (min-width: 761px) {
+  .v-line__track { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; row-gap: 72px; }
+  .v-model--live { grid-column: span 3; }
+  .v-model--soon { grid-column: span 2; }
+  .v-model--soon:nth-child(3) { border-left: 0; padding-left: 0; }
+  .v-model--live:nth-child(2) { padding-right: 0; }
+  .v-line__head { padding-bottom: 80px; }
+}
+/* 22K render has a bluer studio than the page ink: fade its edges into the page instead of showing a box. */
+.v-model--still .v-model__stage { margin-top: 0; height: 320px; }
+.v-model--still .v-model__stage img {
+  -webkit-mask-image: radial-gradient(ellipse 50% 46% at 50% 50%, #000 62%, transparent 100%);
+          mask-image: radial-gradient(ellipse 50% 46% at 50% 50%, #000 62%, transparent 100%);
+}
 
 /* Stage: every image sits on the floor line, so the row reads as one showroom. */
 .v-model__stage {
