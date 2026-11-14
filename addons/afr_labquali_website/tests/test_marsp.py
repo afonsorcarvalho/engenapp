@@ -221,6 +221,7 @@ class TestMarspVitrine(HttpCase):
             '<h2 id="parceria-titulo">Equipamentos projetados para oferecer qualidade e segurança</h2>', parceria)
         self.assertNotIn("São Luís", parceria)
         self.assertNotIn("São Paulo", parceria)
+        self.assertIn("projetam, desenvolvem, automatizam, qualificam e validam", parceria)
 
     def test_hero_is_the_machine(self):
         hero = self._section("inicio")
