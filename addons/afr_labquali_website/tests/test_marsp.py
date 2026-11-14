@@ -1,3 +1,4 @@
+import os
 import re
 
 from odoo.modules.module import get_module_resource
@@ -234,3 +235,59 @@ class TestMarspAutoclave(HttpCase):
             self.assertFalse(re.search(r"\b%s\b" % re.escape(bad), self.html, re.I), bad)
         self.assertNotIn("R$", self.html)
         self.assertNotIn("CNPJ", self.html)
+
+
+@tagged("post_install", "-at_install")
+class TestMarspGuards(HttpCase):
+    """Closing guards: forbidden content and weight budgets for the MARSP folders."""
+
+    FOLDERS = ("marsp-vitrine", "marsp-autoclave-eto", "_marsp")
+    BLACKLIST = (
+        r"montroiz", r"\bamed\b", r"point suture", r"medplast", r"oximed",
+        r"\bsteriliza\b", r"vap-eto", r"R\$",
+    )
+
+    def _root(self, folder):
+        path = get_module_resource("afr_labquali_website", "static", "demos", folder)
+        self.assertTrue(path, folder)
+        return path
+
+    def test_no_forbidden_tokens(self):
+        scanned = 0
+        for folder in self.FOLDERS:
+            for dirpath, _dirs, names in os.walk(self._root(folder)):
+                for name in names:
+                    if not name.endswith((".html", ".css", ".svg")):
+                        continue
+                    with open(os.path.join(dirpath, name), encoding="utf-8") as fh:
+                        text = fh.read()
+                    scanned += 1
+                    for pat in self.BLACKLIST:
+                        self.assertFalse(re.search(pat, text, re.I), "%s in %s/%s" % (pat, folder, name))
+        self.assertGreater(scanned, 10)
+
+    def test_weight_budgets(self):
+        for folder, limit in (("marsp-autoclave-eto", 12), ("marsp-vitrine", 2)):
+            total = sum(
+                os.path.getsize(os.path.join(dp, n))
+                for dp, _d, names in os.walk(self._root(folder)) for n in names
+            )
+            self.assertLessEqual(total, limit * 1024 * 1024, "%s is %d bytes" % (folder, total))
+
+    def test_vitrine_image_served(self):
+        r = self.url_open("/marsp/marsp-vitrine/autoclave.webp")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers.get("Content-Type"), "image/webp")
+
+    def test_engine_failure_falls_back_to_static(self):
+        path = get_module_resource("afr_labquali_website", "static", "demos", "marsp-autoclave-eto", "index.html")
+        with open(path, encoding="utf-8") as fh:
+            src = fh.read()
+        self.assertRegex(src, r"classList\.remove\('m-live'\)")
+
+    def test_brand_css_off_palette_hover_and_reduced_motion(self):
+        path = get_module_resource("afr_labquali_website", "static", "demos", "_marsp", "marsp.css")
+        with open(path, encoding="utf-8") as fh:
+            css = fh.read()
+        self.assertNotIn("#ff7f50", css.lower())
+        self.assertRegex(css, r"prefers-reduced-motion:\s*reduce")

@@ -12,7 +12,7 @@
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('m-live');
 </script>
 <link rel="stylesheet" href="scrollcraft.css">
-<link rel="stylesheet" href="/afr_labquali_website/static/demos/_marsp/marsp.css">
+<link rel="stylesheet" href="/afr_labquali_website/static/demos/_marsp/marsp.css?v=2">
 <link rel="stylesheet" href="page.css?v=5">
 </head>
 <body>
@@ -230,7 +230,14 @@
         .replace('/seq/f_', '/seq-m/f_').replace('/seqa/a_', '/seqa-m/a_'));
     });
   }
-  ScrollCraft.mount(document.body);
+  /* Engine missing or throwing: drop back to the static layout. */
+  var root = document.documentElement;
+  try {
+    if (typeof ScrollCraft === 'undefined') throw new Error('no engine');
+    ScrollCraft.mount(document.body);
+  } catch (e) {
+    root.classList.remove('m-live');
+  }
 })();
 </script>
 </body>

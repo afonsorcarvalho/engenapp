@@ -46,7 +46,7 @@
 }
 .m-btn:focus-visible, .m-link:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 2px; }
 .m-btn--primary { background: var(--m-orange); border-color: var(--m-orange); color: var(--m-ink); }
-.m-btn--primary:hover { background: #ff7f50; border-color: #ff7f50; }
+.m-btn--primary:hover { filter: brightness(1.1); }
 .m-btn--ghost { background: transparent; border-color: var(--m-navy); color: var(--m-navy); }
 .m-btn--ghost:hover { background: var(--m-navy); color: #fff; }
 .m-btn--ghost-dark { background: transparent; border-color: #fff; color: #fff; }
@@ -63,6 +63,10 @@
 }
 .m-link::after { content: "\2192"; transition: transform .15s; }
 .m-link:hover::after { transform: translateX(4px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .m-btn, .m-link, .m-link::after { transition: none; }
+}
 
 /* Pill tag. */
 .m-tag {
