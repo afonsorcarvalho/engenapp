@@ -39,7 +39,9 @@ Geometria de referência, em caixa 120×120 com centro (60, 60):
 
 O gerador de referência é `scratchpad/gen17.py` (função `eclipse`, variante `g1`) da sessão de brainstorm; os esboços aprovados estão em `.superpowers/brainstorm/2542215-1794603220/content/` (`logo-g1-cores.html`, `mockups-marca-v2.html`, `design-system-v2.html`). O builder deve reproduzir a forma em SVG limpo (paths resolvidos, sem máscaras), não copiar o gerador.
 
-Nome: "MARSP" em Michroma, espaçamento 0,22em, ao lado do símbolo.
+Nome: "MARSP" em Nasalization (Typodermic, "Nasalization Rg"), convertido em contornos no SVG, espaçamento 0,10em, ao lado do símbolo. A licença gratuita da Nasalization permite logo em SVG/imagem, mas não servir a fonte em site; por isso ela só existe como contorno e nunca como webfont.
+
+2026-11-13: a fonte do nome foi trocada de Michroma para Nasalization a pedido do user.
 
 Versões:
 
@@ -70,7 +72,8 @@ São as cores do site da LabQuali (`DESIGN.md`), de propósito, para a página e
 
 ### Tipografia e medidas
 
-- Michroma: só no nome da marca e em códigos de modelo.
+- Nasalization (em contornos): só no nome "MARSP" dentro do logo.
+- Michroma: só em códigos de modelo exibidos como texto vivo, porque a licença gratuita da Nasalization não cobre uso como webfont.
 - Inter: todo o resto. Título de página 800 48/1,1; seção 800 34/1,15; subtítulo 700 22/1,3; texto 400 17/1,6; pequeno 400 14/1,5; números de ficha 600 tabular.
 - Espaçamento: 4, 8, 12, 16, 24, 32, 48, 80. Seções com 80 px verticais.
 - Cantos: 6 (botão, campo), 10 (bloco), 14 (card), 20 (etiqueta).
