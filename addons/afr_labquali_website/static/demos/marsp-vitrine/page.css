@@ -142,6 +142,24 @@ a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
   *, *::before, *::after { transition: none !important; }
 }
 
+/* Large screens: the machine box is sized from the viewport so that, over the whole spin
+   (visible pixels span x 9.5%-91.2% of the box), the machine stays 16 px clear of the text
+   column (520 px, keeps the h1 on three lines) and 24 px inside the content area's right edge
+   (the viewport edge up to 1280 px). The box's
+   transparent top/bottom bands sit over the hero padding. Spin canvas and still share this box. */
+@media (min-width: 1081px) {
+  .v-hero__grid { grid-template-columns: minmax(0, 520px) minmax(0, 1fr); gap: 24px; }
+  .v-hero__machine {
+    --v-wrap-left: max(0px, (100vw - 1280px) / 2);
+    --hb: min(900px, (100vw - 2 * var(--v-wrap-left) - 592px) / 0.817);
+    justify-self: start;
+    width: var(--hb);
+    max-width: none;
+    margin: calc(-0.1 * var(--hb)) 0 calc(-0.1 * var(--hb)) calc(100vw - 24px - 0.912 * var(--hb) - 2 * var(--v-wrap-left) - 576px);
+  }
+  .v-hero__machine img { max-height: none; }
+}
+
 /* Tablet. */
 @media (max-width: 1080px) {
   .v-hero h1 { font-size: 46px; }
