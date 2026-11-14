@@ -215,6 +215,13 @@ class TestMarspVitrine(HttpCase):
             self.assertFalse(re.search(r"\b%s\b" % re.escape(bad), self.html, re.I), bad)
         self.assertNotIn("R$", self.html)
 
+    def test_partnership_heading(self):
+        parceria = self._section("parceria")
+        self.assertIn(
+            '<h2 id="parceria-titulo">Equipamentos projetados para oferecer qualidade e segurança</h2>', parceria)
+        self.assertNotIn("São Luís", parceria)
+        self.assertNotIn("São Paulo", parceria)
+
     def test_hero_is_the_machine(self):
         hero = self._section("inicio")
         self.assertIn("hero-autoclave.webp", hero)
