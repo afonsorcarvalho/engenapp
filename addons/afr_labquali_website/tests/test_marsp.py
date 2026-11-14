@@ -231,6 +231,28 @@ class TestMarspVitrine(HttpCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.headers.get("Content-Type"), "image/webp")
 
+    def test_hero_spin_wiring(self):
+        self.assertIn("hero-spin.js", self.html)
+        self.assertIn("hero-autoclave.webp?v=2", self._section("inicio"))
+        gate = re.search(r"<script>(.*?)</script>", self.html.split("</head>")[0], re.S)
+        self.assertTrue(gate, "inline gate missing in <head>")
+        self.assertIn("v-spin", gate.group(1))
+        self.assertIn("prefers-reduced-motion: reduce", gate.group(1))
+        r = self.url_open("/marsp/marsp-vitrine/hero-spin.js")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("javascript", r.headers.get("Content-Type", ""))
+
+    def test_hero_spin_frames(self):
+        for url in ("hero-seq/h_0001.webp", "hero-seq/h_0060.webp",
+                    "hero-seq-m/h_0001.webp", "hero-seq-m/h_0030.webp"):
+            r = self.url_open("/marsp/marsp-vitrine/" + url)
+            self.assertEqual(r.status_code, 200, url)
+            self.assertEqual(r.headers.get("Content-Type"), "image/webp", url)
+        for folder, count in (("hero-seq", 60), ("hero-seq-m", 30)):
+            path = get_module_resource("afr_labquali_website", "static", "demos", "marsp-vitrine", folder)
+            self.assertTrue(path, folder)
+            self.assertEqual(len([n for n in os.listdir(path) if n.endswith(".webp")]), count, folder)
+
     def test_top_bar_logo_is_inverted_lockup(self):
         m = re.search(r'<a class="v-top__brand"[^>]*>(.*?)</a>', self.html, re.S)
         self.assertTrue(m, "brand link missing")
@@ -344,7 +366,7 @@ class TestMarspGuards(HttpCase):
         self.assertGreater(scanned, 10)
 
     def test_weight_budgets(self):
-        for folder, limit in (("marsp-autoclave-eto", 12), ("marsp-vitrine", 2)):
+        for folder, limit in (("marsp-autoclave-eto", 12), ("marsp-vitrine", 4)):
             total = sum(
                 os.path.getsize(os.path.join(dp, n))
                 for dp, _d, names in os.walk(self._root(folder)) for n in names

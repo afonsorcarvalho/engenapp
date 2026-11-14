@@ -7,7 +7,20 @@
 <meta name="description" content="MARSP: autoclave, gerador de vapor, aquecedor de gás e psicrômetro para esterilização por óxido de etileno. Projeto e automação AFR, qualificação LabQuali.">
 <link rel="icon" type="image/svg+xml" href="/afr_labquali_website/static/demos/_marsp/favicon.svg">
 <link rel="stylesheet" href="/afr_labquali_website/static/demos/_marsp/marsp.css?v=3">
-<link rel="stylesheet" href="page.css?v=6">
+<script>
+  /* Hero spin gate (before first paint): only when the spin may run, hide the still (its box stays).
+     If hero-spin.js never takes over, the still comes back after 2 s. */
+  (function () {
+    try {
+      var d = document.documentElement, c = navigator.connection;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches || (c && c.saveData) || !window.requestAnimationFrame) return;
+      d.classList.add('v-spin');
+      setTimeout(function () { if (!d.hasAttribute('data-spin')) d.classList.remove('v-spin'); }, 2000);
+    } catch (e) { /* the still stays */ }
+  })();
+</script>
+<link rel="stylesheet" href="page.css?v=9">
+<script src="hero-spin.js?v=1" defer></script>
 </head>
 <body>
 <header class="v-top">
@@ -30,7 +43,7 @@
       <a class="m-btn m-btn--primary" href="#linha">Conhecer a linha</a>
     </div>
     <div class="v-hero__machine">
-      <img src="hero-autoclave.webp?v=1" width="1400" height="1080" alt="Autoclave ETO MARSP vista de três quartos, com o painel lateral que leva a marca, ao lado do skid de bombas e do painel elétrico" decoding="async" fetchpriority="high">
+      <img src="hero-autoclave.webp?v=2" width="1400" height="1080" alt="Autoclave ETO MARSP vista de três quartos, com o painel lateral que leva a marca, ao lado do skid de bombas e do painel elétrico" decoding="async" fetchpriority="high">
     </div>
   </div>
 </section>

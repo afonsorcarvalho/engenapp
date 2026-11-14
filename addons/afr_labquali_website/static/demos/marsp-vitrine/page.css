@@ -50,13 +50,21 @@ a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
   /* Top: a light lip under the ink band, so the change of material reads as an edge. */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -1px 0 rgba(255, 255, 255, .85);
 }
-.v-hero__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: center; gap: 32px; }
+.v-hero__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: center; gap: 24px; }
 .v-hero h1 { font: 800 56px/1.06 var(--m-font); letter-spacing: -.02em; max-width: 13em; color: var(--v-engrave); text-shadow: var(--v-engrave-shadow); }
 .v-hero p { margin-top: 24px; max-width: 34em; color: var(--v-engrave-soft); text-shadow: var(--v-engrave-shadow); }
 .v-hero .m-btn { margin-top: 32px; }
-/* Machine slot: sized by the column width, never cropped, so a wider group image can replace it. */
+/* Machine slot: sized by the column width, never cropped, so a wider group image can replace it.
+   The still is a wide crop (machine on the left ~80%), so the column is wide and bleeds into the gutter. */
 .v-hero__machine { display: flex; align-items: center; justify-content: center; align-self: center; margin-right: -32px; }
 .v-hero__machine img { width: 100%; height: auto; max-height: 620px; object-fit: contain; }
+/* One-shot spin (hero-spin.js): the still keeps its box while hidden; the canvas sits on that box. */
+.v-hero__machine { position: relative; }
+.v-spin .v-hero__machine img { visibility: hidden; }
+.v-hero__spin { position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0; transition: opacity .18s ease-out; }
+.v-hero__spin.is-on { opacity: 1; }
+.v-spin-fallback .v-hero__machine img { animation: v-fade-in .2s ease-out; }
+@keyframes v-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* The line-up: one dark stage, four models standing on the same floor. */
 .v-line { background: var(--m-ink); color: #fff; padding: 32px 0 80px; border-top: 1px solid rgba(255, 255, 255, .08); }
@@ -137,6 +145,7 @@ a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
 /* Tablet. */
 @media (max-width: 1080px) {
   .v-hero h1 { font-size: 46px; }
+  .v-hero__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
   .v-line__track { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); }
   .v-model__stage { height: 240px; }
   .v-model--live .v-model__stage { height: 300px; }
@@ -155,7 +164,7 @@ a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
   .v-hero__grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .v-hero h1 { font-size: 34px; line-height: 1.1; }
   .v-hero p { font-size: 16px; }
-  .v-hero__machine { margin-right: 0; }
+  .v-hero__machine { margin: 0 -16px; }
   .v-hero__machine img { max-height: 420px; }
 
   .v-line { padding-bottom: 56px; }
