@@ -114,3 +114,54 @@ class TestMarspRoutes(HttpCase):
             demos._html_cache.clear()
         self.assertNotIn("/afr_labquali_website/static/demos/", html)
         self.assertIn("/marsp/_marsp/marsp.css", html)
+
+
+@tagged("post_install", "-at_install")
+class TestMarspVitrine(HttpCase):
+    """/marsp is the line-up: one live model and three "em breve" teasers."""
+
+    SILHOUETTES = ("sil-gerador.svg", "sil-aquecedor.svg", "sil-psicrometro.svg")
+
+    def setUp(self):
+        super().setUp()
+        r = self.url_open("/marsp")
+        self.assertEqual(r.status_code, 200)
+        self.html = r.text
+
+    def _section(self, sid):
+        m = re.search(r'<section[^>]*\bid="%s".*?</section>' % sid, self.html, re.S)
+        self.assertTrue(m, "section #%s missing" % sid)
+        return m.group(0)
+
+    def test_sections(self):
+        for sid in ("inicio", "linha", "parceria", "proposta"):
+            self._section(sid)
+
+    def test_four_products(self):
+        for name in ("Autoclave ETO", "Gerador de vapor", "Aquecedor de gás ETO", "Psicrômetro"):
+            self.assertIn(name, self.html)
+        self.assertIn("MSP 1500-E", self._section("linha"))
+
+    def test_only_autoclave_is_linked(self):
+        linha = self._section("linha")
+        self.assertEqual(linha.count('href="/marsp/autoclave-eto"'), 1)
+        for slug in ("gerador-de-vapor", "aquecedor-eto", "psicrometro"):
+            self.assertNotIn("/marsp/" + slug, self.html, slug)
+
+    def test_three_teasers(self):
+        self.assertEqual(len(re.findall(r"em breve", self.html, re.I)), 3)
+
+    def test_silhouettes_served(self):
+        for name in self.SILHOUETTES:
+            self.assertIn(name, self.html, name)
+            r = self.url_open("/marsp/marsp-vitrine/" + name)
+            self.assertEqual(r.status_code, 200, name)
+            self.assertEqual(r.headers.get("Content-Type"), "image/svg+xml", name)
+
+    def test_proposal_mailto(self):
+        self.assertIn("mailto:labquali@labquali.com.br?subject=Proposta%20MARSP", self._section("proposta"))
+
+    def test_no_forbidden_content(self):
+        for bad in ("amed", "point suture", "medplast", "oximed", "steriliza", "montroiz", "vap-eto"):
+            self.assertFalse(re.search(r"\b%s\b" % re.escape(bad), self.html, re.I), bad)
+        self.assertNotIn("R$", self.html)

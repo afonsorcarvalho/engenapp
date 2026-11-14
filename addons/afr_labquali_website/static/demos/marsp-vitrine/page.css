@@ -1,0 +1,155 @@
+/* /marsp: the line-up. Brand tokens come from _marsp/marsp.css. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: #fff;
+  color: var(--m-ink);
+  font: 400 17px/1.6 var(--m-font);
+}
+img, svg { display: block; max-width: 100%; }
+h1, h2, h3, p { margin: 0; }
+a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
+
+.v-wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+
+/* Top bar: sits on the hero, same ink. */
+.v-top { position: absolute; inset: 0 0 auto 0; z-index: 2; }
+.v-top__bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 80px; border-bottom: 1px solid rgba(255, 255, 255, .1); }
+.v-top__brand img { width: 160px; height: auto; }
+.v-top__nav { display: flex; align-items: center; gap: 32px; }
+.v-top__nav a:not(.m-btn) { color: #fff; text-decoration: none; font: 500 15px/1 var(--m-font); opacity: .85; }
+.v-top__nav a:not(.m-btn):hover { opacity: 1; }
+.v-top__cta { padding: 10px 18px; font-size: 15px; }
+
+/* Opening. */
+.v-hero { background: var(--m-ink); color: #fff; padding: 176px 0 96px; overflow: hidden; }
+.v-hero__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; gap: 48px; }
+.v-hero h1 { font: 800 56px/1.06 var(--m-font); letter-spacing: -.02em; max-width: 13em; }
+.v-hero p { margin-top: 24px; max-width: 34em; color: var(--m-steel); }
+.v-hero .m-btn { margin-top: 32px; }
+.v-hero__mark { width: 100%; max-width: 440px; height: auto; justify-self: end; }
+
+/* The line-up: one dark stage, four models standing on the same floor. */
+.v-line { background: var(--m-ink); color: #fff; padding: 32px 0 80px; border-top: 1px solid rgba(255, 255, 255, .08); }
+.v-line__head { display: flex; align-items: baseline; justify-content: space-between; gap: 32px; padding-top: 48px; padding-bottom: 48px; }
+.v-line__head h2 { font: 800 34px/1.15 var(--m-font); flex: none; }
+.v-line__head p { max-width: 34em; color: var(--m-steel); font-size: 16px; }
+
+.v-line__track {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 1fr));
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.v-model { position: relative; padding: 0 24px; }
+.v-model + .v-model { border-left: 1px solid rgba(255, 255, 255, .08); }
+.v-model:first-child { padding-left: 0; }
+.v-model:last-child { padding-right: 0; }
+
+/* Stage: every image sits on the floor line, so the row reads as one showroom. */
+.v-model__stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 320px;
+  border-bottom: 1px solid rgba(198, 205, 212, .28);
+  margin-bottom: 24px;
+}
+.v-model__stage img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+.v-model--live .v-model__stage { height: 380px; margin-top: -60px; background: var(--m-ink); }
+.v-model--soon .v-model__stage img { width: 100%; height: 86%; }
+.v-model--small .v-model__stage img { height: 56%; }
+
+.v-model__code { font-size: 13px; color: var(--m-steel); margin-bottom: 8px; }
+.v-model__soon { display: inline-block; margin-bottom: 8px; padding: 2px 10px; border: 1px solid rgba(198, 205, 212, .35); border-radius: var(--m-r-pill); color: var(--m-steel); font: 600 12px/1.6 var(--m-font); letter-spacing: .02em; }
+.v-model__name { font: 700 22px/1.3 var(--m-font); }
+.v-model--live .v-model__name { font: 800 34px/1.15 var(--m-font); }
+.v-model__line { margin-top: 8px; color: var(--m-steel); font-size: 15px; line-height: 1.5; max-width: 30em; }
+.v-model--soon .v-model__name, .v-model--soon .v-model__line { opacity: .82; }
+
+.v-model__link { display: block; color: inherit; text-decoration: none; }
+.v-model__go { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; font: 600 16px/1.4 var(--m-font); color: #fff; }
+.v-model__go::after { content: "\2192"; transition: transform .15s; }
+.v-model__link:hover .v-model__go::after { transform: translateX(4px); }
+.v-model__link:hover .v-model__go { text-decoration: underline; text-underline-offset: 4px; }
+.v-model--live img { transition: transform .4s ease; transform-origin: center bottom; }
+.v-model__link:hover img { transform: scale(1.02); }
+
+/* Partnership: running text, no twin cards. */
+.v-part { background: var(--m-fog); padding: 80px 0; }
+.v-part__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: start; }
+.v-part h2 { font: 800 34px/1.15 var(--m-font); max-width: 13em; }
+.v-part__text p { font-size: 19px; line-height: 1.6; }
+.v-part__text p + p { margin-top: 16px; }
+.v-part__text strong { font-weight: 700; color: var(--m-navy); }
+
+/* Proposal + signature. */
+.v-ask { background: #fff; padding: 80px 0 0; }
+.v-ask__row { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; padding-bottom: 48px; }
+.v-ask h2 { font: 800 34px/1.15 var(--m-font); }
+.v-ask p { margin-top: 12px; color: var(--m-slate); max-width: 32em; }
+.v-ask__act { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.v-ask__mail { font-size: 14px; color: var(--m-slate); }
+.v-ask .m-sign { align-items: center; padding: 32px 0 40px; }
+.v-ask .m-sign img { width: 120px; height: auto; margin-right: auto; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}
+
+/* Tablet. */
+@media (max-width: 1080px) {
+  .v-hero h1 { font-size: 46px; }
+  .v-line__track { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); }
+  .v-model__stage { height: 240px; }
+  .v-model--live .v-model__stage { height: 300px; }
+}
+
+/* Phone: the line-up scrolls sideways inside its own track, never the page. */
+@media (max-width: 760px) {
+  .v-wrap { padding: 0 16px; }
+  .v-top__bar { height: 64px; }
+  .v-top__brand img { width: 120px; }
+  .v-top__nav { gap: 16px; }
+  .v-top__nav a:not(.m-btn) { display: none; }
+  .v-top__cta { padding: 8px 14px; font-size: 14px; }
+
+  .v-hero { padding: 112px 0 56px; }
+  .v-hero__grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .v-hero h1 { font-size: 34px; line-height: 1.1; }
+  .v-hero p { font-size: 16px; }
+  .v-hero__mark { order: -1; max-width: 120px; justify-self: start; }
+
+  .v-line { padding-bottom: 56px; }
+  .v-line__head { display: block; padding-top: 32px; padding-bottom: 32px; }
+  .v-line__head p { margin-top: 12px; }
+  .v-line__track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 0 16px 8px;
+    scroll-padding: 0 16px;
+    gap: 0;
+  }
+  .v-model { flex: 0 0 72%; scroll-snap-align: start; padding: 0 16px; }
+  .v-model--live { flex-basis: 86%; }
+  .v-model:first-child { padding-left: 0; }
+  .v-model__stage { height: 200px; }
+  .v-model--live .v-model__stage { height: 240px; margin-top: 0; }
+  .v-model--live .v-model__name { font-size: 28px; }
+
+  .v-part { padding: 56px 0; }
+  .v-part__grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .v-part h2, .v-ask h2, .v-line__head h2 { font-size: 28px; }
+  .v-part__text p { font-size: 17px; }
+
+  .v-ask { padding-top: 56px; }
+  .v-ask__row { display: block; padding-bottom: 32px; }
+  .v-ask__act { align-items: flex-start; margin-top: 24px; }
+  .v-ask .m-sign { display: grid; gap: 8px; }
+}

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="130 0 170 320" role="img" aria-label="Silhueta do psicrômetro">
+  <ellipse cx="200" cy="304" rx="60" ry="6" fill="#020B14" opacity=".8"/>
+  <g fill="#030F1A" stroke="#284A68" stroke-width="1.2" stroke-linejoin="round">
+    <!-- cable and gland -->
+    <path d="M226 52 Q262 44 280 18 L286 22 Q266 52 228 60 Z"/>
+    <path d="M214 48 H230 V62 H214 Z"/>
+    <!-- head (housing) with lid -->
+    <rect x="160" y="54" width="80" height="70" rx="8"/>
+    <rect x="156" y="50" width="88" height="12" rx="4"/>
+    <!-- neck and mounting flange -->
+    <rect x="190" y="124" width="20" height="16"/>
+    <rect x="166" y="140" width="68" height="10" rx="2"/>
+    <rect x="180" y="150" width="40" height="8"/>
+    <!-- probe rod -->
+    <rect x="193" y="158" width="14" height="104" rx="2"/>
+    <!-- sensing tip, slotted filter -->
+    <path d="M191 262 H209 V292 Q209 300 200 300 Q191 300 191 292 Z"/>
+  </g>
+  <g fill="#071E32">
+    <rect x="195" y="270" width="10" height="2"/>
+    <rect x="195" y="276" width="10" height="2"/>
+    <rect x="195" y="282" width="10" height="2"/>
+  </g>
+  <g fill="none" stroke="#9FB6CA" stroke-width="2" stroke-linecap="round" opacity=".85">
+    <path d="M157 58 Q157 50.6 162 50.6 H242"/>
+    <path d="M160.6 66 V118"/>
+    <path d="M167 140.6 H233"/>
+    <path d="M193.6 160 V260"/>
+    <path d="M227 52.6 Q260 45 279.6 18.8"/>
+  </g>
+</svg>
