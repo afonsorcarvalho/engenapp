@@ -215,6 +215,21 @@ class TestMarspVitrine(HttpCase):
             self.assertFalse(re.search(r"\b%s\b" % re.escape(bad), self.html, re.I), bad)
         self.assertNotIn("R$", self.html)
 
+    def test_hero_is_the_machine(self):
+        hero = self._section("inicio")
+        self.assertIn("hero-autoclave.webp", hero)
+        self.assertNotIn("v-hero__mark", self.html)
+        r = self.url_open("/marsp/marsp-vitrine/hero-autoclave.webp")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers.get("Content-Type"), "image/webp")
+
+    def test_top_bar_logo_is_engraved_mono(self):
+        m = re.search(r'<a class="v-top__brand"[^>]*>(.*?)</a>', self.html, re.S)
+        self.assertTrue(m, "brand link missing")
+        self.assertIn('aria-label="MARSP"', m.group(0))
+        self.assertIn('fill="currentColor"', m.group(1))
+        self.assertNotIn("logo-dark.svg", m.group(1))
+
 
 @tagged("post_install", "-at_install")
 class TestMarspAutoclave(HttpCase):
