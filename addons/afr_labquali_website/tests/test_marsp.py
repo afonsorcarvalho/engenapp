@@ -244,8 +244,8 @@ class TestMarspAutoclave(HttpCase):
         # Source keeps the relative template; the controller prefixes it when serving.
         self.assertIn('data-sc-sequence="seq/f_{iiii}.webp', self.source)
         self.assertIn('data-sc-sequence="seqa/a_{iiii}.webp', self.source)
-        self.assertRegex(self.html, r'data-sc-sequence="[^"]*/marsp-autoclave-eto/seq/f_\{iiii\}\.webp:150:1"')
-        self.assertRegex(self.html, r'data-sc-sequence="[^"]*/marsp-autoclave-eto/seqa/a_\{iiii\}\.webp:70:1"')
+        self.assertRegex(self.html, r'data-sc-sequence="[^"]*/marsp-autoclave-eto/seq/f_\{iiii\}\.webp\?v=2:150:1"')
+        self.assertRegex(self.html, r'data-sc-sequence="[^"]*/marsp-autoclave-eto/seqa/a_\{iiii\}\.webp\?v=2:70:1"')
 
     def test_frames_served(self):
         for name in ("seq/f_0001.webp", "seqa/a_0070.webp", "seq-m/f_0150.webp", "seqa-m/a_0001.webp"):
