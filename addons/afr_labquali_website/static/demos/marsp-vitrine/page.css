@@ -139,6 +139,10 @@ a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
 .v-part__text p { font-size: 19px; line-height: 1.6; }
 .v-part__text p + p { margin-top: 16px; }
 .v-part__text strong { font-weight: 700; color: var(--m-navy); }
+/* Special projects: same grammar as the partnership, on white; the button is the quiet one (orange stays on the quote). */
+.v-part--plain { background: #fff; }
+.v-part--plain a:focus-visible { outline-color: var(--m-ink); }
+.v-part__text .m-btn { margin-top: 32px; }
 
 /* Proposal + signature. */
 .v-ask { background: #fff; padding: 80px 0 0; }

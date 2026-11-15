@@ -183,8 +183,23 @@ class TestMarspVitrine(HttpCase):
         return m.group(0)
 
     def test_sections(self):
-        for sid in ("inicio", "linha", "parceria", "proposta"):
+        for sid in ("inicio", "linha", "especiais", "parceria", "proposta"):
             self._section(sid)
+
+    def test_special_projects_section(self):
+        self.assertEqual(self.html.count('id="especiais"'), 1)
+        especiais = self._section("especiais")
+        self.assertRegex(especiais, r'<h2[^>]*>Projetos especiais</h2>')
+        for text in ("câmaras em volumes fora do padrão", "levantamento técnico do processo",
+                     "engenharia, automação, instalação e qualificação"):
+            self.assertIn(text, especiais)
+        self.assertIn("1500&nbsp;L", especiais)
+        self.assertIn("22.000&nbsp;L", especiais)
+        self.assertIn('href="mailto:labquali@labquali.com.br?subject=Projeto%20especial%20MARSP"', especiais)
+        self.assertIn("m-btn--ghost", especiais)
+        self.assertNotIn("m-btn--primary", especiais)
+        pos = [self.html.index('id="%s"' % sid) for sid in ("linha", "especiais", "parceria")]
+        self.assertEqual(pos, sorted(pos))
 
     def test_four_products(self):
         for name in ("Autoclave ETO", "Gerador de vapor", "Aquecedor de gás ETO", "Psicrômetro"):
