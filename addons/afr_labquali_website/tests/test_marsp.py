@@ -167,9 +167,9 @@ class TestMarspRoutes(HttpCase):
 
 @tagged("post_install", "-at_install")
 class TestMarspVitrine(HttpCase):
-    """/marsp is the line-up: one live model and three "em breve" teasers."""
+    """/marsp is the line-up: three shown models and two "em breve" teasers."""
 
-    SILHOUETTES = ("sil-gerador.svg", "sil-aquecedor.svg", "sil-psicrometro.svg")
+    SILHOUETTES = ("sil-aquecedor.svg", "sil-psicrometro.svg")
 
     def setUp(self):
         super().setUp()
@@ -212,8 +212,16 @@ class TestMarspVitrine(HttpCase):
         for slug in ("gerador-de-vapor", "aquecedor-eto", "psicrometro"):
             self.assertNotIn("/marsp/" + slug, self.html, slug)
 
-    def test_three_teasers(self):
-        self.assertEqual(len(re.findall(r"em breve", self.html, re.I)), 3)
+    def test_two_teasers(self):
+        self.assertEqual(len(re.findall(r"em breve", self.html, re.I)), 2)
+
+    def test_steam_generator_card(self):
+        linha = self._section("linha")
+        self.assertIn("MSP GV-40", linha)
+        self.assertRegex(linha, r'src="[^"]*gerador-vapor\.webp')
+        self.assertNotIn("sil-gerador.svg", linha)
+        r = self.url_open("/marsp/marsp-vitrine/gerador-vapor.webp")
+        self.assertEqual(r.status_code, 200)
 
     def test_silhouettes_served(self):
         for name in self.SILHOUETTES:
