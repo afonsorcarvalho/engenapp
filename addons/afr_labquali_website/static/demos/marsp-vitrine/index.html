@@ -7,20 +7,24 @@
 <meta name="description" content="MARSP: autoclave, gerador de vapor, aquecedor de gás e psicrômetro para esterilização por óxido de etileno. Projeto e automação AFR, qualificação LabQuali.">
 <link rel="icon" type="image/svg+xml" href="/afr_labquali_website/static/demos/_marsp/favicon.svg">
 <link rel="stylesheet" href="/afr_labquali_website/static/demos/_marsp/marsp.css?v=3">
+<link rel="stylesheet" href="page.css?v=21">
 <script>
-  /* Hero spin gate (before first paint): only when the spin may run, hide the still (its box stays).
-     If hero-spin.js never takes over, the still comes back after 2 s. */
+  /* Hero tour gate: marks <html> when the tour may run. The still always shows first; hero-tour.js
+     only swaps to the video once it can play through. Skipped on reduced motion, Save-Data and
+     Safari (no VP9 alpha). */
   (function () {
     try {
-      var d = document.documentElement, c = navigator.connection;
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches || (c && c.saveData) || !window.requestAnimationFrame) return;
-      d.classList.add('v-spin');
-      setTimeout(function () { if (!d.hasAttribute('data-spin')) d.classList.remove('v-spin'); }, 2000);
+      var d = document.documentElement, c = navigator.connection, ua = navigator.userAgent;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches || (c && c.saveData)) return;
+      if (/^((?!chrome|chromium|android|crios|fxios).)*safari/i.test(ua)) return;
+      if (!matchMedia('(min-width: 1081px)').matches) return;   // tour only on the full-bleed layout
+      var v = document.createElement('video');
+      if (!v.canPlayType || !v.canPlayType('video/webm; codecs="vp9"')) return;
+      d.classList.add('v-tour-ok');
     } catch (e) { /* the still stays */ }
   })();
 </script>
-<link rel="stylesheet" href="page.css?v=15">
-<script src="hero-spin.js?v=1" defer></script>
+<script src="hero-tour.js?v=1" defer></script>
 </head>
 <body>
 <header class="v-top">
@@ -44,7 +48,10 @@
       <a class="m-btn m-btn--primary" href="#linha">Conhecer a linha</a>
     </div>
     <div class="v-hero__machine">
-      <img src="hero-autoclave.webp?v=2" width="1400" height="1080" alt="Autoclave ETO MARSP vista de três quartos, com o painel lateral que leva a marca, ao lado do skid de bombas e do painel elétrico" decoding="async" fetchpriority="high">
+      <picture>
+        <source media="(max-width: 1080px)" srcset="/afr_labquali_website/static/demos/marsp-vitrine/hero-linha-m.webp?v=3" width="900" height="677">
+        <img src="hero-bg.webp?v=1" width="2400" height="1028" alt="Linha MARSP em escala: câmara ETO de 22.000 litros ao fundo, autoclave ETO com skid de bombas e painel elétrico à esquerda, gerador de vapor GV-40 à frente" decoding="async" fetchpriority="high">
+      </picture>
     </div>
   </div>
 </section>

@@ -54,17 +54,19 @@ a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
 .v-hero h1 { font: 800 56px/1.06 var(--m-font); letter-spacing: -.02em; max-width: 13em; color: var(--v-engrave); text-shadow: var(--v-engrave-shadow); }
 .v-hero p { margin-top: 24px; max-width: 34em; color: var(--v-engrave-soft); text-shadow: var(--v-engrave-shadow); }
 .v-hero .m-btn { margin-top: 32px; }
-/* Machine slot: sized by the column width, never cropped, so a wider group image can replace it.
-   The still is a wide crop (machine on the left ~80%), so the column is wide and bleeds into the gutter. */
+/* Machine slot: the line-up still (three machines to scale), sized by the column width, never cropped.
+   It bleeds a little into the right gutter. */
 .v-hero__machine { display: flex; align-items: center; justify-content: center; align-self: center; margin-right: -32px; }
+.v-hero__machine picture { display: block; width: 100%; }
 .v-hero__machine img { width: 100%; height: auto; max-height: 620px; object-fit: contain; }
-/* One-shot spin (hero-spin.js): the still keeps its box while hidden; the canvas sits on that box. */
+/* Below 1081 px the stacked still is a tight line-up crop; its box edges melt into the steel. */
 .v-hero__machine { position: relative; }
-.v-spin .v-hero__machine img { visibility: hidden; }
-.v-hero__spin { position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0; transition: opacity .18s ease-out; }
-.v-hero__spin.is-on { opacity: 1; }
-.v-spin-fallback .v-hero__machine img { animation: v-fade-in .2s ease-out; }
-@keyframes v-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.v-hero__machine img {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent), linear-gradient(to bottom, transparent, #000 7%, #000 93%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent), linear-gradient(to bottom, transparent, #000 7%, #000 93%, transparent);
+  mask-composite: intersect;
+}
 
 /* The line-up: one dark stage, four models standing on the same floor. */
 .v-line { background: var(--m-ink); color: #fff; padding: 32px 0 80px; border-top: 1px solid rgba(255, 255, 255, .08); }
@@ -161,22 +163,28 @@ a:focus-visible { outline: 3px solid var(--m-mid); outline-offset: 3px; }
   *, *::before, *::after { transition: none !important; }
 }
 
-/* Large screens: the machine box is sized from the viewport so that, over the whole spin
-   (visible pixels span x 9.5%-91.2% of the box), the machine stays 16 px clear of the text
-   column (520 px, keeps the h1 on three lines) and 24 px inside the content area's right edge
-   (the viewport edge up to 1280 px). The box's
-   transparent top/bottom bands sit over the hero padding. Spin canvas and still share this box. */
+/* Large screens: the line-up image grows into the right side, keeping the h1 column. */
 @media (min-width: 1081px) {
-  .v-hero__grid { grid-template-columns: minmax(0, 520px) minmax(0, 1fr); gap: 24px; }
-  .v-hero__machine {
-    --v-wrap-left: max(0px, (100vw - 1280px) / 2);
-    --hb: min(900px, (100vw - 2 * var(--v-wrap-left) - 592px) / 0.817);
-    justify-self: start;
-    width: var(--hb);
-    max-width: none;
-    margin: calc(-0.1 * var(--hb)) 0 calc(-0.1 * var(--hb)) calc(100vw - 24px - 0.912 * var(--hb) - 2 * var(--v-wrap-left) - 576px);
+  /* Wide screens: the machines are the hero's backdrop. Still and tour video share one full-bleed
+     layer (same render frame, same cover/position), the scene sits right and dissolves to the left
+     under the text, so it reads as part of the steel, not a picture on it. The tour (hero-tour.js)
+     fades in over the still once it can play through and hands back to the still on its last frame. */
+  .v-hero { position: relative; min-height: 610px; }
+  .v-hero__grid { position: static; grid-template-columns: minmax(0, 520px); }
+  .v-hero__text { position: relative; z-index: 1; }
+  .v-hero__machine { position: absolute; inset: 0; margin: 0; display: block; align-self: stretch; justify-self: stretch; pointer-events: none; }
+  .v-hero__machine picture { width: 100%; height: 100%; }
+  .v-hero__machine img, .v-hero__tour {
+    position: absolute; inset: 0; width: 100%; height: 100%; max-height: none;
+    object-fit: cover; object-position: 70% 50%;
+    -webkit-mask-image: linear-gradient(to right, transparent 28%, #000 48%);
+    mask-image: linear-gradient(to right, transparent 28%, #000 48%);
+    -webkit-mask-composite: source-over; mask-composite: add;
   }
-  .v-hero__machine img { max-height: none; }
+  .v-hero__machine img { transition: opacity .35s ease-out; }
+  .v-touring .v-hero__machine img { opacity: 0; }
+  .v-hero__tour { opacity: 0; transition: opacity .35s ease-out; }
+  .v-hero__tour.is-on { opacity: 1; }
 }
 
 /* Tablet. */

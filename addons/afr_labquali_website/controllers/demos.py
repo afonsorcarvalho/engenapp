@@ -35,6 +35,7 @@ _REL_ATTR = re.compile(r'((?:src|href|data-sc-sequence)=")(?![#/]|https?:|mailto
 _STATIC_PREFIX = "/%s/static/demos/" % MODULE
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("image/svg+xml", ".svg")
+mimetypes.add_type("video/webm", ".webm")
 _html_cache = {}
 
 
