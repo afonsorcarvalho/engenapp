@@ -138,7 +138,8 @@ class TestMarspRoutes(HttpCase):
                         m = re.search(r'\bcontent="([^"]*)"', tag)
                         if m:
                             urls.add(m.group(1))
-                    urls = {u for u in urls if u.startswith("/") and not u.startswith("//") and u not in page_links}
+                    urls = {u for u in urls if u.startswith("/") and not u.startswith("//") and u.split("#")[0] not in page_links
+                            and u.split("#")[0] != "/marsp/servicos"}
                     for seq in re.findall(r'data-sc-sequence="([^"]*)"', html):
                         base = re.sub(r":\d+:\d+$", "", seq.split("?")[0]).replace("{iiii}", "0001")
                         urls.add(base)
@@ -416,3 +417,65 @@ class TestMarspGuards(HttpCase):
             css = fh.read()
         self.assertNotIn("#ff7f50", css.lower())
         self.assertRegex(css, r"prefers-reduced-motion:\s*reduce")
+
+
+@tagged("post_install", "-at_install")
+class TestMarspServicos(HttpCase):
+    """/marsp/servicos: eight after-sales services, no promises the operation cannot keep."""
+
+    ANCHORS = ("diagnostico", "manutencao", "retrofit", "qualificacao",
+               "calibracao", "treinamento", "suporte-remoto", "engenharia")
+    FORBIDDEN = ("SLA", "24h", "24 h", "estoque", "laboratório", "peças")
+
+    def setUp(self):
+        super().setUp()
+        r = self.url_open("/marsp/servicos")
+        self.assertEqual(r.status_code, 200)
+        self.html = r.text
+
+    def test_route_200(self):
+        self.assertEqual(self.url_open("/marsp/servicos").status_code, 200)
+
+    def test_eight_services_in_order(self):
+        pos = []
+        for a in self.ANCHORS:
+            needle = 'id="%s"' % a
+            self.assertIn(needle, self.html, a)
+            pos.append(self.html.index(needle))
+        self.assertEqual(pos, sorted(pos))
+
+    def test_retrofit_link(self):
+        self.assertIn('href="/retrofit/eto"', self.html)
+
+    def test_cta(self):
+        self.assertIn("Solicitar atendimento técnico", self.html)
+        self.assertIn("subject=Atendimento%20t%C3%A9cnico%20MARSP", self.html)
+
+    def test_no_promises(self):
+        low = self.html.lower()
+        for word in self.FORBIDDEN:
+            if word == "SLA":
+                self.assertIsNone(re.search(r"\bsla\b", low), word)
+            else:
+                self.assertNotIn(word.lower(), low, word)
+        for name in ("telstar", "bocon"):
+            self.assertNotIn(name, low, name)
+
+    def test_key_content(self):
+        for text in ("ISO 11135", "RBC", "incerteza", "qualquer marca",
+                     "validação de software", "NR-13", "corretiva"):
+            self.assertIn(text, self.html, text)
+
+    def test_brand_css(self):
+        self.assertIn("/afr_labquali_website/static/demos/_marsp/marsp.css", self.html)
+
+    def test_vitrine_band_position(self):
+        html = self.url_open("/marsp").text
+        self.assertLess(html.index('id="parceria"'), html.index('id="servicos"'))
+        self.assertLess(html.index('id="servicos"'), html.index('id="proposta"'))
+
+    def test_vitrine_band_links(self):
+        html = self.url_open("/marsp").text
+        self.assertIn('href="/marsp/servicos"', html)
+        for a in self.ANCHORS:
+            self.assertIn('href="/marsp/servicos#%s"' % a, html, a)
